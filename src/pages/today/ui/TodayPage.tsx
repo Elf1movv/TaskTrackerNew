@@ -2,7 +2,7 @@ import { GoalProgressSummary } from "@/widgets/goal-progress-summary"
 import { HabitTrackerGrid } from "@/widgets/habit-tracker-grid"
 import { TodayTasksCard } from "@/widgets/today-tasks-card"
 import { displayFont, monoFont } from "@/shared/lib/typography"
-import { TodayProvider, useTodayContext } from "../connectors/TodayContext"
+import { TodayProvider, useTodayContext } from "../connectors"
 import { formatHeroDate } from "../utilits/formatHeroDate"
 
 function TodayPageContent() {

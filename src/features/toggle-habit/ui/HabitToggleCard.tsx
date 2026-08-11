@@ -29,7 +29,10 @@ export function HabitToggleCard({ habit }: { habit: Habit }) {
     >
       <div className="text-2xl mb-2 leading-none">{habit.icon}</div>
       <div className="text-xs font-medium leading-snug mb-2.5 line-clamp-2">{habit.title}</div>
-      <StreakLabel color={streak > 0 ? habit.color : "var(--muted-foreground)"} className="flex items-center gap-1">
+      <StreakLabel
+        color={streak > 0 ? habit.color : "var(--muted-foreground)"}
+        className="flex items-center gap-1"
+      >
         <Flame size={11} />
         <span css={monoFont} className="text-xs">
           {streak}

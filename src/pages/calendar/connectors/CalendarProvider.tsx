@@ -1,22 +1,9 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react"
+import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { addMonths, subMonths } from "date-fns"
-import { useTasks, type Task } from "@/entities/task"
+import { useTasks } from "@/entities/task"
 import { formatDateKey } from "@/shared/lib/date"
-import { buildMonthGrid, type MonthGrid } from "../utilits/buildMonthGrid"
-
-interface CalendarContextValue {
-  calMonth: Date
-  monthGrid: MonthGrid
-  selectedDay: Date
-  selectedTasks: Task[]
-  allTasks: Task[]
-  selectDay: (day: Date) => void
-  goToPrevMonth: () => void
-  goToNextMonth: () => void
-  goToToday: () => void
-}
-
-const CalendarContext = createContext<CalendarContextValue | null>(null)
+import { buildMonthGrid } from "../utilits/buildMonthGrid"
+import { CalendarContext } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const { tasks } = useTasks()
@@ -51,14 +38,18 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       goToNextMonth,
       goToToday,
     }),
-    [calMonth, monthGrid, selectedDay, selectedTasks, tasks, selectDay, goToPrevMonth, goToNextMonth, goToToday],
+    [
+      calMonth,
+      monthGrid,
+      selectedDay,
+      selectedTasks,
+      tasks,
+      selectDay,
+      goToPrevMonth,
+      goToNextMonth,
+      goToToday,
+    ],
   )
 
   return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>
-}
-
-export function useCalendarContext(): CalendarContextValue {
-  const ctx = useContext(CalendarContext)
-  if (!ctx) throw new Error("useCalendarContext must be used within a CalendarProvider")
-  return ctx
 }

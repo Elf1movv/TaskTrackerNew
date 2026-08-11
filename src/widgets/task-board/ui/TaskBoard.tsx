@@ -39,7 +39,8 @@ export function TaskBoard({
             Tasks
           </h1>
           <p css={monoFont} className="text-sm text-muted-foreground">
-            {allTasks.filter(t => !t.completed).length} remaining · {allTasks.filter(t => t.completed).length} done
+            {allTasks.filter(t => !t.completed).length} remaining · {allTasks.filter(t => t.completed).length}{" "}
+            done
           </p>
         </div>
         <Button size="sm" onClick={() => setIsAdding(v => !v)}>
@@ -106,7 +107,9 @@ export function TaskBoard({
             >
               <TaskToggleCheckbox taskId={task.id} completed={task.completed} />
               <div className="flex-1 min-w-0">
-                <div className={`text-sm leading-snug ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                <div
+                  className={`text-sm leading-snug ${task.completed ? "line-through text-muted-foreground" : ""}`}
+                >
                   {task.title}
                 </div>
                 {task.dueDate && (

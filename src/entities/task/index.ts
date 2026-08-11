@@ -1,5 +1,6 @@
 export type { Task, Priority } from "./model/types"
 export { PRIORITY_COLORS, TASK_CATEGORIES } from "./model/types"
-export { TaskProvider, useTasks } from "./model/TaskContext"
+export { TaskProvider } from "./model/TaskProvider"
+export { useTasks } from "./model/taskContext"
 export { selectTodayTasks } from "./lib/selectTodayTasks"
 export { PriorityDot } from "./ui/PriorityDot"

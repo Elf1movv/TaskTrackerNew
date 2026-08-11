@@ -1,6 +1,6 @@
 import { GoalList } from "@/widgets/goal-list"
 import { displayFont } from "@/shared/lib/typography"
-import { GoalsProvider, useGoalsContext } from "../connectors/GoalsContext"
+import { GoalsProvider, useGoalsContext } from "../connectors"
 
 function GoalsPageContent() {
   const { goals } = useGoalsContext()

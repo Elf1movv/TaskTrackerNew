@@ -56,7 +56,10 @@ export function GoalList({ goals }: { goals: GoalListItem[] }) {
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-0">
               <MilestonesSection color={goal.color} className="pt-5 pb-6">
-                <div css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-4">
+                <div
+                  css={monoFont}
+                  className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-4"
+                >
                   Milestones
                 </div>
                 <div className="space-y-3">

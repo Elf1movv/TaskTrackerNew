@@ -4,7 +4,7 @@ import { CalendarGrid } from "@/widgets/calendar-grid"
 import { DayDetailPanel } from "@/widgets/day-detail-panel"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
-import { CalendarProvider, useCalendarContext } from "../connectors/CalendarContext"
+import { CalendarProvider, useCalendarContext } from "../connectors"
 
 function CalendarPageContent() {
   const {

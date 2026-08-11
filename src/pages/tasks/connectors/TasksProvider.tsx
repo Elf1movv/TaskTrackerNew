@@ -1,18 +1,8 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react"
-import { useTasks, type Task } from "@/entities/task"
+import { useMemo, useState, type ReactNode } from "react"
+import { useTasks } from "@/entities/task"
 import type { StatusFilter } from "@/widgets/task-board"
 import { filterTasks } from "../utilits/filterTasks"
-
-interface TasksContextValue {
-  allTasks: Task[]
-  filteredTasks: Task[]
-  statusFilter: StatusFilter
-  setStatusFilter: (filter: StatusFilter) => void
-  categoryFilter: string
-  setCategoryFilter: (category: string) => void
-}
-
-const TasksContext = createContext<TasksContextValue | null>(null)
+import { TasksContext } from "./tasksContext"
 
 export function TasksProvider({ children }: { children: ReactNode }) {
   const { tasks } = useTasks()
@@ -32,10 +22,4 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   )
 
   return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>
-}
-
-export function useTasksContext(): TasksContextValue {
-  const ctx = useContext(TasksContext)
-  if (!ctx) throw new Error("useTasksContext must be used within a TasksProvider")
-  return ctx
 }

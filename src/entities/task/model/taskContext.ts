@@ -1,0 +1,17 @@
+import { createContext, useContext } from "react"
+import type { Task } from "./types"
+
+export interface TaskContextValue {
+  tasks: Task[]
+  toggleTask: (id: string) => void
+  deleteTask: (id: string) => void
+  addTask: (task: Omit<Task, "id">) => void
+}
+
+export const TaskContext = createContext<TaskContextValue | null>(null)
+
+export function useTasks(): TaskContextValue {
+  const ctx = useContext(TaskContext)
+  if (!ctx) throw new Error("useTasks must be used within a TaskProvider")
+  return ctx
+}

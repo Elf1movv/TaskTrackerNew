@@ -9,8 +9,9 @@ const Dot = styled.div<{ color: string; size: number }>`
   height: ${p => p.size}px;
 `
 
-export const PriorityDot = forwardRef<HTMLDivElement, { priority: Priority; size?: number; colorOverride?: string }>(
-  function PriorityDot({ priority, size = 6, colorOverride }, ref) {
-    return <Dot ref={ref} className="shrink-0" color={colorOverride ?? PRIORITY_COLORS[priority]} size={size} />
-  },
-)
+export const PriorityDot = forwardRef<
+  HTMLDivElement,
+  { priority: Priority; size?: number; colorOverride?: string }
+>(function PriorityDot({ priority, size = 6, colorOverride }, ref) {
+  return <Dot ref={ref} className="shrink-0" color={colorOverride ?? PRIORITY_COLORS[priority]} size={size} />
+})

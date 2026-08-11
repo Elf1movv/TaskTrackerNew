@@ -1,5 +1,5 @@
 import { TaskBoard } from "@/widgets/task-board"
-import { TasksProvider, useTasksContext } from "../connectors/TasksContext"
+import { TasksProvider, useTasksContext } from "../connectors"
 
 function TasksPageContent() {
   const { allTasks, filteredTasks, statusFilter, setStatusFilter, categoryFilter, setCategoryFilter } =

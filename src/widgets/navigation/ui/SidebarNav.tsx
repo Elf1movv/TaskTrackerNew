@@ -17,7 +17,10 @@ export function SidebarNav() {
 
   const stats = [
     { label: "Tasks done", value: `${todayTasks.filter(t => t.completed).length} / ${todayTasks.length}` },
-    { label: "Habits", value: `${habits.filter(h => h.completedDates.includes(today)).length} / ${habits.length}` },
+    {
+      label: "Habits",
+      value: `${habits.filter(h => h.completedDates.includes(today)).length} / ${habits.length}`,
+    },
     { label: "Active goals", value: String(goals.length) },
   ]
 

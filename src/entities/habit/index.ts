@@ -1,3 +1,4 @@
 export type { Habit } from "./model/types"
-export { HabitProvider, useHabits } from "./model/HabitContext"
+export { HabitProvider } from "./model/HabitProvider"
+export { useHabits } from "./model/habitContext"
 export { getStreak } from "./lib/getStreak"
