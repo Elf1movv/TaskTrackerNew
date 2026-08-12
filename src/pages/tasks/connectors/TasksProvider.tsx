@@ -1,7 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react"
-import { useTasks } from "@/entities/task"
-import type { StatusFilter } from "@/widgets/task-board"
-import { filterTasks } from "../utilits/filterTasks"
+import { useTasks, type StatusFilter } from "@/entities/task"
+import { filterTasks } from "../lib/filterTasks"
 import { TasksContext } from "./tasksContext"
 
 export function TasksProvider({ children }: { children: ReactNode }) {

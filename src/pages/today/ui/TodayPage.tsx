@@ -3,7 +3,7 @@ import { HabitTrackerGrid } from "@/widgets/habit-tracker-grid"
 import { TodayTasksCard } from "@/widgets/today-tasks-card"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { TodayProvider, useTodayContext } from "../connectors"
-import { formatHeroDate } from "../utilits/formatHeroDate"
+import { formatHeroDate } from "../lib/formatHeroDate"
 
 function TodayPageContent() {
   const { todayTasks, goals, habits } = useTodayContext()

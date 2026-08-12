@@ -1,6 +1,6 @@
 import { addDays, format } from "date-fns"
 import { getTodayKey } from "@/shared/lib/date"
-import type { Task } from "../model/types"
+import type { Task } from "../model/task"
 
 const TODAY = getTodayKey()
 

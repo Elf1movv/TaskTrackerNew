@@ -16,3 +16,5 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
 }
 
 export const TASK_CATEGORIES = ["Work", "Personal", "Health", "Learning"]
+
+export type StatusFilter = "all" | "active" | "done"

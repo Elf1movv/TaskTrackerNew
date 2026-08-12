@@ -1,8 +1,8 @@
 import { useCallback, useMemo, type ReactNode } from "react"
-import { usePersistedCollection } from "@/shared/lib/storage/usePersistedCollection"
+import { usePersistedCollection } from "@/shared/lib/storage"
 import { habitRepository } from "../api/habitRepository"
 import { HabitContext } from "./habitContext"
-import type { Habit } from "./types"
+import type { Habit } from "./habit"
 
 export function HabitProvider({ children }: { children: ReactNode }) {
   const [habits, setHabits] = usePersistedCollection<Habit>(habitRepository)

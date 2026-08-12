@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react"
 import type { Task } from "@/entities/task"
-import type { MonthGrid } from "../utilits/buildMonthGrid"
+import type { MonthGrid } from "../lib/buildMonthGrid"
 
 export interface CalendarContextValue {
   calMonth: Date

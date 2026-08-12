@@ -1,6 +1,5 @@
-import { createLocalStorageRepository } from "@/shared/lib/storage/createLocalStorageRepository"
-import type { Repository } from "@/shared/lib/storage/repository"
-import type { Goal } from "../model/types"
+import { createLocalStorageRepository, type Repository } from "@/shared/lib/storage"
+import type { Goal } from "../model/goal"
 import { seedGoals } from "../lib/seedGoals"
 
 export const goalRepository: Repository<Goal> = createLocalStorageRepository<Goal>(

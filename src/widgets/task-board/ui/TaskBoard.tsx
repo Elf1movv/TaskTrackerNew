@@ -4,14 +4,12 @@ import { Plus } from "lucide-react"
 import { AddTaskForm } from "@/features/add-task"
 import { DeleteTaskButton } from "@/features/delete-task"
 import { TaskToggleCheckbox } from "@/features/toggle-task"
-import { PriorityDot, TASK_CATEGORIES, type Task } from "@/entities/task"
+import { PriorityDot, TASK_CATEGORIES, type StatusFilter, type Task } from "@/entities/task"
 import { getTodayKey } from "@/shared/lib/date"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
-
-export type StatusFilter = "all" | "active" | "done"
 
 export function TaskBoard({
   allTasks,

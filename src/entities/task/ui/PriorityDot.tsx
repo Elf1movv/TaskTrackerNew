@@ -1,6 +1,6 @@
 import { forwardRef } from "react"
 import styled from "@emotion/styled"
-import { PRIORITY_COLORS, type Priority } from "../model/types"
+import { PRIORITY_COLORS, type Priority } from "../model/task"
 
 const Dot = styled.div<{ color: string; size: number }>`
   border-radius: 9999px;

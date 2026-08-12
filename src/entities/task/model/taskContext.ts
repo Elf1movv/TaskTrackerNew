@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import type { Task } from "./types"
+import type { Task } from "./task"
 
 export interface TaskContextValue {
   tasks: Task[]

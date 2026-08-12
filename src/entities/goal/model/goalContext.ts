@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import type { Goal } from "./types"
+import type { Goal } from "./goal"
 
 export interface GoalContextValue {
   goals: Goal[]

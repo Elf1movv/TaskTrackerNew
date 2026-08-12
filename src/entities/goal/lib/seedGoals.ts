@@ -1,4 +1,4 @@
-import type { Goal } from "../model/types"
+import type { Goal } from "../model/goal"
 
 export const seedGoals: Goal[] = [
   {

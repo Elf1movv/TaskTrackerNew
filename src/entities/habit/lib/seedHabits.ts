@@ -1,5 +1,5 @@
 import { addDays, format } from "date-fns"
-import type { Habit } from "../model/types"
+import type { Habit } from "../model/habit"
 
 export const seedHabits: Habit[] = [
   {

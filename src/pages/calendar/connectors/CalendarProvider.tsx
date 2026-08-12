@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { addMonths, subMonths } from "date-fns"
 import { useTasks } from "@/entities/task"
 import { formatDateKey } from "@/shared/lib/date"
-import { buildMonthGrid } from "../utilits/buildMonthGrid"
+import { buildMonthGrid } from "../lib/buildMonthGrid"
 import { CalendarContext } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {

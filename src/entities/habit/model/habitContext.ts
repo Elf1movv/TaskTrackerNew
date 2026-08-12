@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import type { Habit } from "./types"
+import type { Habit } from "./habit"
 
 export interface HabitContextValue {
   habits: Habit[]

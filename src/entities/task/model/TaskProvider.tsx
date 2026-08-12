@@ -1,9 +1,9 @@
 import { useCallback, useMemo, type ReactNode } from "react"
 import { generateId } from "@/shared/lib/id"
-import { usePersistedCollection } from "@/shared/lib/storage/usePersistedCollection"
+import { usePersistedCollection } from "@/shared/lib/storage"
 import { taskRepository } from "../api/taskRepository"
 import { TaskContext } from "./taskContext"
-import type { Task } from "./types"
+import type { Task } from "./task"
 
 export function TaskProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = usePersistedCollection<Task>(taskRepository)

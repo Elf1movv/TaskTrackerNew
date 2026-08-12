@@ -12,7 +12,7 @@ export function TodayTasksCard({ tasks }: { tasks: Task[] }) {
     <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6">
       <div className="flex items-center justify-between mb-4">
         <span css={monoFont} className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground">
-          Today's Tasks
+         Today's Tasks
         </span>
         <span css={monoFont} className="text-sm text-primary">
           {done}/{tasks.length} done

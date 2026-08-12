@@ -1,8 +1,8 @@
 import { useCallback, useMemo, type ReactNode } from "react"
-import { usePersistedCollection } from "@/shared/lib/storage/usePersistedCollection"
+import { usePersistedCollection } from "@/shared/lib/storage"
 import { goalRepository } from "../api/goalRepository"
 import { GoalContext } from "./goalContext"
-import type { Goal } from "./types"
+import type { Goal } from "./goal"
 
 export function GoalProvider({ children }: { children: ReactNode }) {
   const [goals, setGoals] = usePersistedCollection<Goal>(goalRepository)

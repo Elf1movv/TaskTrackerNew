@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from "react"
 import { useGoals } from "@/entities/goal"
-import { formatTargetDate } from "../utilits/formatTargetDate"
+import { formatTargetDate } from "../lib/formatTargetDate"
 import { GoalsContext } from "./goalsContext"
 
 export function GoalsProvider({ children }: { children: ReactNode }) {

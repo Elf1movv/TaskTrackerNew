@@ -1,5 +1,4 @@
-import type { Task } from "@/entities/task"
-import type { StatusFilter } from "@/widgets/task-board"
+import type { StatusFilter, Task } from "@/entities/task"
 
 export function filterTasks(tasks: Task[], statusFilter: StatusFilter, categoryFilter: string): Task[] {
   return tasks.filter(task => {

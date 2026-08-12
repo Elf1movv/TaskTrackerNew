@@ -1,5 +1,5 @@
 import { getTodayKey } from "@/shared/lib/date"
-import type { Task } from "../model/types"
+import type { Task } from "../model/task"
 
 export function selectTodayTasks(tasks: Task[]): Task[] {
   const today = getTodayKey()
