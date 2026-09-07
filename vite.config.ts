@@ -32,4 +32,15 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ["**/*.svg", "**/*.csv"],
+
+  server: {
+    // In dev, the backend runs separately on :3001. In production, nginx
+    // and Express serve everything from one origin, so VITE_API_URL is
+    // just "/api" in both places — this proxy makes that same relative
+    // path work in dev too, instead of needing a different value per
+    // environment.
+    proxy: {
+      "/api": "http://localhost:3001",
+    },
+  },
 })
