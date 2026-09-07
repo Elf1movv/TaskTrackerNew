@@ -3,5 +3,7 @@ dist
 dist-ssr
 *.local
 
+.env
+
 .DS_Store
 npm-debug.log*

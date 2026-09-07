@@ -1,6 +1,7 @@
 import { format, isSameDay, isToday } from "date-fns"
-import { PriorityDot, type Task } from "@/entities/task"
+import { type Task } from "@/entities/task"
 import { monoFont } from "@/shared/lib/typography"
+import { CalendarDayCell } from "./components"
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
@@ -10,12 +11,14 @@ export function CalendarGrid({
   tasks,
   selectedDay,
   onSelectDay,
+  onMoveTaskToDay,
 }: {
   days: Date[]
   startPad: number
   tasks: Task[]
   selectedDay: Date
   onSelectDay: (day: Date) => void
+  onMoveTaskToDay: (taskId: string, day: Date) => void
 }) {
   return (
     <div>
@@ -37,37 +40,17 @@ export function CalendarGrid({
         {days.map(day => {
           const dayStr = format(day, "yyyy-MM-dd")
           const dayTasks = tasks.filter(t => t.dueDate === dayStr)
-          const isSelected = isSameDay(day, selectedDay)
-          const isCurrent = isToday(day)
 
           return (
-            <button
+            <CalendarDayCell
               key={dayStr}
-              onClick={() => onSelectDay(day)}
-              className={`aspect-square rounded-xl flex flex-col items-center pt-2 text-sm transition-all ${
-                isSelected
-                  ? "bg-primary text-primary-foreground"
-                  : isCurrent
-                    ? "bg-primary/10 text-primary"
-                    : "hover:bg-accent text-foreground"
-              }`}
-            >
-              <span css={monoFont} className="text-xs">
-                {format(day, "d")}
-              </span>
-              {dayTasks.length > 0 && (
-                <div className="flex gap-0.5 mt-1.5 flex-wrap justify-center px-1">
-                  {dayTasks.slice(0, 3).map(t => (
-                    <PriorityDot
-                      key={t.id}
-                      priority={t.priority}
-                      size={4}
-                      colorOverride={isSelected ? "rgba(255,255,255,0.65)" : undefined}
-                    />
-                  ))}
-                </div>
-              )}
-            </button>
+              day={day}
+              dayTasks={dayTasks}
+              isSelected={isSameDay(day, selectedDay)}
+              isCurrent={isToday(day)}
+              onSelect={() => onSelectDay(day)}
+              onMoveTaskToDay={onMoveTaskToDay}
+            />
           )
         })}
       </div>

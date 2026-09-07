@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id        String   @id @default(uuid())
+  title     String
+  completed Boolean  @default(false)
+  priority  String
+  category  String
+  dueDate   String?
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Not used yet — no auth today. Left nullable so a real users table can be
+  // added later (userId made required + a foreign key) without a painful
+  // migration once every existing row already has an owner.
+  userId String?
+}
+
+model Goal {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  progress    Int
+  targetDate  String
+  color       String
+  // Kept as an embedded JSON array (matching the frontend's Milestone[]
+  // shape exactly) rather than a separate related table — same
+  // "start simple" choice already made for Task. Milestone order is just
+  // its position in this array, no separate order column needed for it.
+  milestones Json
+  order      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String?
+}
+
+model Habit {
+  id             String   @id @default(uuid())
+  title          String
+  icon           String
+  color          String
+  completedDates String[]
+  order          Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  userId         String?
+}

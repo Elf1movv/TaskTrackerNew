@@ -1,5 +1,6 @@
 import { useCallback, useMemo, type ReactNode } from "react"
 import { generateId } from "@/shared/lib/id"
+import { reorderById } from "@/shared/lib/reorder"
 import { usePersistedCollection } from "@/shared/lib/storage"
 import { taskRepository } from "../api/taskRepository"
 import { TaskContext } from "./taskContext"
@@ -29,9 +30,23 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     [setTasks],
   )
 
+  const updateTask = useCallback(
+    (id: string, patch: Omit<Task, "id">) => {
+      setTasks(ts => ts.map(t => (t.id === id ? { ...patch, id } : t)))
+    },
+    [setTasks],
+  )
+
+  const reorderTasks = useCallback(
+    (draggedId: string, targetId: string) => {
+      setTasks(ts => reorderById(ts, draggedId, targetId))
+    },
+    [setTasks],
+  )
+
   const value = useMemo(
-    () => ({ tasks, toggleTask, deleteTask, addTask }),
-    [tasks, toggleTask, deleteTask, addTask],
+    () => ({ tasks, toggleTask, deleteTask, addTask, updateTask, reorderTasks }),
+    [tasks, toggleTask, deleteTask, addTask, updateTask, reorderTasks],
   )
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>

@@ -14,11 +14,7 @@ function GoalsPageContent() {
         <p className="text-sm text-muted-foreground">Long-term objectives and milestones</p>
       </div>
 
-      {goals.length > 0 ? (
-        <GoalList goals={goals} />
-      ) : (
-        <div className="text-center py-16 text-muted-foreground text-sm">No goals yet</div>
-      )}
+      <GoalList goals={goals} />
     </div>
   )
 }

@@ -1,0 +1,1 @@
+export { GoalAccordionItem } from "./GoalAccordionItem"

@@ -1,4 +1,5 @@
 export type { Goal, Milestone } from "./model/goal"
+export { GOAL_COLORS } from "./model/goal"
 export { GoalProvider } from "./model/GoalProvider"
 export { useGoals } from "./model/goalContext"
 export { ProgressRing } from "./ui/ProgressRing"

@@ -17,6 +17,7 @@ function CalendarPageContent() {
     goToPrevMonth,
     goToNextMonth,
     goToToday,
+    moveTaskToDay,
   } = useCalendarContext()
 
   return (
@@ -61,6 +62,7 @@ function CalendarPageContent() {
           tasks={allTasks}
           selectedDay={selectedDay}
           onSelectDay={selectDay}
+          onMoveTaskToDay={moveTaskToDay}
         />
         <DayDetailPanel day={selectedDay} tasks={selectedTasks} />
       </div>

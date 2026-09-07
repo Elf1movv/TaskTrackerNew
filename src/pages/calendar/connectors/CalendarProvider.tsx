@@ -6,7 +6,7 @@ import { buildMonthGrid } from "../lib/buildMonthGrid"
 import { CalendarContext } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
-  const { tasks } = useTasks()
+  const { tasks, updateTask } = useTasks()
   const [calMonth, setCalMonth] = useState(new Date())
   const [selectedDay, setSelectedDay] = useState(new Date())
 
@@ -26,6 +26,16 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setSelectedDay(now)
   }, [])
 
+  const moveTaskToDay = useCallback(
+    (taskId: string, day: Date) => {
+      const task = tasks.find(t => t.id === taskId)
+      if (!task) return
+      const { id, ...patch } = task
+      updateTask(id, { ...patch, dueDate: formatDateKey(day) })
+    },
+    [tasks, updateTask],
+  )
+
   const value = useMemo(
     () => ({
       calMonth,
@@ -37,6 +47,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       goToPrevMonth,
       goToNextMonth,
       goToToday,
+      moveTaskToDay,
     }),
     [
       calMonth,
@@ -48,6 +59,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       goToPrevMonth,
       goToNextMonth,
       goToToday,
+      moveTaskToDay,
     ],
   )
 

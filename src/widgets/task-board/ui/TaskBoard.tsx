@@ -1,15 +1,12 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
-import { AddTaskForm } from "@/features/add-task"
-import { DeleteTaskButton } from "@/features/delete-task"
-import { TaskToggleCheckbox } from "@/features/toggle-task"
-import { PriorityDot, TASK_CATEGORIES, type StatusFilter, type Task } from "@/entities/task"
+import { TaskForm } from "@/features/task-form"
+import { TASK_CATEGORIES, type StatusFilter, type Task } from "@/entities/task"
 import { getTodayKey } from "@/shared/lib/date"
 import { displayFont, monoFont } from "@/shared/lib/typography"
-import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
+import { TaskRow } from "./components"
 
 export function TaskBoard({
   allTasks,
@@ -27,6 +24,7 @@ export function TaskBoard({
   onCategoryFilterChange: (category: string) => void
 }) {
   const [isAdding, setIsAdding] = useState(false)
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const today = getTodayKey()
 
   return (
@@ -41,7 +39,13 @@ export function TaskBoard({
             done
           </p>
         </div>
-        <Button size="sm" onClick={() => setIsAdding(v => !v)}>
+        <Button
+          size="sm"
+          onClick={() => {
+            setEditingTaskId(null)
+            setIsAdding(v => !v)
+          }}
+        >
           <Plus size={14} />
           Add task
         </Button>
@@ -56,7 +60,10 @@ export function TaskBoard({
             transition={{ duration: 0.18 }}
             className="overflow-hidden mb-6"
           >
-            <AddTaskForm onDone={() => setIsAdding(false)} />
+            <TaskForm
+              lockedCategory={categoryFilter !== "all" ? categoryFilter : undefined}
+              onDone={() => setIsAdding(false)}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -93,43 +100,23 @@ export function TaskBoard({
 
       <div className="space-y-1.5">
         <AnimatePresence initial={false}>
-          {filteredTasks.map(task => (
-            <motion.div
-              key={task.id}
-              layout
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: 20, transition: { duration: 0.12 } }}
-              transition={{ duration: 0.15 }}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-card border border-border group hover:border-primary/20 transition-colors"
-            >
-              <TaskToggleCheckbox taskId={task.id} completed={task.completed} />
-              <div className="flex-1 min-w-0">
-                <div
-                  className={`text-sm leading-snug ${task.completed ? "line-through text-muted-foreground" : ""}`}
-                >
-                  {task.title}
-                </div>
-                {task.dueDate && (
-                  <div css={monoFont} className="text-xs text-muted-foreground mt-0.5">
-                    {task.dueDate === today ? "Today" : task.dueDate}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <PriorityDot priority={task.priority} />
-                  </TooltipTrigger>
-                  <TooltipContent>{task.priority}</TooltipContent>
-                </Tooltip>
-                <Badge variant="secondary" className="hidden sm:inline-flex">
-                  {task.category}
-                </Badge>
-                <DeleteTaskButton taskId={task.id} />
-              </div>
-            </motion.div>
-          ))}
+          {filteredTasks.map(task =>
+            editingTaskId === task.id ? (
+              <motion.div key={task.id} layout className="mb-1.5">
+                <TaskForm task={task} onDone={() => setEditingTaskId(null)} />
+              </motion.div>
+            ) : (
+              <TaskRow
+                key={task.id}
+                task={task}
+                today={today}
+                onEdit={() => {
+                  setIsAdding(false)
+                  setEditingTaskId(task.id)
+                }}
+              />
+            ),
+          )}
         </AnimatePresence>
         {filteredTasks.length === 0 && (
           <div className="text-center py-16 text-muted-foreground text-sm">

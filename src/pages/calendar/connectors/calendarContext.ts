@@ -12,6 +12,7 @@ export interface CalendarContextValue {
   goToPrevMonth: () => void
   goToNextMonth: () => void
   goToToday: () => void
+  moveTaskToDay: (taskId: string, day: Date) => void
 }
 
 export const CalendarContext = createContext<CalendarContextValue | null>(null)

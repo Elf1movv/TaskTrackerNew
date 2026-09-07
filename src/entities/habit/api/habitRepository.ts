@@ -1,8 +1,6 @@
-import { createLocalStorageRepository, type Repository } from "@/shared/lib/storage"
+import { createRestRepository, type Repository } from "@/shared/lib/storage"
 import type { Habit } from "../model/habit"
-import { seedHabits } from "../lib/seedHabits"
 
-export const habitRepository: Repository<Habit> = createLocalStorageRepository<Habit>(
-  "momentum:habits",
-  seedHabits,
+export const habitRepository: Repository<Habit> = createRestRepository<Habit>(
+  `${import.meta.env.VITE_API_URL}/habits`,
 )

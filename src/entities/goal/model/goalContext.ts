@@ -3,6 +3,14 @@ import type { Goal } from "./goal"
 
 export interface GoalContextValue {
   goals: Goal[]
+  addGoal: (goal: Omit<Goal, "id" | "milestones" | "progress">) => void
+  updateGoal: (id: string, patch: Omit<Goal, "id" | "milestones" | "progress">) => void
+  deleteGoal: (id: string) => void
+  reorderGoals: (draggedId: string, targetId: string) => void
+  addMilestone: (goalId: string, title: string) => void
+  updateMilestone: (goalId: string, milestoneId: string, title: string) => void
+  deleteMilestone: (goalId: string, milestoneId: string) => void
+  reorderMilestones: (goalId: string, draggedId: string, targetId: string) => void
   toggleMilestone: (goalId: string, milestoneId: string) => void
 }
 

@@ -6,6 +6,8 @@ export interface TaskContextValue {
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   addTask: (task: Omit<Task, "id">) => void
+  updateTask: (id: string, patch: Omit<Task, "id">) => void
+  reorderTasks: (draggedId: string, targetId: string) => void
 }
 
 export const TaskContext = createContext<TaskContextValue | null>(null)
