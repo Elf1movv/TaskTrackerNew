@@ -12,7 +12,11 @@
 - **Провайдер**: HipHosting
 - **IP**: `185.65.202.121`
 - **ОС**: Ubuntu 24.04
-- **Домен**: пока не куплен (используется голый IP, без HTTPS)
+- **Домен**: `mytracker.space` (+ `www.mytracker.space`), куплен на reg.ru,
+  DNS — A-записи на `185.65.202.121`
+- **HTTPS**: сертификат Let's Encrypt через certbot, автопродление
+  настроено самим certbot (systemd-таймер), истекает 2026-12-14 (без
+  действий с нашей стороны обновится сам заранее)
 
 Никаких управляемых платформ (Vercel/Railway/Heroku и т.п.) — осознанный
 выбор, см. `docs/ARCHITECTURE.md` и историю решений. Всё своё: свой
@@ -26,15 +30,15 @@ Node-процесс, своя PostgreSQL, свой nginx на своём VPS.
 - Рабочий пользователь: `deploy` (в группе `sudo`, NOPASSWD настроен в
   `/etc/sudoers.d/`)
 - Firewall: `ufw`, разрешены только порты 22 (SSH), 80 (HTTP), 443
-  (HTTPS будущего сертификата)
+  (HTTPS)
 
 ## Установленное ПО (через apt / официальные репозитории)
 
 - **Node.js** — LTS, через NodeSource (`deb.nodesource.com/setup_lts.x`)
 - **PostgreSQL 16** — через apt, кластер БД в `/var/lib/postgresql/16/main`
 - **nginx** — через apt, версия 1.24
-- **certbot** + `python3-certbot-nginx` — для HTTPS (ещё не запускался,
-  ждёт покупки домена)
+- **certbot** + `python3-certbot-nginx` — для HTTPS, уже запущен и
+  настроен (см. раздел "nginx: reverse proxy + HTTPS" ниже)
 
 ## База данных
 
@@ -45,6 +49,33 @@ Node-процесс, своя PostgreSQL, свой nginx на своём VPS.
   не в чате
 - Строка подключения (`DATABASE_URL`) собирается из этого файла и кладётся
   в `server/.env` на сервере
+
+### Бэкапы
+
+Скрипт `/home/deploy/backup-db.sh` на сервере, запускается ежедневно в
+03:00 через `crontab -l` (пользователь `deploy`):
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+BACKUP_DIR=/home/deploy/backups
+mkdir -p "$BACKUP_DIR"
+
+export $(grep DATABASE_URL /var/www/tasktracker/server/.env | xargs)
+
+TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+pg_dump "$DATABASE_URL" | gzip > "$BACKUP_DIR/tasktracker_${TIMESTAMP}.sql.gz"
+
+# Храним последние 14 бэкапов, остальные удаляем
+ls -1t "$BACKUP_DIR"/tasktracker_*.sql.gz | tail -n +15 | xargs -r rm --
+```
+
+Бэкапы лежат в `/home/deploy/backups/`, хранится последние 14 штук.
+**Ограничение**: бэкапы на том же сервере, что и сама БД — не защищают
+от потери VPS целиком, только от случайной порчи данных на живом
+сервере. Восстановление и рекомендация по скачиванию бэкапов на свой
+компьютер — `PROJECT_BRAIN.md`, раздел 6.4.
 
 ## Расположение приложения
 
@@ -113,15 +144,16 @@ sudo journalctl -u tasktracker -f   # логи в реальном времен�
 Сервер слушает только `127.0.0.1:3001` — снаружи напрямую недоступен,
 только через nginx.
 
-## nginx: reverse proxy
+## nginx: reverse proxy + HTTPS
 
 Конфиг `/etc/nginx/sites-available/tasktracker` (симлинк в
-`sites-enabled`), `default`-сайт отключён:
+`sites-enabled`), `default`-сайт отключён. Итоговая версия после
+`certbot --nginx -d mytracker.space -d www.mytracker.space` (certbot сам
+дописал блок HTTPS и редирект, вручную это не редактировалось):
 
 ```nginx
 server {
-    listen 80;
-    server_name 185.65.202.121;
+    server_name mytracker.space www.mytracker.space;
 
     location / {
         proxy_pass http://127.0.0.1:3001;
@@ -134,15 +166,35 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
     }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/mytracker.space/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/mytracker.space/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+server {
+    if ($host = www.mytracker.space) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    if ($host = mytracker.space) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    listen 80;
+    server_name mytracker.space www.mytracker.space;
+    return 404; # managed by Certbot
 }
 ```
 
-**Когда купим домен**: заменить `server_name` с IP на домен, затем
-`sudo certbot --nginx -d <домен>` — сам получит сертификат Let's Encrypt
-и допишет HTTPS-блок + редирект с HTTP в этот же файл.
+Любой HTTP-запрос редиректит на HTTPS (301). Сертификат обновляется
+автоматически — certbot поставил systemd-таймер, вручную ничего делать
+не нужно (можно проверить: `sudo systemctl list-timers | grep certbot`).
 
 Проверка конфига перед reload — всегда: `sudo nginx -t`, потом
-`sudo systemctl reload nginx`.
+`sudo systemctl reload nginx`. **Не редактировать блоки `# managed by
+Certbot` вручную** — при следующем продлении certbot их перепишет заново.
 
 ## Ручной передеплой (до появления CI/CD)
 
@@ -156,12 +208,29 @@ npm install && npx prisma migrate deploy && npm run build
 sudo systemctl restart tasktracker
 ```
 
-## Что ещё не сделано (см. план деплоя)
+## CI/CD: автодеплой при пуше в main
 
-- Покупка домена (reg.ru) — в процессе
-- DNS A-запись на домен → `185.65.202.121`
-- `certbot --nginx -d <домен>` для HTTPS
-- GitHub Actions (`.github/workflows/deploy.yml`) — автодеплой при пуше в
-  `main`, включая SSH-подключение по отдельному deploy-ключу (не
-  личному), сохранённому в GitHub Secrets (`VPS_HOST`, `VPS_USER`,
-  `VPS_SSH_KEY`)
+`.github/workflows/deploy.yml` — при пуше в `main`: SSH на VPS
+(отдельный deploy-ключ, не личный SSH-ключ владельца — добавлен в
+`/home/deploy/.ssh/authorized_keys` вторым по счёту), `git pull`,
+`npm ci` + `npm run build` для фронтенда, то же самое плюс
+`prisma migrate deploy` для `server/`, затем
+`sudo systemctl restart tasktracker`.
+
+Требует три GitHub Secret (Settings → Secrets and variables → Actions →
+New repository secret) — добавляются владельцем репозитория вручную,
+не через CI:
+- `VPS_HOST` = `185.65.202.121`
+- `VPS_USER` = `deploy`
+- `VPS_SSH_KEY` = приватный ключ deploy-пары (не личный `id_ed25519`
+  пользователя) — сгенерирован специально для CI, публичная половина уже
+  на сервере
+
+Если этот ключ когда-нибудь утечёт — просто удалить его строку из
+`/home/deploy/.ssh/authorized_keys` на сервере и сгенерировать новую
+пару, не трогая личный доступ владельца по SSH.
+
+## Что ещё не сделано
+
+- Первый пуш в `main` после добавления секретов — проверить, что
+  вкладка Actions на GitHub показывает успешный прогон
