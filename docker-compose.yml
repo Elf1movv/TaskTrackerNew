@@ -1,0 +1,8 @@
+services:
+  app:
+    image: ghcr.io/elf1movv/tasktracker:latest
+    container_name: tasktracker
+    network_mode: host
+    restart: unless-stopped
+    env_file:
+      - server/.env

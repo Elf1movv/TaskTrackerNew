@@ -4,8 +4,38 @@ on:
   push:
     branches: [main]
 
+env:
+  IMAGE_NAME: ghcr.io/elf1movv/tasktracker
+
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Deploy over SSH
@@ -20,12 +50,8 @@ jobs:
 
             git pull
 
-            npm ci
-            npm run build
+            docker compose pull
+            docker compose run --rm app npx prisma migrate deploy
+            docker compose up -d
 
-            cd server
-            npm ci
-            npx prisma migrate deploy
-            npm run build
-
-            sudo systemctl restart tasktracker
+            docker image prune -f

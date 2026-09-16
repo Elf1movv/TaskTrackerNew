@@ -1,0 +1,40 @@
+# Dependencies (installed fresh inside each build stage)
+node_modules
+server/node_modules
+
+# Build outputs (produced fresh inside each build stage)
+dist
+dist-ssr
+server/dist
+
+# VCS / CI
+.git
+.github
+
+# Env files — never baked into the image; runtime config comes from
+# docker-compose's env_file pointing at server/.env on the VPS
+.env
+.env.*
+server/.env
+server/.env.*
+
+# Docs / project notes — not needed to build or run the app
+docs
+guidelines
+LEARNING.md
+PROJECT_BRAIN.md
+ATTRIBUTIONS.md
+README.md
+
+# Editor / OS / misc
+.DS_Store
+*.local
+.husky
+.vscode
+.idea
+npm-debug.log*
+
+# Docker itself
+Dockerfile
+.dockerignore
+docker-compose.yml
