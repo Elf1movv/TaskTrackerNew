@@ -110,6 +110,44 @@ interface Repository<T> {
 
 ### Модель данных (`server/prisma/schema.prisma`)
 
+```mermaid
+erDiagram
+    Task {
+        string id PK
+        string title
+        boolean completed
+        string priority
+        string category
+        string dueDate
+        int order
+    }
+    Goal {
+        string id PK
+        string title
+        string description
+        int progress
+        string targetDate
+        string color
+        json milestones
+        int order
+    }
+    Habit {
+        string id PK
+        string title
+        string icon
+        string color
+        string_array completedDates
+        int order
+    }
+```
+
+Три независимые таблицы — **без внешних ключей друг на друга**, это не
+случайность: сущности приложения сейчас никак не связаны между собой
+(задача не привязана к цели, привычка не привязана ни к чему). Если
+появится, например, "привязать задачу к цели" — тогда в `Task`
+понадобится `goalId` со внешним ключом на `Goal.id`, и эту диаграмму
+нужно будет обновить.
+
 Три модели: `Task`, `Goal`, `Habit`. У каждой есть `order` (для
 сохранения порядка после drag-and-drop) и `userId` (nullable, сейчас
 нигде не используется — оставлено заранее, чтобы при добавлении логина
