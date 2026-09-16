@@ -4,6 +4,7 @@ dist-ssr
 *.local
 
 .env
+.env.test
 
 .DS_Store
 npm-debug.log*

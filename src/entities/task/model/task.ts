@@ -7,6 +7,7 @@ export interface Task {
   priority: Priority
   category: string
   dueDate: string | null
+  updatedAt: string
 }
 
 export const PRIORITY_COLORS: Record<Priority, string> = {

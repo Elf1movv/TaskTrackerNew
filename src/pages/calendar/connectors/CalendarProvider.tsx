@@ -30,8 +30,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     (taskId: string, day: Date) => {
       const task = tasks.find(t => t.id === taskId)
       if (!task) return
-      const { id, ...patch } = task
-      updateTask(id, { ...patch, dueDate: formatDateKey(day) })
+      updateTask(taskId, { dueDate: formatDateKey(day) })
     },
     [tasks, updateTask],
   )

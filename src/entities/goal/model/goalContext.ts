@@ -3,8 +3,8 @@ import type { Goal } from "./goal"
 
 export interface GoalContextValue {
   goals: Goal[]
-  addGoal: (goal: Omit<Goal, "id" | "milestones" | "progress">) => void
-  updateGoal: (id: string, patch: Omit<Goal, "id" | "milestones" | "progress">) => void
+  addGoal: (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "progress">) => void
+  updateGoal: (id: string, patch: Partial<Omit<Goal, "id" | "updatedAt" | "milestones">>) => void
   deleteGoal: (id: string) => void
   reorderGoals: (draggedId: string, targetId: string) => void
   addMilestone: (goalId: string, title: string) => void

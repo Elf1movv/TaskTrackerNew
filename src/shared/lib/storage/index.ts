@@ -1,4 +1,4 @@
 export type { Repository } from "./repository"
-export { createLocalStorageRepository } from "./createLocalStorageRepository"
+export { ConflictError } from "./repository"
 export { createRestRepository } from "./createRestRepository"
 export { usePersistedCollection } from "./usePersistedCollection"

@@ -7,41 +7,42 @@ import { TaskContext } from "./taskContext"
 import type { Task } from "./task"
 
 export function TaskProvider({ children }: { children: ReactNode }) {
-  const [tasks, setTasks] = usePersistedCollection<Task>(taskRepository)
+  const {
+    items: tasks,
+    create,
+    update,
+    remove,
+    reorder,
+  } = usePersistedCollection<Task>(taskRepository, "task")
 
   const toggleTask = useCallback(
     (id: string) => {
-      setTasks(ts => ts.map(t => (t.id === id ? { ...t, completed: !t.completed } : t)))
+      const task = tasks.find(t => t.id === id)
+      if (!task) return
+      update(id, { completed: !task.completed })
     },
-    [setTasks],
+    [tasks, update],
   )
 
-  const deleteTask = useCallback(
-    (id: string) => {
-      setTasks(ts => ts.filter(t => t.id !== id))
-    },
-    [setTasks],
-  )
+  const deleteTask = useCallback((id: string) => remove(id), [remove])
 
   const addTask = useCallback(
-    (task: Omit<Task, "id">) => {
-      setTasks(ts => [{ ...task, id: generateId() }, ...ts])
+    (task: Omit<Task, "id" | "updatedAt">) => {
+      // updatedAt is a placeholder here — usePersistedCollection.create
+      // replaces it with the server's real value once the request resolves.
+      create({ ...task, id: generateId(), updatedAt: new Date().toISOString() })
     },
-    [setTasks],
+    [create],
   )
 
   const updateTask = useCallback(
-    (id: string, patch: Omit<Task, "id">) => {
-      setTasks(ts => ts.map(t => (t.id === id ? { ...patch, id } : t)))
-    },
-    [setTasks],
+    (id: string, patch: Partial<Omit<Task, "id" | "updatedAt">>) => update(id, patch),
+    [update],
   )
 
   const reorderTasks = useCallback(
-    (draggedId: string, targetId: string) => {
-      setTasks(ts => reorderById(ts, draggedId, targetId))
-    },
-    [setTasks],
+    (draggedId: string, targetId: string) => reorder(reorderById(tasks, draggedId, targetId)),
+    [tasks, reorder],
   )
 
   const value = useMemo(
