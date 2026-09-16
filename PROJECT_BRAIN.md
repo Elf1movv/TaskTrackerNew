@@ -51,6 +51,7 @@
 | ORM | Prisma | Пишешь `db.task.findMany()` вместо ручного SQL |
 | База данных | PostgreSQL | Стандартная реляционная БД, нативно установлена на сервере (не в Docker) |
 | Деплой | Свой VPS (HipHosting), без управляемых платформ (не Vercel/Railway) | Осознанный выбор владельца: "работает на наших мощностях, без посредников" |
+| Контейнеризация | Docker (приложение) + GitHub Container Registry | Воспроизводимый деплой — образ собран один раз в CI, переезд на новый сервер = "поставь Docker, запусти образ". PostgreSQL пока нативно, не в контейнере — осознанно |
 | Reverse proxy | nginx | Принимает интернет-трафик, передаёт на Node |
 | HTTPS | certbot (Let's Encrypt), бесплатно, автопродление | — |
 | CI/CD | GitHub Actions | Автодеплой при пуше в `main` |
@@ -264,9 +265,18 @@ TaskTrackerNew-main/
 - **Бэкапы БД**: ежедневно в 03:00 (cron), `pg_dump` →
   `/home/deploy/backups/`, хранится последние 14 штук — см. раздел 7.4
   ниже про то, чем это НЕ защищает
-- **CI/CD**: пуш в `main` → GitHub Actions по SSH (отдельный deploy-ключ,
-  не личный) → `git pull` + пересборка + `prisma migrate deploy` +
-  рестарт `systemd`-сервиса, проверено рабочим вживую (2026-09-16)
+- **Приложение**: работает в Docker-контейнере (`network_mode: host`),
+  не bare-процессом — образ собирается в GitHub Actions, пушится в
+  GitHub Container Registry (`ghcr.io/elf1movv/tasktracker`), на VPS
+  только `docker compose pull` + `up -d`. `restart: unless-stopped`
+  переживает падения и перезагрузку VPS сам, без systemd-юнита
+  (старый `tasktracker.service` удалён)
+- **CI/CD**: пуш в `main` → GitHub Actions (два джоба: сборка+пуш образа,
+  затем деплой по SSH отдельным deploy-ключом, не личным) → `git pull`
+  на VPS (за `docker-compose.yml`) + `docker compose pull` + `prisma
+  migrate deploy` (одноразовый запуск контейнера) + `docker compose up
+  -d`, проверено рабочим вживую (гранулярный API — 2026-09-16, переход
+  на Docker — 2026-09-16)
 
 ---
 
@@ -296,17 +306,22 @@ TaskTrackerNew-main/
 ### 7.2 VPS полностью потерян/сломан (провайдер удалил, диск умер и т.п.)
 
 **Что не потеряно**: весь код — в GitHub (`github.com/Elf1movv/TaskTrackerNew`);
-вся инфраструктура **дословно** описана в `docs/DEPLOYMENT.md` (все
-команды установки, весь конфиг nginx, весь systemd-юнит — можно
-буквально скопировать и выполнить заново); последний бэкап БД — если
-успел скачать его с сервера до потери (см. 7.4, это важное "если").
+собранный **образ приложения уже лежит готовым** в GitHub Container
+Registry (`ghcr.io/elf1movv/tasktracker:latest`) — не нужно пересобирать
+фронтенд/бэкенд на новом сервере вручную, только `docker pull`; вся
+остальная инфраструктура **дословно** описана в `docs/DEPLOYMENT.md`
+(конфиг nginx, установка Docker/PostgreSQL/certbot); последний бэкап
+БД — если успел скачать его с сервера до потери (см. 7.4, это важное
+"если").
 
 **Что делать**:
 1. Арендовать новый VPS (тот же HipHosting или любой другой — инструкция
    не завязана на конкретного провайдера)
-2. Пройти `docs/DEPLOYMENT.md` заново от начала до конца — установка
-   Node/PostgreSQL/nginx/certbot, создание БД, клонирование репозитория,
-   systemd-юнит, nginx-конфиг
+2. Пройти `docs/DEPLOYMENT.md` заново — установить Docker, PostgreSQL,
+   nginx, certbot (приложение отдельно пересобирать не нужно — только
+   `docker compose pull` готового образа), создать БД, склонировать
+   репозиторий (нужен для `docker-compose.yml` и конфигов), поднять
+   контейнер (`docker compose up -d`)
 3. Восстановить БД из последнего скачанного бэкапа (команда — в 7.4)
 4. Поменять DNS A-запись на reg.ru на IP нового сервера
 5. Заново запустить `certbot --nginx -d mytracker.space -d www.mytracker.space`

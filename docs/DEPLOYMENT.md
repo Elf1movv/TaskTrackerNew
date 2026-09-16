@@ -20,22 +20,37 @@
 
 Никаких управляемых платформ (Vercel/Railway/Heroku и т.п.) — осознанный
 выбор, см. `docs/ARCHITECTURE.md` и историю решений. Всё своё: свой
-Node-процесс, своя PostgreSQL, свой nginx на своём VPS.
+Docker-контейнер с приложением, своя PostgreSQL (нативно, не в
+контейнере — осознанно, см. `docs/ROADMAP.md`), свой nginx на своём VPS.
 
 ## Доступ
 
 - Вход только по SSH-ключу, парольный вход и root-логин отключены
   (`PermitRootLogin no`, `PasswordAuthentication no` в
   `/etc/ssh/sshd_config`)
-- Рабочий пользователь: `deploy` (в группе `sudo`, NOPASSWD настроен в
-  `/etc/sudoers.d/`)
+- Рабочий пользователь: `deploy`. **Уточнение**: у `deploy` настроен
+  **полный passwordless sudo** (`(ALL) NOPASSWD: ALL` в
+  `/etc/sudoers.d/deploy`, проверено `sudo -l`) — не только на
+  `systemctl`, как было неточно написано здесь раньше. `deploy` также
+  состоит в группе `docker` — это не расширяет реальные права (они и
+  так эквивалентны root через sudo), просто позволяет не писать `sudo`
+  перед каждой `docker`-командой
 - Firewall: `ufw`, разрешены только порты 22 (SSH), 80 (HTTP), 443
   (HTTPS)
 
 ## Установленное ПО (через apt / официальные репозитории)
 
-- **Node.js** — LTS, через NodeSource (`deb.nodesource.com/setup_lts.x`)
-- **PostgreSQL 16** — через apt, кластер БД в `/var/lib/postgresql/16/main`
+- **Docker Engine + Compose plugin** — через официальный apt-репозиторий
+  Docker (`download.docker.com`), см. раздел "Docker: образ и контейнер"
+  ниже. Само приложение (Node/Express) теперь работает **внутри
+  контейнера**, не как процесс на самом VPS
+- **Node.js** — LTS, через NodeSource, был установлен для сборки/запуска
+  bare-процесса на VPS до перехода на Docker (2026-09-16). Сейчас
+  ничего не использует его напрямую (сборка происходит в GitHub
+  Actions, приложение — в контейнере), можно оставить для отладки/
+  разовых команд или удалить — не мешает
+- **PostgreSQL 16** — через apt, кластер БД в `/var/lib/postgresql/16/main`,
+  нативно на хосте (не в контейнере)
 - **nginx** — через apt, версия 1.24
 - **certbot** + `python3-certbot-nginx` — для HTTPS, уже запущен и
   настроен (см. раздел "nginx: reverse proxy + HTTPS" ниже)
@@ -88,61 +103,75 @@ git clone https://github.com/Elf1movv/TaskTrackerNew.git /var/www/tasktracker
 
 ### Файлы окружения (создаются вручную на сервере, не в git)
 
-`/var/www/tasktracker/.env`:
-```
-VITE_API_URL=/api
-```
+`/var/www/tasktracker/.env` — **больше не используется в проде**
+(остался как безобидный мусор с bare-процесса до 2026-09-16): значение
+`VITE_API_URL=/api` теперь запекается прямо в образ на этапе сборки
+(`ENV VITE_API_URL=/api` в `Dockerfile`), потому что фронтенд больше не
+собирается на самом VPS.
 
-`/var/www/tasktracker/server/.env`:
+`/var/www/tasktracker/server/.env` — **всё ещё используется**,
+контейнер подключает его через `env_file` в `docker-compose.yml`:
 ```
 DATABASE_URL="postgresql://tasktracker:<пароль>@localhost:5432/tasktracker"
 PORT=3001
 ```
 
-## Сборка
+## Docker: образ и контейнер
 
-```bash
-cd /var/www/tasktracker
-npm install
-npm run build              # → dist/ (собранный фронтенд)
+Приложение (фронтенд + бэкенд одним процессом, см.
+`docs/ARCHITECTURE.md`) собирается в один Docker-образ по
+многоступенчатому `Dockerfile` (в корне репозитория) — сборка происходит
+**в GitHub Actions**, не на VPS: frontend-стадия (`npm run build` →
+`dist/`), backend-стадия (`prisma generate` + `tsc` → `server/dist/`),
+финальная тонкая рантайм-стадия собирает всё вместе.
 
-cd server
-npm install
-npx prisma migrate deploy  # применяет уже готовые миграции без вопросов
-npm run build               # tsc → dist/index.js
+Образ пушится в **GitHub Container Registry** (`ghcr.io/elf1movv/tasktracker`,
+тегами `:latest` и `:<sha>` для отката), пакет сделан публичным вручную
+через настройки GitHub (Packages → tasktracker → Package settings →
+Change visibility → Public) — без этого VPS не смог бы `docker compose
+pull` без учётных данных для реестра.
+
+`docker-compose.yml` (в корне репозитория, доезжает до VPS через
+`git pull`, лежит в `/var/www/tasktracker/docker-compose.yml`):
+```yaml
+services:
+  app:
+    image: ghcr.io/elf1movv/tasktracker:latest
+    container_name: tasktracker
+    network_mode: host
+    restart: unless-stopped
+    env_file:
+      - server/.env
 ```
 
-## systemd: автозапуск и автоперезапуск бэкенда
+`network_mode: host` — контейнер работает в сетевом пространстве самого
+VPS: достаёт PostgreSQL через `127.0.0.1:5432`, слушает `3001` напрямую,
+точно как раньше bare-процесс — **nginx не тронут вообще**. Плата за
+эту простоту: изнутри контейнера видны все сетевые интерфейсы хоста, не
+только его собственные — приемлемо для одного доверенного контейнера на
+своём VPS, но при контейнеризации Postgres (следующий шаг, см.
+`docs/ROADMAP.md`) стоит будет пересмотреть на bridge-сеть.
 
-Юнит `/etc/systemd/system/tasktracker.service`:
-
-```ini
-[Unit]
-Description=TaskTracker Node/Express server
-After=network.target postgresql.service
-
-[Service]
-Type=simple
-User=deploy
-WorkingDirectory=/var/www/tasktracker/server
-ExecStart=/usr/bin/node dist/index.js
-Restart=on-failure
-RestartSec=5
-Environment=NODE_ENV=production
-
-[Install]
-WantedBy=multi-user.target
-```
+`restart: unless-stopped` — сам Docker перезапускает контейнер при
+падении и после перезагрузки VPS (проверено: `sudo reboot`, контейнер
+поднялся сам, без вмешательства) — отдельный systemd-юнит для этого
+больше не нужен (старый `tasktracker.service` удалён, см. ниже).
 
 Управление:
 ```bash
-sudo systemctl status tasktracker
-sudo systemctl restart tasktracker
-sudo journalctl -u tasktracker -f   # логи в реальном времени
+docker compose -f /var/www/tasktracker/docker-compose.yml ps
+docker compose -f /var/www/tasktracker/docker-compose.yml logs -f
+docker compose -f /var/www/tasktracker/docker-compose.yml restart
 ```
 
-Сервер слушает только `127.0.0.1:3001` — снаружи напрямую недоступен,
-только через nginx.
+**Известный gotcha при первой миграции (2026-09-16)**: старый
+`tasktracker.service` (bare-процесс) и новый контейнер несколько минут
+одновременно боролись за порт `3001` (оба слушают `0.0.0.0:3001` через
+`network_mode: host`) — контейнер уходил в restart-loop с растущим
+backoff, пока старый systemd-юнит не был явно остановлен
+(`sudo systemctl stop tasktracker`). Если когда-нибудь понадобится
+переносить деплой на новый VPS — сначала полностью убедиться, что
+ничего больше не слушает `3001`, прежде чем поднимать контейнер.
 
 ## nginx: reverse proxy + HTTPS
 
@@ -196,30 +225,35 @@ server {
 `sudo systemctl reload nginx`. **Не редактировать блоки `# managed by
 Certbot` вручную** — при следующем продлении certbot их перепишет заново.
 
-## Ручной передеплой (до появления CI/CD)
+## Ручной передеплой
 
 ```bash
 ssh deploy@185.65.202.121
 cd /var/www/tasktracker
-git pull
-npm install && npm run build
-cd server
-npm install && npx prisma migrate deploy && npm run build
-sudo systemctl restart tasktracker
+git pull                                        # подтянуть docker-compose.yml, если менялся
+docker compose pull                             # скачать свежий образ с ghcr.io
+docker compose run --rm app npx prisma migrate deploy
+docker compose up -d
+docker image prune -f                           # убрать старые слои, не копить диск
 ```
 
 ## CI/CD: автодеплой при пуше в main
 
-`.github/workflows/deploy.yml` — при пуше в `main`: SSH на VPS
-(отдельный deploy-ключ, не личный SSH-ключ владельца — добавлен в
-`/home/deploy/.ssh/authorized_keys` вторым по счёту), `git pull`,
-`npm ci` + `npm run build` для фронтенда, то же самое плюс
-`prisma migrate deploy` для `server/`, затем
-`sudo systemctl restart tasktracker`.
+`.github/workflows/deploy.yml` — два джоба:
+
+1. **`build-and-push`** (на раннере GitHub, не на VPS) — собирает
+   `Dockerfile`, пушит образ в `ghcr.io/elf1movv/tasktracker` тегами
+   `:latest` и `:<sha>`. Логинится в GHCR через `GITHUB_TOKEN` —
+   выдаётся автоматически GitHub Actions, отдельно настраивать не нужно
+   (только `permissions: packages: write` в самом workflow-файле)
+2. **`deploy`** (`needs: build-and-push`) — SSH на VPS (отдельный
+   deploy-ключ, не личный SSH-ключ владельца — добавлен в
+   `/home/deploy/.ssh/authorized_keys` вторым по счёту), выполняет
+   ровно те же команды, что и в разделе "Ручной передеплой" выше
 
 Требует три GitHub Secret (Settings → Secrets and variables → Actions →
-New repository secret) — добавляются владельцем репозитория вручную,
-не через CI:
+New repository secret) — добавлены владельцем репозитория вручную,
+не через CI, новых секретов для перехода на Docker не понадобилось:
 - `VPS_HOST` = `185.65.202.121`
 - `VPS_USER` = `deploy`
 - `VPS_SSH_KEY` = приватный ключ deploy-пары (не личный `id_ed25519`
@@ -232,7 +266,12 @@ New repository secret) — добавляются владельцем репо�
 
 ## Статус
 
-GitHub Secrets добавлены и автодеплой подтверждён рабочим (2026-09-16):
-пуш коммита `207e3e9` в `main` был подхвачен GitHub Actions автоматически
-(прогон `Deploy to VPS` — `completed success`), без какого-либо ручного
-вмешательства на сервере.
+- Гранулярный API (см. `docs/ARCHITECTURE.md`) — задеплоен и проверен в
+  проде 2026-09-16
+- Переход на Docker-деплой — сделан и проверен в проде 2026-09-16:
+  образ собирается в GitHub Actions, пушится в GHCR (пакет публичный),
+  VPS только `pull` + `up -d`; старый `tasktracker.service` удалён;
+  переживание перезагрузки VPS проверено (`sudo reboot` → контейнер
+  поднялся сам); автодеплой через пуш в `main` проверен end-to-end
+- PostgreSQL пока нативный (не в контейнере) — осознанно, следующий шаг
+  из `docs/ROADMAP.md`
