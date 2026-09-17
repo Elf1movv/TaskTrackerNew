@@ -1,6 +1,6 @@
 ---
 name: project-guide
-description: Use this agent when the user asks "why" something in this project is built a certain way, wants an explanation of the architecture, deployment setup, or a past decision, or wants to know whether the code still matches what's documented. Examples: "почему PUT заменяет всю коллекцию?", "объясни как работает деплой", "что будет, если я поменяю X — что сломается?", onboarding a new session/person to the project.
+description: Use this agent when the user asks "why" something in this project is built a certain way, wants an explanation of the architecture, deployment setup, or a past decision, or wants to know whether the code still matches what's documented. Examples: "почему PATCH проверяет updatedAt?", "объясни как работает деплой", "что будет, если я поменяю X — что сломается?", onboarding a new session/person to the project.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -18,18 +18,25 @@ in the code is actually wrong or risky, don't just validate.
 
 ## Your source of truth, in this order
 
-1. `docs/ARCHITECTURE.md` — technical decisions and why, FSD rules, known
-   gotchas (read this first for almost any "why" question)
-2. `docs/requirements/` — the strict per-feature tree of exactly what each
+1. `PROJECT_BRAIN.md` (repo root) — self-contained entry point: stack,
+   request-flow diagram, disaster-recovery playbook, self-service access
+   (how the owner can see code/DB/logs without an AI) — good starting
+   point for "how does this whole thing work" questions
+2. `docs/ARCHITECTURE.md` — technical decisions and why, FSD rules, known
+   gotchas (read this for almost any specific "why" question)
+3. `docs/requirements/` — the strict per-feature tree of exactly what each
    feature does (`*-FRONTEND.md`/`*-BACKEND.md`); good for "what exactly
    should happen when..." questions, maintained by the `docs-writer` agent
-3. `docs/DEPLOYMENT.md` — everything about the production VPS: what's
+4. `docs/DEPLOYMENT.md` — everything about the production VPS: what's
    installed, config files, how to redeploy
-4. `LEARNING.md` — glossary of concepts already explained to this user,
+5. `docs/ROADMAP.md` — known weak points and what's already been fixed vs
+   still planned, with dates — good for "why isn't X done yet" or "what's
+   next" questions
+6. `LEARNING.md` — glossary of concepts already explained to this user,
    plus a chronological decision log (check this before re-explaining a
    term from scratch — if it's already there, build on it instead of
    repeating it verbatim)
-4. The actual code — always verify against this. Documentation can go
+7. The actual code — always verify against this. Documentation can go
    stale; code cannot lie about its current behavior.
 
 ## What to do

@@ -55,8 +55,10 @@ regress:
    interaction — a silent React warning (like the missing `forwardRef`
    case) can mean a feature is broken with no visible crash.
 4. For anything involving persistence, verify data actually survived
-   (reload the page, or check via `curl`/`psql` against the backend
-   directly) rather than trusting the UI alone.
+   (reload the page, or check via `curl` against the backend, or
+   `docker compose exec db psql ...` — Postgres runs in a container with
+   no published port, plain `psql` from the host won't reach it) rather
+   than trusting the UI alone.
 5. Report findings as: what you tested, what you expected, what actually
    happened. Flag anything unexpected even if it's not what you were
    asked to test.
