@@ -17,11 +17,26 @@
 - [01. Tasks](./01.%20Tasks.md)
   - [01.01. Task CRUD-FRONTEND](./01.%20Tasks/01.01.%20Task%20CRUD-FRONTEND.md)
   - [01.01. Task CRUD-BACKEND](./01.%20Tasks/01.01.%20Task%20CRUD-BACKEND.md)
-- 02. Goals — #TODO
-- 03. Habits — #TODO
-- 04. Calendar — #TODO
-- 05. Today (dashboard) — #TODO
+- [02. Goals](./02.%20Goals.md)
+  - [02.01. Goal CRUD-FRONTEND](./02.%20Goals/02.01.%20Goal%20CRUD-FRONTEND.md)
+  - [02.01. Goal CRUD-BACKEND](./02.%20Goals/02.01.%20Goal%20CRUD-BACKEND.md)
+- [03. Habits](./03.%20Habits.md)
+  - [03.01. Habit CRUD-FRONTEND](./03.%20Habits/03.01.%20Habit%20CRUD-FRONTEND.md)
+  - [03.01. Habit CRUD-BACKEND](./03.%20Habits/03.01.%20Habit%20CRUD-BACKEND.md)
+- [04. Calendar](./04.%20Calendar.md)
+  - [04.01. Calendar-FRONTEND](./04.%20Calendar/04.01.%20Calendar-FRONTEND.md)
+    (без BACKEND — использует обычный CRUD задач, своих серверных
+    методов нет)
+- [05. Today (Dashboard)](./05.%20Today.md)
+  - [05.01. Today Dashboard-FRONTEND](./05.%20Today/05.01.%20Today%20Dashboard-FRONTEND.md)
+    (без BACKEND — собирает уже существующие данные, не хранит своих)
+- [06. Navigation](./06.%20Navigation.md)
+  - [06.01. Sidebar Stats-FRONTEND](./06.%20Navigation/06.01.%20Sidebar%20Stats-FRONTEND.md)
+    (без BACKEND — чисто клиентские вычисления над уже загруженными
+    данными)
 
-Разделы с `#TODO` ещё не задокументированы — будут дописаны по мере того,
-как мы будем возвращаться к соответствующей функциональности (добавлять,
-менять, чинить баги), следуя `<WhenToUpdate>` из `STYLE_GUIDE.md`.
+Дерево полностью покрывает текущий функционал приложения (обновлено
+2026-09-17). Дальше — поддерживать в актуальном состоянии по
+`<WhenToUpdate>` из `STYLE_GUIDE.md`: новая функциональность → новый
+`NN.MM.` файл, изменение поведения → правка существующего файла, а не
+создание нового рядом.
