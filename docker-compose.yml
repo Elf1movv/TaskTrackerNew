@@ -1,8 +1,18 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    # Docker's json-file driver has no size limit by default — the log file
+    # grows forever otherwise. Caps each container at 30MB total (3 files x
+    # 10MB, oldest rotated out), plenty for a low-traffic personal app.
+    max-size: "10m"
+    max-file: "3"
+
 services:
   app:
     image: ghcr.io/elf1movv/tasktracker:latest
     container_name: tasktracker
     restart: unless-stopped
+    logging: *default-logging
     env_file:
       - server/.env
     ports:
@@ -17,6 +27,7 @@ services:
     image: postgres:16-bookworm
     container_name: tasktracker-db
     restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_USER: tasktracker
       POSTGRES_DB: tasktracker
