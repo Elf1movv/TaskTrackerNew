@@ -28,6 +28,24 @@ describe("tasks router", () => {
     expect(list.body).toHaveLength(1)
   })
 
+  it("round-trips dueDate as the same YYYY-MM-DD string, no timezone drift", async () => {
+    const created = await request(app)
+      .post("/api/tasks")
+      .send({ ...baseTask, id: crypto.randomUUID(), dueDate: "2026-01-01" })
+    expect(created.status).toBe(201)
+    expect(created.body.dueDate).toBe("2026-01-01")
+
+    const list = await request(app).get("/api/tasks")
+    expect(list.body[0].dueDate).toBe("2026-01-01")
+  })
+
+  it("rejects a malformed dueDate", async () => {
+    const res = await request(app)
+      .post("/api/tasks")
+      .send({ ...baseTask, id: crypto.randomUUID(), dueDate: "01/01/2026" })
+    expect(res.status).toBe(400)
+  })
+
   it("rejects an invalid task", async () => {
     const res = await request(app)
       .post("/api/tasks")
@@ -95,5 +113,11 @@ describe("tasks router", () => {
     expect(list.body.map((t: { id: string }) => t.id)).toEqual([b.body.id, a.body.id])
     // Titles must be untouched — reorder only ever writes the `order` column.
     expect(list.body.map((t: { title: string }) => t.title)).toEqual(["B", "A"])
+  })
+
+  it("returns a JSON 404 for an unknown path under /api, not the SPA fallback", async () => {
+    const res = await request(app).get("/api/tasks/does/not/exist")
+    expect(res.status).toBe(404)
+    expect(res.body).toEqual({ error: "Not found" })
   })
 })

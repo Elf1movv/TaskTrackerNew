@@ -9,13 +9,17 @@ export const tasksRouter = Router()
 // createdAt, userId) never leave the server. `updatedAt` DOES leave the
 // server now — the client needs it to detect "this record changed
 // elsewhere" before overwriting it (see PATCH /:id below).
+//
+// `dueDate` is stored as a real SQL `date` (see schema.prisma) but the
+// wire format stays the same "YYYY-MM-DD" string the client always used —
+// this mapper is the only place that knows the DB column is now a Date.
 function toClientTask(task: {
   id: string
   title: string
   completed: boolean
   priority: string
   category: string
-  dueDate: string | null
+  dueDate: Date | null
   updatedAt: Date
 }) {
   return {
@@ -24,7 +28,7 @@ function toClientTask(task: {
     completed: task.completed,
     priority: task.priority,
     category: task.category,
-    dueDate: task.dueDate,
+    dueDate: task.dueDate ? task.dueDate.toISOString().slice(0, 10) : null,
     updatedAt: task.updatedAt,
   }
 }

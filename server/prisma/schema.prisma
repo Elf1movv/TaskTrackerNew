@@ -13,7 +13,10 @@ model Task {
   completed Boolean  @default(false)
   priority  String
   category  String
-  dueDate   String?
+  // @db.Date (not DateTime) — no time-of-day component, matches the
+  // client's "YYYY-MM-DD" wire format exactly and avoids timezone drift
+  // that a full timestamp would introduce.
+  dueDate   DateTime? @db.Date
   order     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -22,6 +25,9 @@ model Task {
   // added later (userId made required + a foreign key) without a painful
   // migration once every existing row already has an owner.
   userId String?
+
+  @@index([order])
+  @@index([dueDate])
 }
 
 model Goal {
@@ -40,6 +46,8 @@ model Goal {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   userId     String?
+
+  @@index([order])
 }
 
 model Habit {
@@ -52,4 +60,6 @@ model Habit {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   userId         String?
+
+  @@index([order])
 }
