@@ -5,6 +5,7 @@ import { TaskForm } from "@/features/task-form"
 import { GoalProgressSummary } from "@/widgets/goal-progress-summary"
 import { HabitTrackerGrid } from "@/widgets/habit-tracker-grid"
 import { TodayTasksCard } from "@/widgets/today-tasks-card"
+import { useLanguage } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { TodayProvider, useTodayContext } from "../connectors"
@@ -12,7 +13,8 @@ import { formatHeroDate } from "../lib/formatHeroDate"
 
 function TodayPageContent() {
   const { todayTasks, goals, habits } = useTodayContext()
-  const { weekday, day, monthYear } = formatHeroDate(new Date())
+  const { language, t } = useLanguage()
+  const { weekday, day, monthYear } = formatHeroDate(new Date(), language)
   const [isAdding, setIsAdding] = useState(false)
 
   return (
@@ -33,7 +35,7 @@ function TodayPageContent() {
         </div>
         <Button size="sm" onClick={() => setIsAdding(v => !v)}>
           <Plus size={14} />
-          Add task
+          {t("tasks.addTask")}
         </Button>
       </div>
 

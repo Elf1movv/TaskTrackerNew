@@ -4,26 +4,29 @@
   --font-size: 16px;
   --font-display: "Roboto Slab", Georgia, serif;
   --font-mono: "JetBrains Mono", "Courier New", monospace;
-  --background: #0e0d0b;
-  --foreground: #e4dfd8;
-  --card: #181512;
-  --card-foreground: #e4dfd8;
-  --popover: #1c1915;
-  --popover-foreground: #e4dfd8;
+  /* Warm light palette — same brand orange accent as .dark below, just a
+     light warm-white ground instead of near-black, so the two themes read
+     as siblings rather than two unrelated apps. */
+  --background: #faf6f0;
+  --foreground: #241f19;
+  --card: #ffffff;
+  --card-foreground: #241f19;
+  --popover: #ffffff;
+  --popover-foreground: #241f19;
   --primary: #c97b3a;
   --primary-foreground: #fdf6ef;
-  --secondary: #201e1a;
-  --secondary-foreground: #e4dfd8;
-  --muted: #201e1a;
-  --muted-foreground: #7a7268;
-  --accent: #1d1b17;
-  --accent-foreground: #e4dfd8;
+  --secondary: #f1ebe2;
+  --secondary-foreground: #241f19;
+  --muted: #f1ebe2;
+  --muted-foreground: #8a8074;
+  --accent: #ece4d8;
+  --accent-foreground: #241f19;
   --destructive: #c9503a;
   --destructive-foreground: #fff8f6;
-  --border: rgba(228, 223, 216, 0.08);
-  --input: rgba(228, 223, 216, 0.06);
-  --input-background: #201e1a;
-  --switch-background: #3a3632;
+  --border: rgba(36, 31, 25, 0.1);
+  --input: rgba(36, 31, 25, 0.06);
+  --input-background: #f1ebe2;
+  --switch-background: #d8cfc2;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   --ring: rgba(201, 123, 58, 0.45);
@@ -33,13 +36,13 @@
   --chart-4: #4a8bc9;
   --chart-5: #c9503a;
   --radius: 0.75rem;
-  --sidebar: #181512;
-  --sidebar-foreground: #e4dfd8;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #241f19;
   --sidebar-primary: #c97b3a;
   --sidebar-primary-foreground: #fdf6ef;
-  --sidebar-accent: #1d1b17;
-  --sidebar-accent-foreground: #e4dfd8;
-  --sidebar-border: rgba(228, 223, 216, 0.08);
+  --sidebar-accent: #ece4d8;
+  --sidebar-accent-foreground: #241f19;
+  --sidebar-border: rgba(36, 31, 25, 0.1);
   --sidebar-ring: rgba(201, 123, 58, 0.45);
 }
 
@@ -62,6 +65,8 @@
   --destructive-foreground: #fff8f6;
   --border: rgba(228, 223, 216, 0.08);
   --input: rgba(228, 223, 216, 0.06);
+  --input-background: #201e1a;
+  --switch-background: #3a3632;
   --ring: rgba(201, 123, 58, 0.45);
   --font-weight-medium: 500;
   --font-weight-normal: 400;

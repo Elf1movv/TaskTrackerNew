@@ -9,6 +9,16 @@ const dueDateField = z
   .transform(s => new Date(s))
   .nullable()
 
+// Set by the client to the current instant when `completed` flips to true,
+// and to `null` when it flips back to false — see the comment on
+// Task.completedAt in schema.prisma for why this can't be derived from
+// `updatedAt` instead.
+const completedAtField = z
+  .string()
+  .datetime()
+  .transform(s => new Date(s))
+  .nullable()
+
 const taskFields = z.object({
   id: z.string().uuid(),
   title: z.string().min(1),
@@ -16,6 +26,7 @@ const taskFields = z.object({
   priority: z.enum(["low", "medium", "high"]),
   category: z.string().min(1),
   dueDate: dueDateField,
+  completedAt: completedAtField,
 })
 
 export const createTaskSchema = taskFields

@@ -10,6 +10,7 @@ const baseTask = {
   priority: "medium",
   category: "Work",
   dueDate: null,
+  completedAt: null,
 }
 
 describe("tasks router", () => {
@@ -37,6 +38,20 @@ describe("tasks router", () => {
 
     const list = await request(app).get("/api/tasks")
     expect(list.body[0].dueDate).toBe("2026-01-01")
+  })
+
+  it("round-trips completedAt when a task is marked completed", async () => {
+    const created = await request(app)
+      .post("/api/tasks")
+      .send({ ...baseTask, id: crypto.randomUUID() })
+    expect(created.body.completedAt).toBeNull()
+
+    const completedAt = new Date().toISOString()
+    const res = await request(app)
+      .patch(`/api/tasks/${created.body.id}`)
+      .send({ patch: { completed: true, completedAt }, expectedUpdatedAt: created.body.updatedAt })
+    expect(res.status).toBe(200)
+    expect(res.body.completedAt).toBe(completedAt)
   })
 
   it("rejects a malformed dueDate", async () => {

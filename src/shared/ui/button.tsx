@@ -32,19 +32,29 @@ const buttonVariants = cva(
   },
 )
 
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
+// forwardRef is required here, not optional — Radix's `asChild`/Slot
+// pattern (used by PopoverTrigger, TooltipTrigger, etc.) attaches its own
+// ref to this component's child to manage positioning and outside-click
+// detection; without forwardRef that ref silently goes nowhere and the
+// consuming Radix component breaks (e.g. a Popover that won't open).
+const Button = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<"button"> &
+    VariantProps<typeof buttonVariants> & {
+      asChild?: boolean
+    }
+>(({ className, variant, size, asChild = false, ...props }, ref) => {
   const Comp = asChild ? Slot : "button"
 
-  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />
-}
+  return (
+    <Comp
+      ref={ref}
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+})
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

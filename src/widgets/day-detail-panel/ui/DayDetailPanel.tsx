@@ -5,6 +5,7 @@ import { Plus } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
 import { type Task } from "@/entities/task"
 import { formatDateKey } from "@/shared/lib/date"
+import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { DayTaskRow } from "./components"
@@ -12,6 +13,8 @@ import { DayTaskRow } from "./components"
 export function DayDetailPanel({ day, tasks }: { day: Date; tasks: Task[] }) {
   const [isAdding, setIsAdding] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const { language, t } = useLanguage()
+  const locale = getDateLocale(language)
   const dueDate = formatDateKey(day)
 
   return (
@@ -19,10 +22,10 @@ export function DayDetailPanel({ day, tasks }: { day: Date; tasks: Task[] }) {
       <div className="flex items-start justify-between gap-2 mb-5">
         <div>
           <div css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-1">
-            {format(day, "EEEE")}
+            {format(day, "EEEE", { locale })}
           </div>
           <div css={displayFont} className="text-2xl">
-            {format(day, "MMMM d")}
+            {format(day, "MMMM d", { locale })}
           </div>
         </div>
         <Button
@@ -71,7 +74,11 @@ export function DayDetailPanel({ day, tasks }: { day: Date; tasks: Task[] }) {
           )}
         </div>
       ) : (
-        !isAdding && <div className="text-sm text-muted-foreground text-center py-8">No tasks scheduled</div>
+        !isAdding && (
+          <div className="text-sm text-muted-foreground text-center py-8">
+            {t("calendar.noTasksScheduled")}
+          </div>
+        )
       )}
     </div>
   )

@@ -1,0 +1,81 @@
+import type { en } from "./en"
+
+export const ru: Record<keyof typeof en, string> = {
+  "common.today": "Сегодня",
+  "common.cancel": "Отмена",
+  "common.save": "Сохранить",
+  "common.add": "Добавить",
+  "common.color": "Цвет",
+
+  "nav.today": "Сегодня",
+  "nav.tasks": "Задачи",
+  "nav.goals": "Цели",
+  "nav.calendar": "Календарь",
+
+  "sidebar.statTasksDone": "Задач выполнено",
+  "sidebar.statHabits": "Привычки",
+  "sidebar.statActiveGoals": "Активные цели",
+  "sidebar.theme": "Тема",
+  "sidebar.language": "Язык",
+
+  "tasks.title": "Задачи",
+  "tasks.remainingDone": "осталось: {remaining} · выполнено: {done}",
+  "tasks.addTask": "Добавить задачу",
+  "tasks.status.all": "Все",
+  "tasks.status.active": "Активные",
+  "tasks.status.done": "Готово",
+  "tasks.categoryAll": "Все",
+  "tasks.noTasks": "Нет задач",
+  "tasks.noTasksMarkedAs": " со статусом «{status}»",
+  "tasks.noTasksIn": " в категории {category}",
+  "tasks.loadMore": "Показать ещё {count}",
+
+  "taskForm.placeholder": "Что нужно сделать?",
+  "taskForm.priority": "Приоритет",
+  "taskForm.low": "Низкий",
+  "taskForm.medium": "Средний",
+  "taskForm.high": "Высокий",
+  "taskForm.category": "Категория",
+  "taskForm.newCategoryOption": "+ Новая категория",
+  "taskForm.newCategoryPlaceholder": "Новая категория",
+  "taskForm.due": "Срок",
+  "taskForm.pickDate": "Выбрать дату",
+
+  "goalForm.titlePlaceholder": "Название цели",
+  "goalForm.descriptionPlaceholder": "Описание (необязательно)",
+  "goalForm.targetDate": "Дата завершения",
+
+  "habitForm.namePlaceholder": "Название привычки",
+
+  "habits.sectionLabel": "Привычки",
+  "habits.addHabit": "Добавить привычку",
+  "habits.noHabitsYet": "Пока нет привычек",
+  "habitCard.days": "дней",
+
+  "goals.title": "Цели",
+  "goals.subtitle": "Долгосрочные цели и этапы",
+  "goals.addGoal": "Добавить цель",
+  "goals.noGoalsYet": "Пока нет целей",
+  "goals.milestones": "Этапы",
+  "goals.milestonesCount": "{completed}/{total} этапов",
+  "goals.due": "Срок: {date}",
+  "goals.noMilestonesYet": "Пока нет этапов",
+  "goals.addMilestonePlaceholder": "Добавить этап…",
+  "goalProgress.title": "Прогресс целей",
+
+  "today.title": "Задачи на сегодня",
+  "today.doneCount": "{done}/{total} выполнено",
+  "today.noTasksToday": "На сегодня задач нет",
+
+  "calendar.noTasksScheduled": "Нет запланированных задач",
+
+  "toast.entityTask": "задачу",
+  "toast.entityGoal": "цель",
+  "toast.entityHabit": "привычку",
+  "toast.entityCategory": "категорию",
+  "toast.createFailed": "Не удалось сохранить новую {entity}. Попробуйте ещё раз.",
+  "toast.conflict": "Эта запись была изменена в другом месте — показана последняя версия.",
+  "toast.updateFailed": "Не удалось сохранить изменения. Попробуйте ещё раз.",
+  "toast.deleteFailed": "Не удалось удалить. Попробуйте ещё раз.",
+  "toast.reorderFailed": "Не удалось сохранить новый порядок. Попробуйте ещё раз.",
+}

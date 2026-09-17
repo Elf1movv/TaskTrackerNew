@@ -4,12 +4,14 @@ import { EditTaskButton } from "@/features/edit-task"
 import { TaskToggleCheckbox } from "@/features/toggle-task"
 import { PriorityDot, useTasks, type Task } from "@/entities/task"
 import { useDragReorder } from "@/shared/lib/dnd"
+import { useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 import { Badge } from "@/shared/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
 
 export function TaskRow({ task, today, onEdit }: { task: Task; today: string; onEdit: () => void }) {
   const { reorderTasks } = useTasks()
+  const { t } = useLanguage()
   const { ref, isDragging } = useDragReorder<HTMLDivElement>({
     type: "task",
     id: task.id,
@@ -33,7 +35,7 @@ export function TaskRow({ task, today, onEdit }: { task: Task; today: string; on
         </div>
         {task.dueDate && (
           <div css={monoFont} className="text-xs text-muted-foreground mt-0.5">
-            {task.dueDate === today ? "Today" : task.dueDate}
+            {task.dueDate === today ? t("common.today") : task.dueDate}
           </div>
         )}
       </div>

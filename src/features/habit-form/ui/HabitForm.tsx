@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { HABIT_COLORS, useHabits, type Habit } from "@/entities/habit"
+import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
@@ -8,6 +9,7 @@ import { Label } from "@/shared/ui/label"
 // `habit` to pre-fill the fields and save via update instead of create.
 export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void }) {
   const { addHabit, updateHabit } = useHabits()
+  const { t } = useLanguage()
   const [title, setTitle] = useState(habit?.title ?? "")
   const [icon, setIcon] = useState(habit?.icon ?? "✨")
   const [color, setColor] = useState(habit?.color ?? HABIT_COLORS[0])
@@ -39,13 +41,13 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
           value={title}
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
-          placeholder="Habit name"
+          placeholder={t("habitForm.namePlaceholder")}
           className="border-0 border-b border-border rounded-none bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary flex-1"
         />
       </div>
 
       <div className="flex items-center gap-2">
-        <Label className="text-xs text-muted-foreground font-normal">Color</Label>
+        <Label className="text-xs text-muted-foreground font-normal">{t("common.color")}</Label>
         <div className="flex gap-1.5">
           {HABIT_COLORS.map(c => (
             <button
@@ -67,10 +69,10 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
 
       <div className="flex gap-2 justify-end pt-1">
         <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button size="sm" onClick={handleSubmit} className="text-xs">
-          {habit ? "Save" : "Add habit"}
+          {habit ? t("common.save") : t("habits.addHabit")}
         </Button>
       </div>
     </div>

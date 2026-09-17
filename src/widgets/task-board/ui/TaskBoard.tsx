@@ -2,11 +2,19 @@ import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
-import { TASK_CATEGORIES, type StatusFilter, type Task } from "@/entities/task"
+import { useCategories } from "@/entities/category"
+import { type StatusFilter, type Task } from "@/entities/task"
 import { getTodayKey } from "@/shared/lib/date"
+import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { TaskRow } from "./components"
+
+const STATUS_LABEL_KEYS: Record<StatusFilter, TranslationKey> = {
+  all: "tasks.status.all",
+  active: "tasks.status.active",
+  done: "tasks.status.done",
+}
 
 export function TaskBoard({
   allTasks,
@@ -15,6 +23,9 @@ export function TaskBoard({
   onStatusFilterChange,
   categoryFilter,
   onCategoryFilterChange,
+  hasMoreCompleted,
+  remainingCompletedCount,
+  onLoadMoreCompleted,
 }: {
   allTasks: Task[]
   filteredTasks: Task[]
@@ -22,7 +33,12 @@ export function TaskBoard({
   onStatusFilterChange: (filter: StatusFilter) => void
   categoryFilter: string
   onCategoryFilterChange: (category: string) => void
+  hasMoreCompleted: boolean
+  remainingCompletedCount: number
+  onLoadMoreCompleted: () => void
 }) {
+  const { categories } = useCategories()
+  const { t } = useLanguage()
   const [isAdding, setIsAdding] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const today = getTodayKey()
@@ -32,11 +48,13 @@ export function TaskBoard({
       <div className="flex items-end justify-between mb-8">
         <div>
           <h1 css={displayFont} className="text-3xl mb-1">
-            Tasks
+            {t("tasks.title")}
           </h1>
           <p css={monoFont} className="text-sm text-muted-foreground">
-            {allTasks.filter(t => !t.completed).length} remaining · {allTasks.filter(t => t.completed).length}{" "}
-            done
+            {t("tasks.remainingDone", {
+              remaining: allTasks.filter(t => !t.completed).length,
+              done: allTasks.filter(t => t.completed).length,
+            })}
           </p>
         </div>
         <Button
@@ -47,7 +65,7 @@ export function TaskBoard({
           }}
         >
           <Plus size={14} />
-          Add task
+          {t("tasks.addTask")}
         </Button>
       </div>
 
@@ -79,11 +97,11 @@ export function TaskBoard({
                 : "text-muted-foreground hover:text-foreground hover:bg-accent"
             }`}
           >
-            {f}
+            {t(STATUS_LABEL_KEYS[f])}
           </button>
         ))}
         <div className="w-px h-4 bg-border mx-0.5" />
-        {["all", ...TASK_CATEGORIES].map(c => (
+        {["all", ...categories.map(c => c.name)].map(c => (
           <button
             key={c}
             onClick={() => onCategoryFilterChange(c)}
@@ -93,7 +111,7 @@ export function TaskBoard({
                 : "text-muted-foreground hover:text-foreground hover:bg-accent"
             }`}
           >
-            {c}
+            {c === "all" ? t("tasks.categoryAll") : c}
           </button>
         ))}
       </div>
@@ -120,11 +138,22 @@ export function TaskBoard({
         </AnimatePresence>
         {filteredTasks.length === 0 && (
           <div className="text-center py-16 text-muted-foreground text-sm">
-            No tasks{statusFilter !== "all" ? ` marked as ${statusFilter}` : ""}
-            {categoryFilter !== "all" ? ` in ${categoryFilter}` : ""}
+            {t("tasks.noTasks")}
+            {statusFilter !== "all"
+              ? t("tasks.noTasksMarkedAs", { status: t(STATUS_LABEL_KEYS[statusFilter]) })
+              : ""}
+            {categoryFilter !== "all" ? t("tasks.noTasksIn", { category: categoryFilter }) : ""}
           </div>
         )}
       </div>
+
+      {hasMoreCompleted && (
+        <div className="flex justify-center mt-4">
+          <Button variant="outline" size="sm" onClick={onLoadMoreCompleted} className="text-xs">
+            {t("tasks.loadMore", { count: Math.min(remainingCompletedCount, 10) })}
+          </Button>
+        </div>
+      )}
     </>
   )
 }

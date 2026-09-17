@@ -8,6 +8,9 @@ export interface TasksContextValue {
   setStatusFilter: (filter: StatusFilter) => void
   categoryFilter: string
   setCategoryFilter: (category: string) => void
+  hasMoreCompleted: boolean
+  remainingCompletedCount: number
+  onLoadMoreCompleted: () => void
 }
 
 export const TasksContext = createContext<TasksContextValue | null>(null)

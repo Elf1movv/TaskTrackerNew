@@ -6,6 +6,7 @@ import express from "express"
 import helmet from "helmet"
 import morgan from "morgan"
 import { errorHandler } from "./middleware/errorHandler.js"
+import { categoriesRouter } from "./routes/categories.js"
 import { goalsRouter } from "./routes/goals.js"
 import { habitsRouter } from "./routes/habits.js"
 import { tasksRouter } from "./routes/tasks.js"
@@ -36,6 +37,7 @@ export function createApp() {
   app.use("/api/tasks", tasksRouter)
   app.use("/api/goals", goalsRouter)
   app.use("/api/habits", habitsRouter)
+  app.use("/api/categories", categoriesRouter)
 
   // Anything under /api/ that didn't match a route above is a genuine 404,
   // not a frontend route — return JSON here so it doesn't fall through to

@@ -2,6 +2,7 @@ import { Flame } from "lucide-react"
 import styled from "@emotion/styled"
 import { getStreak, useHabits, type Habit } from "@/entities/habit"
 import { getTodayKey } from "@/shared/lib/date"
+import { useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 
 const Card = styled.button<{ active: boolean; color: string }>`
@@ -15,6 +16,7 @@ const StreakLabel = styled.div<{ color: string }>`
 
 export function HabitCard({ habit }: { habit: Habit }) {
   const { toggleHabit } = useHabits()
+  const { t } = useLanguage()
   const today = getTodayKey()
   const doneToday = habit.completedDates.includes(today)
   const streak = getStreak(habit.completedDates)
@@ -37,7 +39,7 @@ export function HabitCard({ habit }: { habit: Habit }) {
         <span css={monoFont} className="text-xs">
           {streak}
         </span>
-        <span className="text-xs text-muted-foreground">days</span>
+        <span className="text-xs text-muted-foreground">{t("habitCard.days")}</span>
       </StreakLabel>
     </Card>
   )

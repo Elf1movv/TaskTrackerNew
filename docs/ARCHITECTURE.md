@@ -96,6 +96,27 @@ interface Repository<T extends { id: string; updatedAt: string }> {
 **Если где-то в будущем drag-and-drop снова "не работает через раз" —
 первым делом проверяй именно это.**
 
+### Вендорные компоненты без `forwardRef`
+
+Второй повторяющийся класс тихих поломок — вендорный shadcn-компонент,
+который является обычной функцией без `React.forwardRef`. Проявляется
+дважды в этом проекте так:
+
+1. **`AccordionItem`** (`shared/ui/accordion.tsx`) — drag-ref в
+   `GoalAccordionItem.tsx` подключён к обёрточному `<div>`, а не напрямую
+   к `AccordionItem`, ровно по этой причине (см. комментарий в файле)
+2. **`Button`** (`shared/ui/button.tsx`) — не был обёрнут в
+   `forwardRef` до 2026-09-17; ломал любой Radix-компонент, использующий
+   `asChild`/`Slot` для подключения своего ref к дочернему элементу
+   (например `PopoverTrigger asChild`, как в `shared/ui/date-picker.tsx`)
+   — попап просто никогда не открывался, без единой ошибки в консоли,
+   только предупреждение React "Function components cannot be given
+   refs". Исправлено один раз в самом `Button` через `React.forwardRef`.
+
+**Если новый Radix-триггер (`asChild`) не открывается и в консоли нет
+явной ошибки — первым делом проверяй, обёрнут ли компонент, который ты
+передал как дочерний, в `forwardRef`.**
+
 ### Тесты на drag-and-drop хуки
 
 `shared/lib/dnd/*.test.tsx` — два разных вида тестов, каждый решает свою

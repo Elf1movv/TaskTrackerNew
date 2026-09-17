@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { type Habit } from "@/entities/habit"
+import { useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { HabitGridItem } from "./components"
@@ -10,12 +11,13 @@ import { HabitGridItem } from "./components"
 export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
   const [isAdding, setIsAdding] = useState(false)
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
+  const { t } = useLanguage()
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6">
       <div className="flex items-center justify-between mb-5">
         <div css={monoFont} className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground">
-          Habits
+          {t("habits.sectionLabel")}
         </div>
         <Button
           size="sm"
@@ -27,7 +29,7 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
           }}
         >
           <Plus size={13} />
-          Add habit
+          {t("habits.addHabit")}
         </Button>
       </div>
 
@@ -58,7 +60,9 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
           ))}
         </div>
       ) : (
-        !isAdding && <div className="text-center py-8 text-muted-foreground text-sm">No habits yet</div>
+        !isAdding && (
+          <div className="text-center py-8 text-muted-foreground text-sm">{t("habits.noHabitsYet")}</div>
+        )
       )}
     </div>
   )

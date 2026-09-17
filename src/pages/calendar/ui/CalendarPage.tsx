@@ -2,6 +2,7 @@ import { format } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { CalendarGrid } from "@/widgets/calendar-grid"
 import { DayDetailPanel } from "@/widgets/day-detail-panel"
+import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { CalendarProvider, useCalendarContext } from "../connectors"
@@ -19,12 +20,13 @@ function CalendarPageContent() {
     goToToday,
     moveTaskToDay,
   } = useCalendarContext()
+  const { language, t } = useLanguage()
 
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 css={displayFont} className="text-3xl">
-          {format(calMonth, "MMMM yyyy")}
+          {format(calMonth, "MMMM yyyy", { locale: getDateLocale(language) })}
         </h1>
         <div className="flex items-center gap-1">
           <Button
@@ -42,7 +44,7 @@ function CalendarPageContent() {
             css={monoFont}
             className="rounded-xl text-xs text-muted-foreground hover:text-foreground"
           >
-            Today
+            {t("common.today")}
           </Button>
           <Button
             variant="ghost"

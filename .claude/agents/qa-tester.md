@@ -44,6 +44,16 @@ regress:
 6. **Narrow-container layout overflow** — the task form's priority buttons
    must wrap (not overflow) inside narrow containers like the Calendar
    day-detail panel.
+7. **Popovers/tooltips silently not opening** — `shared/ui/button.tsx`'s
+   `Button` (and any other vendored shared component used with Radix's
+   `asChild`/`Slot` pattern, e.g. `PopoverTrigger asChild`) must stay
+   wrapped in `React.forwardRef`. Without it, Radix's ref silently fails
+   to attach and the popover/tooltip/dropdown just never opens — no
+   console error except a React warning about refs on function
+   components. First found via the themed date-picker (`DatePicker` in
+   `shared/ui/date-picker.tsx`), fixed once in `Button` itself. If a new
+   Radix-based trigger stops opening with no visible error, check this
+   first.
 
 ## How to test
 

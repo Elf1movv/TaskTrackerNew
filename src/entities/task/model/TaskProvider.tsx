@@ -19,7 +19,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     (id: string) => {
       const task = tasks.find(t => t.id === id)
       if (!task) return
-      update(id, { completed: !task.completed })
+      const completed = !task.completed
+      update(id, { completed, completedAt: completed ? new Date().toISOString() : null })
     },
     [tasks, update],
   )
@@ -27,10 +28,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const deleteTask = useCallback((id: string) => remove(id), [remove])
 
   const addTask = useCallback(
-    (task: Omit<Task, "id" | "updatedAt">) => {
+    (task: Omit<Task, "id" | "updatedAt" | "completedAt">) => {
       // updatedAt is a placeholder here — usePersistedCollection.create
       // replaces it with the server's real value once the request resolves.
-      create({ ...task, id: generateId(), updatedAt: new Date().toISOString() })
+      create({ ...task, id: generateId(), updatedAt: new Date().toISOString(), completedAt: null })
     },
     [create],
   )

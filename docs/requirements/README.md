@@ -17,6 +17,8 @@
 - [01. Tasks](./01.%20Tasks.md)
   - [01.01. Task CRUD-FRONTEND](./01.%20Tasks/01.01.%20Task%20CRUD-FRONTEND.md)
   - [01.01. Task CRUD-BACKEND](./01.%20Tasks/01.01.%20Task%20CRUD-BACKEND.md)
+  - [01.02. Categories-FRONTEND](./01.%20Tasks/01.02.%20Categories-FRONTEND.md)
+  - [01.02. Categories-BACKEND](./01.%20Tasks/01.02.%20Categories-BACKEND.md)
 - [02. Goals](./02.%20Goals.md)
   - [02.01. Goal CRUD-FRONTEND](./02.%20Goals/02.01.%20Goal%20CRUD-FRONTEND.md)
   - [02.01. Goal CRUD-BACKEND](./02.%20Goals/02.01.%20Goal%20CRUD-BACKEND.md)
@@ -34,6 +36,12 @@
   - [06.01. Sidebar Stats-FRONTEND](./06.%20Navigation/06.01.%20Sidebar%20Stats-FRONTEND.md)
     (без BACKEND — чисто клиентские вычисления над уже загруженными
     данными)
+- [07. Localization](./07.%20Localization.md)
+  - [07.01. Language Toggle-FRONTEND](./07.%20Localization/07.01.%20Language%20Toggle-FRONTEND.md)
+    (без BACKEND — язык не привязан к аккаунту, авторизации нет)
+- [08. Theme](./08.%20Theme.md)
+  - [08.01. Theme Toggle-FRONTEND](./08.%20Theme/08.01.%20Theme%20Toggle-FRONTEND.md)
+    (без BACKEND — тема не привязана к аккаунту, авторизации нет)
 
 Дерево полностью покрывает текущий функционал приложения (обновлено
 2026-09-17). Дальше — поддерживать в актуальном состоянии по

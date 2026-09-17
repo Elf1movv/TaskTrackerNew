@@ -1,9 +1,8 @@
 import { format, isSameDay, isToday } from "date-fns"
-import { type Task } from "@/entities/task"
+import { isTaskOnDay, type Task } from "@/entities/task"
+import { getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 import { CalendarDayCell } from "./components"
-
-const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
 export function CalendarGrid({
   days,
@@ -20,10 +19,12 @@ export function CalendarGrid({
   onSelectDay: (day: Date) => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
 }) {
+  const { language } = useLanguage()
+
   return (
     <div>
       <div className="grid grid-cols-7 mb-1">
-        {WEEKDAYS.map(d => (
+        {getWeekdayLabels(language).map(d => (
           <div
             key={d}
             css={monoFont}
@@ -39,7 +40,7 @@ export function CalendarGrid({
         ))}
         {days.map(day => {
           const dayStr = format(day, "yyyy-MM-dd")
-          const dayTasks = tasks.filter(t => t.dueDate === dayStr)
+          const dayTasks = tasks.filter(t => isTaskOnDay(t, dayStr))
 
           return (
             <CalendarDayCell

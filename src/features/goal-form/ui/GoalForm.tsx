@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { GOAL_COLORS, useGoals, type Goal } from "@/entities/goal"
 import { formatDateKey } from "@/shared/lib/date"
+import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
+import { DatePicker } from "@/shared/ui/date-picker"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
 import { Textarea } from "@/shared/ui/textarea"
@@ -12,6 +14,7 @@ import { Textarea } from "@/shared/ui/textarea"
 // features/milestone-row), not part of this form.
 export function GoalForm({ goal, onDone }: { goal?: Goal; onDone: () => void }) {
   const { addGoal, updateGoal } = useGoals()
+  const { t } = useLanguage()
   const [title, setTitle] = useState(goal?.title ?? "")
   const [description, setDescription] = useState(goal?.description ?? "")
   const [targetDate, setTargetDate] = useState(goal?.targetDate ?? formatDateKey(new Date()))
@@ -34,33 +37,27 @@ export function GoalForm({ goal, onDone }: { goal?: Goal; onDone: () => void }) 
         autoFocus
         value={title}
         onChange={e => setTitle(e.target.value)}
-        placeholder="Goal title"
+        placeholder={t("goalForm.titlePlaceholder")}
         className="border-0 border-b border-border rounded-none bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary"
       />
 
       <Textarea
         value={description}
         onChange={e => setDescription(e.target.value)}
-        placeholder="Description (optional)"
+        placeholder={t("goalForm.descriptionPlaceholder")}
         className="text-sm min-h-16 resize-none"
       />
 
       <div className="flex gap-4 flex-wrap items-center">
         <div className="flex items-center gap-2">
           <Label htmlFor="goal-target-date" className="text-xs text-muted-foreground font-normal">
-            Target date
+            {t("goalForm.targetDate")}
           </Label>
-          <Input
-            id="goal-target-date"
-            type="date"
-            value={targetDate}
-            onChange={e => setTargetDate(e.target.value)}
-            className="text-xs px-2 py-1 h-8 w-auto rounded-lg bg-muted"
-          />
+          <DatePicker id="goal-target-date" value={targetDate} onChange={setTargetDate} />
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Color</span>
+          <span className="text-xs text-muted-foreground">{t("common.color")}</span>
           <div className="flex gap-1.5">
             {GOAL_COLORS.map(c => (
               <button
@@ -83,10 +80,10 @@ export function GoalForm({ goal, onDone }: { goal?: Goal; onDone: () => void }) 
 
       <div className="flex gap-2 justify-end pt-1">
         <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button size="sm" onClick={handleSubmit} className="text-xs">
-          {goal ? "Save" : "Add goal"}
+          {goal ? t("common.save") : t("goals.addGoal")}
         </Button>
       </div>
     </div>

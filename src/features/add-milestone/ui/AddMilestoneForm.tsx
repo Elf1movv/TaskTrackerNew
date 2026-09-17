@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
 import { useGoals } from "@/entities/goal"
+import { useLanguage } from "@/shared/lib/i18n"
 import { Input } from "@/shared/ui/input"
 
 export function AddMilestoneForm({ goalId }: { goalId: string }) {
   const { addMilestone } = useGoals()
+  const { t } = useLanguage()
   const [title, setTitle] = useState("")
 
   function handleSubmit() {
@@ -19,7 +21,7 @@ export function AddMilestoneForm({ goalId }: { goalId: string }) {
         value={title}
         onChange={e => setTitle(e.target.value)}
         onKeyDown={e => e.key === "Enter" && handleSubmit()}
-        placeholder="Add a milestone…"
+        placeholder={t("goals.addMilestonePlaceholder")}
         className="text-sm h-8 bg-muted border-0"
       />
       <button

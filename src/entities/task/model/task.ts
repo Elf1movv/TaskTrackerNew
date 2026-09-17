@@ -7,6 +7,7 @@ export interface Task {
   priority: Priority
   category: string
   dueDate: string | null
+  completedAt: string | null
   updatedAt: string
 }
 
@@ -15,7 +16,5 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
   medium: "#c97b3a",
   high: "#c9503a",
 }
-
-export const TASK_CATEGORIES = ["Work", "Personal", "Health", "Learning"]
 
 export type StatusFilter = "all" | "active" | "done"

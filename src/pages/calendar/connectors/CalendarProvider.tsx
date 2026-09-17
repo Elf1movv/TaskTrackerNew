@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { addMonths, subMonths } from "date-fns"
-import { useTasks } from "@/entities/task"
+import { isTaskOnDay, useTasks } from "@/entities/task"
 import { formatDateKey } from "@/shared/lib/date"
 import { buildMonthGrid } from "../lib/buildMonthGrid"
 import { CalendarContext } from "./calendarContext"
@@ -14,7 +14,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const selectedTasks = useMemo(() => {
     const selectedKey = formatDateKey(selectedDay)
-    return tasks.filter(t => t.dueDate === selectedKey)
+    return tasks.filter(t => isTaskOnDay(t, selectedKey))
   }, [tasks, selectedDay])
 
   const selectDay = useCallback((day: Date) => setSelectedDay(day), [])

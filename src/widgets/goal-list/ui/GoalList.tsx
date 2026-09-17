@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
 import { GoalForm } from "@/features/goal-form"
 import { type Goal } from "@/entities/goal"
+import { useLanguage } from "@/shared/lib/i18n"
 import { Accordion } from "@/shared/ui/accordion"
 import { Button } from "@/shared/ui/button"
 import { GoalAccordionItem } from "./components"
@@ -14,6 +15,7 @@ export interface GoalListItem extends Goal {
 export function GoalList({ goals }: { goals: GoalListItem[] }) {
   const [isAdding, setIsAdding] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
+  const { t } = useLanguage()
 
   return (
     <div>
@@ -26,7 +28,7 @@ export function GoalList({ goals }: { goals: GoalListItem[] }) {
           }}
         >
           <Plus size={14} />
-          Add goal
+          {t("goals.addGoal")}
         </Button>
       </div>
 
@@ -57,7 +59,9 @@ export function GoalList({ goals }: { goals: GoalListItem[] }) {
           ))}
         </Accordion>
       ) : (
-        !isAdding && <div className="text-center py-16 text-muted-foreground text-sm">No goals yet</div>
+        !isAdding && (
+          <div className="text-center py-16 text-muted-foreground text-sm">{t("goals.noGoalsYet")}</div>
+        )
       )}
     </div>
   )
