@@ -1,7 +1,10 @@
-import { defineConfig } from "vite"
 import path from "path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
+// vitest/config re-exports Vite's defineConfig with an added `test` field,
+// so build and test config can share the same plugins/aliases below instead
+// of duplicating them in a separate vitest.config.ts.
+import { defineConfig } from "vitest/config"
 
 function figmaAssetResolver() {
   return {
@@ -42,5 +45,15 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:3001",
     },
+  },
+
+  test: {
+    environment: "jsdom",
+    // Without an explicit include, Vitest scans the whole project and picks
+    // up server/'s test files too — those run destructive Prisma calls
+    // (deleteMany in beforeEach) and are only safe under server's own
+    // vitest.config.ts, which enforces a dedicated test database via
+    // server/vitest.setup.ts. Root's test run must never see them.
+    include: ["src/**/*.test.{ts,tsx}"],
   },
 })

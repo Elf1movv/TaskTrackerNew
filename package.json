@@ -11,6 +11,7 @@
     "lint:fix": "eslint . --fix",
     "fsd-lint": "steiger ./src",
     "format": "prettier --write .",
+    "test": "vitest run",
     "prepare": "husky"
   },
   "dependencies": {
@@ -76,6 +77,10 @@
     "@eslint/js": "^10.0.1",
     "@feature-sliced/steiger-plugin": "^0.7.0",
     "@tailwindcss/vite": "4.1.12",
+    "@testing-library/react": "16.3.3",
+    "jsdom": "30.1.0",
+    "react-dnd-test-backend": "16.0.1",
+    "vitest": "4.1.11",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "@vitejs/plugin-react": "4.7.0",
@@ -106,5 +111,10 @@
     "*.{json,css,md}": [
       "prettier --write --ignore-unknown"
     ]
+  },
+  "allowScripts": {
+    "@tailwindcss/oxide@4.1.12": true,
+    "esbuild@0.25.12": true,
+    "fsevents@2.3.3": true
   }
 }
