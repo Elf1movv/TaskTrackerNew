@@ -19,9 +19,9 @@
   действий с нашей стороны обновится сам заранее)
 
 Никаких управляемых платформ (Vercel/Railway/Heroku и т.п.) — осознанный
-выбор, см. `docs/ARCHITECTURE.md` и историю решений. Всё своё: свой
-Docker-контейнер с приложением, своя PostgreSQL (нативно, не в
-контейнере — осознанно, см. `docs/ROADMAP.md`), свой nginx на своём VPS.
+выбор, см. `docs/ARCHITECTURE.md` и историю решений. Всё своё: приложение
+и PostgreSQL — оба в Docker-контейнерах (с 2026-09-17), свой nginx на
+своём VPS.
 
 ## Доступ
 
@@ -49,26 +49,54 @@ Docker-контейнер с приложением, своя PostgreSQL (нат
   ничего не использует его напрямую (сборка происходит в GitHub
   Actions, приложение — в контейнере), можно оставить для отладки/
   разовых команд или удалить — не мешает
-- **PostgreSQL 16** — через apt, кластер БД в `/var/lib/postgresql/16/main`,
-  нативно на хосте (не в контейнере)
+- **PostgreSQL 16** — через apt, кластер БД в `/var/lib/postgresql/16/main`.
+  **С 2026-09-17 остановлен и не используется приложением** — сама база
+  теперь в Docker-контейнере (см. "База данных" ниже). Оставлен
+  установленным, но выключенным, как страховка отката — данные на диске
+  не удалялись, будут физически стёрты не раньше начала октября 2026
+  (двухнедельный период наблюдения после переключения, см. план в
+  истории коммитов)
 - **nginx** — через apt, версия 1.24
 - **certbot** + `python3-certbot-nginx` — для HTTPS, уже запущен и
   настроен (см. раздел "nginx: reverse proxy + HTTPS" ниже)
 
 ## База данных
 
-- БД: `tasktracker`, пользователь: `tasktracker` (отдельный от системного
-  `postgres`)
-- Пароль сгенерирован случайно на сервере и лежит **только на сервере**
-  в `/home/deploy/db_url.txt` (chmod 600, владелец `deploy`) — не в git,
-  не в чате
-- Строка подключения (`DATABASE_URL`) собирается из этого файла и кладётся
-  в `server/.env` на сервере
+**С 2026-09-17 PostgreSQL работает в Docker-контейнере** (`tasktracker-db`,
+образ `postgres:16-bookworm`) — та же мажорная версия, что была у
+нативной установки (обязательно для совместимости дампа при переносе).
+
+- БД: `tasktracker`, пользователь: `tasktracker`
+- Данные хранятся в именованном Docker volume `tasktracker-db-data`
+  (**не** bind mount) — управляется самим Docker, живёт независимо от
+  жизненного цикла контейнера
+- Пароль лежит в `/var/www/tasktracker/db.env` на сервере (gitignored,
+  отдельно от `server/.env` — меньше площадь у секрета), и всё ещё
+  дублируется в `/home/deploy/db_url.txt` (исторически, для справки)
+- `db` **не публикует никакого порта на хост** — недоступен ни снаружи
+  VPS, ни даже с самого хоста напрямую, только изнутри Docker-сети
+  `tasktracker-net` по имени сервиса `db`. Строже, чем было у нативной
+  версии (та была ограничена `listen_addresses = localhost`, но
+  технически имела открытый порт на loopback)
+
+**⚠️ Самая опасная команда в этой системе**: `docker compose down -v`
+или `docker volume rm tasktracker-db-data` — необратимо удаляет все
+данные. Обычный `docker compose down` (без `-v`) безопасен, удаляет
+только контейнеры и сеть, volume не трогает.
+
+**⚠️ Gotcha с именем volume**: если в `docker-compose.yml` когда-нибудь
+уберётся явный `name: tasktracker-db-data` у volume — Docker Compose
+молча подставит префикс имени проекта (`tasktracker_tasktracker-db-data`),
+и `docker compose up -d db` создаст **новый пустой** volume вместо
+реального. Всё будет выглядеть рабочим (healthcheck зелёный, миграции
+применятся к пустой схеме без ошибок) — обнаружится только когда
+откроешь приложение и увидишь пустоту. Всегда держать `name:` явным.
 
 ### Бэкапы
 
 Скрипт `/home/deploy/backup-db.sh` на сервере, запускается ежедневно в
-03:00 через `crontab -l` (пользователь `deploy`):
+03:00 через `crontab -l` (пользователь `deploy`), теперь снимает дамп
+**изнутри контейнера**, не с хоста:
 
 ```bash
 #!/bin/bash
@@ -77,20 +105,29 @@ set -euo pipefail
 BACKUP_DIR=/home/deploy/backups
 mkdir -p "$BACKUP_DIR"
 
-export $(grep DATABASE_URL /var/www/tasktracker/server/.env | xargs)
+cd /var/www/tasktracker
+DB_PASSWORD=$(grep DATABASE_URL server/.env | sed -E 's#.*://[^:]+:([^@]+)@.*#\1#')
 
 TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
-pg_dump "$DATABASE_URL" | gzip > "$BACKUP_DIR/tasktracker_${TIMESTAMP}.sql.gz"
+docker compose exec -T -e PGPASSWORD="$DB_PASSWORD" db \
+  pg_dump -h localhost -U tasktracker tasktracker \
+  | gzip > "$BACKUP_DIR/tasktracker_${TIMESTAMP}.sql.gz"
 
 # Храним последние 14 бэкапов, остальные удаляем
 ls -1t "$BACKUP_DIR"/tasktracker_*.sql.gz | tail -n +15 | xargs -r rm --
 ```
 
+`-T` обязателен — у cron нет TTY, а `docker compose exec` по умолчанию
+пытается его выделить. Формат бэкапа не изменился (`.sql.gz`, обычный
+SQL) — протестировано восстановление свежего бэкапа в отдельный
+тестовый контейнер сразу после миграции (2026-09-17), прошло успешно.
+
 Бэкапы лежат в `/home/deploy/backups/`, хранится последние 14 штук.
 **Ограничение**: бэкапы на том же сервере, что и сама БД — не защищают
 от потери VPS целиком, только от случайной порчи данных на живом
-сервере. Восстановление и рекомендация по скачиванию бэкапов на свой
-компьютер — `PROJECT_BRAIN.md`, раздел 6.4.
+сервере. Восстановление (команда изменилась — теперь через
+`docker compose exec`, не напрямую `psql`) и рекомендация по скачиванию
+бэкапов на свой компьютер — `PROJECT_BRAIN.md`, раздел 7.4.
 
 ## Расположение приложения
 
@@ -112,11 +149,20 @@ git clone https://github.com/Elf1movv/TaskTrackerNew.git /var/www/tasktracker
 `/var/www/tasktracker/server/.env` — **всё ещё используется**,
 контейнер подключает его через `env_file` в `docker-compose.yml`:
 ```
-DATABASE_URL="postgresql://tasktracker:<пароль>@localhost:5432/tasktracker"
+DATABASE_URL="postgresql://tasktracker:<пароль>@db:5432/tasktracker"
 PORT=3001
 ```
+Хост в `DATABASE_URL` — `db` (имя сервиса в Docker-сети), не `localhost`
+и не IP: с 2026-09-17, после перехода на bridge-сеть, `app` достаёт базу
+по внутреннему DNS Docker, не через loopback хоста.
 
-## Docker: образ и контейнер
+`/var/www/tasktracker/db.env` — новый файл (тоже gitignored), пароль для
+самого контейнера `db`:
+```
+POSTGRES_PASSWORD=<тот же пароль>
+```
+
+## Docker: образы и контейнеры
 
 Приложение (фронтенд + бэкенд одним процессом, см.
 `docs/ARCHITECTURE.md`) собирается в один Docker-образ по
@@ -129,33 +175,75 @@ PORT=3001
 тегами `:latest` и `:<sha>` для отката), пакет сделан публичным вручную
 через настройки GitHub (Packages → tasktracker → Package settings →
 Change visibility → Public) — без этого VPS не смог бы `docker compose
-pull` без учётных данных для реестра.
+pull` без учётных данных для реестра. Postgres берётся готовым из
+Docker Hub (`postgres:16-bookworm`), ничего дополнительно собирать
+не нужно.
 
 `docker-compose.yml` (в корне репозитория, доезжает до VPS через
-`git pull`, лежит в `/var/www/tasktracker/docker-compose.yml`):
+`git pull`, лежит в `/var/www/tasktracker/docker-compose.yml`) — с
+2026-09-17 два сервиса:
 ```yaml
 services:
   app:
     image: ghcr.io/elf1movv/tasktracker:latest
     container_name: tasktracker
-    network_mode: host
     restart: unless-stopped
     env_file:
       - server/.env
+    ports:
+      - "127.0.0.1:3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - tasktracker-net
+
+  db:
+    image: postgres:16-bookworm
+    container_name: tasktracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tasktracker
+      POSTGRES_DB: tasktracker
+    env_file:
+      - db.env
+    volumes:
+      - tasktracker-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tasktracker -d tasktracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tasktracker-net
+
+networks:
+  tasktracker-net:
+    name: tasktracker-net
+
+volumes:
+  tasktracker-db-data:
+    name: tasktracker-db-data
 ```
 
-`network_mode: host` — контейнер работает в сетевом пространстве самого
-VPS: достаёт PostgreSQL через `127.0.0.1:5432`, слушает `3001` напрямую,
-точно как раньше bare-процесс — **nginx не тронут вообще**. Плата за
-эту простоту: изнутри контейнера видны все сетевые интерфейсы хоста, не
-только его собственные — приемлемо для одного доверенного контейнера на
-своём VPS, но при контейнеризации Postgres (следующий шаг, см.
-`docs/ROADMAP.md`) стоит будет пересмотреть на bridge-сеть.
+**Сеть — bridge, не host** (сменилось при добавлении `db`): раньше был
+`network_mode: host`, потому что Postgres был нативным и контейнеру
+нужен был доступ к `127.0.0.1` хоста. Как только Postgres тоже
+переехал в контейнер, эта причина исчезла — `app` публикует только
+`127.0.0.1:3001` (то же самое, что видел nginx раньше — nginx не
+тронут), `db` не публикует вообще ничего, виден только изнутри
+Docker-сети. Побочный плюс: `app`-контейнер больше не видит все сетевые
+интерфейсы хоста, только свою изолированную сеть.
 
-`restart: unless-stopped` — сам Docker перезапускает контейнер при
-падении и после перезагрузки VPS (проверено: `sudo reboot`, контейнер
-поднялся сам, без вмешательства) — отдельный systemd-юнит для этого
-больше не нужен (старый `tasktracker.service` удалён, см. ниже).
+`depends_on: condition: service_healthy` — `app` не запустится, пока
+`db` не пройдёт `pg_isready`-healthcheck; нужен Compose V2 (плагин, не
+старый отдельный `docker-compose`) — уже используется, подтверждено
+(`docker compose version` → v5.5.1).
+
+`restart: unless-stopped` — сам Docker перезапускает оба контейнера при
+падении и после перезагрузки VPS (проверено дважды: `sudo reboot` и до,
+и после переноса базы — оба раза поднялись сами, без вмешательства).
 
 Управление:
 ```bash
@@ -164,14 +252,26 @@ docker compose -f /var/www/tasktracker/docker-compose.yml logs -f
 docker compose -f /var/www/tasktracker/docker-compose.yml restart
 ```
 
-**Известный gotcha при первой миграции (2026-09-16)**: старый
-`tasktracker.service` (bare-процесс) и новый контейнер несколько минут
-одновременно боролись за порт `3001` (оба слушают `0.0.0.0:3001` через
-`network_mode: host`) — контейнер уходил в restart-loop с растущим
-backoff, пока старый systemd-юнит не был явно остановлен
-(`sudo systemctl stop tasktracker`). Если когда-нибудь понадобится
-переносить деплой на новый VPS — сначала полностью убедиться, что
-ничего больше не слушает `3001`, прежде чем поднимать контейнер.
+**Осознанно НЕ добавлено в автопайплайн**: `docker volume prune` — без
+явного указания имени удаляет любой неприсоединённый volume без
+подтверждения; если `db` хоть раз не поднимется вовремя во время
+автодеплоя, это могло бы снести продовые данные без участия человека.
+Чистка диска — только вручную, по конкретному имени volume.
+
+**Известные gotcha (из миграции 2026-09-16 — 2026-09-17)**:
+1. При первом переходе на Docker: старый `tasktracker.service`
+   (bare-процесс) и новый контейнер несколько минут боролись за порт
+   `3001` — контейнер уходил в restart-loop, пока старый systemd-юнит
+   не был явно остановлен. При переносе на новый VPS — сначала
+   убедиться, что ничего больше не слушает `3001`
+2. При переносе базы в контейнер: `name:` у volume — обязателен (см.
+   раздел "База данных" выше) — без него легко тихо получить пустую
+   базу вместо реальной
+3. Если когда-нибудь "временно для отладки" поменяешь
+   `127.0.0.1:3001` на `0.0.0.0:3001` — Docker умеет вставлять
+   iptables-правила, обходящие ограничения `ufw` именно для портов,
+   опубликованных на `0.0.0.0`. Не делать этого без явного понимания
+   последствий
 
 ## nginx: reverse proxy + HTTPS
 
@@ -268,10 +368,17 @@ New repository secret) — добавлены владельцем репози�
 
 - Гранулярный API (см. `docs/ARCHITECTURE.md`) — задеплоен и проверен в
   проде 2026-09-16
-- Переход на Docker-деплой — сделан и проверен в проде 2026-09-16:
-  образ собирается в GitHub Actions, пушится в GHCR (пакет публичный),
-  VPS только `pull` + `up -d`; старый `tasktracker.service` удалён;
-  переживание перезагрузки VPS проверено (`sudo reboot` → контейнер
-  поднялся сам); автодеплой через пуш в `main` проверен end-to-end
-- PostgreSQL пока нативный (не в контейнере) — осознанно, следующий шаг
-  из `docs/ROADMAP.md`
+- Переход на Docker-деплой (приложение) — сделан и проверен в проде
+  2026-09-16: образ собирается в GitHub Actions, пушится в GHCR (пакет
+  публичный), VPS только `pull` + `up -d`; старый `tasktracker.service`
+  удалён; переживание перезагрузки VPS проверено; автодеплой через пуш
+  в `main` проверен end-to-end
+- Контейнеризация PostgreSQL — сделана и проверена в проде 2026-09-17:
+  реальные продовые данные перенесены (репетиция на копии → реальное
+  переключение с построчной сверкой количества записей на каждом шаге
+  → пост-деплой верификация), сеть переведена на bridge, backup-скрипт
+  переписан под контейнер и протестирован (создание + восстановление в
+  отдельный контейнер), переживание перезагрузки VPS проверено с обоими
+  контейнерами. Нативный PostgreSQL остановлен, но **не удалён** — как
+  минимум до начала октября 2026 (двухнедельный период наблюдения),
+  данные на диске нетронуты как страховка отката

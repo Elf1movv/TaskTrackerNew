@@ -49,9 +49,9 @@
 | Архитектура фронта | Feature-Sliced Design (FSD) v2.1 | Чёткие правила, куда класть код — не даёт превратиться в кашу по мере роста |
 | Бэкенд | Node.js + TypeScript + Express 5 | Один язык (TS) на весь стек — типы переиспользуются без дублирования |
 | ORM | Prisma | Пишешь `db.task.findMany()` вместо ручного SQL |
-| База данных | PostgreSQL | Стандартная реляционная БД, нативно установлена на сервере (не в Docker) |
+| База данных | PostgreSQL | Стандартная реляционная БД, с 2026-09-17 в Docker-контейнере (было нативно) |
 | Деплой | Свой VPS (HipHosting), без управляемых платформ (не Vercel/Railway) | Осознанный выбор владельца: "работает на наших мощностях, без посредников" |
-| Контейнеризация | Docker (приложение) + GitHub Container Registry | Воспроизводимый деплой — образ собран один раз в CI, переезд на новый сервер = "поставь Docker, запусти образ". PostgreSQL пока нативно, не в контейнере — осознанно |
+| Контейнеризация | Docker (приложение + PostgreSQL) + GitHub Container Registry | Воспроизводимый деплой — образы собраны/взяты один раз, переезд на новый сервер = "поставь Docker, запусти `docker compose up`" |
 | Reverse proxy | nginx | Принимает интернет-трафик, передаёт на Node |
 | HTTPS | certbot (Let's Encrypt), бесплатно, автопродление | — |
 | CI/CD | GitHub Actions | Автодеплой при пуше в `main` |
@@ -260,23 +260,31 @@ TaskTrackerNew-main/
   автоматическое (systemd-таймер certbot)
 - **Доступ**: только по SSH-ключу (пароль и root-вход отключены);
   рабочий пользователь `deploy`
-- **База данных**: PostgreSQL, БД `tasktracker`, пользователь `tasktracker`,
-  пароль лежит только на сервере в `/home/deploy/db_url.txt`
-- **Бэкапы БД**: ежедневно в 03:00 (cron), `pg_dump` →
+- **База данных**: PostgreSQL, БД `tasktracker`, пользователь
+  `tasktracker` — **с 2026-09-17 в Docker-контейнере** (`tasktracker-db`,
+  образ `postgres:16-bookworm`), данные в именованном volume
+  `tasktracker-db-data`, недоступна ни снаружи VPS, ни с самого хоста —
+  только изнутри Docker-сети. Пароль в `/var/www/tasktracker/db.env` на
+  сервере. Нативная установка PostgreSQL остановлена, но не удалена —
+  страховка отката минимум до начала октября 2026
+- **Бэкапы БД**: ежедневно в 03:00 (cron), дамп снимается изнутри
+  контейнера (`docker compose exec db pg_dump ...`) →
   `/home/deploy/backups/`, хранится последние 14 штук — см. раздел 7.4
   ниже про то, чем это НЕ защищает
-- **Приложение**: работает в Docker-контейнере (`network_mode: host`),
-  не bare-процессом — образ собирается в GitHub Actions, пушится в
-  GitHub Container Registry (`ghcr.io/elf1movv/tasktracker`), на VPS
-  только `docker compose pull` + `up -d`. `restart: unless-stopped`
-  переживает падения и перезагрузку VPS сам, без systemd-юнита
-  (старый `tasktracker.service` удалён)
+- **Приложение и база**: оба работают в Docker-контейнерах на общей
+  bridge-сети (`tasktracker-net`) — образ приложения собирается в
+  GitHub Actions, пушится в GitHub Container Registry
+  (`ghcr.io/elf1movv/tasktracker`), Postgres берётся готовым с Docker
+  Hub. На VPS только `docker compose pull` + `up -d`. `restart:
+  unless-stopped` переживает падения и перезагрузку VPS сам, без
+  systemd-юнита (старый `tasktracker.service` удалён)
 - **CI/CD**: пуш в `main` → GitHub Actions (два джоба: сборка+пуш образа,
   затем деплой по SSH отдельным deploy-ключом, не личным) → `git pull`
   на VPS (за `docker-compose.yml`) + `docker compose pull` + `prisma
   migrate deploy` (одноразовый запуск контейнера) + `docker compose up
   -d`, проверено рабочим вживую (гранулярный API — 2026-09-16, переход
-  на Docker — 2026-09-16)
+  на Docker приложения — 2026-09-16, перенос PostgreSQL в контейнер —
+  2026-09-17, включая реальную миграцию продовых данных)
 
 ---
 
@@ -307,21 +315,24 @@ TaskTrackerNew-main/
 
 **Что не потеряно**: весь код — в GitHub (`github.com/Elf1movv/TaskTrackerNew`);
 собранный **образ приложения уже лежит готовым** в GitHub Container
-Registry (`ghcr.io/elf1movv/tasktracker:latest`) — не нужно пересобирать
-фронтенд/бэкенд на новом сервере вручную, только `docker pull`; вся
-остальная инфраструктура **дословно** описана в `docs/DEPLOYMENT.md`
-(конфиг nginx, установка Docker/PostgreSQL/certbot); последний бэкап
-БД — если успел скачать его с сервера до потери (см. 7.4, это важное
-"если").
+Registry (`ghcr.io/elf1movv/tasktracker:latest`), а образ PostgreSQL —
+готовым в Docker Hub (`postgres:16-bookworm`) — не нужно пересобирать
+или устанавливать ни то, ни другое вручную, только `docker compose
+pull`; вся остальная инфраструктура **дословно** описана в
+`docs/DEPLOYMENT.md` (конфиг nginx, установка Docker/certbot);
+последний бэкап БД — если успел скачать его с сервера до потери (см.
+7.4, это важное "если").
 
 **Что делать**:
 1. Арендовать новый VPS (тот же HipHosting или любой другой — инструкция
    не завязана на конкретного провайдера)
-2. Пройти `docs/DEPLOYMENT.md` заново — установить Docker, PostgreSQL,
-   nginx, certbot (приложение отдельно пересобирать не нужно — только
-   `docker compose pull` готового образа), создать БД, склонировать
-   репозиторий (нужен для `docker-compose.yml` и конфигов), поднять
-   контейнер (`docker compose up -d`)
+2. Пройти `docs/DEPLOYMENT.md` заново — установить Docker, nginx,
+   certbot (ни приложение, ни PostgreSQL отдельно ставить/собирать не
+   нужно — оба идут одним `docker compose pull` готовых образов),
+   склонировать репозиторий (нужен для `docker-compose.yml` и
+   конфигов), создать `server/.env` и `db.env` с новым паролем,
+   поднять весь стек (`docker compose up -d` — создаст новый пустой
+   volume для базы)
 3. Восстановить БД из последнего скачанного бэкапа (команда — в 7.4)
 4. Поменять DNS A-запись на reg.ru на IP нового сервера
 5. Заново запустить `certbot --nginx -d mytracker.space -d www.mytracker.space`
@@ -351,11 +362,15 @@ Registry (`ghcr.io/elf1movv/tasktracker:latest`) — не нужно перес�
 нём тоже пропадут вместе с ним. Это НЕ защита от потери сервера
 целиком, только от "случайно снёс данные, а сервер жив".
 
-**Восстановить бэкап на живом сервере**:
+**Восстановить бэкап на живом сервере** (с 2026-09-17 база в контейнере —
+восстанавливаем через `docker compose exec`, не напрямую `psql` на хосте):
 ```bash
 ssh deploy@185.65.202.121
+cd /var/www/tasktracker
+DB_PASSWORD=$(grep DATABASE_URL server/.env | sed -E 's#.*://[^:]+:([^@]+)@.*#\1#')
 gunzip -c /home/deploy/backups/tasktracker_<дата>.sql.gz | \
-  psql "$(grep DATABASE_URL /var/www/tasktracker/server/.env | cut -d= -f2- | tr -d '"')"
+  docker compose exec -T -e PGPASSWORD="$DB_PASSWORD" db \
+  psql -h localhost -U tasktracker -d tasktracker
 ```
 
 **Чтобы защититься и от потери сервера целиком** — периодически
