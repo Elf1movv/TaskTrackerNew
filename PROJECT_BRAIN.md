@@ -278,17 +278,20 @@ TaskTrackerNew-main/
 ├── src/                       фронтенд (React, FSD-слои: app/pages/
 │                               widgets/features/entities/shared)
 ├── server/                    бэкенд (Express + Prisma)
-│   ├── prisma/schema.prisma   модели данных (Task/Goal/Habit)
-│   └── src/routes/            GET/PUT обработчики на каждую сущность
+│   ├── prisma/schema.prisma   модели данных (Task/Goal/Habit/Category)
+│   └── src/routes/            гранулярный REST на каждую сущность
+│                               (POST/PATCH :id/DELETE :id/PATCH reorder)
 ├── docs/
 │   ├── ARCHITECTURE.md        ПОЧЕМУ технически всё устроено именно так
 │   ├── DEPLOYMENT.md          ТОЧНАЯ инфраструктура прода (конфиги дословно)
-│   ├── REPO_STRUCTURE.md      что за что отвечает в самом репозитории
-│   ├── ROADMAP.md             известные слабые места + план на будущее
-│   │                           (гранулярный API, логи, Docker)
+│   ├── REPO_STRUCTURE.md      3 логических слоя репозитория (что за что отвечает)
+│   ├── FILE_GUIDE.md          каждый файл/папка в корне и в src/server —
+│   │                           что это, зачем, как использовать
+│   ├── ROADMAP.md             технический долг — что уже закрыто
+│   ├── BACKLOG.md             продуктовые фичи в планах (авторизация и т.д.)
 │   └── requirements/          ЧТО именно делает каждая фича, по пунктам
 │       ├── STYLE_GUIDE.md     как писать эти доки
-│       └── 01. Tasks/         пример — остальные фичи дополняются по ходу
+│       └── 01. Tasks/ … 08. Theme/   дерево фич, дополняется по ходу
 ├── .claude/
 │   ├── agents/                см. 3.4 выше
 │   └── skills/coding-mentor/  как AI должен объяснять код этому владельцу
@@ -296,7 +299,8 @@ TaskTrackerNew-main/
 ```
 
 **Порядок чтения, если нужно разобраться с нуля**: этот файл → `docs/ARCHITECTURE.md`
-→ `docs/DEPLOYMENT.md` → конкретный файл в `docs/requirements/` под ту
+→ `docs/FILE_GUIDE.md` (если хочешь понять каждый конкретный файл) →
+`docs/DEPLOYMENT.md` → конкретный файл в `docs/requirements/` под ту
 фичу, с которой работаешь.
 
 ---
