@@ -1,10 +1,12 @@
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
+import { toNodeHandler } from "better-auth/node"
 import cors from "cors"
 import express from "express"
 import helmet from "helmet"
 import morgan from "morgan"
+import { auth } from "./auth.js"
 import { errorHandler } from "./middleware/errorHandler.js"
 import { categoriesRouter } from "./routes/categories.js"
 import { goalsRouter } from "./routes/goals.js"
@@ -28,6 +30,12 @@ export function createApp() {
   app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"))
   app.use(helmet())
   app.use(cors({ origin: ALLOWED_ORIGINS }))
+
+  // Registered before express.json() deliberately — Better Auth reads the
+  // raw request body itself, and a body-parser mounted first would already
+  // have consumed the stream by the time this handler runs.
+  app.all("/api/auth/*splat", toNodeHandler(auth))
+
   app.use(express.json())
 
   app.get("/api/health", (_req, res) => {

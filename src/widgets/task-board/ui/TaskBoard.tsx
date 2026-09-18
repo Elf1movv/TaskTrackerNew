@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
 import { useCategories } from "@/entities/category"
 import { type StatusFilter, type Task } from "@/entities/task"
@@ -37,7 +37,7 @@ export function TaskBoard({
   remainingCompletedCount: number
   onLoadMoreCompleted: () => void
 }) {
-  const { categories } = useCategories()
+  const { categories, deleteCategory } = useCategories()
   const { t } = useLanguage()
   const [isAdding, setIsAdding] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
@@ -101,18 +101,39 @@ export function TaskBoard({
           </button>
         ))}
         <div className="w-px h-4 bg-border mx-0.5" />
-        {["all", ...categories.map(c => c.name)].map(c => (
-          <button
-            key={c}
-            onClick={() => onCategoryFilterChange(c)}
-            className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
-              categoryFilter === c
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent"
-            }`}
-          >
-            {c === "all" ? t("tasks.categoryAll") : c}
-          </button>
+        <button
+          onClick={() => onCategoryFilterChange("all")}
+          className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
+            categoryFilter === "all"
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+          }`}
+        >
+          {t("tasks.categoryAll")}
+        </button>
+        {categories.map(c => (
+          <div key={c.id} className="relative group">
+            <button
+              onClick={() => onCategoryFilterChange(c.name)}
+              className={`pl-3 pr-6 py-1.5 rounded-lg text-xs transition-all ${
+                categoryFilter === c.name
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              }`}
+            >
+              {c.name}
+            </button>
+            <button
+              onClick={() => {
+                deleteCategory(c.id)
+                if (categoryFilter === c.name) onCategoryFilterChange("all")
+              }}
+              aria-label={`Delete category ${c.name}`}
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+            >
+              <X size={11} />
+            </button>
+          </div>
         ))}
       </div>
 

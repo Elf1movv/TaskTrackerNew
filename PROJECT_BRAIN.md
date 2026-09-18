@@ -50,6 +50,7 @@
 | Бэкенд | Node.js + TypeScript + Express 5 | Один язык (TS) на весь стек — типы переиспользуются без дублирования |
 | ORM | Prisma | Пишешь `db.task.findMany()` вместо ручного SQL |
 | База данных | PostgreSQL | Стандартная реляционная БД, с 2026-09-17 в Docker-контейнере (было нативно) |
+| Авторизация | Better Auth (email+пароль, своя, не сторонний сервис) | Сессии/пользователи хранятся в той же PostgreSQL через Prisma, не в чужой инфраструктуре — с 2026-09-18 у приложения есть логин, все данные привязаны к владельцу-аккаунту |
 | Деплой | Свой VPS (HipHosting), без управляемых платформ (не Vercel/Railway) | Осознанный выбор владельца: "работает на наших мощностях, без посредников" |
 | Контейнеризация | Docker (приложение + PostgreSQL) + GitHub Container Registry | Воспроизводимый деплой — образы собраны/взяты один раз, переезд на новый сервер = "поставь Docker, запусти `docker compose up`" |
 | Reverse proxy | nginx | Принимает интернет-трафик, передаёт на Node |
@@ -277,10 +278,19 @@ TaskTrackerNew-main/
 │                               (хронологический, "что разбирали когда")
 ├── src/                       фронтенд (React, FSD-слои: app/pages/
 │                               widgets/features/entities/shared)
+│   ├── pages/auth/             экраны входа/регистрации/сброса пароля
+│   │                            (вне сайдбара — рендерятся для разлогиненных)
+│   └── shared/lib/auth/        клиент Better Auth (useSession/signIn/signOut)
 ├── server/                    бэкенд (Express + Prisma)
-│   ├── prisma/schema.prisma   модели данных (Task/Goal/Habit/Category)
+│   ├── prisma/schema.prisma   модели данных (Task/Goal/Habit/Category +
+│   │                           User/Session/Account/Verification для авторизации)
+│   ├── src/auth.ts            конфигурация Better Auth (email+пароль,
+│   │                           подтверждение почты, восстановление пароля)
+│   ├── src/middleware/requireAuth.ts  проверка сессии на каждом защищённом роуте
 │   └── src/routes/            гранулярный REST на каждую сущность
-│                               (POST/PATCH :id/DELETE :id/PATCH reorder)
+│                               (POST/PATCH :id/DELETE :id/PATCH reorder),
+│                               все роуты теперь требуют сессию и фильтруют
+│                               по `userId`
 ├── docs/
 │   ├── ARCHITECTURE.md        ПОЧЕМУ технически всё устроено именно так
 │   ├── DEPLOYMENT.md          ТОЧНАЯ инфраструктура прода (конфиги дословно)
@@ -291,7 +301,7 @@ TaskTrackerNew-main/
 │   ├── BACKLOG.md             продуктовые фичи в планах (авторизация и т.д.)
 │   └── requirements/          ЧТО именно делает каждая фича, по пунктам
 │       ├── STYLE_GUIDE.md     как писать эти доки
-│       └── 01. Tasks/ … 08. Theme/   дерево фич, дополняется по ходу
+│       └── 01. Tasks/ … 09. Authentication/   дерево фич, дополняется по ходу
 ├── .claude/
 │   ├── agents/                см. 3.4 выше
 │   └── skills/coding-mentor/  как AI должен объяснять код этому владельцу

@@ -147,14 +147,38 @@ git clone https://github.com/Elf1movv/TaskTrackerNew.git /var/www/tasktracker
 собирается на самом VPS.
 
 `/var/www/tasktracker/server/.env` — **всё ещё используется**,
-контейнер подключает его через `env_file` в `docker-compose.yml`:
+контейнер подключает его через `env_file` в `docker-compose.yml`. С
+2026-09-18 (добавление авторизации, Better Auth) сюда добавились 4
+новые переменные:
 ```
 DATABASE_URL="postgresql://tasktracker:<пароль>@db:5432/tasktracker"
 PORT=3001
+BETTER_AUTH_SECRET="<случайная строка, см. ниже как сгенерировать>"
+BETTER_AUTH_URL="https://mytracker.space"
+RESEND_API_KEY="<ключ из аккаунта Resend>"
+RESEND_FROM_EMAIL="MyTracker <noreply@mytracker.space>"
 ```
 Хост в `DATABASE_URL` — `db` (имя сервиса в Docker-сети), не `localhost`
 и не IP: с 2026-09-17, после перехода на bridge-сеть, `app` достаёт базу
 по внутреннему DNS Docker, не через loopback хоста.
+
+**`BETTER_AUTH_SECRET`** — подписывает сессионные куки и токены
+(email-подтверждение, сброс пароля). Сгенерировать один раз:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+Если этот секрет когда-нибудь потеряется/сменится — все существующие
+сессии и незавершённые ссылки подтверждения/сброса пароля станут
+недействительными (пользователям придётся войти заново), но данные не
+пострадают.
+
+**`RESEND_API_KEY`/`RESEND_FROM_EMAIL`** — без них `server/src/lib/
+email.ts` не падает, а просто пишет письмо в лог контейнера вместо
+реальной отправки (тот же fallback, что в деве) — то есть без ключа
+Resend восстановление пароля и подтверждение почты на проде будут
+"молча" не работать для пользователя (письмо реально не улетит), хотя
+сервер не покажет ошибки. Проверять после любого передеплоя, если
+письма перестали приходить.
 
 `/var/www/tasktracker/db.env` — новый файл (тоже gitignored), пароль для
 самого контейнера `db`:

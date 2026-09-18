@@ -6,7 +6,11 @@ import { CategoryContext } from "./categoryContext"
 import type { Category } from "./category"
 
 export function CategoryProvider({ children }: { children: ReactNode }) {
-  const { items: categories, create } = usePersistedCollection<Category>(categoryRepository, "category")
+  const {
+    items: categories,
+    create,
+    remove,
+  } = usePersistedCollection<Category>(categoryRepository, "category")
 
   const addCategory = useCallback(
     (name: string) => {
@@ -15,7 +19,12 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     [create],
   )
 
-  const value = useMemo(() => ({ categories, addCategory }), [categories, addCategory])
+  const deleteCategory = useCallback((id: string) => remove(id), [remove])
+
+  const value = useMemo(
+    () => ({ categories, addCategory, deleteCategory }),
+    [categories, addCategory, deleteCategory],
+  )
 
   return <CategoryContext.Provider value={value}>{children}</CategoryContext.Provider>
 }

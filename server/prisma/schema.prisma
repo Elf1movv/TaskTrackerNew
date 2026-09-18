@@ -26,13 +26,15 @@ model Task {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Not used yet — no auth today. Left nullable so a real users table can be
-  // added later (userId made required + a foreign key) without a painful
-  // migration once every existing row already has an owner.
+  // Nullable for now, during the rollout: existing rows predate auth and
+  // need a one-time backfill (assign them to the owner's new account)
+  // before this can become required. See docs/BACKLOG.md.
   userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([order])
   @@index([dueDate])
+  @@index([userId])
 }
 
 model Goal {
@@ -51,8 +53,10 @@ model Goal {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([order])
+  @@index([userId])
 }
 
 model Habit {
@@ -65,8 +69,10 @@ model Habit {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   userId         String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([order])
+  @@index([userId])
 }
 
 // A plain list of category names the user has defined — deliberately NOT a
@@ -75,11 +81,87 @@ model Habit {
 // the category picker offer", the same "start simple" choice as Goal.milestones.
 model Category {
   id        String   @id @default(uuid())
-  name      String   @unique
+  name      String
   order     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Per-user uniqueness, not global — otherwise only the first user could
+  // ever have a category named "Work".
+  @@unique([userId, name])
   @@index([order])
+}
+
+// Better Auth's required core schema (user/session/account/verification) —
+// written by hand rather than via `npx auth generate`, which has a known
+// history of overwriting hand-maintained models in schema.prisma (see
+// LEARNING.md). Field shapes and @@map names must match exactly what
+// Better Auth's Prisma adapter expects.
+model User {
+  id            String     @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+  tasks         Task[]
+  goals         Goal[]
+  habits        Habit[]
+  categories    Category[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+// One row per login method — the hashed password for email/password auth
+// lives here (providerId "credential"), not on User.
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+// Short-lived tokens: email verification links, password reset links.
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
 }

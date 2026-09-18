@@ -1,6 +1,8 @@
+import type { TestAgent } from "supertest"
 import request from "supertest"
 import { beforeEach, describe, expect, it } from "vitest"
 import { createApp } from "../app.js"
+import { createAuthenticatedAgent } from "../test-utils/auth.js"
 import { db } from "../db.js"
 
 const app = createApp()
@@ -14,50 +16,59 @@ const baseGoal = {
 }
 
 describe("goals router", () => {
+  let agent: TestAgent
+
   beforeEach(async () => {
     await db.goal.deleteMany({})
+    agent = await createAuthenticatedAgent(app)
+  })
+
+  it("requires a session", async () => {
+    const res = await request(app).get("/api/goals")
+    expect(res.status).toBe(401)
   })
 
   it("creates a goal with milestones and lists it", async () => {
-    const created = await request(app)
-      .post("/api/goals")
-      .send({
-        ...baseGoal,
-        id: crypto.randomUUID(),
-        milestones: [{ id: crypto.randomUUID(), title: "Step 1", completed: false }],
-      })
+    const created = await agent.post("/api/goals").send({
+      ...baseGoal,
+      id: crypto.randomUUID(),
+      milestones: [{ id: crypto.randomUUID(), title: "Step 1", completed: false }],
+    })
     expect(created.status).toBe(201)
     expect(created.body.milestones).toHaveLength(1)
 
-    const list = await request(app).get("/api/goals")
+    const list = await agent.get("/api/goals")
     expect(list.body).toHaveLength(1)
   })
 
   it("patches milestones as part of the goal and returns 409 on a stale update", async () => {
-    const created = await request(app)
-      .post("/api/goals")
-      .send({ ...baseGoal, id: crypto.randomUUID() })
+    const created = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID() })
 
-    const firstPatch = await request(app)
-      .patch(`/api/goals/${created.body.id}`)
-      .send({
-        patch: { milestones: [{ id: crypto.randomUUID(), title: "Step 1", completed: false }] },
-        expectedUpdatedAt: created.body.updatedAt,
-      })
+    const firstPatch = await agent.patch(`/api/goals/${created.body.id}`).send({
+      patch: { milestones: [{ id: crypto.randomUUID(), title: "Step 1", completed: false }] },
+      expectedUpdatedAt: created.body.updatedAt,
+    })
     expect(firstPatch.status).toBe(200)
     expect(firstPatch.body.milestones).toHaveLength(1)
 
-    const stale = await request(app)
+    const stale = await agent
       .patch(`/api/goals/${created.body.id}`)
       .send({ patch: { progress: 50 }, expectedUpdatedAt: created.body.updatedAt })
     expect(stale.status).toBe(409)
   })
 
   it("deletes a goal", async () => {
-    const created = await request(app)
-      .post("/api/goals")
-      .send({ ...baseGoal, id: crypto.randomUUID() })
-    expect((await request(app).delete(`/api/goals/${created.body.id}`)).status).toBe(204)
-    expect((await request(app).get("/api/goals")).body).toHaveLength(0)
+    const created = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID() })
+    expect((await agent.delete(`/api/goals/${created.body.id}`)).status).toBe(204)
+    expect((await agent.get("/api/goals")).body).toHaveLength(0)
+  })
+
+  it("only lists this user's own goals, not another user's", async () => {
+    await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID(), title: "Mine" })
+    const otherAgent = await createAuthenticatedAgent(app)
+    await otherAgent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID(), title: "Theirs" })
+
+    const list = await agent.get("/api/goals")
+    expect(list.body.map((g: { title: string }) => g.title)).toEqual(["Mine"])
   })
 })

@@ -1,9 +1,11 @@
 import { Router } from "express"
 import { db } from "../db.js"
-import { isPrismaNotFound } from "../lib/prismaErrors.js"
+import { requireAuth } from "../middleware/requireAuth.js"
 import { createHabitSchema, reorderSchema, updateHabitSchema } from "../validation/habit.js"
 
 export const habitsRouter = Router()
+
+habitsRouter.use(requireAuth)
 
 interface ClientHabit {
   id: string
@@ -32,8 +34,8 @@ function toClientHabit(habit: {
   }
 }
 
-habitsRouter.get("/", async (_req, res) => {
-  const habits = await db.habit.findMany({ orderBy: { order: "asc" } })
+habitsRouter.get("/", async (req, res) => {
+  const habits = await db.habit.findMany({ where: { userId: req.userId }, orderBy: { order: "asc" } })
   res.json(habits.map(toClientHabit))
 })
 
@@ -44,9 +46,9 @@ habitsRouter.post("/", async (req, res) => {
     return
   }
 
-  const { _min } = await db.habit.aggregate({ _min: { order: true } })
+  const { _min } = await db.habit.aggregate({ where: { userId: req.userId }, _min: { order: true } })
   const created = await db.habit.create({
-    data: { ...parsed.data, order: (_min.order ?? 0) - 1 },
+    data: { ...parsed.data, userId: req.userId, order: (_min.order ?? 0) - 1 },
   })
   res.status(201).json(toClientHabit(created))
 })
@@ -59,7 +61,9 @@ habitsRouter.patch("/reorder", async (req, res) => {
   }
 
   await db.$transaction(
-    parsed.data.map(({ id, order }) => db.habit.update({ where: { id }, data: { order } })),
+    parsed.data.map(({ id, order }) =>
+      db.habit.updateMany({ where: { id, userId: req.userId }, data: { order } }),
+    ),
   )
   res.status(204).end()
 })
@@ -73,12 +77,12 @@ habitsRouter.patch("/:id", async (req, res) => {
   const { patch, expectedUpdatedAt } = parsed.data
 
   const result = await db.habit.updateMany({
-    where: { id: req.params.id, updatedAt: new Date(expectedUpdatedAt) },
+    where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },
     data: patch,
   })
 
   if (result.count === 0) {
-    const current = await db.habit.findUnique({ where: { id: req.params.id } })
+    const current = await db.habit.findFirst({ where: { id: req.params.id, userId: req.userId } })
     if (!current) {
       res.status(404).json({ error: "Habit not found" })
       return
@@ -91,15 +95,10 @@ habitsRouter.patch("/:id", async (req, res) => {
   res.json(toClientHabit(updated))
 })
 
-habitsRouter.delete("/:id", async (req, res, next) => {
-  try {
-    await db.habit.delete({ where: { id: req.params.id } })
-  } catch (err) {
-    if (isPrismaNotFound(err)) {
-      res.status(404).json({ error: "Habit not found" })
-      return
-    }
-    next(err)
+habitsRouter.delete("/:id", async (req, res) => {
+  const result = await db.habit.deleteMany({ where: { id: req.params.id, userId: req.userId } })
+  if (result.count === 0) {
+    res.status(404).json({ error: "Habit not found" })
     return
   }
   res.status(204).end()

@@ -1,9 +1,11 @@
 import { Router } from "express"
 import { db } from "../db.js"
-import { isPrismaNotFound } from "../lib/prismaErrors.js"
+import { requireAuth } from "../middleware/requireAuth.js"
 import { createTaskSchema, reorderSchema, updateTaskSchema } from "../validation/task.js"
 
 export const tasksRouter = Router()
+
+tasksRouter.use(requireAuth)
 
 // Shape the frontend's Task type expects — the DB-only fields (order,
 // createdAt, userId) never leave the server. `updatedAt` DOES leave the
@@ -35,8 +37,8 @@ function toClientTask(task: {
   }
 }
 
-tasksRouter.get("/", async (_req, res) => {
-  const tasks = await db.task.findMany({ orderBy: { order: "asc" } })
+tasksRouter.get("/", async (req, res) => {
+  const tasks = await db.task.findMany({ where: { userId: req.userId }, orderBy: { order: "asc" } })
   res.json(tasks.map(toClientTask))
 })
 
@@ -48,10 +50,11 @@ tasksRouter.post("/", async (req, res) => {
   }
 
   // New tasks are prepended on the client (added tasks show up first), so
-  // they need an order smaller than everything currently stored.
-  const { _min } = await db.task.aggregate({ _min: { order: true } })
+  // they need an order smaller than everything currently stored — scoped
+  // to this user's own tasks, not the whole table.
+  const { _min } = await db.task.aggregate({ where: { userId: req.userId }, _min: { order: true } })
   const created = await db.task.create({
-    data: { ...parsed.data, order: (_min.order ?? 0) - 1 },
+    data: { ...parsed.data, userId: req.userId, order: (_min.order ?? 0) - 1 },
   })
   res.status(201).json(toClientTask(created))
 })
@@ -67,9 +70,13 @@ tasksRouter.patch("/reorder", async (req, res) => {
 
   // Deliberately touches ONLY `order` for these rows, never the rest of the
   // record — a reorder from one device can't clobber a concurrent field
-  // edit from another device.
+  // edit from another device. updateMany (not update) with userId in the
+  // where clause — a plain `update` would throw if the id belonged to
+  // someone else instead of just matching zero rows.
   await db.$transaction(
-    parsed.data.map(({ id, order }) => db.task.update({ where: { id }, data: { order } })),
+    parsed.data.map(({ id, order }) =>
+      db.task.updateMany({ where: { id, userId: req.userId }, data: { order } }),
+    ),
   )
   res.status(204).end()
 })
@@ -84,16 +91,20 @@ tasksRouter.patch("/:id", async (req, res) => {
 
   // Atomic conditional update — the WHERE clause itself enforces the
   // concurrency check, so there's no read-then-write race window between
-  // "check updatedAt" and "apply the patch".
+  // "check updatedAt" and "apply the patch". userId is in the same WHERE,
+  // not a separate check — a mismatch reads exactly like "not found",
+  // never revealing that a task with this id exists but belongs to
+  // someone else.
   const result = await db.task.updateMany({
-    where: { id: req.params.id, updatedAt: new Date(expectedUpdatedAt) },
+    where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },
     data: patch,
   })
 
   if (result.count === 0) {
-    // count === 0 means either the row doesn't exist, or it exists but
-    // updatedAt didn't match — look it up once more to tell those apart.
-    const current = await db.task.findUnique({ where: { id: req.params.id } })
+    // count === 0 means either the row doesn't exist (or isn't this
+    // user's), or it exists but updatedAt didn't match — look it up once
+    // more, still scoped to this user, to tell those apart.
+    const current = await db.task.findFirst({ where: { id: req.params.id, userId: req.userId } })
     if (!current) {
       res.status(404).json({ error: "Task not found" })
       return
@@ -106,15 +117,10 @@ tasksRouter.patch("/:id", async (req, res) => {
   res.json(toClientTask(updated))
 })
 
-tasksRouter.delete("/:id", async (req, res, next) => {
-  try {
-    await db.task.delete({ where: { id: req.params.id } })
-  } catch (err) {
-    if (isPrismaNotFound(err)) {
-      res.status(404).json({ error: "Task not found" })
-      return
-    }
-    next(err)
+tasksRouter.delete("/:id", async (req, res) => {
+  const result = await db.task.deleteMany({ where: { id: req.params.id, userId: req.userId } })
+  if (result.count === 0) {
+    res.status(404).json({ error: "Task not found" })
     return
   }
   res.status(204).end()

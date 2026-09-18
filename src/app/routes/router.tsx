@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router"
+import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from "@/pages/auth"
 import { CalendarPage } from "@/pages/calendar"
 import { GoalsPage } from "@/pages/goals"
 import { TasksPage } from "@/pages/tasks"
@@ -6,6 +7,12 @@ import { TodayPage } from "@/pages/today"
 import { RootLayout } from "../layouts/RootLayout"
 
 export const router = createBrowserRouter([
+  // Outside RootLayout on purpose — these render without the sidebar/nav
+  // chrome, and RootLayout itself is what redirects here when logged out.
+  { path: "login", element: <LoginPage /> },
+  { path: "register", element: <RegisterPage /> },
+  { path: "forgot-password", element: <ForgotPasswordPage /> },
+  { path: "reset-password", element: <ResetPasswordPage /> },
   {
     element: <RootLayout />,
     children: [

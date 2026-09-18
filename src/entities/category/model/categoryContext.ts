@@ -4,6 +4,7 @@ import type { Category } from "./category"
 export interface CategoryContextValue {
   categories: Category[]
   addCategory: (name: string) => void
+  deleteCategory: (id: string) => void
 }
 
 export const CategoryContext = createContext<CategoryContextValue | null>(null)
