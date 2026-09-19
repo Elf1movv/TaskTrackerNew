@@ -48,25 +48,14 @@ export function TaskForm({
   onDone: () => void
 }) {
   const { addTask, updateTask } = useTasks()
-  const { categories, addCategory } = useCategories()
+  const { categories } = useCategories()
   const { t } = useLanguage()
   const [title, setTitle] = useState(task?.title ?? "")
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
-  const [isAddingCategory, setIsAddingCategory] = useState(false)
-  const [newCategoryName, setNewCategoryName] = useState("")
   const [hasDueDate, setHasDueDate] = useState(!!(task?.dueDate ?? defaultDueDate))
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? getTodayKey())
   const showCategoryPicker = !!task || !lockedCategory
-
-  function handleCreateCategory() {
-    const name = newCategoryName.trim()
-    if (!name) return
-    addCategory(name)
-    setCategory(name)
-    setNewCategoryName("")
-    setIsAddingCategory(false)
-  }
 
   function handleSubmit() {
     if (!title.trim()) return
@@ -108,50 +97,18 @@ export function TaskForm({
             <Label htmlFor="task-category" className="text-xs text-muted-foreground font-normal">
               {t("taskForm.category")}
             </Label>
-            {isAddingCategory ? (
-              <div className="flex items-center gap-1.5">
-                <Input
-                  autoFocus
-                  value={newCategoryName}
-                  onChange={e => setNewCategoryName(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === "Enter") handleCreateCategory()
-                    if (e.key === "Escape") setIsAddingCategory(false)
-                  }}
-                  placeholder={t("taskForm.newCategoryPlaceholder")}
-                  className="text-xs h-8 w-32"
-                />
-                <Button type="button" size="sm" className="text-xs h-8" onClick={handleCreateCategory}>
-                  {t("common.add")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs h-8"
-                  onClick={() => setIsAddingCategory(false)}
-                >
-                  {t("common.cancel")}
-                </Button>
-              </div>
-            ) : (
-              <Select
-                value={category}
-                onValueChange={v => (v === "__new__" ? setIsAddingCategory(true) : setCategory(v))}
-              >
-                <SelectTrigger id="task-category" size="sm" className="text-xs h-8 w-auto bg-muted">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(c => (
-                    <SelectItem key={c.id} value={c.name}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="__new__">{t("taskForm.newCategoryOption")}</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger id="task-category" size="sm" className="text-xs h-8 w-auto bg-muted">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(c => (
+                  <SelectItem key={c.id} value={c.name}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         ) : (
           <div className="flex items-center gap-2">

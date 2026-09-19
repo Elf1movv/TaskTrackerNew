@@ -8,6 +8,7 @@ import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
+import { Input } from "@/shared/ui/input"
 import { TaskRow } from "./components"
 
 const STATUS_LABEL_KEYS: Record<StatusFilter, TranslationKey> = {
@@ -37,11 +38,21 @@ export function TaskBoard({
   remainingCompletedCount: number
   onLoadMoreCompleted: () => void
 }) {
-  const { categories, deleteCategory } = useCategories()
+  const { categories, addCategory, deleteCategory } = useCategories()
   const { t } = useLanguage()
   const [isAdding, setIsAdding] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const [isAddingCategory, setIsAddingCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState("")
   const today = getTodayKey()
+
+  function handleCreateCategory() {
+    const name = newCategoryName.trim()
+    if (!name) return
+    addCategory(name)
+    setNewCategoryName("")
+    setIsAddingCategory(false)
+  }
 
   return (
     <>
@@ -129,12 +140,46 @@ export function TaskBoard({
                 if (categoryFilter === c.name) onCategoryFilterChange("all")
               }}
               aria-label={`Delete category ${c.name}`}
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-destructive transition-all"
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
             >
               <X size={11} />
             </button>
           </div>
         ))}
+        {isAddingCategory ? (
+          <div className="flex items-center gap-1.5">
+            <Input
+              autoFocus
+              value={newCategoryName}
+              onChange={e => setNewCategoryName(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter") handleCreateCategory()
+                if (e.key === "Escape") setIsAddingCategory(false)
+              }}
+              placeholder={t("taskForm.newCategoryPlaceholder")}
+              className="text-xs h-8 w-32"
+            />
+            <Button type="button" size="sm" className="text-xs h-8" onClick={handleCreateCategory}>
+              {t("common.add")}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-xs h-8"
+              onClick={() => setIsAddingCategory(false)}
+            >
+              {t("common.cancel")}
+            </Button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsAddingCategory(true)}
+            className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+          >
+            + {t("tasks.addCategory")}
+          </button>
+        )}
       </div>
 
       <div className="space-y-1.5">
