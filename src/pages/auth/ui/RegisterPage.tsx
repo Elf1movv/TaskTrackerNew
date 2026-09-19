@@ -24,6 +24,11 @@ export function RegisterPage() {
       name: name.trim(),
       email: email.trim(),
       password,
+      // Better Auth embeds this in the verification email link and
+      // redirects the browser here once the link is clicked — the only
+      // reliable signal LoginPage has to tell "first ever login" apart
+      // from a normal returning login.
+      callbackURL: `${window.location.origin}/login?verified=1`,
     })
     setIsSubmitting(false)
     if (signUpError) {

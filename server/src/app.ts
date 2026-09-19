@@ -9,6 +9,7 @@ import morgan from "morgan"
 import { auth } from "./auth.js"
 import { errorHandler } from "./middleware/errorHandler.js"
 import { categoriesRouter } from "./routes/categories.js"
+import { feedbackRouter } from "./routes/feedback.js"
 import { goalsRouter } from "./routes/goals.js"
 import { habitsRouter } from "./routes/habits.js"
 import { tasksRouter } from "./routes/tasks.js"
@@ -36,7 +37,9 @@ export function createApp() {
   // have consumed the stream by the time this handler runs.
   app.all("/api/auth/*splat", toNodeHandler(auth))
 
-  app.use(express.json())
+  // Default 100kb limit is too small for feedback's optional base64
+  // screenshot attachment (validated up to ~7MB in validation/feedback.ts).
+  app.use(express.json({ limit: "8mb" }))
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true })
@@ -46,6 +49,7 @@ export function createApp() {
   app.use("/api/goals", goalsRouter)
   app.use("/api/habits", habitsRouter)
   app.use("/api/categories", categoriesRouter)
+  app.use("/api/feedback", feedbackRouter)
 
   // Anything under /api/ that didn't match a route above is a genuine 404,
   // not a frontend route — return JSON here so it doesn't fall through to

@@ -234,6 +234,7 @@ erDiagram
     User ||--o{ Category : owns
     User ||--o{ Session : has
     User ||--o{ Account : has
+    User ||--o{ Feedback : submits
     Task {
         string id PK
         string title
@@ -276,6 +277,13 @@ erDiagram
         string email
         boolean emailVerified
     }
+    Feedback {
+        string id PK
+        string message
+        string imageData
+        string page
+        string userId FK
+    }
 ```
 
 `Task`/`Goal`/`Habit`/`Category` — **без внешних ключей друг на друга**,
@@ -306,6 +314,12 @@ Better Auth (`@@map` на нижний регистр — `user`/`session`/`acco
 `@@index([order])`, `GET` всегда сортирует по нему) и `userId`
 (индексирован — `@@index([userId])` — каждый список теперь
 фильтруется по нему).
+
+`Feedback` (добавлено 2026-09-19, временная бета-фича — см.
+`LEARNING.md`) — без `order`, не переупорядочивается пользователем;
+`imageData` хранит скриншот целиком как base64 data URL прямо в
+колонке, без отдельного файлового хранилища — оправдано низким
+объёмом и временным характером фичи.
 
 `Task.dueDate` — настоящий SQL `date` (`@db.Date`, не `DateTime` — без
 компонента времени суток, избегает сдвига по часовому поясу), тоже

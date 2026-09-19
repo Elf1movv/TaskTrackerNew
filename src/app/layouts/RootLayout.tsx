@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "motion/react"
 import { Navigate, useLocation, useOutlet } from "react-router"
 import { useSession } from "@/shared/lib/auth"
+import { FeedbackBanner } from "@/widgets/feedback"
 import { MobileNav, SidebarNav } from "@/widgets/navigation"
 
 export function RootLayout() {
@@ -29,6 +30,7 @@ export function RootLayout() {
             {element}
           </motion.div>
         </AnimatePresence>
+        <FeedbackBanner />
       </main>
 
       <MobileNav />

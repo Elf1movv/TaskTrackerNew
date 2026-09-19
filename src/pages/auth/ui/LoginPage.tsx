@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "react-router"
+import { Link, useSearchParams } from "react-router"
 import { authClient, translateAuthError } from "@/shared/lib/auth"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
@@ -9,6 +9,7 @@ import { AuthLayout } from "./AuthLayout"
 
 export function LoginPage() {
   const { t } = useLanguage()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -27,8 +28,11 @@ export function LoginPage() {
     // A full navigation, not react-router's navigate() — RootLayout needs a
     // fresh mount so its useSession() subscription starts from the
     // just-set cookie instead of racing a stale cached "no session" value
-    // from before login.
-    window.location.href = "/today"
+    // from before login. The query flag tells TodayPage which greeting to
+    // show — "verified=1" only ever arrives via the email-verification
+    // redirect (see RegisterPage), so it reliably marks the very first login.
+    const isFirstLogin = searchParams.get("verified") === "1"
+    window.location.href = isFirstLogin ? "/today?firstLogin=1" : "/today?welcomeBack=1"
   }
 
   return (

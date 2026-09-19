@@ -1,7 +1,7 @@
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useLanguage } from "@/shared/lib/i18n"
-import { Switch } from "./switch"
+import { Button } from "./button"
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
@@ -9,12 +9,14 @@ export function ThemeToggle() {
   const isDark = theme === "dark"
 
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-        {isDark ? <Moon size={12} /> : <Sun size={12} />}
-        {t("sidebar.theme")}
-      </span>
-      <Switch checked={isDark} onCheckedChange={checked => setTheme(checked ? "dark" : "light")} />
-    </div>
+    <Button
+      variant="outline"
+      size="sm"
+      className="w-full justify-center text-xs"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+    >
+      {isDark ? <Moon size={12} /> : <Sun size={12} />}
+      {isDark ? t("sidebar.themeDark") : t("sidebar.themeLight")}
+    </Button>
   )
 }

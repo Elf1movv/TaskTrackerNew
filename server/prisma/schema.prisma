@@ -91,6 +91,24 @@ model Category {
   @@index([order])
 }
 
+// A temporary beta-testing feature (see LEARNING.md) — free-text feedback
+// plus an optional screenshot, stored here so nothing is lost even before
+// a real recipient inbox exists, and mirrored to email when one is set.
+model Feedback {
+  id        String   @id @default(uuid())
+  message   String
+  // Base64 data URL of an optionally-attached screenshot — kept as a plain
+  // column, not a separate file-storage table, since this is a low-volume,
+  // temporary feature (see LEARNING.md for the "delete after beta" plan).
+  imageData String?
+  page      String?
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 // Better Auth's required core schema (user/session/account/verification) —
 // written by hand rather than via `npx auth generate`, which has a known
 // history of overwriting hand-maintained models in schema.prisma (see
@@ -110,6 +128,7 @@ model User {
   goals         Goal[]
   habits        Habit[]
   categories    Category[]
+  feedbacks     Feedback[]
 
   @@unique([email])
   @@map("user")

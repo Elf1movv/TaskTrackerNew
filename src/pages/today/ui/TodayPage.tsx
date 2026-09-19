@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
+import { useSearchParams } from "react-router"
 import { TaskForm } from "@/features/task-form"
+import { WelcomeBackGreeting, WelcomeModal } from "@/widgets/onboarding"
 import { GoalProgressSummary } from "@/widgets/goal-progress-summary"
 import { HabitTrackerGrid } from "@/widgets/habit-tracker-grid"
 import { TodayTasksCard } from "@/widgets/today-tasks-card"
@@ -16,6 +18,21 @@ function TodayPageContent() {
   const { language, t } = useLanguage()
   const { weekday, day, monthYear } = formatHeroDate(new Date(), language)
   const [isAdding, setIsAdding] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const isFirstLogin = searchParams.get("firstLogin") === "1"
+  const isWelcomeBack = searchParams.get("welcomeBack") === "1"
+
+  function clearGreetingParam() {
+    setSearchParams(
+      prev => {
+        const next = new URLSearchParams(prev)
+        next.delete("firstLogin")
+        next.delete("welcomeBack")
+        return next
+      },
+      { replace: true },
+    )
+  }
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto">
@@ -59,6 +76,9 @@ function TodayPageContent() {
       </div>
 
       <HabitTrackerGrid habits={habits} />
+
+      {isFirstLogin && <WelcomeModal open onClose={clearGreetingParam} />}
+      {isWelcomeBack && <WelcomeBackGreeting onDone={clearGreetingParam} />}
     </div>
   )
 }

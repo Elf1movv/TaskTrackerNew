@@ -79,16 +79,16 @@ export function SidebarNav() {
         <div className="pt-2 mt-2 border-t border-border space-y-2">
           <LanguageToggle />
           <ThemeToggle />
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-center text-xs text-muted-foreground hover:text-destructive"
+            onClick={() => signOut()}
+          >
+            <LogOut size={13} />
+            {t("sidebar.logout")}
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start text-xs text-muted-foreground hover:text-destructive px-0"
-          onClick={() => signOut()}
-        >
-          <LogOut size={13} />
-          {t("sidebar.logout")}
-        </Button>
       </div>
     </aside>
   )

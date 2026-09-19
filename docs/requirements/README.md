@@ -45,9 +45,17 @@
 - [09. Authentication](./09.%20Authentication.md)
   - [09.01. Account Access-FRONTEND](./09.%20Authentication/09.01.%20Account%20Access-FRONTEND.md)
   - [09.01. Account Access-BACKEND](./09.%20Authentication/09.01.%20Account%20Access-BACKEND.md)
+- [10. Feedback](./10.%20Feedback.md)
+  - [10.01. Feedback Widget-FRONTEND](./10.%20Feedback/10.01.%20Feedback%20Widget-FRONTEND.md)
+  - [10.01. Feedback Widget-BACKEND](./10.%20Feedback/10.01.%20Feedback%20Widget-BACKEND.md)
+- [11. Onboarding](./11.%20Onboarding.md)
+  - [11.01. Welcome Screens-FRONTEND](./11.%20Onboarding/11.01.%20Welcome%20Screens-FRONTEND.md)
+    (без BACKEND — чисто клиентские экраны поверх уже описанного флоу
+    Better Auth)
 
 Дерево полностью покрывает текущий функционал приложения (обновлено
-2026-09-18 — добавлена авторизация). Дальше — поддерживать в актуальном
-состоянии по `<WhenToUpdate>` из `STYLE_GUIDE.md`: новая функциональность
-→ новый `NN.MM.` файл, изменение поведения → правка существующего файла,
-а не создание нового рядом.
+2026-09-19 — добавлены временный виджет обратной связи (беta) и экраны
+онбординга после входа). Дальше — поддерживать в актуальном состоянии по
+`<WhenToUpdate>` из `STYLE_GUIDE.md`: новая функциональность → новый
+`NN.MM.` файл, изменение поведения → правка существующего файла, а не
+создание нового рядом.
