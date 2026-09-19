@@ -10,6 +10,8 @@ export function buildMonthGrid(month: Date): MonthGrid {
   const monthEnd = endOfMonth(month)
   return {
     days: eachDayOfInterval({ start: monthStart, end: monthEnd }),
-    startPad: getDay(monthStart),
+    // getDay() is Sunday-first (0=Sun); shift so Monday lands in column 0,
+    // matching WEEKDAY_LABELS in dateLocale.ts.
+    startPad: (getDay(monthStart) + 6) % 7,
   }
 }

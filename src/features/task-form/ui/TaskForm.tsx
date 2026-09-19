@@ -9,7 +9,6 @@ import { DatePicker } from "@/shared/ui/date-picker"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
-import { Switch } from "@/shared/ui/switch"
 
 const PRIORITIES: Priority[] = ["low", "medium", "high"]
 const PRIORITY_LABEL_KEYS: Record<Priority, TranslationKey> = {
@@ -18,10 +17,17 @@ const PRIORITY_LABEL_KEYS: Record<Priority, TranslationKey> = {
   high: "taskForm.high",
 }
 
-const PriorityOption = styled.button<{ active: boolean; color: string }>`
-  border-color: ${p => (p.active ? p.color : "var(--border)")};
-  background-color: ${p => (p.active ? `${p.color}28` : "transparent")};
-  color: ${p => (p.active ? p.color : "var(--muted-foreground)")};
+function nextPriority(current: Priority): Priority {
+  return PRIORITIES[(PRIORITIES.indexOf(current) + 1) % PRIORITIES.length]
+}
+
+// Always styled as "active" for its current value — same cycling-button
+// pattern as language-toggle.tsx/theme-toggle.tsx, just with a per-value
+// color instead of a fixed one.
+const PriorityToggle = styled.button<{ color: string }>`
+  border-color: ${p => p.color};
+  background-color: ${p => `${p.color}28`};
+  color: ${p => p.color};
 `
 
 // Handles both creating a new task and editing an existing one — pass
@@ -85,20 +91,16 @@ export function TaskForm({
       />
 
       <div className="flex gap-4 flex-wrap items-center">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("taskForm.priority")}</span>
-          {PRIORITIES.map(p => (
-            <PriorityOption
-              key={p}
-              type="button"
-              active={priority === p}
-              color={PRIORITY_COLORS[p]}
-              onClick={() => setPriority(p)}
-              className="px-2.5 py-1 rounded-lg text-xs capitalize transition-all border"
-            >
-              {t(PRIORITY_LABEL_KEYS[p])}
-            </PriorityOption>
-          ))}
+          <PriorityToggle
+            type="button"
+            color={PRIORITY_COLORS[priority]}
+            onClick={() => setPriority(nextPriority(priority))}
+            className="px-2.5 py-1 rounded-lg text-xs capitalize transition-all border"
+          >
+            {t(PRIORITY_LABEL_KEYS[priority])}
+          </PriorityToggle>
         </div>
 
         {showCategoryPicker ? (
@@ -159,17 +161,19 @@ export function TaskForm({
         )}
 
         <div className="flex items-center gap-2">
-          <Label htmlFor="task-due-date-toggle" className="text-xs text-muted-foreground font-normal">
-            {t("taskForm.due")}
-          </Label>
-          <Switch
-            id="task-due-date-toggle"
-            checked={hasDueDate}
-            onCheckedChange={checked => {
-              setHasDueDate(checked)
-              if (checked && !dueDate) setDueDate(getTodayKey())
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-xs h-8"
+            onClick={() => {
+              const next = !hasDueDate
+              setHasDueDate(next)
+              if (next && !dueDate) setDueDate(getTodayKey())
             }}
-          />
+          >
+            {hasDueDate ? t("taskForm.hasDueDate") : t("taskForm.noDueDate")}
+          </Button>
           {hasDueDate && <DatePicker value={dueDate} onChange={setDueDate} />}
         </div>
       </div>

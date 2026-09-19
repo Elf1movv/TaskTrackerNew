@@ -1,9 +1,10 @@
 import { useState } from "react"
-import { HABIT_COLORS, useHabits, type Habit } from "@/entities/habit"
+import { HABIT_COLORS, HABIT_ICONS, useHabits, type Habit } from "@/entities/habit"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 
 // Handles both creating a new habit and editing an existing one — pass
 // `habit` to pre-fill the fields and save via update instead of create.
@@ -13,10 +14,11 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
   const [title, setTitle] = useState(habit?.title ?? "")
   const [icon, setIcon] = useState(habit?.icon ?? "✨")
   const [color, setColor] = useState(habit?.color ?? HABIT_COLORS[0])
+  const [isPickingIcon, setIsPickingIcon] = useState(false)
 
   function handleSubmit() {
     if (!title.trim()) return
-    const patch = { title: title.trim(), icon: icon.trim() || "✨", color }
+    const patch = { title: title.trim(), icon, color }
     if (habit) {
       updateHabit(habit.id, patch)
     } else {
@@ -28,14 +30,38 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
   return (
     <div className="bg-card border border-primary/25 rounded-2xl p-5 space-y-4">
       <div className="flex gap-3 items-center">
-        <Input
-          value={icon}
-          onChange={e => setIcon(e.target.value)}
-          placeholder="✨"
-          maxLength={2}
-          className="w-14 text-center text-lg h-10 bg-muted border-0"
-          aria-label="Icon (emoji)"
-        />
+        <Popover open={isPickingIcon} onOpenChange={setIsPickingIcon}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="w-14 h-10 shrink-0 rounded-md bg-muted text-lg hover:bg-accent transition-colors"
+              aria-label="Choose icon"
+            >
+              {icon}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-2">
+            <div className="grid grid-cols-8 gap-1">
+              {HABIT_ICONS.map(emoji => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => {
+                    setIcon(emoji)
+                    setIsPickingIcon(false)
+                  }}
+                  aria-label={`Icon ${emoji}`}
+                  aria-pressed={icon === emoji}
+                  className={`size-7 flex items-center justify-center rounded text-lg hover:bg-accent transition-colors ${
+                    icon === emoji ? "bg-accent" : ""
+                  }`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
         <Input
           autoFocus
           value={title}
@@ -48,7 +74,7 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
 
       <div className="flex items-center gap-2">
         <Label className="text-xs text-muted-foreground font-normal">{t("common.color")}</Label>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {HABIT_COLORS.map(c => (
             <button
               key={c}
@@ -59,7 +85,7 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
               className="w-6 h-6 rounded-full transition-transform"
               style={{
                 backgroundColor: c,
-                outline: color === c ? `2px solid ${c}` : "none",
+                outline: color === c ? "2px solid var(--foreground)" : "none",
                 outlineOffset: 2,
               }}
             />

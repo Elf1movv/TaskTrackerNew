@@ -129,7 +129,7 @@ export function TaskBoard({
                 if (categoryFilter === c.name) onCategoryFilterChange("all")
               }}
               aria-label={`Delete category ${c.name}`}
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-destructive transition-all"
             >
               <X size={11} />
             </button>

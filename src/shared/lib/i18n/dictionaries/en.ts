@@ -37,7 +37,8 @@ export const en = {
   "taskForm.category": "Category",
   "taskForm.newCategoryOption": "+ New category",
   "taskForm.newCategoryPlaceholder": "New category",
-  "taskForm.due": "Due",
+  "taskForm.noDueDate": "No due date",
+  "taskForm.hasDueDate": "Has due date",
   "taskForm.pickDate": "Pick a date",
 
   "goalForm.titlePlaceholder": "Goal title",

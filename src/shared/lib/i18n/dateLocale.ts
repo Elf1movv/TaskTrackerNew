@@ -11,9 +11,11 @@ export function getDateLocale(language: Language) {
   return DATE_LOCALES[language]
 }
 
+// Monday-first (CIS/most-of-Europe convention), not Sunday-first — must stay
+// in sync with buildMonthGrid.ts's startPad calculation.
 const WEEKDAY_LABELS: Record<Language, string[]> = {
-  en: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
-  ru: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+  en: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+  ru: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
 }
 
 export function getWeekdayLabels(language: Language): string[] {

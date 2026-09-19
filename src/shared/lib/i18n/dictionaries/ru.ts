@@ -39,7 +39,8 @@ export const ru: Record<keyof typeof en, string> = {
   "taskForm.category": "Категория",
   "taskForm.newCategoryOption": "+ Новая категория",
   "taskForm.newCategoryPlaceholder": "Новая категория",
-  "taskForm.due": "Срок",
+  "taskForm.noDueDate": "Без срока",
+  "taskForm.hasDueDate": "Со сроком",
   "taskForm.pickDate": "Выбрать дату",
 
   "goalForm.titlePlaceholder": "Название цели",

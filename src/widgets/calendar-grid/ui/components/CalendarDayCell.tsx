@@ -33,11 +33,11 @@ export function CalendarDayCell({
     <button
       ref={ref}
       onClick={onSelect}
-      className={`aspect-square rounded-xl flex flex-col items-center pt-2 text-sm transition-all ${
+      className={`aspect-square rounded-xl border border-border flex flex-col items-center pt-2 text-sm transition-all ${
         isSelected
-          ? "bg-primary text-primary-foreground"
+          ? "bg-primary text-primary-foreground border-primary"
           : isCurrent
-            ? "bg-primary/10 text-primary"
+            ? "bg-primary/10 text-primary border-primary/30"
             : "hover:bg-accent text-foreground"
       } ${isOver ? "ring-2 ring-primary" : ""}`}
     >
