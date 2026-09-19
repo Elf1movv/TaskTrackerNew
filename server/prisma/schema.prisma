@@ -26,11 +26,8 @@ model Task {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Nullable for now, during the rollout: existing rows predate auth and
-  // need a one-time backfill (assign them to the owner's new account)
-  // before this can become required. See docs/BACKLOG.md.
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([order])
   @@index([dueDate])
@@ -52,8 +49,8 @@ model Goal {
   order      Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([order])
   @@index([userId])
@@ -68,8 +65,8 @@ model Habit {
   order          Int
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  userId         String?
-  user           User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([order])
   @@index([userId])
@@ -85,8 +82,8 @@ model Category {
   order     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Per-user uniqueness, not global — otherwise only the first user could
   // ever have a category named "Work".
