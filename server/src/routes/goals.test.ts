@@ -57,6 +57,28 @@ describe("goals router", () => {
     expect(stale.status).toBe(409)
   })
 
+  it("reorder returns fresh updatedAt so a follow-up patch isn't a false conflict", async () => {
+    const a = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID(), title: "A" })
+    const b = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID(), title: "B" })
+
+    const reordered = await agent.patch("/api/goals/reorder").send([
+      { id: b.body.id, order: 0 },
+      { id: a.body.id, order: 1 },
+    ])
+    expect(reordered.status).toBe(200)
+    const freshUpdatedAt = reordered.body.find((g: { id: string }) => g.id === a.body.id).updatedAt
+
+    const withStaleTimestamp = await agent
+      .patch(`/api/goals/${a.body.id}`)
+      .send({ patch: { progress: 25 }, expectedUpdatedAt: a.body.updatedAt })
+    expect(withStaleTimestamp.status).toBe(409)
+
+    const withFreshTimestamp = await agent
+      .patch(`/api/goals/${a.body.id}`)
+      .send({ patch: { progress: 25 }, expectedUpdatedAt: freshUpdatedAt })
+    expect(withFreshTimestamp.status).toBe(200)
+  })
+
   it("deletes a goal", async () => {
     const created = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID() })
     expect((await agent.delete(`/api/goals/${created.body.id}`)).status).toBe(204)
