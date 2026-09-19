@@ -48,6 +48,7 @@ export function createRestRepository<T extends { id: string; updatedAt: string }
         body: JSON.stringify(order),
       })
       if (!res.ok) throw new Error(`Failed to reorder ${baseUrl}: ${res.status}`)
+      return res.json() as Promise<{ id: string; updatedAt: string }[]>
     },
   }
 }

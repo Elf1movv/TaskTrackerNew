@@ -78,7 +78,15 @@ tasksRouter.patch("/reorder", async (req, res) => {
       db.task.updateMany({ where: { id, userId: req.userId }, data: { order } }),
     ),
   )
-  res.status(204).end()
+  // Prisma's @updatedAt bumps updatedAt on every reordered row even though
+  // only `order` changed — the client must learn the new values, or its
+  // next per-item PATCH on any of these tasks will carry a stale
+  // expectedUpdatedAt and get a false 409 "changed elsewhere".
+  const updated = await db.task.findMany({
+    where: { id: { in: parsed.data.map(d => d.id) }, userId: req.userId },
+    select: { id: true, updatedAt: true },
+  })
+  res.json(updated)
 })
 
 tasksRouter.patch("/:id", async (req, res) => {

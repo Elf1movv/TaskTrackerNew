@@ -57,9 +57,18 @@ interface Repository<T extends { id: string; updatedAt: string }> {
   create(item: T): Promise<T>
   update(id: string, patch: Partial<T>, expectedUpdatedAt: string): Promise<T>
   remove(id: string): Promise<void>
-  reorder(order: { id: string; order: number }[]): Promise<void>
+  reorder(order: { id: string; order: number }[]): Promise<{ id: string; updatedAt: string }[]>
 }
 ```
+
+`reorder()` возвращает свежий `updatedAt` по каждой переставленной
+записи (не просто `void`) — Prisma's `@updatedAt` бампает эту колонку
+у любой изменённой строки, даже когда пишется только `order`, и без
+этого следующий точечный `update()` по одной из переставленных записей
+уходил бы со старым `expectedUpdatedAt` и ловил ложный `409`
+("changed elsewhere" сразу после drag-and-drop, реальный баг — см.
+`LEARNING.md`, 2026-09-19). `usePersistedCollection.reorder()`
+подмешивает эти значения в локальный стейт сразу после ответа сервера.
 
 `entities/task/api/taskRepository.ts` (и аналогично `goal`, `habit`)
 создаёт конкретную реализацию через `createRestRepository`. Раньше
@@ -205,7 +214,9 @@ Better Auth после мутации (`signIn`/`signUp`/`signOut`), и иног
 - `PATCH /reorder` — отдельный bulk-эндпоинт, меняет **только** колонку
   `order` для присланных `{id, order}` пар, никогда не трогает
   остальные поля — реордер с одного устройства физически не может
-  затереть правку поля с другого
+  затереть правку поля с другого. Отвечает `200` с массивом `{id,
+  updatedAt}` (не `204`) — см. пояснение про `Repository<T>.reorder()`
+  выше, зачем это нужно
 - `DELETE /:id` — удалить одну запись, `404` если её уже нет
 
 **Конфликт-детекция на практике**: клиент при любом изменении посылает

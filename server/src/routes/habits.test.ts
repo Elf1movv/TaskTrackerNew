@@ -49,6 +49,33 @@ describe("habits router", () => {
     expect(stale.status).toBe(409)
   })
 
+  it("reorder returns fresh updatedAt so a follow-up patch isn't a false conflict", async () => {
+    const a = await agent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID(), title: "A" })
+    const b = await agent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID(), title: "B" })
+
+    const reordered = await agent.patch("/api/habits/reorder").send([
+      { id: b.body.id, order: 0 },
+      { id: a.body.id, order: 1 },
+    ])
+    expect(reordered.status).toBe(200)
+    const freshUpdatedAt = reordered.body.find((h: { id: string }) => h.id === a.body.id).updatedAt
+
+    // The pre-reorder timestamp is now stale — a patch carrying it must be
+    // rejected as a conflict (reorder really did touch this row's updatedAt).
+    const withStaleTimestamp = await agent
+      .patch(`/api/habits/${a.body.id}`)
+      .send({ patch: { completedDates: ["2026-09-16"] }, expectedUpdatedAt: a.body.updatedAt })
+    expect(withStaleTimestamp.status).toBe(409)
+
+    // But the timestamp the reorder response just returned must work —
+    // this is the bug: the client needs this value, or every next patch
+    // after a reorder falsely reports "changed elsewhere".
+    const withFreshTimestamp = await agent
+      .patch(`/api/habits/${a.body.id}`)
+      .send({ patch: { completedDates: ["2026-09-16"] }, expectedUpdatedAt: freshUpdatedAt })
+    expect(withFreshTimestamp.status).toBe(200)
+  })
+
   it("deletes a habit", async () => {
     const created = await agent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID() })
     expect((await agent.delete(`/api/habits/${created.body.id}`)).status).toBe(204)

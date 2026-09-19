@@ -95,7 +95,13 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
       const previous = items
       setItems(nextItems)
       try {
-        await repository.reorder(nextItems.map((item, index) => ({ id: item.id, order: index })))
+        const updated = await repository.reorder(
+          nextItems.map((item, index) => ({ id: item.id, order: index })),
+        )
+        const freshUpdatedAt = new Map(updated.map(u => [u.id, u.updatedAt]))
+        setItems(prev =>
+          prev.map(i => (freshUpdatedAt.has(i.id) ? { ...i, updatedAt: freshUpdatedAt.get(i.id)! } : i)),
+        )
       } catch (err) {
         setItems(previous)
         toast.error(t("toast.reorderFailed"))

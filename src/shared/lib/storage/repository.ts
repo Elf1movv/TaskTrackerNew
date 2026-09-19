@@ -3,7 +3,11 @@ export interface Repository<T extends { id: string; updatedAt: string }> {
   create(item: T): Promise<T>
   update(id: string, patch: Partial<T>, expectedUpdatedAt: string): Promise<T>
   remove(id: string): Promise<void>
-  reorder(order: { id: string; order: number }[]): Promise<void>
+  // Returns each reordered item's fresh `updatedAt` (Prisma's `@updatedAt`
+  // bumps it even though only `order` changed) — callers must merge this
+  // back into local state, or the next per-item update() on any of these
+  // items will send a now-stale expectedUpdatedAt and get a false 409.
+  reorder(order: { id: string; order: number }[]): Promise<{ id: string; updatedAt: string }[]>
 }
 
 // Thrown by createRestRepository on a 409 so callers can special-case it
