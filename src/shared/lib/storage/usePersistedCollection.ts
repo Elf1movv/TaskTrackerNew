@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { ConflictError, type Repository } from "./repository"
@@ -53,24 +53,48 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
     [repository, t, entity],
   )
 
+  // Keyed by item id — chains same-item update() calls one after another
+  // instead of letting them race. Without this, dragging a goal's
+  // milestones fires several update() calls in quick succession (one per
+  // hover step); each one reads `expectedUpdatedAt` from React state
+  // captured before any of the earlier calls' server responses land, so
+  // the second call sends an already-stale timestamp and gets a false
+  // "changed elsewhere" conflict — even though nothing outside this tab
+  // touched the record. Chaining off the previous call's *server-confirmed*
+  // result (not locally-captured state) closes that race for every caller
+  // of update(), not just milestone reordering. create/remove/reorder don't
+  // need this — they either have no server-side conflict check at all, or
+  // (create) always target a brand-new id that can't collide with itself.
+  const pendingUpdates = useRef(new Map<string, Promise<T>>())
+
   const update = useCallback(
     async (id: string, patch: Partial<T>) => {
       const previous = items.find(i => i.id === id)
       if (!previous) return
       setItems(prev => prev.map(i => (i.id === id ? { ...i, ...patch } : i)))
-      try {
-        const saved = await repository.update(id, patch, previous.updatedAt)
-        setItems(prev => prev.map(i => (i.id === id ? saved : i)))
-      } catch (err) {
-        if (err instanceof ConflictError) {
-          setItems(prev => prev.map(i => (i.id === id ? (err.current as T) : i)))
-          toast.error(t("toast.conflict", { entity }))
-        } else {
+
+      const priorChain = pendingUpdates.current.get(id) ?? Promise.resolve(previous)
+      const thisUpdate = priorChain.then(async base => {
+        try {
+          const saved = await repository.update(id, patch, base.updatedAt)
+          setItems(prev => prev.map(i => (i.id === id ? saved : i)))
+          return saved
+        } catch (err) {
+          if (err instanceof ConflictError) {
+            const current = err.current as T
+            setItems(prev => prev.map(i => (i.id === id ? current : i)))
+            toast.error(t("toast.conflict", { entity }))
+            console.error(err)
+            return current
+          }
           setItems(prev => prev.map(i => (i.id === id ? previous : i)))
           toast.error(t("toast.updateFailed", { entity }))
+          console.error(err)
+          return base
         }
-        console.error(err)
-      }
+      })
+      pendingUpdates.current.set(id, thisUpdate)
+      await thisUpdate
     },
     [items, repository, t, entity],
   )
