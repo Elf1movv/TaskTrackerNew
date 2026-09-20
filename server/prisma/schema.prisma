@@ -39,7 +39,9 @@ model Goal {
   title       String
   description String
   progress    Int
-  targetDate  String
+  // null = no deadline ("бессрочная") — the target-date toggle in
+  // GoalForm defaults new goals to off, matching Task.dueDate's pattern.
+  targetDate  String?
   color       String
   // Kept as an embedded JSON array (matching the frontend's Milestone[]
   // shape exactly) rather than a separate related table — same

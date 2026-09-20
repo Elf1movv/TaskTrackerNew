@@ -11,7 +11,7 @@ const goalFields = z.object({
   title: z.string().min(1),
   description: z.string(),
   progress: z.number().int().min(0).max(100),
-  targetDate: z.string(),
+  targetDate: z.string().nullable(),
   color: z.string().min(1),
   milestones: z.array(milestoneSchema),
 })

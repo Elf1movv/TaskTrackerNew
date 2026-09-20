@@ -63,7 +63,7 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
                     {t("goals.milestonesCount", { completed: completedCount, total: goal.milestones.length })}
                   </MilestoneCountLabel>
                   <span css={monoFont} className="text-xs text-muted-foreground">
-                    {t("goals.due", { date: goal.dueLabel })}
+                    {goal.dueLabel ? t("goals.due", { date: goal.dueLabel }) : t("goalForm.noTargetDate")}
                   </span>
                 </div>
               </div>

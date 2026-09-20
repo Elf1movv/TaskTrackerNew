@@ -19,7 +19,7 @@ interface ClientGoal {
   title: string
   description: string
   progress: number
-  targetDate: string
+  targetDate: string | null
   color: string
   milestones: ClientMilestone[]
   updatedAt: Date
@@ -30,7 +30,7 @@ function toClientGoal(goal: {
   title: string
   description: string
   progress: number
-  targetDate: string
+  targetDate: string | null
   color: string
   milestones: unknown
   updatedAt: Date

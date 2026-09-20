@@ -4,6 +4,7 @@ export const en = {
   "common.save": "Save",
   "common.add": "Add",
   "common.color": "Color",
+  "common.delete": "Delete",
 
   "nav.today": "Today",
   "nav.tasks": "Tasks",
@@ -25,6 +26,11 @@ export const en = {
   "tasks.status.done": "Done",
   "tasks.categoryAll": "All",
   "tasks.addCategory": "Add category",
+  "tasks.deleteCategoryTitle": "Delete category?",
+  "tasks.deleteCategoryBody": 'The category "{name}" will be deleted.',
+  "tasks.deleteCategoryTitleWithTasks": "Delete category and its tasks?",
+  "tasks.deleteCategoryBodyWithTasks":
+    '"{name}" has {count} task(s). Deleting the category will also delete them. This can\'t be undone.',
   "tasks.noTasks": "No tasks",
   "tasks.noTasksMarkedAs": " marked as {status}",
   "tasks.noTasksIn": " in {category}",
@@ -43,12 +49,15 @@ export const en = {
 
   "goalForm.titlePlaceholder": "Goal title",
   "goalForm.descriptionPlaceholder": "Description (optional)",
-  "goalForm.targetDate": "Target date",
+  "goalForm.noTargetDate": "No deadline",
+  "goalForm.hasTargetDate": "Has deadline",
 
   "habitForm.namePlaceholder": "Habit name",
 
   "habits.sectionLabel": "Habits",
   "habits.addHabit": "Add habit",
+  "habits.viewGrid": "Grid view",
+  "habits.viewList": "List view",
   "habits.noHabitsYet": "No habits yet",
   "habitCard.days": "days",
 

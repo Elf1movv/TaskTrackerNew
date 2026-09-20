@@ -13,6 +13,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     update,
     remove,
     reorder,
+    refresh,
   } = usePersistedCollection<Task>(taskRepository, "task")
 
   const toggleTask = useCallback(
@@ -47,8 +48,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ tasks, toggleTask, deleteTask, addTask, updateTask, reorderTasks }),
-    [tasks, toggleTask, deleteTask, addTask, updateTask, reorderTasks],
+    () => ({ tasks, toggleTask, deleteTask, addTask, updateTask, reorderTasks, refreshTasks: refresh }),
+    [tasks, toggleTask, deleteTask, addTask, updateTask, reorderTasks, refresh],
   )
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>

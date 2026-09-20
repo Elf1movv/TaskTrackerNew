@@ -6,6 +6,7 @@ export const ru: Record<keyof typeof en, string> = {
   "common.save": "Сохранить",
   "common.add": "Добавить",
   "common.color": "Цвет",
+  "common.delete": "Удалить",
 
   "nav.today": "Сегодня",
   "nav.tasks": "Задачи",
@@ -27,6 +28,11 @@ export const ru: Record<keyof typeof en, string> = {
   "tasks.status.done": "Готово",
   "tasks.categoryAll": "Все",
   "tasks.addCategory": "Добавить категорию",
+  "tasks.deleteCategoryTitle": "Удалить категорию?",
+  "tasks.deleteCategoryBody": "Категория «{name}» будет удалена.",
+  "tasks.deleteCategoryTitleWithTasks": "Удалить категорию вместе с задачами?",
+  "tasks.deleteCategoryBodyWithTasks":
+    "В категории «{name}» {count} задач(и). При удалении категории они тоже будут удалены. Это действие нельзя отменить.",
   "tasks.noTasks": "Нет задач",
   "tasks.noTasksMarkedAs": " со статусом «{status}»",
   "tasks.noTasksIn": " в категории {category}",
@@ -45,12 +51,15 @@ export const ru: Record<keyof typeof en, string> = {
 
   "goalForm.titlePlaceholder": "Название цели",
   "goalForm.descriptionPlaceholder": "Описание (необязательно)",
-  "goalForm.targetDate": "Дата завершения",
+  "goalForm.noTargetDate": "Без срока",
+  "goalForm.hasTargetDate": "Со сроком",
 
   "habitForm.namePlaceholder": "Название привычки",
 
   "habits.sectionLabel": "Привычки",
   "habits.addHabit": "Добавить привычку",
+  "habits.viewGrid": "Сетка",
+  "habits.viewList": "Список",
   "habits.noHabitsYet": "Пока нет привычек",
   "habitCard.days": "дней",
 

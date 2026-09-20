@@ -1,11 +1,11 @@
 import { useState } from "react"
-import { GOAL_COLORS, useGoals, type Goal } from "@/entities/goal"
+import { useGoals, type Goal } from "@/entities/goal"
 import { formatDateKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
+import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { Button } from "@/shared/ui/button"
 import { DatePicker } from "@/shared/ui/date-picker"
 import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
 import { Textarea } from "@/shared/ui/textarea"
 
 // Handles both creating a new goal and editing an existing one — pass
@@ -17,12 +17,18 @@ export function GoalForm({ goal, onDone }: { goal?: Goal; onDone: () => void }) 
   const { t } = useLanguage()
   const [title, setTitle] = useState(goal?.title ?? "")
   const [description, setDescription] = useState(goal?.description ?? "")
+  const [hasTargetDate, setHasTargetDate] = useState(!!goal?.targetDate)
   const [targetDate, setTargetDate] = useState(goal?.targetDate ?? formatDateKey(new Date()))
-  const [color, setColor] = useState(goal?.color ?? GOAL_COLORS[0])
+  const [color, setColor] = useState(goal?.color ?? PALETTE_COLORS[0])
 
   function handleSubmit() {
     if (!title.trim()) return
-    const patch = { title: title.trim(), description: description.trim(), targetDate, color }
+    const patch = {
+      title: title.trim(),
+      description: description.trim(),
+      targetDate: hasTargetDate ? targetDate : null,
+      color,
+    }
     if (goal) {
       updateGoal(goal.id, patch)
     } else {
@@ -50,16 +56,26 @@ export function GoalForm({ goal, onDone }: { goal?: Goal; onDone: () => void }) 
 
       <div className="flex gap-4 flex-wrap items-center">
         <div className="flex items-center gap-2">
-          <Label htmlFor="goal-target-date" className="text-xs text-muted-foreground font-normal">
-            {t("goalForm.targetDate")}
-          </Label>
-          <DatePicker id="goal-target-date" value={targetDate} onChange={setTargetDate} />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-xs h-8"
+            onClick={() => {
+              const next = !hasTargetDate
+              setHasTargetDate(next)
+              if (next && !targetDate) setTargetDate(formatDateKey(new Date()))
+            }}
+          >
+            {hasTargetDate ? t("goalForm.hasTargetDate") : t("goalForm.noTargetDate")}
+          </Button>
+          {hasTargetDate && <DatePicker value={targetDate} onChange={setTargetDate} />}
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("common.color")}</span>
-          <div className="flex gap-1.5">
-            {GOAL_COLORS.map(c => (
+          <div className="flex gap-1.5 flex-wrap">
+            {PALETTE_COLORS.map(c => (
               <button
                 key={c}
                 type="button"
@@ -69,7 +85,7 @@ export function GoalForm({ goal, onDone }: { goal?: Goal; onDone: () => void }) 
                 className="w-6 h-6 rounded-full transition-transform"
                 style={{
                   backgroundColor: c,
-                  outline: color === c ? `2px solid ${c}` : "none",
+                  outline: color === c ? "2px solid var(--foreground)" : "none",
                   outlineOffset: 2,
                 }}
               />

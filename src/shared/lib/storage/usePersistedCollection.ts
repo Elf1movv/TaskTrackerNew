@@ -38,6 +38,16 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
     }
   }, [repository])
 
+  // Re-fetches the whole collection from the server — for the rare case
+  // where something else (e.g. deleting a category cascades to deleting its
+  // tasks server-side) changed records this collection doesn't directly
+  // know about, and a full resync is simpler than threading that knowledge
+  // through every caller.
+  const refresh = useCallback(async () => {
+    const list = await repository.list()
+    setItems(list)
+  }, [repository])
+
   const create = useCallback(
     async (item: T) => {
       setItems(prev => [item, ...prev])
@@ -135,5 +145,5 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
     [items, repository, t],
   )
 
-  return { items, isLoaded, create, update, remove, reorder }
+  return { items, isLoaded, create, update, remove, reorder, refresh }
 }

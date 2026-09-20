@@ -8,6 +8,7 @@ export interface TaskContextValue {
   addTask: (task: Omit<Task, "id" | "updatedAt" | "completedAt">) => void
   updateTask: (id: string, patch: Partial<Omit<Task, "id" | "updatedAt">>) => void
   reorderTasks: (draggedId: string, targetId: string) => void
+  refreshTasks: () => Promise<void>
 }
 
 export const TaskContext = createContext<TaskContextValue | null>(null)

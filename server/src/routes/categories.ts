@@ -98,10 +98,21 @@ categoriesRouter.patch("/:id", async (req, res) => {
 })
 
 categoriesRouter.delete("/:id", async (req, res) => {
-  const result = await db.category.deleteMany({ where: { id: req.params.id, userId: req.userId } })
-  if (result.count === 0) {
+  const category = await db.category.findFirst({ where: { id: req.params.id, userId: req.userId } })
+  if (!category) {
     res.status(404).json({ error: "Category not found" })
     return
   }
+
+  // Task.category is a plain string, not a foreign key (see schema comment),
+  // so nothing at the DB level would clean these up on its own — the
+  // frontend warns the user how many tasks this deletes before confirming
+  // (see TaskBoard.tsx), then this cascades both in one transaction so a
+  // failure can't leave the category gone but its tasks still around (or
+  // vice versa).
+  await db.$transaction([
+    db.task.deleteMany({ where: { userId: req.userId, category: category.name } }),
+    db.category.delete({ where: { id: category.id } }),
+  ])
   res.status(204).end()
 })

@@ -9,7 +9,7 @@ import { Button } from "@/shared/ui/button"
 import { GoalAccordionItem } from "./components"
 
 export interface GoalListItem extends Goal {
-  dueLabel: string
+  dueLabel: string | null
 }
 
 export function GoalList({ goals }: { goals: GoalListItem[] }) {

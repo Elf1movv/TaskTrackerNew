@@ -2,12 +2,22 @@ import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Plus, X } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
-import { useCategories } from "@/entities/category"
-import { type StatusFilter, type Task } from "@/entities/task"
+import { useCategories, type Category } from "@/entities/category"
+import { type StatusFilter, type Task, useTasks } from "@/entities/task"
 import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
-import { Button } from "@/shared/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/ui/alert-dialog"
+import { Button, buttonVariants } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import { TaskRow } from "./components"
 
@@ -39,11 +49,13 @@ export function TaskBoard({
   onLoadMoreCompleted: () => void
 }) {
   const { categories, addCategory, deleteCategory } = useCategories()
+  const { refreshTasks } = useTasks()
   const { t } = useLanguage()
   const [isAdding, setIsAdding] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
+  const [categoryPendingDelete, setCategoryPendingDelete] = useState<Category | null>(null)
   const today = getTodayKey()
 
   function handleCreateCategory() {
@@ -52,6 +64,21 @@ export function TaskBoard({
     addCategory(name)
     setNewCategoryName("")
     setIsAddingCategory(false)
+  }
+
+  const taskCountInPendingCategory = categoryPendingDelete
+    ? allTasks.filter(task => task.category === categoryPendingDelete.name).length
+    : 0
+
+  async function handleConfirmDeleteCategory() {
+    if (!categoryPendingDelete) return
+    const { id, name } = categoryPendingDelete
+    setCategoryPendingDelete(null)
+    await deleteCategory(id)
+    if (categoryFilter === name) onCategoryFilterChange("all")
+    // The backend cascades tasks in that category when it deletes it — this
+    // collection's local state doesn't know that happened on its own.
+    await refreshTasks()
   }
 
   return (
@@ -135,10 +162,7 @@ export function TaskBoard({
               {c.name}
             </button>
             <button
-              onClick={() => {
-                deleteCategory(c.id)
-                if (categoryFilter === c.name) onCategoryFilterChange("all")
-              }}
+              onClick={() => setCategoryPendingDelete(c)}
               aria-label={`Delete category ${c.name}`}
               className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
             >
@@ -181,6 +205,40 @@ export function TaskBoard({
           </button>
         )}
       </div>
+
+      <AlertDialog
+        open={!!categoryPendingDelete}
+        onOpenChange={open => !open && setCategoryPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {taskCountInPendingCategory > 0
+                ? t("tasks.deleteCategoryTitleWithTasks")
+                : t("tasks.deleteCategoryTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {taskCountInPendingCategory > 0
+                ? t("tasks.deleteCategoryBodyWithTasks", {
+                    name: categoryPendingDelete?.name ?? "",
+                    count: taskCountInPendingCategory,
+                  })
+                : t("tasks.deleteCategoryBody", { name: categoryPendingDelete?.name ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeleteCategory}
+              className={
+                taskCountInPendingCategory > 0 ? buttonVariants({ variant: "destructive" }) : undefined
+              }
+            >
+              {t("common.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="space-y-1.5">
         <AnimatePresence initial={false}>

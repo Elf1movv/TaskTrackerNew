@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { HABIT_COLORS, HABIT_ICONS, useHabits, type Habit } from "@/entities/habit"
+import { HABIT_ICONS, useHabits, type Habit } from "@/entities/habit"
+import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
@@ -13,7 +14,7 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
   const { t } = useLanguage()
   const [title, setTitle] = useState(habit?.title ?? "")
   const [icon, setIcon] = useState(habit?.icon ?? "✨")
-  const [color, setColor] = useState(habit?.color ?? HABIT_COLORS[0])
+  const [color, setColor] = useState(habit?.color ?? PALETTE_COLORS[0])
   const [isPickingIcon, setIsPickingIcon] = useState(false)
 
   function handleSubmit() {
@@ -75,7 +76,7 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
       <div className="flex items-center gap-2">
         <Label className="text-xs text-muted-foreground font-normal">{t("common.color")}</Label>
         <div className="flex gap-1.5 flex-wrap">
-          {HABIT_COLORS.map(c => (
+          {PALETTE_COLORS.map(c => (
             <button
               key={c}
               type="button"

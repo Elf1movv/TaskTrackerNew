@@ -12,6 +12,7 @@ describe("categories router", () => {
 
   beforeEach(async () => {
     await db.category.deleteMany({})
+    await db.task.deleteMany({})
     agent = await createAuthenticatedAgent(app)
   })
 
@@ -66,6 +67,36 @@ describe("categories router", () => {
     const otherAgent = await createAuthenticatedAgent(app)
     const second = await otherAgent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work" })
     expect(second.status).toBe(201)
+  })
+
+  it("deleting a category also deletes tasks that were in it, but not other categories' tasks", async () => {
+    const category = await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Errands" })
+
+    const inCategory = await agent.post("/api/tasks").send({
+      id: crypto.randomUUID(),
+      title: "Buy milk",
+      completed: false,
+      priority: "low",
+      category: "Errands",
+      dueDate: null,
+      completedAt: null,
+    })
+    const elsewhere = await agent.post("/api/tasks").send({
+      id: crypto.randomUUID(),
+      title: "Unrelated",
+      completed: false,
+      priority: "low",
+      category: "Work",
+      dueDate: null,
+      completedAt: null,
+    })
+
+    expect((await agent.delete(`/api/categories/${category.body.id}`)).status).toBe(204)
+
+    const list = await agent.get("/api/tasks")
+    const remainingIds = list.body.map((t: { id: string }) => t.id)
+    expect(remainingIds).not.toContain(inCategory.body.id)
+    expect(remainingIds).toContain(elsewhere.body.id)
   })
 
   it("deletes a category — an empty list is re-seeded with defaults on the next fetch", async () => {
