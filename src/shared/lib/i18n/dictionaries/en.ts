@@ -102,6 +102,10 @@ export const en = {
   "toast.deleteFailed": "Couldn't delete this {entity}. Please try again.",
   "toast.reorderFailed": "Couldn't save the new order. Please try again.",
 
+  "reminders.tasksDueSoon": "You have {count} task(s) due soon",
+  "reminders.goalsDueSoon": "You have {count} goal(s) due soon",
+  "reminders.viewAction": "View",
+
   "auth.email": "Email",
   "auth.password": "Password",
   "auth.name": "Name",

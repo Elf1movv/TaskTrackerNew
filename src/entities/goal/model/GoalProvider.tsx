@@ -15,6 +15,7 @@ function computeProgress(milestones: Goal["milestones"]): number {
 export function GoalProvider({ children }: { children: ReactNode }) {
   const {
     items: goals,
+    isLoaded,
     create,
     update,
     remove,
@@ -105,6 +106,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       goals,
+      isLoaded,
       addGoal,
       updateGoal,
       deleteGoal,
@@ -117,6 +119,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     }),
     [
       goals,
+      isLoaded,
       addGoal,
       updateGoal,
       deleteGoal,

@@ -3,6 +3,7 @@ import type { Task } from "./task"
 
 export interface TaskContextValue {
   tasks: Task[]
+  isLoaded: boolean
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   addTask: (task: Omit<Task, "id" | "updatedAt" | "completedAt">) => void

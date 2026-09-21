@@ -3,6 +3,7 @@ import type { Goal } from "./goal"
 
 export interface GoalContextValue {
   goals: Goal[]
+  isLoaded: boolean
   addGoal: (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "progress">) => void
   updateGoal: (id: string, patch: Partial<Omit<Goal, "id" | "updatedAt" | "milestones">>) => void
   deleteGoal: (id: string) => void

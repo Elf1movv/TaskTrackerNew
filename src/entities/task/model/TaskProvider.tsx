@@ -9,6 +9,7 @@ import type { Task } from "./task"
 export function TaskProvider({ children }: { children: ReactNode }) {
   const {
     items: tasks,
+    isLoaded,
     create,
     update,
     remove,
@@ -48,8 +49,17 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ tasks, toggleTask, deleteTask, addTask, updateTask, reorderTasks, refreshTasks: refresh }),
-    [tasks, toggleTask, deleteTask, addTask, updateTask, reorderTasks, refresh],
+    () => ({
+      tasks,
+      isLoaded,
+      toggleTask,
+      deleteTask,
+      addTask,
+      updateTask,
+      reorderTasks,
+      refreshTasks: refresh,
+    }),
+    [tasks, isLoaded, toggleTask, deleteTask, addTask, updateTask, reorderTasks, refresh],
   )
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>

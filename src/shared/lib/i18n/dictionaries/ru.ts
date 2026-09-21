@@ -104,6 +104,10 @@ export const ru: Record<keyof typeof en, string> = {
   "toast.deleteFailed": "Не удалось удалить. Попробуйте ещё раз.",
   "toast.reorderFailed": "Не удалось сохранить новый порядок. Попробуйте ещё раз.",
 
+  "reminders.tasksDueSoon": "У вас {count} задач(и) с приближающимся сроком",
+  "reminders.goalsDueSoon": "У вас {count} цел(и) с приближающимся сроком",
+  "reminders.viewAction": "Перейти",
+
   "auth.email": "Почта",
   "auth.password": "Пароль",
   "auth.name": "Имя",
