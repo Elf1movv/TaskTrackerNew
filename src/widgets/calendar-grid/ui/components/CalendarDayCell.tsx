@@ -6,6 +6,7 @@ import { monoFont } from "@/shared/lib/typography"
 
 export function CalendarDayCell({
   day,
+  isCurrentMonth,
   dayTasks,
   isSelected,
   isCurrent,
@@ -13,6 +14,7 @@ export function CalendarDayCell({
   onMoveTaskToDay,
 }: {
   day: Date
+  isCurrentMonth: boolean
   dayTasks: Task[]
   isSelected: boolean
   isCurrent: boolean
@@ -33,12 +35,14 @@ export function CalendarDayCell({
     <button
       ref={ref}
       onClick={onSelect}
-      className={`aspect-square rounded-xl border border-border flex flex-col items-center pt-2 text-sm transition-all ${
+      className={`aspect-square rounded-xl border flex flex-col items-center pt-2 text-sm transition-all ${
         isSelected
           ? "bg-primary text-primary-foreground border-primary"
           : isCurrent
             ? "bg-primary/10 text-primary border-primary/30"
-            : "hover:bg-accent text-foreground"
+            : isCurrentMonth
+              ? "border-border hover:bg-accent text-foreground"
+              : "border-border/40 hover:bg-accent/50 text-muted-foreground/50"
       } ${isOver ? "ring-2 ring-primary" : ""}`}
     >
       <span css={monoFont} className="text-xs">

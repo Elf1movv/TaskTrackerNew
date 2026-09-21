@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { addMonths, subMonths } from "date-fns"
 import { isTaskOnDay, useTasks } from "@/entities/task"
 import { formatDateKey } from "@/shared/lib/date"
-import { buildMonthGrid } from "../lib/buildMonthGrid"
+import { buildMonthGrid } from "@/widgets/calendar-grid"
 import { CalendarContext } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
@@ -28,6 +28,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setCalMonth(now)
     setSelectedDay(now)
   }, [])
+  const goToMonth = useCallback((date: Date) => setCalMonth(date), [])
 
   const moveTaskToDay = useCallback(
     (taskId: string, day: Date) => {
@@ -49,6 +50,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       goToPrevMonth,
       goToNextMonth,
       goToToday,
+      goToMonth,
       moveTaskToDay,
     }),
     [
@@ -61,6 +63,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       goToPrevMonth,
       goToNextMonth,
       goToToday,
+      goToMonth,
       moveTaskToDay,
     ],
   )

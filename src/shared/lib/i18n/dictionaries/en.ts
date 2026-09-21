@@ -102,6 +102,7 @@ export const en = {
   "today.noTasksToday": "No tasks for today",
 
   "calendar.noTasksScheduled": "No tasks scheduled",
+  "calendar.backToToday": "Back to today",
 
   "toast.entityTask": "task",
   "toast.entityGoal": "goal",

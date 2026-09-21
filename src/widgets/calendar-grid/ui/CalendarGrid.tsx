@@ -2,21 +2,20 @@ import { format, isSameDay, isToday } from "date-fns"
 import { isTaskOnDay, type Task } from "@/entities/task"
 import { getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
+import type { MonthGridDay } from "../lib/buildMonthGrid"
 import { CalendarDayCell } from "./components"
 
 export function CalendarGrid({
   days,
-  startPad,
   tasks,
   selectedDay,
   onSelectDay,
   onMoveTaskToDay,
 }: {
-  days: Date[]
-  startPad: number
+  days: MonthGridDay[]
   tasks: Task[]
   selectedDay: Date | null
-  onSelectDay: (day: Date) => void
+  onSelectDay: (day: Date, isCurrentMonth: boolean) => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
 }) {
   const { language } = useLanguage()
@@ -35,21 +34,19 @@ export function CalendarGrid({
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: startPad }, (_, i) => (
-          <div key={`pad-${i}`} />
-        ))}
-        {days.map(day => {
-          const dayStr = format(day, "yyyy-MM-dd")
+        {days.map(({ date, isCurrentMonth }) => {
+          const dayStr = format(date, "yyyy-MM-dd")
           const dayTasks = tasks.filter(t => isTaskOnDay(t, dayStr))
 
           return (
             <CalendarDayCell
               key={dayStr}
-              day={day}
+              day={date}
+              isCurrentMonth={isCurrentMonth}
               dayTasks={dayTasks}
-              isSelected={selectedDay ? isSameDay(day, selectedDay) : false}
-              isCurrent={isToday(day)}
-              onSelect={() => onSelectDay(day)}
+              isSelected={selectedDay ? isSameDay(date, selectedDay) : false}
+              isCurrent={isToday(date)}
+              onSelect={() => onSelectDay(date, isCurrentMonth)}
               onMoveTaskToDay={onMoveTaskToDay}
             />
           )

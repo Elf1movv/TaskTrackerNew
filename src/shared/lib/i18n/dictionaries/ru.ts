@@ -104,6 +104,7 @@ export const ru: Record<keyof typeof en, string> = {
   "today.noTasksToday": "На сегодня задач нет",
 
   "calendar.noTasksScheduled": "Нет запланированных задач",
+  "calendar.backToToday": "К сегодня",
 
   "toast.entityTask": "задачу",
   "toast.entityGoal": "цель",

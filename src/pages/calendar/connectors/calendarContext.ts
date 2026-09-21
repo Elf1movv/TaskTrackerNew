@@ -1,10 +1,10 @@
 import { createContext, useContext } from "react"
 import type { Task } from "@/entities/task"
-import type { MonthGrid } from "../lib/buildMonthGrid"
+import type { MonthGridDay } from "@/widgets/calendar-grid"
 
 export interface CalendarContextValue {
   calMonth: Date
-  monthGrid: MonthGrid
+  monthGrid: MonthGridDay[]
   selectedDay: Date | null
   selectedTasks: Task[]
   allTasks: Task[]
@@ -12,6 +12,7 @@ export interface CalendarContextValue {
   goToPrevMonth: () => void
   goToNextMonth: () => void
   goToToday: () => void
+  goToMonth: (date: Date) => void
   moveTaskToDay: (taskId: string, day: Date) => void
 }
 
