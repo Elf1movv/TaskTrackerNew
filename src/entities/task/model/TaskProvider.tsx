@@ -30,10 +30,12 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const deleteTask = useCallback((id: string) => remove(id), [remove])
 
   const addTask = useCallback(
-    (task: Omit<Task, "id" | "updatedAt" | "completedAt">) => {
-      // updatedAt is a placeholder here — usePersistedCollection.create
-      // replaces it with the server's real value once the request resolves.
-      create({ ...task, id: generateId(), updatedAt: new Date().toISOString(), completedAt: null })
+    (task: Omit<Task, "id" | "updatedAt" | "completedAt" | "createdAt">) => {
+      // updatedAt/createdAt are placeholders here — usePersistedCollection.
+      // create replaces them with the server's real values once the
+      // request resolves.
+      const now = new Date().toISOString()
+      create({ ...task, id: generateId(), updatedAt: now, createdAt: now, completedAt: null })
     },
     [create],
   )

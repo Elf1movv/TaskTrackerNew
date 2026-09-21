@@ -26,7 +26,7 @@ export function HabitCard({ habit }: { habit: Habit }) {
       active={doneToday}
       color={habit.color}
       onClick={() => toggleHabit(habit.id, today)}
-      className="w-full p-4 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+      className="w-full h-full p-4 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
       aria-pressed={doneToday}
     >
       <div className="text-2xl mb-2 leading-none">{habit.icon}</div>

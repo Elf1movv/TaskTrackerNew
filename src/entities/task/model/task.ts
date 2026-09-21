@@ -9,6 +9,7 @@ export interface Task {
   dueDate: string | null
   completedAt: string | null
   updatedAt: string
+  createdAt: string
 }
 
 export const PRIORITY_COLORS: Record<Priority, string> = {

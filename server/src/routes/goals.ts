@@ -59,13 +59,15 @@ goalsRouter.post("/", async (req, res) => {
     return
   }
 
-  const { _min } = await db.goal.aggregate({ where: { userId: req.userId }, _min: { order: true } })
+  // New goals are appended on the client (added goals show up last), so
+  // they need an order larger than everything currently stored.
+  const { _max } = await db.goal.aggregate({ where: { userId: req.userId }, _max: { order: true } })
   const created = await db.goal.create({
     data: {
       ...parsed.data,
       userId: req.userId,
       milestones: parsed.data.milestones as unknown as Prisma.InputJsonValue,
-      order: (_min.order ?? 0) - 1,
+      order: (_max.order ?? -1) + 1,
     },
   })
   res.status(201).json(toClientGoal(created))
@@ -78,10 +80,13 @@ goalsRouter.patch("/reorder", async (req, res) => {
     return
   }
 
+  // Sorted by id — see the matching comment in routes/tasks.ts's reorder
+  // handler for why (deterministic lock order avoids deadlocking
+  // overlapping reorder transactions).
   await db.$transaction(
-    parsed.data.map(({ id, order }) =>
-      db.goal.updateMany({ where: { id, userId: req.userId }, data: { order } }),
-    ),
+    [...parsed.data]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(({ id, order }) => db.goal.updateMany({ where: { id, userId: req.userId }, data: { order } })),
   )
   // Prisma's @updatedAt bumps updatedAt on every reordered row even though
   // only `order` changed — the client must learn the new values, or its

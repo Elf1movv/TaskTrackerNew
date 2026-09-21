@@ -124,7 +124,7 @@ export function TaskBoard({
         )}
       </AnimatePresence>
 
-      <div className="flex gap-1.5 mb-6 flex-wrap items-center">
+      <div className="flex gap-1.5 mb-3 flex-wrap items-center">
         {(["all", "active", "done"] as const).map(f => (
           <button
             key={f}
@@ -138,7 +138,9 @@ export function TaskBoard({
             {t(STATUS_LABEL_KEYS[f])}
           </button>
         ))}
-        <div className="w-px h-4 bg-border mx-0.5" />
+      </div>
+
+      <div className="flex gap-1.5 mb-6 flex-wrap items-center">
         <button
           onClick={() => onCategoryFilterChange("all")}
           className={`px-3 py-1.5 rounded-lg text-xs transition-all ${

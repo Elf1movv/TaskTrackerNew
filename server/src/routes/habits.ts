@@ -46,9 +46,11 @@ habitsRouter.post("/", async (req, res) => {
     return
   }
 
-  const { _min } = await db.habit.aggregate({ where: { userId: req.userId }, _min: { order: true } })
+  // New habits are appended on the client (added habits show up last), so
+  // they need an order larger than everything currently stored.
+  const { _max } = await db.habit.aggregate({ where: { userId: req.userId }, _max: { order: true } })
   const created = await db.habit.create({
-    data: { ...parsed.data, userId: req.userId, order: (_min.order ?? 0) - 1 },
+    data: { ...parsed.data, userId: req.userId, order: (_max.order ?? -1) + 1 },
   })
   res.status(201).json(toClientHabit(created))
 })
@@ -60,10 +62,13 @@ habitsRouter.patch("/reorder", async (req, res) => {
     return
   }
 
+  // Sorted by id — see the matching comment in routes/tasks.ts's reorder
+  // handler for why (deterministic lock order avoids deadlocking
+  // overlapping reorder transactions).
   await db.$transaction(
-    parsed.data.map(({ id, order }) =>
-      db.habit.updateMany({ where: { id, userId: req.userId }, data: { order } }),
-    ),
+    [...parsed.data]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(({ id, order }) => db.habit.updateMany({ where: { id, userId: req.userId }, data: { order } })),
   )
   // Prisma's @updatedAt bumps updatedAt on every reordered row even though
   // only `order` changed — the client must learn the new values, or its

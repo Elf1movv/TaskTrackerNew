@@ -50,7 +50,7 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
 
   const create = useCallback(
     async (item: T) => {
-      setItems(prev => [item, ...prev])
+      setItems(prev => [...prev, item])
       try {
         const saved = await repository.create(item)
         setItems(prev => prev.map(i => (i.id === item.id ? saved : i)))
@@ -124,23 +124,37 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
     [items, repository, t, entity],
   )
 
+  // Chains reorder() calls one after another instead of letting them race —
+  // a single drag gesture can still call reorder() more than once (moving
+  // across several targets), and without this each call fired its own
+  // concurrent full-payload request racing all the others, which is what
+  // let overlapping backend transactions deadlock (see LEARNING.md,
+  // 2026-09-21). The optimistic setItems below still applies immediately
+  // on every call, so dragging stays visually instant — only the actual
+  // network round trips get serialized.
+  const pendingReorder = useRef<Promise<void>>(Promise.resolve())
+
   const reorder = useCallback(
-    async (nextItems: T[]) => {
+    (nextItems: T[]) => {
       const previous = items
       setItems(nextItems)
-      try {
-        const updated = await repository.reorder(
-          nextItems.map((item, index) => ({ id: item.id, order: index })),
-        )
-        const freshUpdatedAt = new Map(updated.map(u => [u.id, u.updatedAt]))
-        setItems(prev =>
-          prev.map(i => (freshUpdatedAt.has(i.id) ? { ...i, updatedAt: freshUpdatedAt.get(i.id)! } : i)),
-        )
-      } catch (err) {
-        setItems(previous)
-        toast.error(t("toast.reorderFailed"))
-        console.error(err)
-      }
+      const thisReorder = pendingReorder.current.then(async () => {
+        try {
+          const updated = await repository.reorder(
+            nextItems.map((item, index) => ({ id: item.id, order: index })),
+          )
+          const freshUpdatedAt = new Map(updated.map(u => [u.id, u.updatedAt]))
+          setItems(prev =>
+            prev.map(i => (freshUpdatedAt.has(i.id) ? { ...i, updatedAt: freshUpdatedAt.get(i.id)! } : i)),
+          )
+        } catch (err) {
+          setItems(previous)
+          toast.error(t("toast.reorderFailed"))
+          console.error(err)
+        }
+      })
+      pendingReorder.current = thisReorder
+      return thisReorder
     },
     [items, repository, t],
   )

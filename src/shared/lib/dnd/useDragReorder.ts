@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useRef } from "react"
 import { useDrag, useDrop } from "react-dnd"
 
 interface DragItem {
@@ -37,11 +37,22 @@ export function useDragReorder<T extends HTMLElement>({
     [type, id],
   )
 
+  // react-dnd's `hover` fires on nearly every pointer-move tick while the
+  // drag stays over this target, not just once when it actually arrives —
+  // without this guard, hovering a single target for a moment calls
+  // onHoverMove (and downstream, fires a real API request) dozens of times
+  // for the exact same move. This tracks the last dragged item already
+  // moved next to this target and skips repeats; a different drag (new
+  // `item.id`) naturally passes again.
+  const lastMovedIdRef = useRef<string | null>(null)
+
   const [, drop] = useDrop<DragItem>(
     () => ({
       accept: type,
       hover: item => {
-        if (item.id !== id) onHoverMove(item.id, id)
+        if (item.id === id || lastMovedIdRef.current === item.id) return
+        lastMovedIdRef.current = item.id
+        onHoverMove(item.id, id)
       },
     }),
     [type, id, onHoverMove],

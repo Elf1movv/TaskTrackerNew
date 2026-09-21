@@ -7,10 +7,14 @@ export const tasksRouter = Router()
 
 tasksRouter.use(requireAuth)
 
-// Shape the frontend's Task type expects — the DB-only fields (order,
-// createdAt, userId) never leave the server. `updatedAt` DOES leave the
-// server now — the client needs it to detect "this record changed
-// elsewhere" before overwriting it (see PATCH /:id below).
+// Shape the frontend's Task type expects — `order`/`userId` are DB-only and
+// never leave the server. `updatedAt`/`createdAt` DO leave the server:
+// `updatedAt` so the client can detect "this record changed elsewhere"
+// before overwriting it (see PATCH /:id below); `createdAt` so
+// selectTodayTasks.ts can tell "this undated task was made today" from
+// "this undated task is from a previous day" — a bare `dueDate == null`
+// check used to include every undated task forever (see LEARNING.md,
+// 2026-09-21).
 //
 // `dueDate` is stored as a real SQL `date` (see schema.prisma) but the
 // wire format stays the same "YYYY-MM-DD" string the client always used —
@@ -24,6 +28,7 @@ function toClientTask(task: {
   dueDate: Date | null
   completedAt: Date | null
   updatedAt: Date
+  createdAt: Date
 }) {
   return {
     id: task.id,
@@ -34,6 +39,7 @@ function toClientTask(task: {
     dueDate: task.dueDate ? task.dueDate.toISOString().slice(0, 10) : null,
     completedAt: task.completedAt ? task.completedAt.toISOString() : null,
     updatedAt: task.updatedAt,
+    createdAt: task.createdAt,
   }
 }
 
@@ -49,12 +55,12 @@ tasksRouter.post("/", async (req, res) => {
     return
   }
 
-  // New tasks are prepended on the client (added tasks show up first), so
-  // they need an order smaller than everything currently stored — scoped
+  // New tasks are appended on the client (added tasks show up last), so
+  // they need an order larger than everything currently stored — scoped
   // to this user's own tasks, not the whole table.
-  const { _min } = await db.task.aggregate({ where: { userId: req.userId }, _min: { order: true } })
+  const { _max } = await db.task.aggregate({ where: { userId: req.userId }, _max: { order: true } })
   const created = await db.task.create({
-    data: { ...parsed.data, userId: req.userId, order: (_min.order ?? 0) - 1 },
+    data: { ...parsed.data, userId: req.userId, order: (_max.order ?? -1) + 1 },
   })
   res.status(201).json(toClientTask(created))
 })
@@ -73,10 +79,16 @@ tasksRouter.patch("/reorder", async (req, res) => {
   // edit from another device. updateMany (not update) with userId in the
   // where clause — a plain `update` would throw if the id belonged to
   // someone else instead of just matching zero rows.
+  //
+  // Sorted by id before building the transaction — two overlapping reorder
+  // requests (e.g. a drag that fires more than one, or two tabs at once)
+  // each touch the same rows; without a deterministic lock order Postgres
+  // can deadlock one of them, which used to surface as a raw 500 (see
+  // LEARNING.md, 2026-09-21).
   await db.$transaction(
-    parsed.data.map(({ id, order }) =>
-      db.task.updateMany({ where: { id, userId: req.userId }, data: { order } }),
-    ),
+    [...parsed.data]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(({ id, order }) => db.task.updateMany({ where: { id, userId: req.userId }, data: { order } })),
   )
   // Prisma's @updatedAt bumps updatedAt on every reordered row even though
   // only `order` changed — the client must learn the new values, or its

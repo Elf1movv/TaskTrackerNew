@@ -32,10 +32,14 @@ export function HabitListRow({ habit }: { habit: Habit }) {
       aria-pressed={doneToday}
     >
       <div className="text-xl leading-none shrink-0">{habit.icon}</div>
-      <div className="text-sm font-medium flex-1 min-w-0 truncate pr-6">{habit.title}</div>
+      <div className="text-sm font-medium flex-1 min-w-0 truncate">{habit.title}</div>
+      {/* pr-14 reserves the corner HabitGridItem's absolute-positioned
+          edit/delete overlay occupies on hover — without it this row's
+          own right-aligned streak label lands directly under those
+          icons (see docs/ARCHITECTURE.md gotcha list). */}
       <StreakLabel
         color={streak > 0 ? habit.color : "var(--muted-foreground)"}
-        className="flex items-center gap-1 shrink-0"
+        className="flex items-center gap-1 shrink-0 pr-14"
       >
         <Flame size={11} />
         <span css={monoFont} className="text-xs">

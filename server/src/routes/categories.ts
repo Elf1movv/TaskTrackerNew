@@ -87,10 +87,13 @@ categoriesRouter.patch("/reorder", async (req, res) => {
     return
   }
 
+  // Sorted by id — see the matching comment in routes/tasks.ts's reorder
+  // handler for why (deterministic lock order avoids deadlocking
+  // overlapping reorder transactions).
   await db.$transaction(
-    parsed.data.map(({ id, order }) =>
-      db.category.updateMany({ where: { id, userId: req.userId }, data: { order } }),
-    ),
+    [...parsed.data]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(({ id, order }) => db.category.updateMany({ where: { id, userId: req.userId }, data: { order } })),
   )
   // Prisma's @updatedAt bumps updatedAt on every reordered row even though
   // only `order` changed — the client must learn the new values, or its

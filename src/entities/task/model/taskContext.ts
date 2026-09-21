@@ -6,7 +6,7 @@ export interface TaskContextValue {
   isLoaded: boolean
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
-  addTask: (task: Omit<Task, "id" | "updatedAt" | "completedAt">) => void
+  addTask: (task: Omit<Task, "id" | "updatedAt" | "completedAt" | "createdAt">) => void
   updateTask: (id: string, patch: Partial<Omit<Task, "id" | "updatedAt">>) => void
   reorderTasks: (draggedId: string, targetId: string) => void
   refreshTasks: () => Promise<void>

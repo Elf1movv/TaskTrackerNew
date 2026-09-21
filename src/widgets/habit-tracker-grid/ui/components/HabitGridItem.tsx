@@ -24,7 +24,7 @@ export function HabitGridItem({
   return (
     <div
       ref={ref}
-      className="relative group cursor-grab active:cursor-grabbing select-none"
+      className={`relative group cursor-grab active:cursor-grabbing select-none ${viewMode === "grid" ? "h-full" : ""}`}
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       {viewMode === "grid" ? <HabitCard habit={habit} /> : <HabitListRow habit={habit} />}
