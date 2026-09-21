@@ -1,10 +1,16 @@
 import { useState } from "react"
 import { Link } from "react-router"
-import { authClient, translateAuthError } from "@/shared/lib/auth"
+import {
+  authClient,
+  MAX_PASSWORD_LENGTH,
+  meetsPasswordRequirements,
+  translateAuthError,
+} from "@/shared/lib/auth"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
+import { PasswordRequirementsHint } from "@/shared/ui/password-requirements-hint"
 import { AuthLayout } from "./AuthLayout"
 
 export function RegisterPage() {
@@ -17,7 +23,7 @@ export function RegisterPage() {
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
 
   async function handleSubmit() {
-    if (!name.trim() || !email.trim() || !password) return
+    if (!name.trim() || !email.trim() || !meetsPasswordRequirements(password)) return
     setError(null)
     setIsSubmitting(true)
     const { error: signUpError } = await authClient.signUp.email({
@@ -78,13 +84,19 @@ export function RegisterPage() {
         <Input
           id="register-password"
           type="password"
+          maxLength={MAX_PASSWORD_LENGTH}
           value={password}
           onChange={e => setPassword(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
         />
+        <PasswordRequirementsHint password={password} />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button className="w-full" onClick={handleSubmit} disabled={isSubmitting}>
+      <Button
+        className="w-full"
+        onClick={handleSubmit}
+        disabled={isSubmitting || !meetsPasswordRequirements(password)}
+      >
         {t("auth.register.submit")}
       </Button>
       <p className="text-sm text-muted-foreground text-center">

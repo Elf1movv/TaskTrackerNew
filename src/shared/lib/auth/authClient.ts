@@ -5,4 +5,5 @@ import { createAuthClient } from "better-auth/react"
 // see vite.config.ts) and prod (nginx serves both from mytracker.space).
 export const authClient = createAuthClient()
 
-export const { useSession, signIn, signUp, signOut, requestPasswordReset, resetPassword } = authClient
+export const { useSession, signIn, signUp, signOut, requestPasswordReset, resetPassword, changePassword } =
+  authClient

@@ -7,6 +7,7 @@ import { TaskProvider } from "@/entities/task"
 import { useSession } from "@/shared/lib/auth"
 import { FeedbackBanner } from "@/widgets/feedback"
 import { MobileNav, SidebarNav } from "@/widgets/navigation"
+import { SettingsPanel } from "@/widgets/settings-panel"
 
 export function RootLayout() {
   const location = useLocation()
@@ -31,6 +32,7 @@ export function RootLayout() {
           <CategoryProvider>
             <div className="flex h-screen bg-background text-foreground overflow-hidden">
               <SidebarNav />
+              <SettingsPanel email={session.user.email} />
 
               <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
                 <AnimatePresence mode="wait">

@@ -8,6 +8,10 @@ const ERROR_CODE_KEYS: Record<string, TranslationKey> = {
   INVALID_EMAIL_OR_PASSWORD: "auth.error.invalidCredentials",
   EMAIL_NOT_VERIFIED: "auth.error.emailNotVerified",
   USER_ALREADY_EXISTS: "auth.error.userAlreadyExists",
+  INVALID_PASSWORD: "auth.error.wrongCurrentPassword",
+  PASSWORD_TOO_SHORT: "auth.error.passwordTooShort",
+  PASSWORD_TOO_LONG: "auth.error.passwordTooLong",
+  PASSWORD_NO_LETTER_OR_DIGIT: "auth.error.passwordNoLetterOrDigit",
 }
 
 export function translateAuthError(
