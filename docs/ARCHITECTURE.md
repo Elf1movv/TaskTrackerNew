@@ -299,6 +299,7 @@ erDiagram
         string id PK
         string email
         boolean emailVerified
+        boolean categoriesSeeded
     }
     Feedback {
         string id PK

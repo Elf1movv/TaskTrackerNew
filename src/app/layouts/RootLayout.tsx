@@ -1,5 +1,9 @@
 import { AnimatePresence, motion } from "motion/react"
 import { Navigate, useLocation, useOutlet } from "react-router"
+import { CategoryProvider } from "@/entities/category"
+import { GoalProvider } from "@/entities/goal"
+import { HabitProvider } from "@/entities/habit"
+import { TaskProvider } from "@/entities/task"
 import { useSession } from "@/shared/lib/auth"
 import { FeedbackBanner } from "@/widgets/feedback"
 import { MobileNav, SidebarNav } from "@/widgets/navigation"
@@ -15,25 +19,39 @@ export function RootLayout() {
   if (!session) return <Navigate to="/login" replace />
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
-      <SidebarNav />
+    // Entity providers mounted here, not in AppProviders — they only ever
+    // render once a session is confirmed above, so TaskProvider etc. never
+    // fire their usePersistedCollection fetch on /login and get a 401.
+    // LanguageProvider (in AppProviders, an ancestor of this component) is
+    // still above these — usePersistedCollection's error toasts call
+    // useLanguage() to translate, and need it as an ancestor.
+    <TaskProvider>
+      <GoalProvider>
+        <HabitProvider>
+          <CategoryProvider>
+            <div className="flex h-screen bg-background text-foreground overflow-hidden">
+              <SidebarNav />
 
-      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22 }}
-          >
-            {element}
-          </motion.div>
-        </AnimatePresence>
-        <FeedbackBanner />
-      </main>
+              <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.22 }}
+                  >
+                    {element}
+                  </motion.div>
+                </AnimatePresence>
+                <FeedbackBanner />
+              </main>
 
-      <MobileNav />
-    </div>
+              <MobileNav />
+            </div>
+          </CategoryProvider>
+        </HabitProvider>
+      </GoalProvider>
+    </TaskProvider>
   )
 }

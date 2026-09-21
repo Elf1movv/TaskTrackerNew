@@ -35,5 +35,9 @@ export const auth = betterAuth({
         html: `<p>Чтобы подтвердить почту и войти в MyTracker, перейдите по ссылке: <a href="${url}">${url}</a></p>`,
       })
     },
+    // Without this, someone who tries to log in before verifying just gets
+    // "email not verified" with no way to get a fresh link if the first
+    // one was lost or landed in spam.
+    sendOnSignIn: true,
   },
 })

@@ -54,10 +54,11 @@ describe("categories router", () => {
     expect(list.body.map((c: { name: string }) => c.name)).toEqual(["Work", "Personal"])
   })
 
-  it("rejects a duplicate category name for the same user", async () => {
+  it("rejects a duplicate category name for the same user with a clean 409, not a raw 500", async () => {
     await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work" })
     const res = await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work" })
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(409)
+    expect(res.body.error).toBeTruthy()
   })
 
   it("allows two different users to each have a category with the same name", async () => {
@@ -99,14 +100,15 @@ describe("categories router", () => {
     expect(remainingIds).toContain(elsewhere.body.id)
   })
 
-  it("deletes a category — an empty list is re-seeded with defaults on the next fetch", async () => {
-    const created = await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work" })
-    expect((await agent.delete(`/api/categories/${created.body.id}`)).status).toBe(204)
+  it("deleting the last category does not resurrect the defaults on the next fetch", async () => {
+    await agent.get("/api/categories") // triggers the seed
+    const all = await agent.get("/api/categories")
+    await Promise.all(all.body.map((c: { id: string }) => agent.delete(`/api/categories/${c.id}`)))
 
-    // No categories left for this user, so the next GET re-triggers the
-    // same lazy seed a brand-new user would get — there's no "permanently
-    // empty" state, by design.
+    // categoriesSeeded stays true once set, so an empty list here means the
+    // user deliberately deleted everything, not that they're new — the
+    // next GET must leave it empty, not silently bring the defaults back.
     const list = await agent.get("/api/categories")
-    expect(list.body.map((c: { name: string }) => c.name)).toEqual(["Work", "Personal", "Health", "Learning"])
+    expect(list.body).toEqual([])
   })
 })

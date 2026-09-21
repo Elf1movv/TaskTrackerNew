@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { Router } from "express"
 import { db } from "../db.js"
 import { requireAuth } from "../middleware/requireAuth.js"
@@ -19,11 +20,28 @@ function toClientCategory(category: { id: string; name: string; updatedAt: Date 
 const DEFAULT_CATEGORY_NAMES = ["Work", "Personal", "Health", "Learning"]
 
 categoriesRouter.get("/", async (req, res) => {
-  const existing = await db.category.count({ where: { userId: req.userId } })
-  if (existing === 0) {
-    await db.category.createMany({
-      data: DEFAULT_CATEGORY_NAMES.map((name, order) => ({ name, order, userId: req.userId })),
-    })
+  // categoriesSeeded (not "does the user have zero categories right now")
+  // is what tells a brand-new account apart from one that deleted its last
+  // category on purpose — count === 0 couldn't distinguish those, so
+  // deleting your last category used to silently resurrect the 4 defaults
+  // on next load. See LEARNING.md.
+  const user = await db.user.findUniqueOrThrow({
+    where: { id: req.userId },
+    select: { categoriesSeeded: true },
+  })
+  if (!user.categoriesSeeded) {
+    await db.$transaction([
+      // skipDuplicates: a category can be created via POST before this
+      // user's first GET resolves (e.g. submitting "add category" while
+      // the initial list load is still in flight) — without it, seeding a
+      // default name that collides with one the user already made would
+      // throw and crash this request instead of just skipping that name.
+      db.category.createMany({
+        data: DEFAULT_CATEGORY_NAMES.map((name, order) => ({ name, order, userId: req.userId })),
+        skipDuplicates: true,
+      }),
+      db.user.update({ where: { id: req.userId }, data: { categoriesSeeded: true } }),
+    ])
   }
 
   const categories = await db.category.findMany({ where: { userId: req.userId }, orderBy: { order: "asc" } })
@@ -41,10 +59,25 @@ categoriesRouter.post("/", async (req, res) => {
   // picker reads top-to-bottom as "oldest/most-established first", not
   // "newest first" like a task list does.
   const { _max } = await db.category.aggregate({ where: { userId: req.userId }, _max: { order: true } })
-  const created = await db.category.create({
-    data: { ...parsed.data, userId: req.userId, order: (_max.order ?? -1) + 1 },
-  })
-  res.status(201).json(toClientCategory(created))
+  try {
+    // Also marks categoriesSeeded true: a user who creates their own first
+    // category (e.g. their "add category" request beats their initial GET's
+    // seed) already has a category to their name, so the next GET must not
+    // seed defaults on top of it.
+    const [created] = await db.$transaction([
+      db.category.create({
+        data: { ...parsed.data, userId: req.userId, order: (_max.order ?? -1) + 1 },
+      }),
+      db.user.update({ where: { id: req.userId }, data: { categoriesSeeded: true } }),
+    ])
+    res.status(201).json(toClientCategory(created))
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      res.status(409).json({ error: "Category name already exists" })
+      return
+    }
+    throw err
+  }
 })
 
 categoriesRouter.patch("/reorder", async (req, res) => {
