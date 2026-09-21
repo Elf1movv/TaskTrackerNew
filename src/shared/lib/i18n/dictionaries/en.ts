@@ -21,6 +21,8 @@ export const en = {
   "settings.open": "Settings",
   "settings.title": "Settings",
   "settings.description": "Account and app settings",
+  "settings.back": "Back",
+  "settings.menu.appearance": "Appearance",
   "settings.account.title": "Account",
   "settings.account.email": "Email",
   "settings.account.password": "Password",

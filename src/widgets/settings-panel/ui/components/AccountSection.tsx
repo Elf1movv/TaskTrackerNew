@@ -7,7 +7,6 @@ import {
   translateAuthError,
 } from "@/shared/lib/auth"
 import { useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { Checkbox } from "@/shared/ui/checkbox"
 import { Label } from "@/shared/ui/label"
@@ -44,10 +43,6 @@ export function AccountSection({ email }: { email: string }) {
 
   return (
     <div className="space-y-4">
-      <div css={monoFont} className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground">
-        {t("settings.account.title")}
-      </div>
-
       <div className="space-y-1">
         <div className="text-xs text-muted-foreground">{t("settings.account.email")}</div>
         <div className="text-sm">{email}</div>

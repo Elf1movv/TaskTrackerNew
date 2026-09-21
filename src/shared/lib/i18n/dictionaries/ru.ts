@@ -23,6 +23,8 @@ export const ru: Record<keyof typeof en, string> = {
   "settings.open": "Настройки",
   "settings.title": "Настройки",
   "settings.description": "Настройки аккаунта и приложения",
+  "settings.back": "Назад",
+  "settings.menu.appearance": "Внешний вид",
   "settings.account.title": "Аккаунт",
   "settings.account.email": "Почта",
   "settings.account.password": "Пароль",

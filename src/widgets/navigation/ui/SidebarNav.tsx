@@ -1,16 +1,11 @@
 import { format } from "date-fns"
-import { LogOut } from "lucide-react"
 import { NavLink } from "react-router"
 import { selectTodayTasks, useTasks } from "@/entities/task"
 import { useGoals } from "@/entities/goal"
 import { useHabits } from "@/entities/habit"
-import { signOut } from "@/shared/lib/auth"
 import { getTodayKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
-import { Button } from "@/shared/ui/button"
-import { LanguageToggle } from "@/shared/ui/language-toggle"
-import { ThemeToggle } from "@/shared/ui/theme-toggle"
 import { NAV_ITEMS } from "../model/navItems"
 
 export function SidebarNav() {
@@ -76,19 +71,6 @@ export function SidebarNav() {
             </span>
           </div>
         ))}
-        <div className="pt-2 mt-2 border-t border-border space-y-2">
-          <LanguageToggle />
-          <ThemeToggle />
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-center text-xs text-muted-foreground hover:text-destructive"
-            onClick={() => signOut()}
-          >
-            <LogOut size={13} />
-            {t("sidebar.logout")}
-          </Button>
-        </div>
       </div>
     </aside>
   )
