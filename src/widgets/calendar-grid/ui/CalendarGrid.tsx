@@ -15,7 +15,7 @@ export function CalendarGrid({
   days: Date[]
   startPad: number
   tasks: Task[]
-  selectedDay: Date
+  selectedDay: Date | null
   onSelectDay: (day: Date) => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
 }) {
@@ -47,7 +47,7 @@ export function CalendarGrid({
               key={dayStr}
               day={day}
               dayTasks={dayTasks}
-              isSelected={isSameDay(day, selectedDay)}
+              isSelected={selectedDay ? isSameDay(day, selectedDay) : false}
               isCurrent={isToday(day)}
               onSelect={() => onSelectDay(day)}
               onMoveTaskToDay={onMoveTaskToDay}

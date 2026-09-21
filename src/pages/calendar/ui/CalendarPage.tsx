@@ -1,4 +1,5 @@
 import { format } from "date-fns"
+import { AnimatePresence, motion } from "motion/react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { CalendarGrid } from "@/widgets/calendar-grid"
 import { DayDetailPanel } from "@/widgets/day-detail-panel"
@@ -66,7 +67,21 @@ function CalendarPageContent() {
           onSelectDay={selectDay}
           onMoveTaskToDay={moveTaskToDay}
         />
-        <DayDetailPanel day={selectedDay} tasks={selectedTasks} />
+        <AnimatePresence>
+          {selectedDay && (
+            // No per-day `key` on purpose — switching between two already-
+            // open days should just swap content, not replay the
+            // enter/exit animation; that's reserved for null <-> a day.
+            <motion.div
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 12 }}
+              transition={{ duration: 0.2 }}
+            >
+              <DayDetailPanel day={selectedDay} tasks={selectedTasks} onClose={() => selectDay(null)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

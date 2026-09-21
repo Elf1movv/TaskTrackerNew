@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { format } from "date-fns"
-import { Plus } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
 import { type Task } from "@/entities/task"
 import { formatDateKey } from "@/shared/lib/date"
@@ -10,7 +10,7 @@ import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { DayTaskRow } from "./components"
 
-export function DayDetailPanel({ day, tasks }: { day: Date; tasks: Task[] }) {
+export function DayDetailPanel({ day, tasks, onClose }: { day: Date; tasks: Task[]; onClose: () => void }) {
   const [isAdding, setIsAdding] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const { language, t } = useLanguage()
@@ -28,18 +28,29 @@ export function DayDetailPanel({ day, tasks }: { day: Date; tasks: Task[] }) {
             {format(day, "MMMM d", { locale })}
           </div>
         </div>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="rounded-xl text-muted-foreground hover:text-foreground shrink-0"
-          onClick={() => {
-            setEditingTaskId(null)
-            setIsAdding(v => !v)
-          }}
-          aria-label="Add task"
-        >
-          <Plus size={16} />
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="rounded-xl text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setEditingTaskId(null)
+              setIsAdding(v => !v)
+            }}
+            aria-label="Add task"
+          >
+            <Plus size={16} />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="rounded-xl text-muted-foreground hover:text-foreground"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <X size={16} />
+          </Button>
+        </div>
       </div>
 
       <AnimatePresence>

@@ -8,16 +8,19 @@ import { CalendarContext } from "./calendarContext"
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const { tasks, updateTask } = useTasks()
   const [calMonth, setCalMonth] = useState(new Date())
-  const [selectedDay, setSelectedDay] = useState(new Date())
+  // No day selected by default — the day panel only appears once the user
+  // actually taps a day (see docs/requirements), not pre-filled with today.
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null)
 
   const monthGrid = useMemo(() => buildMonthGrid(calMonth), [calMonth])
 
   const selectedTasks = useMemo(() => {
+    if (!selectedDay) return []
     const selectedKey = formatDateKey(selectedDay)
     return tasks.filter(t => isTaskOnDay(t, selectedKey))
   }, [tasks, selectedDay])
 
-  const selectDay = useCallback((day: Date) => setSelectedDay(day), [])
+  const selectDay = useCallback((day: Date | null) => setSelectedDay(day), [])
   const goToPrevMonth = useCallback(() => setCalMonth(d => subMonths(d, 1)), [])
   const goToNextMonth = useCallback(() => setCalMonth(d => addMonths(d, 1)), [])
   const goToToday = useCallback(() => {

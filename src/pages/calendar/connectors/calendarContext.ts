@@ -5,10 +5,10 @@ import type { MonthGrid } from "../lib/buildMonthGrid"
 export interface CalendarContextValue {
   calMonth: Date
   monthGrid: MonthGrid
-  selectedDay: Date
+  selectedDay: Date | null
   selectedTasks: Task[]
   allTasks: Task[]
-  selectDay: (day: Date) => void
+  selectDay: (day: Date | null) => void
   goToPrevMonth: () => void
   goToNextMonth: () => void
   goToToday: () => void

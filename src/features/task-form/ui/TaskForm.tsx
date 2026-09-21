@@ -53,7 +53,12 @@ export function TaskForm({
   const [title, setTitle] = useState(task?.title ?? "")
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
-  const [hasDueDate, setHasDueDate] = useState(!!(task?.dueDate ?? defaultDueDate))
+  // hasDueDate starts on only when editing a task that already has a date
+  // — defaultDueDate (e.g. the day clicked in the calendar's day panel)
+  // still pre-fills what the date field WOULD be if the toggle is turned
+  // on, but merely suggesting a value shouldn't flip the toggle itself;
+  // every other place a new task is created defaults it off.
+  const [hasDueDate, setHasDueDate] = useState(!!task?.dueDate)
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? getTodayKey())
   const showCategoryPicker = !!task || !lockedCategory
 
@@ -117,7 +122,11 @@ export function TaskForm({
           </div>
         )}
 
-        <div className="flex items-center gap-2">
+        {/* flex-wrap of its own — narrow containers (e.g. the calendar
+            day panel's ~260px card) don't have room for both buttons on
+            one line; without this the DatePicker's trigger overflowed the
+            card instead of wrapping. */}
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             type="button"
             variant="outline"
