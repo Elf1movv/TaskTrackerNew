@@ -13,13 +13,18 @@ export function getDayCellState(habit: Habit, date: Date, today: Date): DayCellS
   return habit.completedDates.includes(formatDateKey(date)) ? "done" : "pending"
 }
 
-// Share of this habit's *scheduled* days in `month` that are done, counted
+export interface MonthCompletionStats {
+  done: number
+  scheduled: number
+}
+
+// This habit's *scheduled* days in `month` that are done vs. total, counted
 // only up through today for the current month (a partially-lived month
 // isn't "behind" just because it isn't over) and not at all for a future
-// month. Drives the year view's cell shading — more informative than a
-// binary "did every day in this month happen".
-export function getMonthCompletionRatio(habit: Habit, month: Date, today: Date): number {
-  if (isAfter(month, today) && !isSameMonth(month, today)) return 0
+// month. Drives the year view's cell shading and its click popup — more
+// informative than a binary "did every day in this month happen".
+export function getMonthCompletionStats(habit: Habit, month: Date, today: Date): MonthCompletionStats {
+  if (isAfter(month, today) && !isSameMonth(month, today)) return { done: 0, scheduled: 0 }
 
   const year = month.getFullYear()
   const monthIndex = month.getMonth()
@@ -35,5 +40,5 @@ export function getMonthCompletionRatio(habit: Habit, month: Date, today: Date):
     if (habit.completedDates.includes(formatDateKey(date))) done++
   }
 
-  return scheduled === 0 ? 0 : done / scheduled
+  return { done, scheduled }
 }

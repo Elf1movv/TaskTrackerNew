@@ -78,80 +78,92 @@ export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
           <div className="text-center py-12 text-muted-foreground text-sm">{t("habits.noHabitsYet")}</div>
         )
       ) : (
-        <div className="overflow-x-auto">
-          <div
-            className="grid gap-y-2 min-w-max"
-            style={{ gridTemplateColumns: `minmax(160px, auto) repeat(${columnCount}, 32px)` }}
-          >
-            <div />
-            {days?.map(date => (
-              <div
-                key={date.toISOString()}
-                css={monoFont}
-                className="text-[10px] text-muted-foreground text-center self-end pb-1"
-              >
-                {period === "week" ? weekdayLabels[(date.getDay() + 6) % 7] : date.getDate()}
-              </div>
-            ))}
-            {months?.map(month => (
-              <div
-                key={month.toISOString()}
-                css={monoFont}
-                className="text-[10px] text-muted-foreground text-center self-end pb-1 capitalize"
-              >
-                {format(month, "LLL", { locale })}
-              </div>
-            ))}
-
-            {habits.map(habit => (
-              <Fragment key={habit.id}>
-                <div className="flex items-center gap-2 pr-2 group/row">
-                  <span className="text-base leading-none">{habit.icon}</span>
-                  <span className="text-sm font-medium truncate flex-1">{habit.title}</span>
-                  <span
-                    css={monoFont}
-                    className="flex items-center gap-0.5 text-[10px] text-muted-foreground shrink-0"
-                  >
-                    <Flame size={10} />
-                    {getStreak(habit.completedDates, habit.activeDays)}
-                  </span>
-                  <span className="hidden group-hover/row:flex items-center shrink-0">
-                    <EditHabitButton onClick={() => setEditingHabit(habit)} />
-                    <DeleteHabitButton habitId={habit.id} />
-                  </span>
+        // Fluid columns (1fr each), not a fixed pixel width — the whole
+        // period always fits the container's width with no horizontal
+        // scroll, at the cost of narrower cells for month view's ~30
+        // columns than for week/year's 7-12.
+        <div
+          className="grid gap-y-2 gap-x-1"
+          style={{ gridTemplateColumns: `minmax(120px, 220px) repeat(${columnCount}, minmax(0, 1fr))` }}
+        >
+          <div />
+          {days?.map((date, i) => (
+            <div key={date.toISOString()} className="text-center self-end pb-1">
+              {period === "month" && (
+                <div css={monoFont} className="text-[9px] text-muted-foreground/70 leading-tight">
+                  {weekdayLabels[(date.getDay() + 6) % 7]}
                 </div>
-                {days?.map(date => {
-                  const state = getDayCellState(habit, date, today)
-                  const dateKey = formatDateKey(date)
-                  const clickable = state === "done" || state === "pending"
-                  return (
-                    <button
-                      key={`${habit.id}-${dateKey}`}
-                      type="button"
-                      disabled={!clickable}
-                      onClick={() => clickable && toggleHabit(habit.id, dateKey)}
-                      aria-label={`${habit.title} ${dateKey}`}
-                      className="size-8 rounded-md border transition-all disabled:cursor-default"
-                      style={{
-                        backgroundColor:
-                          state === "done"
-                            ? habit.color
-                            : state === "unscheduled" || state === "future"
-                              ? "var(--muted)"
-                              : "transparent",
-                        borderColor: state === "done" ? habit.color : "var(--border)",
-                        borderStyle: state === "unscheduled" || state === "future" ? "dashed" : "solid",
-                        opacity: state === "unscheduled" || state === "future" ? 0.6 : 1,
-                      }}
-                    />
-                  )
-                })}
-                {months?.map(month => (
-                  <MonthCell key={month.toISOString()} habit={habit} month={month} today={today} />
-                ))}
-              </Fragment>
-            ))}
-          </div>
+              )}
+              <div css={monoFont} className="text-[10px] text-muted-foreground leading-tight">
+                {period === "week" ? weekdayLabels[i] : date.getDate()}
+              </div>
+              {period === "week" && (
+                <div css={monoFont} className="text-[9px] text-muted-foreground/70 leading-tight">
+                  {date.getDate()}
+                </div>
+              )}
+            </div>
+          ))}
+          {months?.map(month => (
+            <div
+              key={month.toISOString()}
+              css={monoFont}
+              className="text-[10px] text-muted-foreground text-center self-end pb-1 capitalize"
+            >
+              {format(month, "LLL", { locale })}
+            </div>
+          ))}
+
+          {habits.map(habit => (
+            <Fragment key={habit.id}>
+              <div className="flex items-center gap-2 pr-2 group/row">
+                <span className="text-base leading-none">{habit.icon}</span>
+                <span className="text-sm font-medium truncate flex-1">{habit.title}</span>
+                <span
+                  css={monoFont}
+                  className="flex items-center gap-0.5 text-[10px] text-muted-foreground shrink-0"
+                >
+                  <Flame size={10} />
+                  {getStreak(habit.completedDates, habit.activeDays)}
+                </span>
+                <span className="hidden group-hover/row:flex items-center shrink-0">
+                  <EditHabitButton onClick={() => setEditingHabit(habit)} />
+                  <DeleteHabitButton habitId={habit.id} />
+                </span>
+              </div>
+              {days?.map(date => {
+                const state = getDayCellState(habit, date, today)
+                const dateKey = formatDateKey(date)
+                const clickable = state === "done" || state === "pending"
+                return (
+                  <button
+                    key={`${habit.id}-${dateKey}`}
+                    type="button"
+                    disabled={!clickable}
+                    onClick={() => clickable && toggleHabit(habit.id, dateKey)}
+                    aria-label={`${habit.title} ${dateKey}`}
+                    className="w-full max-w-10 aspect-square mx-auto rounded-md border transition-all disabled:cursor-default"
+                    style={{
+                      backgroundColor:
+                        state === "done"
+                          ? habit.color
+                          : state === "unscheduled" || state === "future"
+                            ? "var(--muted)"
+                            : "transparent",
+                      borderColor: state === "done" ? habit.color : "var(--border)",
+                      borderStyle: state === "unscheduled" || state === "future" ? "dashed" : "solid",
+                      opacity: state === "unscheduled" || state === "future" ? 0.6 : 1,
+                    }}
+                  />
+                )
+              })}
+              {months?.map(month => (
+                <div key={month.toISOString()} className="w-full max-w-10 aspect-square mx-auto">
+                  <MonthCell habit={habit} month={month} today={today} />
+                </div>
+              ))}
+            </Fragment>
+          ))}
         </div>
       )}
 
