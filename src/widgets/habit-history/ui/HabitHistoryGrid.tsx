@@ -34,7 +34,10 @@ export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
   const weekdayLabels = getWeekdayLabels(language)
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
+    <div
+      className="bg-card border border-border rounded-2xl p-6 space-y-6 mx-auto transition-[max-width] duration-300 ease-out"
+      style={{ maxWidth: period === "month" ? "100%" : "56rem" }}
+    >
       <div className="flex items-center justify-end flex-wrap gap-3">
         <div className="flex gap-0.5 bg-muted rounded-lg p-0.5">
           {PERIODS.map(p => (
@@ -142,7 +145,7 @@ export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
                     disabled={!clickable}
                     onClick={() => clickable && toggleHabit(habit.id, dateKey)}
                     aria-label={`${habit.title} ${dateKey}`}
-                    className="w-full max-w-10 aspect-square mx-auto rounded-md border transition-all disabled:cursor-default"
+                    className="w-full max-w-10 aspect-square mx-auto rounded-full border transition-all disabled:cursor-default"
                     style={{
                       backgroundColor:
                         state === "done"

@@ -8,4 +8,5 @@ export interface Habit {
   // (0=Sunday..6=Saturday). Defaults to every day.
   activeDays: number[]
   updatedAt: string
+  createdAt: string
 }

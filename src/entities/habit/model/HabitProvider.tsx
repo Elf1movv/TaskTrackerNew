@@ -16,13 +16,12 @@ export function HabitProvider({ children }: { children: ReactNode }) {
   } = usePersistedCollection<Habit>(habitRepository, "habit")
 
   const addHabit = useCallback(
-    (habit: Omit<Habit, "id" | "updatedAt" | "completedDates">) => {
-      create({
-        ...habit,
-        id: generateId(),
-        completedDates: [],
-        updatedAt: new Date().toISOString(),
-      })
+    (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates">) => {
+      // updatedAt/createdAt are placeholders here — usePersistedCollection.
+      // create replaces them with the server's real values once the
+      // request resolves.
+      const now = new Date().toISOString()
+      create({ ...habit, id: generateId(), completedDates: [], updatedAt: now, createdAt: now })
     },
     [create],
   )

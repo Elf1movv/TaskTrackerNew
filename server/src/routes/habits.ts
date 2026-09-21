@@ -15,6 +15,7 @@ interface ClientHabit {
   completedDates: string[]
   activeDays: number[]
   updatedAt: Date
+  createdAt: Date
 }
 
 function toClientHabit(habit: {
@@ -25,6 +26,7 @@ function toClientHabit(habit: {
   completedDates: string[]
   activeDays: number[]
   updatedAt: Date
+  createdAt: Date
 }): ClientHabit {
   return {
     id: habit.id,
@@ -34,6 +36,7 @@ function toClientHabit(habit: {
     completedDates: habit.completedDates,
     activeDays: habit.activeDays,
     updatedAt: habit.updatedAt,
+    createdAt: habit.createdAt,
   }
 }
 

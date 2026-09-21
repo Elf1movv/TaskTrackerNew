@@ -3,7 +3,7 @@ import type { Habit } from "./habit"
 
 export interface HabitContextValue {
   habits: Habit[]
-  addHabit: (habit: Omit<Habit, "id" | "updatedAt" | "completedDates">) => void
+  addHabit: (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates">) => void
   updateHabit: (id: string, patch: Partial<Omit<Habit, "id" | "updatedAt">>) => void
   deleteHabit: (id: string) => void
   reorderHabits: (draggedId: string, targetId: string) => void

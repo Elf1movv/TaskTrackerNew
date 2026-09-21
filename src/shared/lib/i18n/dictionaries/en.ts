@@ -83,7 +83,7 @@ export const en = {
   "habits.period.month": "Month",
   "habits.period.year": "Year",
   "habits.page.summary": "Done: {completed} of {total} ({percent}%)",
-  "habits.monthCellSummary": "{done} of {scheduled} ({percent}%)",
+  "habits.monthCellSummary": "{done} of {scheduled}",
   "habitCard.days": "days",
 
   "goals.title": "Goals",

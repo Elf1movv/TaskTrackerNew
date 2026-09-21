@@ -1,4 +1,4 @@
-import { isAfter, isSameMonth } from "date-fns"
+import { isAfter, isBefore, isSameMonth } from "date-fns"
 import type { Habit } from "@/entities/habit"
 import { formatDateKey } from "@/shared/lib/date"
 
@@ -20,20 +20,28 @@ export interface MonthCompletionStats {
 
 // This habit's *scheduled* days in `month` that are done vs. total, counted
 // only up through today for the current month (a partially-lived month
-// isn't "behind" just because it isn't over) and not at all for a future
-// month. Drives the year view's cell shading and its click popup — more
-// informative than a binary "did every day in this month happen".
+// isn't "behind" just because it isn't over), not at all for a future
+// month, and not for any day before the habit was created (a habit made
+// on Sept 15 has no data for Sept 1-14, or for any earlier month at all —
+// that's not "0% completed", it's "didn't exist yet", which the year view
+// shows as a plain empty cell rather than a 0% ring). Drives the year
+// view's cell shading and its click popup — more informative than a
+// binary "did every day in this month happen".
 export function getMonthCompletionStats(habit: Habit, month: Date, today: Date): MonthCompletionStats {
   if (isAfter(month, today) && !isSameMonth(month, today)) return { done: 0, scheduled: 0 }
+
+  const createdAt = new Date(habit.createdAt)
+  if (isBefore(month, createdAt) && !isSameMonth(month, createdAt)) return { done: 0, scheduled: 0 }
 
   const year = month.getFullYear()
   const monthIndex = month.getMonth()
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate()
   const lastDay = isSameMonth(month, today) ? today.getDate() : daysInMonth
+  const firstDay = isSameMonth(month, createdAt) ? createdAt.getDate() : 1
 
   let scheduled = 0
   let done = 0
-  for (let day = 1; day <= lastDay; day++) {
+  for (let day = firstDay; day <= lastDay; day++) {
     const date = new Date(year, monthIndex, day)
     if (!habit.activeDays.includes(date.getDay())) continue
     scheduled++

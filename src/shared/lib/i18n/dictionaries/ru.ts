@@ -85,7 +85,7 @@ export const ru: Record<keyof typeof en, string> = {
   "habits.period.month": "Месяц",
   "habits.period.year": "Год",
   "habits.page.summary": "Выполнено: {completed} из {total} ({percent}%)",
-  "habits.monthCellSummary": "{done} из {scheduled} ({percent}%)",
+  "habits.monthCellSummary": "{done} из {scheduled}",
   "habitCard.days": "дней",
 
   "goals.title": "Цели",
