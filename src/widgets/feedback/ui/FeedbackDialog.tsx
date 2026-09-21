@@ -4,7 +4,7 @@ import { toast } from "sonner"
 import { useLocation } from "react-router"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Textarea } from "@/shared/ui/textarea"
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
@@ -70,6 +70,10 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t("feedback.dialogTitle")}</DialogTitle>
+          {/* sr-only — the visible textarea placeholder already says this
+              on screen; Radix requires an accessible description for
+              screen readers regardless. */}
+          <DialogDescription className="sr-only">{t("feedback.messagePlaceholder")}</DialogDescription>
         </DialogHeader>
         <Textarea
           autoFocus

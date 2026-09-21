@@ -22,9 +22,17 @@ function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.C
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
-function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+// forwardRef is required here, not optional — DialogPortal clones its
+// overlay child to attach its own ref for animation/measurement; without
+// forwardRef that ref silently goes nowhere (see the Button gotcha in
+// docs/ARCHITECTURE.md for the same pattern with asChild/Slot).
+const DialogOverlay = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentProps<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => {
   return (
     <DialogPrimitive.Overlay
+      ref={ref}
       data-slot="dialog-overlay"
       className={cn(
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
@@ -33,7 +41,8 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<typeof Dial
       {...props}
     />
   )
-}
+})
+DialogOverlay.displayName = "DialogOverlay"
 
 function DialogContent({
   className,
