@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react"
 import { selectTodayTasks, useTasks } from "@/entities/task"
 import { useGoals } from "@/entities/goal"
-import { useHabits } from "@/entities/habit"
+import { selectTodayHabits, useHabits } from "@/entities/habit"
 import { TodayContext } from "./todayContext"
 
 export function TodayProvider({ children }: { children: ReactNode }) {
@@ -10,7 +10,7 @@ export function TodayProvider({ children }: { children: ReactNode }) {
   const { habits } = useHabits()
 
   const value = useMemo(
-    () => ({ todayTasks: selectTodayTasks(tasks), goals, habits }),
+    () => ({ todayTasks: selectTodayTasks(tasks), goals, habits: selectTodayHabits(habits) }),
     [tasks, goals, habits],
   )
 

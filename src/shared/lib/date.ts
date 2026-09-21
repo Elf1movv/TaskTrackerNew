@@ -17,3 +17,8 @@ export function isDueSoonOrOverdue(dateKey: string | null): boolean {
   if (!dateKey) return false
   return dateKey <= formatDateKey(addDays(new Date(), 1))
 }
+
+// JS `Date.getDay()` values (0=Sunday..6=Saturday), in the Monday-first
+// order this app displays weekdays in everywhere else (see
+// pages/calendar/lib/buildMonthGrid.ts).
+export const MONDAY_FIRST_WEEKDAYS = [1, 2, 3, 4, 5, 6, 0]

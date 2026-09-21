@@ -11,6 +11,7 @@ const baseHabit = {
   icon: "📚",
   color: "#6a9c74",
   completedDates: [],
+  activeDays: [0, 1, 2, 3, 4, 5, 6],
 }
 
 describe("habits router", () => {

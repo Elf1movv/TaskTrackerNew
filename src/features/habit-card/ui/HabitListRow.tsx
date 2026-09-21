@@ -21,7 +21,7 @@ export function HabitListRow({ habit }: { habit: Habit }) {
   const { t } = useLanguage()
   const today = getTodayKey()
   const doneToday = habit.completedDates.includes(today)
-  const streak = getStreak(habit.completedDates)
+  const streak = getStreak(habit.completedDates, habit.activeDays)
 
   return (
     <Row

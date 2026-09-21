@@ -9,6 +9,7 @@ export const en = {
   "nav.today": "Today",
   "nav.tasks": "Tasks",
   "nav.goals": "Goals",
+  "nav.habits": "Habits",
   "nav.calendar": "Calendar",
 
   "sidebar.statTasksDone": "Tasks done",
@@ -67,12 +68,21 @@ export const en = {
   "goalForm.hasTargetDate": "Has deadline",
 
   "habitForm.namePlaceholder": "Habit name",
+  "habitForm.activeDays": "Repeats on",
 
   "habits.sectionLabel": "Habits",
   "habits.addHabit": "Add habit",
   "habits.viewGrid": "Grid view",
   "habits.viewList": "List view",
   "habits.noHabitsYet": "No habits yet",
+  "habits.deleteTitle": "Delete habit?",
+  "habits.deleteBody": "This deletes the habit and its whole history. This can't be undone.",
+  "habits.page.title": "Habits",
+  "habits.page.subtitle": "Every habit, on its own schedule",
+  "habits.period.week": "Week",
+  "habits.period.month": "Month",
+  "habits.period.year": "Year",
+  "habits.page.summary": "Done: {completed} of {total} ({percent}%)",
   "habitCard.days": "days",
 
   "goals.title": "Goals",

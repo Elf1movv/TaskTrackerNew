@@ -64,6 +64,11 @@ model Habit {
   icon           String
   color          String
   completedDates String[]
+  // Days of week this habit is scheduled on — JS `Date.getDay()` values
+  // (0=Sunday..6=Saturday). Defaults to every day, so existing habits keep
+  // their current always-shown behavior until someone deliberately narrows
+  // it via HabitForm.
+  activeDays     Int[]    @default([0, 1, 2, 3, 4, 5, 6])
   order          Int
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

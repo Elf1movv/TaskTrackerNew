@@ -11,6 +11,7 @@ export const ru: Record<keyof typeof en, string> = {
   "nav.today": "Сегодня",
   "nav.tasks": "Задачи",
   "nav.goals": "Цели",
+  "nav.habits": "Привычки",
   "nav.calendar": "Календарь",
 
   "sidebar.statTasksDone": "Задач выполнено",
@@ -69,12 +70,21 @@ export const ru: Record<keyof typeof en, string> = {
   "goalForm.hasTargetDate": "Со сроком",
 
   "habitForm.namePlaceholder": "Название привычки",
+  "habitForm.activeDays": "Повторять по дням",
 
   "habits.sectionLabel": "Привычки",
   "habits.addHabit": "Добавить привычку",
   "habits.viewGrid": "Сетка",
   "habits.viewList": "Список",
   "habits.noHabitsYet": "Пока нет привычек",
+  "habits.deleteTitle": "Удалить привычку?",
+  "habits.deleteBody": "Привычка и вся её история будут удалены. Это действие нельзя отменить.",
+  "habits.page.title": "Привычки",
+  "habits.page.subtitle": "Каждая привычка — по своему расписанию",
+  "habits.period.week": "Неделя",
+  "habits.period.month": "Месяц",
+  "habits.period.year": "Год",
+  "habits.page.summary": "Выполнено: {completed} из {total} ({percent}%)",
   "habitCard.days": "дней",
 
   "goals.title": "Цели",

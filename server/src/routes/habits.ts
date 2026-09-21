@@ -13,6 +13,7 @@ interface ClientHabit {
   icon: string
   color: string
   completedDates: string[]
+  activeDays: number[]
   updatedAt: Date
 }
 
@@ -22,6 +23,7 @@ function toClientHabit(habit: {
   icon: string
   color: string
   completedDates: string[]
+  activeDays: number[]
   updatedAt: Date
 }): ClientHabit {
   return {
@@ -30,6 +32,7 @@ function toClientHabit(habit: {
     icon: habit.icon,
     color: habit.color,
     completedDates: habit.completedDates,
+    activeDays: habit.activeDays,
     updatedAt: habit.updatedAt,
   }
 }

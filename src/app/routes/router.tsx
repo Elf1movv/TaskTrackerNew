@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router"
 import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from "@/pages/auth"
 import { CalendarPage } from "@/pages/calendar"
 import { GoalsPage } from "@/pages/goals"
+import { HabitsPage } from "@/pages/habits"
 import { TasksPage } from "@/pages/tasks"
 import { TodayPage } from "@/pages/today"
 import { RootLayout } from "../layouts/RootLayout"
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
       { path: "today", element: <TodayPage /> },
       { path: "tasks", element: <TasksPage /> },
       { path: "goals", element: <GoalsPage /> },
+      { path: "habits", element: <HabitsPage /> },
       { path: "calendar", element: <CalendarPage /> },
       { path: "*", element: <Navigate to="/today" replace /> },
     ],
