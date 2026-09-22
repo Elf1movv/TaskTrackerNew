@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router"
-import { REMINDER_PRIORITY_COLORS, type Reminder } from "@/entities/reminder"
+import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { ReminderToggleCheckbox } from "@/features/toggle-reminder"
 import { monoFont } from "@/shared/lib/typography"
 
@@ -18,12 +18,7 @@ export function ReminderRow({ reminder }: { reminder: Reminder }) {
       <span onClick={e => e.stopPropagation()} className="shrink-0">
         <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={16} />
       </span>
-      {reminder.priority === "critical" && (
-        <span
-          className="size-1.5 rounded-full shrink-0"
-          style={{ backgroundColor: REMINDER_PRIORITY_COLORS.critical }}
-        />
-      )}
+      <ReminderPriorityIcon priority={reminder.priority} size={12} />
       <span
         className={`text-xs flex-1 leading-snug line-clamp-2 ${
           reminder.completed ? "line-through text-muted-foreground" : ""

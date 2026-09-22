@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react"
 import { format } from "date-fns"
-import { Flame, Plus } from "lucide-react"
+import { Activity, BarChart3, Flame, PieChart, Plus, TrendingUp } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { EditHabitButton } from "@/features/edit-habit"
 import { DeleteHabitButton } from "@/features/delete-habit"
@@ -12,15 +12,23 @@ import { Button } from "@/shared/ui/button"
 import { getDayCellState } from "../lib/habitCellState"
 import { getHabitHistorySummary } from "../lib/habitHistorySummary"
 import { getPeriodDays, getYearMonths, type HabitHistoryPeriod } from "../lib/periodColumns"
-import { HabitHistoryChart } from "./HabitHistoryChart"
+import { HabitHistoryChart, type HabitChartStyle } from "./HabitHistoryChart"
 import { MonthCell } from "./MonthCell"
 
 const PERIODS: HabitHistoryPeriod[] = ["week", "month", "year"]
+
+const CHART_STYLES: { style: HabitChartStyle; Icon: typeof TrendingUp }[] = [
+  { style: "area", Icon: TrendingUp },
+  { style: "bar", Icon: BarChart3 },
+  { style: "step", Icon: Activity },
+  { style: "ring", Icon: PieChart },
+]
 
 export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
   const { toggleHabit } = useHabits()
   const { t, language } = useLanguage()
   const [period, setPeriod] = useState<HabitHistoryPeriod>("week")
+  const [chartStyle, setChartStyle] = useState<HabitChartStyle>("area")
   const [isAdding, setIsAdding] = useState(false)
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
   const today = new Date()
@@ -29,6 +37,10 @@ export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
   const days = period !== "year" ? getPeriodDays(period, today) : null
   const months = period === "year" ? getYearMonths(today) : null
   const columnCount = (days ?? months ?? []).length
+  // Shared by the day/month grid below AND the chart section further
+  // down, so the chart's plotted area lines up pixel-for-pixel with the
+  // day columns instead of starting under the name column like before.
+  const gridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(0, 1fr))`
   const summary = getHabitHistorySummary(habits, period, today)
   const percent = summary.total === 0 ? 0 : Math.round((summary.completed / summary.total) * 100)
   const weekdayLabels = getWeekdayLabels(language)
@@ -85,10 +97,7 @@ export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
         // period always fits the container's width with no horizontal
         // scroll, at the cost of narrower cells for month view's ~30
         // columns than for week/year's 7-12.
-        <div
-          className="grid gap-y-2 gap-x-1"
-          style={{ gridTemplateColumns: `minmax(120px, 220px) repeat(${columnCount}, minmax(0, 1fr))` }}
-        >
+        <div className="grid gap-y-2 gap-x-1" style={{ gridTemplateColumns }}>
           <div />
           {days?.map((date, i) => (
             <div key={date.toISOString()} className="text-center self-end pb-1">
@@ -171,9 +180,35 @@ export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
       )}
 
       {habits.length > 0 && (
-        <div className="space-y-3 pt-2 border-t border-border">
-          <HabitHistoryChart data={summary.chartData} />
-          <p className="text-sm text-muted-foreground">
+        <div className="pt-2 border-t border-border">
+          {/* Same gridTemplateColumns as the day/month grid above — the
+              chart's plotted area (columns 2..N) now starts at the exact
+              same x-position as the first day column, instead of under
+              the name column like before. Column 1, freed up by that
+              alignment, holds the style switcher instead of sitting
+              empty. */}
+          <div className="grid gap-x-1 items-center" style={{ gridTemplateColumns }}>
+            <div className="flex items-center gap-1">
+              {CHART_STYLES.map(({ style, Icon }) => (
+                <button
+                  key={style}
+                  onClick={() => setChartStyle(style)}
+                  aria-label={t(`habits.chartStyle.${style}`)}
+                  className={`flex items-center justify-center size-6 rounded-md transition-all ${
+                    chartStyle === style
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon size={13} />
+                </button>
+              ))}
+            </div>
+            <div style={{ gridColumn: `2 / -1` }}>
+              <HabitHistoryChart data={summary.chartData} style={chartStyle} percent={percent} />
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">
             {t("habits.page.summary", { completed: summary.completed, total: summary.total, percent })}
           </p>
         </div>

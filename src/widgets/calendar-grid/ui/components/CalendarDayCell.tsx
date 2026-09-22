@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 import { format } from "date-fns"
-import type { Reminder } from "@/entities/reminder"
+import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { PriorityDot, type Task } from "@/entities/task"
 import { useDropTarget } from "@/shared/lib/dnd"
 import { monoFont } from "@/shared/lib/typography"
@@ -77,6 +77,11 @@ export function CalendarDayCell({
                     : "bg-primary/10 text-primary"
               }`}
             >
+              <ReminderPriorityIcon
+                priority={reminder.priority}
+                size={8}
+                colorOverride={isSelected ? "currentColor" : undefined}
+              />
               {reminder.time && (
                 <span css={monoFont} className="shrink-0">
                   {reminder.time}
@@ -101,7 +106,7 @@ export function CalendarDayCell({
             <PriorityDot
               key={t.id}
               priority={t.priority}
-              size={4}
+              size={10}
               colorOverride={isSelected ? "rgba(255,255,255,0.65)" : undefined}
             />
           ))}

@@ -9,22 +9,23 @@ function GoalsPageContent() {
   const { goals } = useGoalsContext()
   const { t } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
-  const editGoalId = searchParams.get("edit") ?? undefined
+  const focusedGoalId = searchParams.get("goal") ?? undefined
 
   // One-shot deep link from the Today page's goal-progress card — GoalList
-  // reads it once to open that goal's editor; this just clears it from the
-  // URL right away so it doesn't linger or re-fire on a later navigation.
+  // reads it once to expand that goal and move it to the top; this just
+  // clears it from the URL right away so it doesn't linger or re-fire on a
+  // later navigation.
   useEffect(() => {
-    if (!editGoalId) return
+    if (!focusedGoalId) return
     setSearchParams(
       prev => {
         const next = new URLSearchParams(prev)
-        next.delete("edit")
+        next.delete("goal")
         return next
       },
       { replace: true },
     )
-  }, [editGoalId, setSearchParams])
+  }, [focusedGoalId, setSearchParams])
 
   return (
     <div className="p-6 md:p-10 max-w-3xl mx-auto">
@@ -35,7 +36,7 @@ function GoalsPageContent() {
         <p className="text-sm text-muted-foreground">{t("goals.subtitle")}</p>
       </div>
 
-      <GoalList goals={goals} initialEditGoalId={editGoalId} />
+      <GoalList goals={goals} initialGoalId={focusedGoalId} />
     </div>
   )
 }

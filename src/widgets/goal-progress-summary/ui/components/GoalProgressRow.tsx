@@ -20,7 +20,7 @@ export function GoalProgressRow({ goal }: { goal: Goal }) {
   return (
     <div
       ref={ref}
-      onClick={() => navigate(`/goals?edit=${goal.id}`)}
+      onClick={() => navigate(`/goals?goal=${goal.id}`)}
       className="cursor-grab active:cursor-grabbing select-none"
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >

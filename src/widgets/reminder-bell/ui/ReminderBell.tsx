@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Bell } from "lucide-react"
 import { useNavigate } from "react-router"
 import {
-  REMINDER_PRIORITY_COLORS,
+  ReminderPriorityIcon,
   selectUpcomingReminders,
   summarizeReminders,
   useReminders,
@@ -63,12 +63,7 @@ export function ReminderBell() {
                 <span onClick={e => e.stopPropagation()} className="shrink-0">
                   <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={14} />
                 </span>
-                {reminder.priority === "critical" && (
-                  <span
-                    className="size-1.5 rounded-full shrink-0"
-                    style={{ backgroundColor: REMINDER_PRIORITY_COLORS.critical }}
-                  />
-                )}
+                <ReminderPriorityIcon priority={reminder.priority} size={12} />
                 <button
                   onClick={() => goToReminderDay(reminder.date)}
                   className="flex-1 min-w-0 text-left cursor-pointer"

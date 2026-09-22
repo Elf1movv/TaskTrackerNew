@@ -1,9 +1,10 @@
 import { DeleteTaskButton } from "@/features/delete-task"
 import { EditTaskButton } from "@/features/edit-task"
 import { TaskToggleCheckbox } from "@/features/toggle-task"
-import { useTasks, type Task } from "@/entities/task"
+import { PriorityDot, useTasks, type Task } from "@/entities/task"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { Badge } from "@/shared/ui/badge"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
 
 export function TodayTaskRow({ task, onEdit }: { task: Task; onEdit: () => void }) {
   const { reorderTasks } = useTasks()
@@ -27,6 +28,12 @@ export function TodayTaskRow({ task, onEdit }: { task: Task; onEdit: () => void 
       >
         {task.title}
       </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <PriorityDot priority={task.priority} />
+        </TooltipTrigger>
+        <TooltipContent>{task.priority}</TooltipContent>
+      </Tooltip>
       <Badge variant="secondary" className="hidden sm:inline-flex shrink-0">
         {task.category}
       </Badge>

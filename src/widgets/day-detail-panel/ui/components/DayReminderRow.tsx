@@ -1,5 +1,5 @@
 import { Pencil } from "lucide-react"
-import { REMINDER_PRIORITY_COLORS, type Reminder } from "@/entities/reminder"
+import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { DeleteReminderButton } from "@/features/delete-reminder"
 import { ReminderToggleCheckbox } from "@/features/toggle-reminder"
 import { monoFont } from "@/shared/lib/typography"
@@ -13,12 +13,7 @@ export function DayReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdi
           {reminder.time}
         </span>
       )}
-      {reminder.priority === "critical" && (
-        <span
-          className="size-1.5 rounded-full shrink-0"
-          style={{ backgroundColor: REMINDER_PRIORITY_COLORS.critical }}
-        />
-      )}
+      <ReminderPriorityIcon priority={reminder.priority} size={13} />
       <span
         className={`text-sm flex-1 text-left leading-snug ${
           reminder.completed ? "line-through text-muted-foreground" : ""
