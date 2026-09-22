@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
 import { ReminderForm } from "@/features/reminder-form"
 import { type Reminder } from "@/entities/reminder"
-import { useLanguage } from "@/shared/lib/i18n"
+import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { ReminderRow } from "./components/ReminderRow"
@@ -14,9 +14,19 @@ import { ReminderRow } from "./components/ReminderRow"
 // selectUpcomingReminders) plus a quick-add form; not paginated or capped
 // here — the calendar (this feature's home page) is where the full picture
 // lives, this card is deliberately just a glance.
+const PRIORITY_FILTERS = ["all", "critical"] as const
+type PriorityFilter = (typeof PRIORITY_FILTERS)[number]
+const PRIORITY_FILTER_LABEL_KEYS: Record<PriorityFilter, TranslationKey> = {
+  all: "reminders.filterAll",
+  critical: "reminders.filterCritical",
+}
+
 export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
   const [isAdding, setIsAdding] = useState(false)
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all")
   const { t } = useLanguage()
+  const visibleReminders =
+    priorityFilter === "critical" ? reminders.filter(r => r.priority === "critical") : reminders
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6">
@@ -49,9 +59,27 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
         )}
       </AnimatePresence>
 
-      {reminders.length > 0 ? (
+      {reminders.length > 0 && (
+        <div className="flex gap-1.5 mb-4 flex-wrap items-center">
+          {PRIORITY_FILTERS.map(f => (
+            <button
+              key={f}
+              onClick={() => setPriorityFilter(f)}
+              className={`px-2.5 py-1 rounded-lg text-xs transition-all ${
+                priorityFilter === f
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              }`}
+            >
+              {t(PRIORITY_FILTER_LABEL_KEYS[f])}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {visibleReminders.length > 0 ? (
         <div className="space-y-4">
-          {reminders.map(reminder => (
+          {visibleReminders.map(reminder => (
             <ReminderRow key={reminder.id} reminder={reminder} />
           ))}
         </div>

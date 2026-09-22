@@ -6,9 +6,11 @@ import { HabitProvider } from "@/entities/habit"
 import { ReminderProvider } from "@/entities/reminder"
 import { TaskProvider } from "@/entities/task"
 import { useSession } from "@/shared/lib/auth"
+import { CriticalReminderAlert } from "@/widgets/critical-reminder-alert"
 import { DueDateReminders } from "@/widgets/due-date-reminders"
 import { FeedbackBanner } from "@/widgets/feedback"
 import { MobileNav, SidebarNav } from "@/widgets/navigation"
+import { ReminderBell } from "@/widgets/reminder-bell"
 import { SettingsPanel } from "@/widgets/settings-panel"
 
 export function RootLayout() {
@@ -36,7 +38,9 @@ export function RootLayout() {
               <div className="flex h-screen bg-background text-foreground overflow-hidden">
                 <SidebarNav />
                 <SettingsPanel email={session.user.email} />
+                <ReminderBell />
                 <DueDateReminders userId={session.user.id} />
+                <CriticalReminderAlert userId={session.user.id} />
 
                 <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
                   <AnimatePresence mode="wait">

@@ -1,5 +1,7 @@
-export type { Reminder } from "./model/reminder"
+export type { Reminder, ReminderPriority } from "./model/reminder"
+export { REMINDER_PRIORITY_COLORS } from "./model/reminder"
 export { ReminderProvider } from "./model/ReminderProvider"
 export { useReminders } from "./model/reminderContext"
 export { selectUpcomingReminders } from "./lib/selectUpcomingReminders"
 export { selectRemindersOnDay } from "./lib/selectRemindersOnDay"
+export { summarizeReminders, type ReminderSummaryCounts } from "./lib/summarizeReminders"

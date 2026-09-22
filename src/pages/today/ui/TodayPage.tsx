@@ -14,7 +14,7 @@ import { formatHeroDate } from "../lib/formatHeroDate"
 import { GoalReminderSwapCard } from "./components"
 
 function TodayPageContent() {
-  const { todayTasks, goals, habits, reminders } = useTodayContext()
+  const { todayTasks, goals, habits, reminders, remindersLoaded } = useTodayContext()
   const { language, t } = useLanguage()
   const { weekday, day, monthYear } = formatHeroDate(new Date(), language)
   const [isAdding, setIsAdding] = useState(false)
@@ -72,7 +72,7 @@ function TodayPageContent() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
         <TodayTasksCard tasks={todayTasks} />
-        <GoalReminderSwapCard goals={goals} reminders={reminders} />
+        <GoalReminderSwapCard goals={goals} reminders={reminders} remindersLoaded={remindersLoaded} />
       </div>
 
       <HabitTrackerGrid habits={habits} />

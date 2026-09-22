@@ -9,7 +9,7 @@ export function TodayProvider({ children }: { children: ReactNode }) {
   const { tasks } = useTasks()
   const { goals } = useGoals()
   const { habits } = useHabits()
-  const { reminders } = useReminders()
+  const { reminders, isLoaded: remindersLoaded } = useReminders()
 
   const value = useMemo(
     () => ({
@@ -17,8 +17,9 @@ export function TodayProvider({ children }: { children: ReactNode }) {
       goals,
       habits: selectTodayHabits(habits),
       reminders: selectUpcomingReminders(reminders),
+      remindersLoaded,
     }),
-    [tasks, goals, habits, reminders],
+    [tasks, goals, habits, reminders, remindersLoaded],
   )
 
   return <TodayContext.Provider value={value}>{children}</TodayContext.Provider>

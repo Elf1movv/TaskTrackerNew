@@ -70,7 +70,11 @@ export function CalendarDayCell({
             <div
               key={reminder.id}
               className={`w-full flex items-center gap-1 rounded px-1 py-0.5 text-[9px] leading-tight ${
-                isSelected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary"
+                isSelected
+                  ? "bg-primary-foreground/20 text-primary-foreground"
+                  : reminder.priority === "critical"
+                    ? "bg-destructive/15 text-destructive"
+                    : "bg-primary/10 text-primary"
               }`}
             >
               {reminder.time && (

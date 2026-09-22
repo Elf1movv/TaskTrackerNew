@@ -16,6 +16,7 @@ const reminderFields = z.object({
     .string()
     .regex(/^\d{2}:\d{2}$/, "time must be in HH:mm format")
     .nullable(),
+  priority: z.enum(["normal", "critical"]),
   completed: z.boolean(),
 })
 

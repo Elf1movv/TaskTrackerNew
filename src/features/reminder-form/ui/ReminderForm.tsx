@@ -1,11 +1,36 @@
 import { useState } from "react"
-import { useReminders, type Reminder } from "@/entities/reminder"
+import styled from "@emotion/styled"
+import {
+  REMINDER_PRIORITY_COLORS,
+  useReminders,
+  type Reminder,
+  type ReminderPriority,
+} from "@/entities/reminder"
 import { getTodayKey } from "@/shared/lib/date"
-import { useLanguage } from "@/shared/lib/i18n"
+import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { DatePicker } from "@/shared/ui/date-picker"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
+import { TimePicker } from "./components"
+
+const PRIORITIES: ReminderPriority[] = ["normal", "critical"]
+const PRIORITY_LABEL_KEYS: Record<ReminderPriority, TranslationKey> = {
+  normal: "reminderForm.priorityNormal",
+  critical: "reminderForm.priorityCritical",
+}
+
+function nextPriority(current: ReminderPriority): ReminderPriority {
+  return PRIORITIES[(PRIORITIES.indexOf(current) + 1) % PRIORITIES.length]
+}
+
+// Same cycling-toggle pattern as TaskForm's PriorityToggle, just over the
+// two-value ReminderPriority instead of Task's three.
+const PriorityToggle = styled.button<{ color: string }>`
+  border-color: ${p => p.color};
+  background-color: ${p => `${p.color}28`};
+  color: ${p => p.color};
+`
 
 // Handles both creating a new reminder and editing an existing one — pass
 // `reminder` to pre-fill and save via update instead of create.
@@ -26,12 +51,13 @@ export function ReminderForm({
   const { t } = useLanguage()
   const [title, setTitle] = useState(reminder?.title ?? "")
   const [date, setDate] = useState(reminder?.date ?? lockedDate ?? getTodayKey())
-  const [time, setTime] = useState(reminder?.time ?? "")
+  const [time, setTime] = useState<string | null>(reminder?.time ?? null)
+  const [priority, setPriority] = useState<ReminderPriority>(reminder?.priority ?? "normal")
   const showDatePicker = !lockedDate
 
   function handleSubmit() {
     if (!title.trim()) return
-    const patch = { title: title.trim(), date, time: time || null }
+    const patch = { title: title.trim(), date, time, priority }
     if (reminder) {
       updateReminder(reminder.id, { ...patch, completed: reminder.completed })
     } else {
@@ -52,24 +78,26 @@ export function ReminderForm({
       />
 
       <div className="flex gap-4 flex-wrap items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{t("reminderForm.priority")}</span>
+          <PriorityToggle
+            type="button"
+            color={REMINDER_PRIORITY_COLORS[priority]}
+            onClick={() => setPriority(nextPriority(priority))}
+            className="px-2.5 py-1 rounded-lg text-xs transition-all border"
+          >
+            {t(PRIORITY_LABEL_KEYS[priority])}
+          </PriorityToggle>
+        </div>
+
         {showDatePicker && (
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground font-normal">{t("reminderForm.date")}</Label>
             <DatePicker value={date} onChange={setDate} />
           </div>
         )}
-        <div className="flex items-center gap-2">
-          <Label htmlFor="reminder-time" className="text-xs text-muted-foreground font-normal">
-            {t("reminderForm.time")}
-          </Label>
-          <Input
-            id="reminder-time"
-            type="time"
-            value={time}
-            onChange={e => setTime(e.target.value)}
-            className="text-xs h-8 w-auto bg-muted"
-          />
-        </div>
+
+        <TimePicker value={time} onChange={setTime} />
       </div>
 
       <div className="flex gap-2 justify-end pt-1">

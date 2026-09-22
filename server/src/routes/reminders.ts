@@ -12,6 +12,7 @@ interface ClientReminder {
   title: string
   date: string
   time: string | null
+  priority: string
   completed: boolean
   updatedAt: Date
 }
@@ -23,6 +24,7 @@ function toClientReminder(reminder: {
   title: string
   date: Date
   time: string | null
+  priority: string
   completed: boolean
   updatedAt: Date
 }): ClientReminder {
@@ -31,6 +33,7 @@ function toClientReminder(reminder: {
     title: reminder.title,
     date: reminder.date.toISOString().slice(0, 10),
     time: reminder.time,
+    priority: reminder.priority,
     completed: reminder.completed,
     updatedAt: reminder.updatedAt,
   }

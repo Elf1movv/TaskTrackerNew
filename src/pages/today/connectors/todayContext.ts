@@ -9,6 +9,7 @@ export interface TodayContextValue {
   goals: Goal[]
   habits: Habit[]
   reminders: Reminder[]
+  remindersLoaded: boolean
 }
 
 export const TodayContext = createContext<TodayContextValue | null>(null)

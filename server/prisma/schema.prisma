@@ -111,6 +111,10 @@ model Reminder {
   // label with no instant/timezone attached, unlike a real timestamp.
   // null = reminder isn't pinned to a specific time, just a day.
   time      String?
+  // "normal" | "critical" — plain string like Task.priority, validated at
+  // the zod layer, not a Postgres enum. Critical ones trigger the
+  // center-screen alert popup; normal ones don't.
+  priority  String   @default("normal")
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
