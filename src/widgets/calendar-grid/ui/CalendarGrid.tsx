@@ -1,4 +1,5 @@
 import { format, isSameDay, isToday } from "date-fns"
+import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task } from "@/entities/task"
 import { getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
@@ -8,12 +9,14 @@ import { CalendarDayCell } from "./components"
 export function CalendarGrid({
   days,
   tasks,
+  reminders,
   selectedDay,
   onSelectDay,
   onMoveTaskToDay,
 }: {
   days: MonthGridDay[]
   tasks: Task[]
+  reminders: Reminder[]
   selectedDay: Date | null
   onSelectDay: (day: Date, isCurrentMonth: boolean) => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
@@ -37,6 +40,7 @@ export function CalendarGrid({
         {days.map(({ date, isCurrentMonth }) => {
           const dayStr = format(date, "yyyy-MM-dd")
           const dayTasks = tasks.filter(t => isTaskOnDay(t, dayStr))
+          const dayReminders = selectRemindersOnDay(reminders, dayStr)
 
           return (
             <CalendarDayCell
@@ -44,6 +48,7 @@ export function CalendarGrid({
               day={date}
               isCurrentMonth={isCurrentMonth}
               dayTasks={dayTasks}
+              dayReminders={dayReminders}
               isSelected={selectedDay ? isSameDay(date, selectedDay) : false}
               isCurrent={isToday(date)}
               onSelect={() => onSelectDay(date, isCurrentMonth)}

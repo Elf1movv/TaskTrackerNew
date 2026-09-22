@@ -1,6 +1,8 @@
-import { format, isSameMonth } from "date-fns"
+import { useEffect } from "react"
+import { format, isSameMonth, parseISO } from "date-fns"
 import { AnimatePresence, motion } from "motion/react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useSearchParams } from "react-router"
 import { CalendarGrid } from "@/widgets/calendar-grid"
 import { DayDetailPanel } from "@/widgets/day-detail-panel"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
@@ -14,7 +16,9 @@ function CalendarPageContent() {
     monthGrid,
     selectedDay,
     selectedTasks,
+    selectedReminders,
     allTasks,
+    allReminders,
     selectDay,
     goToPrevMonth,
     goToNextMonth,
@@ -24,6 +28,28 @@ function CalendarPageContent() {
   } = useCalendarContext()
   const { language, t } = useLanguage()
   const isViewingCurrentMonth = isSameMonth(calMonth, new Date())
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // One-shot deep link from the reminders summary card on Today ("open
+  // this reminder's day on the calendar") — consumed once on mount, then
+  // stripped from the URL so it doesn't re-fire on a later re-render.
+  useEffect(() => {
+    const dateParam = searchParams.get("date")
+    if (!dateParam) return
+    const day = parseISO(dateParam)
+    goToMonth(day)
+    selectDay(day)
+    // Clears the param, which re-runs this effect once more — that second
+    // run finds no `date` param and no-ops, so this only ever acts once.
+    setSearchParams(
+      prev => {
+        const next = new URLSearchParams(prev)
+        next.delete("date")
+        return next
+      },
+      { replace: true },
+    )
+  }, [searchParams, goToMonth, selectDay, setSearchParams])
 
   function handleSelectDay(day: Date, isCurrentMonth: boolean) {
     if (!isCurrentMonth) goToMonth(day)
@@ -77,6 +103,7 @@ function CalendarPageContent() {
             <CalendarGrid
               days={monthGrid}
               tasks={allTasks}
+              reminders={allReminders}
               selectedDay={selectedDay}
               onSelectDay={handleSelectDay}
               onMoveTaskToDay={moveTaskToDay}
@@ -94,7 +121,12 @@ function CalendarPageContent() {
                 transition={{ duration: 0.2 }}
                 className="w-full lg:w-[260px] shrink-0"
               >
-                <DayDetailPanel day={selectedDay} tasks={selectedTasks} onClose={() => selectDay(null)} />
+                <DayDetailPanel
+                  day={selectedDay}
+                  tasks={selectedTasks}
+                  reminders={selectedReminders}
+                  onClose={() => selectDay(null)}
+                />
               </motion.div>
             )}
           </AnimatePresence>

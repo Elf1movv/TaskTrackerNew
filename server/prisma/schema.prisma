@@ -98,6 +98,28 @@ model Category {
   @@index([order])
 }
 
+// Standalone lightweight entity — deliberately separate from Task/Goal.
+// Unlike them, has no manual `order` column: reminders are always sorted
+// by date+time, never drag-reordered.
+model Reminder {
+  id        String   @id @default(uuid())
+  title     String
+  // @db.Date, same reasoning as Task.dueDate — no time-of-day component on
+  // this column, that's `time` below.
+  date      DateTime @db.Date
+  // "HH:mm", 24h — plain string, not a DB time type: it's a user-facing
+  // label with no instant/timezone attached, unlike a real timestamp.
+  // null = reminder isn't pinned to a specific time, just a day.
+  time      String?
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
 // A temporary beta-testing feature (see LEARNING.md) — free-text feedback
 // plus an optional screenshot, stored here so nothing is lost even before
 // a real recipient inbox exists, and mirrored to email when one is set.
@@ -140,6 +162,7 @@ model User {
   goals            Goal[]
   habits           Habit[]
   categories       Category[]
+  reminders        Reminder[]
   feedbacks        Feedback[]
 
   @@unique([email])

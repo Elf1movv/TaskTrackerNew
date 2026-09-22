@@ -62,6 +62,12 @@ export const en = {
   "taskForm.hasDueDate": "Has due date",
   "taskForm.pickDate": "Pick a date",
 
+  "reminderForm.placeholder": "What to remind about?",
+  "reminderForm.date": "Date",
+  "reminderForm.time": "Time",
+  "reminders.addReminder": "Add reminder",
+  "reminders.noRemindersYet": "No reminders yet",
+
   "goalForm.titlePlaceholder": "Goal title",
   "goalForm.descriptionPlaceholder": "Description (optional)",
   "goalForm.noTargetDate": "No deadline",
@@ -97,9 +103,13 @@ export const en = {
   "goals.addMilestonePlaceholder": "Add a milestone…",
   "goalProgress.title": "Goal Progress",
 
+  "reminderSummary.title": "Reminders",
+
   "today.title": "Today's Tasks",
   "today.doneCount": "{done}/{total} done",
   "today.noTasksToday": "No tasks for today",
+  "today.showReminders": "Show reminders",
+  "today.showGoals": "Show goals",
 
   "calendar.noTasksScheduled": "No tasks scheduled",
   "calendar.backToToday": "Back to today",
@@ -108,6 +118,7 @@ export const en = {
   "toast.entityGoal": "goal",
   "toast.entityHabit": "habit",
   "toast.entityCategory": "category",
+  "toast.entityReminder": "reminder",
   "toast.createFailed": "Couldn't save the new {entity}. Please try again.",
   "toast.conflict": "This {entity} was changed elsewhere — showing the latest version.",
   "toast.updateFailed": "Couldn't save changes to this {entity}. Please try again.",

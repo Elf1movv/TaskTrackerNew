@@ -1,12 +1,14 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { addMonths, subMonths } from "date-fns"
 import { isTaskOnDay, useTasks } from "@/entities/task"
+import { selectRemindersOnDay, useReminders } from "@/entities/reminder"
 import { formatDateKey } from "@/shared/lib/date"
 import { buildMonthGrid } from "@/widgets/calendar-grid"
 import { CalendarContext } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const { tasks, updateTask } = useTasks()
+  const { reminders } = useReminders()
   const [calMonth, setCalMonth] = useState(new Date())
   // No day selected by default — the day panel only appears once the user
   // actually taps a day (see docs/requirements), not pre-filled with today.
@@ -19,6 +21,11 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     const selectedKey = formatDateKey(selectedDay)
     return tasks.filter(t => isTaskOnDay(t, selectedKey))
   }, [tasks, selectedDay])
+
+  const selectedReminders = useMemo(() => {
+    if (!selectedDay) return []
+    return selectRemindersOnDay(reminders, formatDateKey(selectedDay))
+  }, [reminders, selectedDay])
 
   const selectDay = useCallback((day: Date | null) => setSelectedDay(day), [])
   const goToPrevMonth = useCallback(() => setCalMonth(d => subMonths(d, 1)), [])
@@ -45,7 +52,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       monthGrid,
       selectedDay,
       selectedTasks,
+      selectedReminders,
       allTasks: tasks,
+      allReminders: reminders,
       selectDay,
       goToPrevMonth,
       goToNextMonth,
@@ -58,7 +67,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       monthGrid,
       selectedDay,
       selectedTasks,
+      selectedReminders,
       tasks,
+      reminders,
       selectDay,
       goToPrevMonth,
       goToNextMonth,

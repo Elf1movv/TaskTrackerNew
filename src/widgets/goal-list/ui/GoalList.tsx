@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
 import { GoalForm } from "@/features/goal-form"
@@ -12,10 +12,34 @@ export interface GoalListItem extends Goal {
   dueLabel: string | null
 }
 
-export function GoalList({ goals }: { goals: GoalListItem[] }) {
+// `initialEditGoalId` — deep link from the Today page's goal-progress card
+// ("tap a goal there, land here with its edit form already open"). Read
+// once on mount; the page that owns the URL is responsible for clearing
+// the query param, this just consumes the id it's handed.
+export function GoalList({
+  goals,
+  initialEditGoalId,
+}: {
+  goals: GoalListItem[]
+  initialEditGoalId?: string
+}) {
   const [isAdding, setIsAdding] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const { t } = useLanguage()
+
+  // A ref, not a dependency — this should only react to the id changing,
+  // not to every background refresh of `goals` re-forcing the editor back
+  // open after the user has since moved on to editing something else.
+  const goalsRef = useRef(goals)
+  useEffect(() => {
+    goalsRef.current = goals
+  })
+
+  useEffect(() => {
+    if (!initialEditGoalId) return
+    const goal = goalsRef.current.find(g => g.id === initialEditGoalId)
+    if (goal) setEditingGoal(goal)
+  }, [initialEditGoalId])
 
   return (
     <div>

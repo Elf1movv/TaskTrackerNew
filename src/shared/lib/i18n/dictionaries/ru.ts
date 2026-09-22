@@ -64,6 +64,12 @@ export const ru: Record<keyof typeof en, string> = {
   "taskForm.hasDueDate": "Со сроком",
   "taskForm.pickDate": "Выбрать дату",
 
+  "reminderForm.placeholder": "О чём напомнить?",
+  "reminderForm.date": "Дата",
+  "reminderForm.time": "Время",
+  "reminders.addReminder": "Добавить напоминание",
+  "reminders.noRemindersYet": "Пока нет напоминаний",
+
   "goalForm.titlePlaceholder": "Название цели",
   "goalForm.descriptionPlaceholder": "Описание (необязательно)",
   "goalForm.noTargetDate": "Без срока",
@@ -99,9 +105,13 @@ export const ru: Record<keyof typeof en, string> = {
   "goals.addMilestonePlaceholder": "Добавить этап…",
   "goalProgress.title": "Прогресс целей",
 
+  "reminderSummary.title": "Напоминания",
+
   "today.title": "Задачи на сегодня",
   "today.doneCount": "{done}/{total} выполнено",
   "today.noTasksToday": "На сегодня задач нет",
+  "today.showReminders": "Показать напоминания",
+  "today.showGoals": "Показать цели",
 
   "calendar.noTasksScheduled": "Нет запланированных задач",
   "calendar.backToToday": "К сегодня",
@@ -110,6 +120,7 @@ export const ru: Record<keyof typeof en, string> = {
   "toast.entityGoal": "цель",
   "toast.entityHabit": "привычку",
   "toast.entityCategory": "категорию",
+  "toast.entityReminder": "напоминание",
   "toast.createFailed": "Не удалось сохранить новую {entity}. Попробуйте ещё раз.",
   "toast.conflict": "Эта запись была изменена в другом месте — показана последняя версия.",
   "toast.updateFailed": "Не удалось сохранить изменения. Попробуйте ещё раз.",

@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react"
+import type { Reminder } from "@/entities/reminder"
 import type { Task } from "@/entities/task"
 import type { MonthGridDay } from "@/widgets/calendar-grid"
 
@@ -7,7 +8,9 @@ export interface CalendarContextValue {
   monthGrid: MonthGridDay[]
   selectedDay: Date | null
   selectedTasks: Task[]
+  selectedReminders: Reminder[]
   allTasks: Task[]
+  allReminders: Reminder[]
   selectDay: (day: Date | null) => void
   goToPrevMonth: () => void
   goToNextMonth: () => void

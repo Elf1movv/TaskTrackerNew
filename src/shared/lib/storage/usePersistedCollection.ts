@@ -8,6 +8,7 @@ const ENTITY_TRANSLATION_KEYS: Record<string, TranslationKey> = {
   goal: "toast.entityGoal",
   habit: "toast.entityHabit",
   category: "toast.entityCategory",
+  reminder: "toast.entityReminder",
 }
 
 // Loads a collection from a Repository on mount, then exposes granular

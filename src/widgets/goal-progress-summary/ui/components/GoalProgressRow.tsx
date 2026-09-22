@@ -1,4 +1,5 @@
 import styled from "@emotion/styled"
+import { useNavigate } from "react-router"
 import { GoalProgressBar, useGoals, type Goal } from "@/entities/goal"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { monoFont } from "@/shared/lib/typography"
@@ -9,6 +10,7 @@ const PercentLabel = styled.span<{ color: string }>`
 
 export function GoalProgressRow({ goal }: { goal: Goal }) {
   const { reorderGoals } = useGoals()
+  const navigate = useNavigate()
   const { ref, isDragging } = useDragReorder<HTMLDivElement>({
     type: "today-goal",
     id: goal.id,
@@ -18,6 +20,7 @@ export function GoalProgressRow({ goal }: { goal: Goal }) {
   return (
     <div
       ref={ref}
+      onClick={() => navigate(`/goals?edit=${goal.id}`)}
       className="cursor-grab active:cursor-grabbing select-none"
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >

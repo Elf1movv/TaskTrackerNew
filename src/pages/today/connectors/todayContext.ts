@@ -2,11 +2,13 @@ import { createContext, useContext } from "react"
 import type { Task } from "@/entities/task"
 import type { Goal } from "@/entities/goal"
 import type { Habit } from "@/entities/habit"
+import type { Reminder } from "@/entities/reminder"
 
 export interface TodayContextValue {
   todayTasks: Task[]
   goals: Goal[]
   habits: Habit[]
+  reminders: Reminder[]
 }
 
 export const TodayContext = createContext<TodayContextValue | null>(null)

@@ -12,6 +12,7 @@ import { categoriesRouter } from "./routes/categories.js"
 import { feedbackRouter } from "./routes/feedback.js"
 import { goalsRouter } from "./routes/goals.js"
 import { habitsRouter } from "./routes/habits.js"
+import { remindersRouter } from "./routes/reminders.js"
 import { tasksRouter } from "./routes/tasks.js"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -49,6 +50,7 @@ export function createApp() {
   app.use("/api/goals", goalsRouter)
   app.use("/api/habits", habitsRouter)
   app.use("/api/categories", categoriesRouter)
+  app.use("/api/reminders", remindersRouter)
   app.use("/api/feedback", feedbackRouter)
 
   // Anything under /api/ that didn't match a route above is a genuine 404,
