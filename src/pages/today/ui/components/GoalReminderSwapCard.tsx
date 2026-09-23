@@ -52,7 +52,12 @@ export function GoalReminderSwapCard({
     <div className="relative">
       {/* The global bell (widgets/reminder-bell) is hidden on /today (see
           RootLayout.tsx) so this is now the only bell on this page — the
-          badge/tooltip lives here instead of being duplicated on both. */}
+          badge/tooltip lives here instead of being duplicated on both.
+          Badge/tooltip only show on the Bell state (offering to switch TO
+          reminders) — once already viewing reminders (Target state,
+          offering to switch back to goals), a reminder-count badge on the
+          button that takes you away from them doesn't make sense
+          (direct feedback, 2026-09-23). */}
       <Tooltip delayDuration={1500}>
         <TooltipTrigger asChild>
           <button
@@ -62,14 +67,19 @@ export function GoalReminderSwapCard({
             className="absolute -top-3 -right-3 z-20 flex size-9 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors"
           >
             {showReminders ? <Target size={16} /> : <Bell size={16} />}
-            {total > 0 && (
+            {!showReminders && total > 0 && (
               <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-white text-[10px] font-medium leading-none">
                 {total}
               </span>
             )}
           </button>
         </TooltipTrigger>
-        {total > 0 && <TooltipContent>{t("reminders.badgeTooltip", { total, critical })}</TooltipContent>}
+        {/* side="bottom" — this button sits just under the "Add task"
+            button above the card; Radix's default top-side tooltip
+            collided with it (direct feedback, 2026-09-23). */}
+        {!showReminders && total > 0 && (
+          <TooltipContent side="bottom">{t("reminders.badgeTooltip", { total, critical })}</TooltipContent>
+        )}
       </Tooltip>
 
       <div className="grid">
