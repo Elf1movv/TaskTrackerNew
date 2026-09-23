@@ -13,7 +13,7 @@ export function DayTaskRow({ task, onEdit }: { task: Task; onEdit: () => void })
   return (
     <div
       ref={ref}
-      className="w-full flex items-center gap-2.5 text-left group cursor-grab active:cursor-grabbing select-none"
+      className="w-full flex items-start gap-2.5 text-left group cursor-grab active:cursor-grabbing select-none"
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={16} />

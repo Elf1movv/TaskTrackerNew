@@ -26,7 +26,7 @@ export function TaskRow({ task, today, onEdit }: { task: Task; today: string; on
       animate={{ opacity: isDragging ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, x: 20, transition: { duration: 0.12 } }}
       transition={{ duration: 0.15 }}
-      className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-card border border-border group hover:border-primary/20 transition-colors cursor-grab active:cursor-grabbing select-none"
+      className="flex items-start gap-3 px-4 py-3.5 rounded-xl bg-card border border-border group hover:border-primary/20 transition-colors cursor-grab active:cursor-grabbing select-none"
     >
       <TaskToggleCheckbox taskId={task.id} completed={task.completed} />
       <div className="flex-1 min-w-0">

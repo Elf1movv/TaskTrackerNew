@@ -4,11 +4,8 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Line,
   LineChart,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -17,11 +14,12 @@ import {
 import { monoFont } from "@/shared/lib/typography"
 import type { ChartPoint } from "../lib/habitHistorySummary"
 
-// Four styles the user asked to try side by side, switched via
+// Three styles the user asked to try side by side, switched via
 // HabitHistoryGrid's toggle row — "area" (the original smooth trend) is
-// the default, the other three are the experiment; unused ones get
-// dropped later once it's clear which reads best.
-export type HabitChartStyle = "area" | "bar" | "step" | "ring"
+// the default. A fourth, "ring" (a single donut with the period's overall
+// percent), was tried and dropped 2026-09-23 — direct feedback called it
+// unclear/hard to read, not worth keeping alongside the three trend styles.
+export type HabitChartStyle = "area" | "bar" | "step"
 
 const tooltipContentStyle = {
   background: "var(--popover)",
@@ -31,8 +29,8 @@ const tooltipContentStyle = {
   boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
 }
 
-// Shared by the three per-day trend styles (area/bar/step) — only the
-// plotted series itself (Area/Bar/Line) differs between them.
+// Shared by all three styles — only the plotted series itself
+// (Area/Bar/Line) differs between them.
 function ChartAxes() {
   return (
     <>
@@ -61,47 +59,7 @@ function ChartAxes() {
   )
 }
 
-function RingChart({ percent }: { percent: number }) {
-  const data = [{ value: percent }, { value: 100 - percent }]
-  return (
-    <div className="h-36 relative">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            innerRadius="72%"
-            outerRadius="100%"
-            startAngle={90}
-            endAngle={-270}
-            stroke="none"
-            isAnimationActive={false}
-          >
-            <Cell fill="var(--primary)" />
-            <Cell fill="var(--muted)" />
-          </Pie>
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <span css={monoFont} className="text-3xl font-semibold text-foreground">
-          {percent}%
-        </span>
-      </div>
-    </div>
-  )
-}
-
-export function HabitHistoryChart({
-  data,
-  style,
-  percent,
-}: {
-  data: ChartPoint[]
-  style: HabitChartStyle
-  percent: number
-}) {
-  if (style === "ring") return <RingChart percent={percent} />
-
+export function HabitHistoryChart({ data, style }: { data: ChartPoint[]; style: HabitChartStyle }) {
   if (style === "bar") {
     return (
       <div css={monoFont} className="h-36 -ml-2">

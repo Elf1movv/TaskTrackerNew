@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react"
 import { format } from "date-fns"
-import { Activity, BarChart3, Flame, PieChart, Plus, TrendingUp } from "lucide-react"
+import { Activity, BarChart3, Flame, Plus, TrendingUp } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { EditHabitButton } from "@/features/edit-habit"
 import { DeleteHabitButton } from "@/features/delete-habit"
@@ -21,7 +21,6 @@ const CHART_STYLES: { style: HabitChartStyle; Icon: typeof TrendingUp }[] = [
   { style: "area", Icon: TrendingUp },
   { style: "bar", Icon: BarChart3 },
   { style: "step", Icon: Activity },
-  { style: "ring", Icon: PieChart },
 ]
 
 export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
@@ -205,7 +204,7 @@ export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
               ))}
             </div>
             <div style={{ gridColumn: `2 / -1` }}>
-              <HabitHistoryChart data={summary.chartData} style={chartStyle} percent={percent} />
+              <HabitHistoryChart data={summary.chartData} style={chartStyle} />
             </div>
           </div>
           <p className="text-sm text-muted-foreground mt-3">
