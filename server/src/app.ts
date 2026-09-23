@@ -11,6 +11,7 @@ import { errorHandler } from "./middleware/errorHandler.js"
 import { categoriesRouter } from "./routes/categories.js"
 import { feedbackRouter } from "./routes/feedback.js"
 import { goalsRouter } from "./routes/goals.js"
+import { habitGroupsRouter } from "./routes/habitGroups.js"
 import { habitsRouter } from "./routes/habits.js"
 import { remindersRouter } from "./routes/reminders.js"
 import { tasksRouter } from "./routes/tasks.js"
@@ -49,6 +50,7 @@ export function createApp() {
   app.use("/api/tasks", tasksRouter)
   app.use("/api/goals", goalsRouter)
   app.use("/api/habits", habitsRouter)
+  app.use("/api/habit-groups", habitGroupsRouter)
   app.use("/api/categories", categoriesRouter)
   app.use("/api/reminders", remindersRouter)
   app.use("/api/feedback", feedbackRouter)

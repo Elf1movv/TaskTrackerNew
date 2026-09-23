@@ -1,25 +1,42 @@
 import { useState } from "react"
 import { HABIT_ICONS, useHabits, type Habit } from "@/entities/habit"
+import { getHabitGroupIcon, getHabitGroupTitle, useHabitGroups } from "@/entities/habit-group"
 import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { MONDAY_FIRST_WEEKDAYS } from "@/shared/lib/date"
 import { getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
+import { EmojiPicker } from "@/shared/ui/emoji-picker"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]
 
 // Handles both creating a new habit and editing an existing one — pass
 // `habit` to pre-fill the fields and save via update instead of create.
-export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void }) {
+// `lockedGroupId` is for create mode only: when set (adding via a
+// specific block's own "+"), the group picker is hidden and the habit is
+// created there — mirrors TaskForm's `lockedCategory`. Editing always
+// shows the full picker, so a habit can be moved between blocks from the
+// form too, not just by dragging.
+export function HabitForm({
+  habit,
+  lockedGroupId,
+  onDone,
+}: {
+  habit?: Habit
+  lockedGroupId?: string
+  onDone: () => void
+}) {
   const { addHabit, updateHabit } = useHabits()
+  const { habitGroups } = useHabitGroups()
   const { t, language } = useLanguage()
   const [title, setTitle] = useState(habit?.title ?? "")
   const [icon, setIcon] = useState(habit?.icon ?? "✨")
   const [color, setColor] = useState(habit?.color ?? PALETTE_COLORS[0])
   const [activeDays, setActiveDays] = useState<number[]>(habit?.activeDays ?? ALL_DAYS)
-  const [isPickingIcon, setIsPickingIcon] = useState(false)
+  const [groupId, setGroupId] = useState(habit?.groupId ?? lockedGroupId ?? habitGroups[0]?.id ?? "")
+  const showGroupPicker = !!habit || !lockedGroupId
   const weekdayLabels = getWeekdayLabels(language)
 
   function toggleDay(day: number) {
@@ -27,8 +44,8 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
   }
 
   function handleSubmit() {
-    if (!title.trim() || activeDays.length === 0) return
-    const patch = { title: title.trim(), icon, color, activeDays }
+    if (!title.trim() || activeDays.length === 0 || !groupId) return
+    const patch = { title: title.trim(), icon, color, activeDays, groupId }
     if (habit) {
       updateHabit(habit.id, patch)
     } else {
@@ -40,38 +57,7 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
   return (
     <div className="bg-card border border-primary/25 rounded-2xl p-5 space-y-4">
       <div className="flex gap-3 items-center">
-        <Popover open={isPickingIcon} onOpenChange={setIsPickingIcon}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="w-14 h-10 shrink-0 rounded-md bg-muted text-lg hover:bg-accent transition-colors"
-              aria-label="Choose icon"
-            >
-              {icon}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 p-2">
-            <div className="grid grid-cols-8 gap-1">
-              {HABIT_ICONS.map(emoji => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => {
-                    setIcon(emoji)
-                    setIsPickingIcon(false)
-                  }}
-                  aria-label={`Icon ${emoji}`}
-                  aria-pressed={icon === emoji}
-                  className={`size-7 flex items-center justify-center rounded text-lg hover:bg-accent transition-colors ${
-                    icon === emoji ? "bg-accent" : ""
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+        <EmojiPicker value={icon} onChange={setIcon} options={HABIT_ICONS} />
         <Input
           autoFocus
           value={title}
@@ -82,25 +68,47 @@ export function HabitForm({ habit, onDone }: { habit?: Habit; onDone: () => void
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <Label className="text-xs text-muted-foreground font-normal">{t("common.color")}</Label>
-        <div className="flex gap-1.5 flex-wrap">
-          {PALETTE_COLORS.map(c => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setColor(c)}
-              aria-label={`Color ${c}`}
-              aria-pressed={color === c}
-              className="w-6 h-6 rounded-full transition-transform"
-              style={{
-                backgroundColor: c,
-                outline: color === c ? "2px solid var(--foreground)" : "none",
-                outlineOffset: 2,
-              }}
-            />
-          ))}
+      <div className="flex gap-4 flex-wrap items-center">
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground font-normal">{t("common.color")}</Label>
+          <div className="flex gap-1.5 flex-wrap">
+            {PALETTE_COLORS.map(c => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setColor(c)}
+                aria-label={`Color ${c}`}
+                aria-pressed={color === c}
+                className="w-6 h-6 rounded-full transition-transform"
+                style={{
+                  backgroundColor: c,
+                  outline: color === c ? "2px solid var(--foreground)" : "none",
+                  outlineOffset: 2,
+                }}
+              />
+            ))}
+          </div>
         </div>
+
+        {showGroupPicker && (
+          <div className="flex items-center gap-2">
+            <Label htmlFor="habit-group" className="text-xs text-muted-foreground font-normal">
+              {t("habitForm.group")}
+            </Label>
+            <Select value={groupId} onValueChange={setGroupId}>
+              <SelectTrigger id="habit-group" size="sm" className="text-xs h-8 w-auto bg-muted">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {habitGroups.map(g => (
+                  <SelectItem key={g.id} value={g.id}>
+                    {getHabitGroupIcon(g)} {getHabitGroupTitle(g, t)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className="space-y-1.5">

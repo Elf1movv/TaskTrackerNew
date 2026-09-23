@@ -7,6 +7,7 @@ const habitFields = z.object({
   color: z.string().min(1),
   completedDates: z.array(z.string()),
   activeDays: z.array(z.number().int().min(0).max(6)),
+  groupId: z.string().uuid(),
 })
 
 export const createHabitSchema = habitFields

@@ -7,6 +7,7 @@ const ENTITY_TRANSLATION_KEYS: Record<string, TranslationKey> = {
   task: "toast.entityTask",
   goal: "toast.entityGoal",
   habit: "toast.entityHabit",
+  habitGroup: "toast.entityHabitGroup",
   category: "toast.entityCategory",
   reminder: "toast.entityReminder",
 }
@@ -105,7 +106,14 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
         }
       })
       pendingUpdates.current.set(id, thisUpdate)
-      await thisUpdate
+      // Returns the server-confirmed item (or, on conflict/failure, whatever
+      // was actually applied locally) — a caller that needs to act on this
+      // item right after (e.g. moveHabitToGroup building a reorder() list)
+      // must use this return value, not a pre-update snapshot from its own
+      // closure: that snapshot's updatedAt goes stale the moment this call
+      // resolves, and feeding it back into another write reintroduces the
+      // exact same false-conflict race this queuing was built to prevent.
+      return await thisUpdate
     },
     [items, repository, t, entity],
   )
@@ -138,7 +146,16 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
   const reorder = useCallback(
     (nextItems: T[]) => {
       const previous = items
-      setItems(nextItems)
+      // Most callers pass the whole collection in its new order, but some
+      // (e.g. habits reordering within one group) pass only a subset —
+      // replacing `items` outright would then wholesale-discard every item
+      // that subset left out, until the next refresh/reload brought it
+      // back. Keeping whatever the subset excluded, appended after it,
+      // makes this safe either way: a full-collection call still ends up
+      // as exactly `nextItems` (nothing left over to keep), and a subset
+      // call keeps the rest of the collection intact.
+      const nextIds = new Set(nextItems.map(i => i.id))
+      setItems([...previous.filter(i => !nextIds.has(i.id)), ...nextItems])
       const thisReorder = pendingReorder.current.then(async () => {
         try {
           const updated = await repository.reorder(
@@ -148,6 +165,24 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
           setItems(prev =>
             prev.map(i => (freshUpdatedAt.has(i.id) ? { ...i, updatedAt: freshUpdatedAt.get(i.id)! } : i)),
           )
+          // The server bumps updatedAt on every reordered row (it's an
+          // @updatedAt column) even though only `order` changed — but
+          // update()'s own per-id chain (pendingUpdates below) only ever
+          // chains off a *previous update()'s* result, with no way to know
+          // a reorder() touched this id too. Left alone, a follow-up
+          // update() on one of these ids (e.g. moving the same habit to
+          // yet another group right after) would send the pre-reorder
+          // updatedAt and get a real conflict from the server — not a bug
+          // in that update(), just a stale base it was never told about.
+          // Seeding the chain here with the reorder-confirmed item closes
+          // that gap for the common case (the next update() starts after
+          // this reorder has resolved); a genuinely concurrent update() for
+          // the same id, mid-flight right as this resolves, is the one
+          // narrow case this doesn't cover.
+          nextItems.forEach(item => {
+            const updatedAt = freshUpdatedAt.get(item.id)
+            if (updatedAt) pendingUpdates.current.set(item.id, Promise.resolve({ ...item, updatedAt }))
+          })
         } catch (err) {
           setItems(previous)
           toast.error(t("toast.reorderFailed"))

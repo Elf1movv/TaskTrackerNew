@@ -59,7 +59,7 @@ model Goal {
 }
 
 model Habit {
-  id             String   @id @default(uuid())
+  id             String     @id @default(uuid())
   title          String
   icon           String
   color          String
@@ -68,12 +68,46 @@ model Habit {
   // (0=Sunday..6=Saturday). Defaults to every day, so existing habits keep
   // their current always-shown behavior until someone deliberately narrows
   // it via HabitForm.
-  activeDays     Int[]    @default([0, 1, 2, 3, 4, 5, 6])
+  activeDays     Int[]      @default([0, 1, 2, 3, 4, 5, 6])
   order          Int
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
   userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Every habit belongs to a group — including the auto-seeded "General"
+  // one (HabitGroup.isGeneral) for habits that aren't in a named block.
+  // A real FK, unlike Task.category's plain-string approach — see the
+  // comment on HabitGroup for why that indirection wasn't chosen here.
+  groupId        String
+  group          HabitGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@index([order])
+  @@index([userId])
+  @@index([groupId])
+}
+
+// Named, collapsible blocks a user can sort their habits into (e.g.
+// "Morning" 🌅), one level only, mirroring how Goals expand as accordion
+// items. Deliberately a real FK from Habit (unlike Category, which stays a
+// plain string on Task) — a block needs to be safely renameable/
+// draggable without any risk of a name-matching desync.
+model HabitGroup {
+  id        String   @id @default(uuid())
+  title     String
+  icon      String
+  // The one auto-seeded, undeletable/unrenameable "General" bucket every
+  // user gets (see User.habitGroupsSeeded) — habits land here by default
+  // and whenever their real group gets deleted. Its `title` on this row is
+  // just a placeholder; the client always substitutes its own localized
+  // label for a group with isGeneral: true, since the server has no
+  // concept of the user's language.
+  isGeneral Boolean  @default(false)
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habits    Habit[]
 
   @@index([order])
   @@index([userId])
@@ -148,26 +182,31 @@ model Feedback {
 // LEARNING.md). Field shapes and @@map names must match exactly what
 // Better Auth's Prisma adapter expects.
 model User {
-  id               String     @id
-  name             String
-  email            String
-  emailVerified    Boolean
-  image            String?
-  createdAt        DateTime
-  updatedAt        DateTime
+  id                String       @id
+  name              String
+  email             String
+  emailVerified     Boolean
+  image             String?
+  createdAt         DateTime
+  updatedAt         DateTime
   // Distinguishes "never seeded" from "seeded, then deleted every
   // category" — a bare count of the user's categories can't tell those
   // apart, which used to let deleting your last category silently
   // resurrect the 4 defaults on next load. See LEARNING.md.
-  categoriesSeeded Boolean    @default(false)
-  sessions         Session[]
-  accounts         Account[]
-  tasks            Task[]
-  goals            Goal[]
-  habits           Habit[]
-  categories       Category[]
-  reminders        Reminder[]
-  feedbacks        Feedback[]
+  categoriesSeeded  Boolean      @default(false)
+  // Same "never seeded" vs "seeded, then user deleted everything" distinction
+  // as categoriesSeeded above — guards the one auto-created "General"
+  // HabitGroup the same way, see routes/habitGroups.ts.
+  habitGroupsSeeded Boolean      @default(false)
+  sessions          Session[]
+  accounts          Account[]
+  tasks             Task[]
+  goals             Goal[]
+  habits            Habit[]
+  habitGroups       HabitGroup[]
+  categories        Category[]
+  reminders         Reminder[]
+  feedbacks         Feedback[]
 
   @@unique([email])
   @@map("user")

@@ -13,6 +13,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     update,
     remove,
     reorder,
+    refresh,
   } = usePersistedCollection<Habit>(habitRepository, "habit")
 
   const addHabit = useCallback(
@@ -38,6 +39,43 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     [habits, reorder],
   )
 
+  const reorderHabitsInGroup = useCallback(
+    (groupId: string, draggedId: string, targetId: string) => {
+      const groupHabits = habits.filter(h => h.groupId === groupId)
+      reorder(reorderById(groupHabits, draggedId, targetId))
+    },
+    [habits, reorder],
+  )
+
+  const moveHabitToGroup = useCallback(
+    async (habitId: string, targetGroupId: string) => {
+      const habit = habits.find(h => h.id === habitId)
+      if (!habit || habit.groupId === targetGroupId) return
+      // Awaited, not fired in parallel with reorder() below: update() and
+      // reorder() are two separate request queues (see
+      // usePersistedCollection.ts's pendingUpdates/pendingReorder), so
+      // nothing serializes them against each other. Firing both at once let
+      // reorder()'s server-side updatedAt bump land before update()'s PATCH
+      // did, which then carried a now-stale expectedUpdatedAt and got a
+      // false "changed elsewhere" conflict. Awaiting update() first means
+      // reorder() only starts once this habit's updatedAt is settled.
+      const movedHabit = await update(habitId, { groupId: targetGroupId })
+      if (!movedHabit) return
+      // Also re-sequences order so the moved habit lands at the end of its
+      // new group instead of keeping whatever numeric order it had in its
+      // old one (order is never exposed to the client as a raw number, so
+      // "append" has to go through reorder() like this, not arithmetic).
+      // Uses update()'s server-confirmed result, not the `habit` snapshot
+      // from above — that snapshot's updatedAt is already stale by this
+      // point, and feeding it into reorder()'s optimistic state would
+      // silently overwrite the fresh value update() just applied, breaking
+      // this same habit's *next* move with a real (not false) conflict.
+      const targetGroupHabits = habits.filter(h => h.groupId === targetGroupId)
+      reorder([...targetGroupHabits, movedHabit])
+    },
+    [habits, update, reorder],
+  )
+
   const toggleHabit = useCallback(
     (id: string, date: string) => {
       const habit = habits.find(h => h.id === id)
@@ -52,8 +90,28 @@ export function HabitProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ habits, addHabit, updateHabit, deleteHabit, reorderHabits, toggleHabit }),
-    [habits, addHabit, updateHabit, deleteHabit, reorderHabits, toggleHabit],
+    () => ({
+      habits,
+      addHabit,
+      updateHabit,
+      deleteHabit,
+      reorderHabits,
+      reorderHabitsInGroup,
+      moveHabitToGroup,
+      toggleHabit,
+      refreshHabits: refresh,
+    }),
+    [
+      habits,
+      addHabit,
+      updateHabit,
+      deleteHabit,
+      reorderHabits,
+      reorderHabitsInGroup,
+      moveHabitToGroup,
+      toggleHabit,
+      refresh,
+    ],
   )
 
   return <HabitContext.Provider value={value}>{children}</HabitContext.Provider>

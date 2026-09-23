@@ -86,6 +86,7 @@ export const en = {
 
   "habitForm.namePlaceholder": "Habit name",
   "habitForm.activeDays": "Repeats on",
+  "habitForm.group": "Block",
 
   "habits.sectionLabel": "Habits",
   "habits.addHabit": "Add habit",
@@ -105,6 +106,15 @@ export const en = {
   "habits.page.summary": "Done: {completed} of {total} ({percent}%)",
   "habits.monthCellSummary": "{done} of {scheduled}",
   "habitCard.days": "days",
+
+  "habits.group.addBlock": "Add block",
+  "habits.group.generalTitle": "General",
+  "habits.group.titlePlaceholder": "Block name",
+  "habits.group.editTitle": "Edit block",
+  "habits.group.deleteTitle": "Delete block?",
+  "habits.group.deleteBody":
+    'The "{title}" block will be deleted, but its habits aren\'t — they\'ll move to "General".',
+  "habits.group.habitCount": "{count} habits",
 
   "goals.title": "Goals",
   "goals.subtitle": "Long-term objectives and milestones",
@@ -131,6 +141,7 @@ export const en = {
   "toast.entityTask": "task",
   "toast.entityGoal": "goal",
   "toast.entityHabit": "habit",
+  "toast.entityHabitGroup": "habit block",
   "toast.entityCategory": "category",
   "toast.entityReminder": "reminder",
   "toast.createFailed": "Couldn't save the new {entity}. Please try again.",

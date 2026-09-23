@@ -14,6 +14,7 @@ interface ClientHabit {
   color: string
   completedDates: string[]
   activeDays: number[]
+  groupId: string
   updatedAt: Date
   createdAt: Date
 }
@@ -25,6 +26,7 @@ function toClientHabit(habit: {
   color: string
   completedDates: string[]
   activeDays: number[]
+  groupId: string
   updatedAt: Date
   createdAt: Date
 }): ClientHabit {
@@ -35,6 +37,7 @@ function toClientHabit(habit: {
     color: habit.color,
     completedDates: habit.completedDates,
     activeDays: habit.activeDays,
+    groupId: habit.groupId,
     updatedAt: habit.updatedAt,
     createdAt: habit.createdAt,
   }
@@ -49,6 +52,15 @@ habitsRouter.post("/", async (req, res) => {
   const parsed = createHabitSchema.safeParse(req.body)
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid habit", details: parsed.error.flatten() })
+    return
+  }
+
+  // groupId is a real FK now (unlike Task.category's plain string) — a
+  // client could otherwise point a habit at some other user's group id,
+  // since Prisma alone won't check ownership, only that the row exists.
+  const group = await db.habitGroup.findFirst({ where: { id: parsed.data.groupId, userId: req.userId } })
+  if (!group) {
+    res.status(400).json({ error: "Habit group not found" })
     return
   }
 
@@ -94,6 +106,16 @@ habitsRouter.patch("/:id", async (req, res) => {
     return
   }
   const { patch, expectedUpdatedAt } = parsed.data
+
+  // Same ownership check as POST — only relevant when the patch actually
+  // moves the habit to a different group.
+  if (patch.groupId) {
+    const group = await db.habitGroup.findFirst({ where: { id: patch.groupId, userId: req.userId } })
+    if (!group) {
+      res.status(400).json({ error: "Habit group not found" })
+      return
+    }
+  }
 
   const result = await db.habit.updateMany({
     where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },

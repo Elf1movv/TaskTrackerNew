@@ -88,6 +88,7 @@ export const ru: Record<keyof typeof en, string> = {
 
   "habitForm.namePlaceholder": "Название привычки",
   "habitForm.activeDays": "Повторять по дням",
+  "habitForm.group": "Блок",
 
   "habits.sectionLabel": "Привычки",
   "habits.addHabit": "Добавить привычку",
@@ -107,6 +108,15 @@ export const ru: Record<keyof typeof en, string> = {
   "habits.page.summary": "Выполнено: {completed} из {total} ({percent}%)",
   "habits.monthCellSummary": "{done} из {scheduled}",
   "habitCard.days": "дней",
+
+  "habits.group.addBlock": "Добавить блок",
+  "habits.group.generalTitle": "Общие",
+  "habits.group.titlePlaceholder": "Название блока",
+  "habits.group.editTitle": "Изменить блок",
+  "habits.group.deleteTitle": "Удалить блок?",
+  "habits.group.deleteBody":
+    "Блок «{title}» будет удалён, но привычки в нём никуда не денутся — переедут в «Общие».",
+  "habits.group.habitCount": "{count} привычек",
 
   "goals.title": "Цели",
   "goals.subtitle": "Долгосрочные цели и этапы",
@@ -133,6 +143,7 @@ export const ru: Record<keyof typeof en, string> = {
   "toast.entityTask": "задачу",
   "toast.entityGoal": "цель",
   "toast.entityHabit": "привычку",
+  "toast.entityHabitGroup": "блок привычек",
   "toast.entityCategory": "категорию",
   "toast.entityReminder": "напоминание",
   "toast.createFailed": "Не удалось сохранить новую {entity}. Попробуйте ещё раз.",

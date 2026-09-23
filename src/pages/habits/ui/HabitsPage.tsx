@@ -11,10 +11,10 @@ export function HabitsPage() {
   const { t } = useLanguage()
 
   return (
-    // max-w-7xl, not 4xl — HabitHistoryGrid's own card animates its max-width
-    // between a 4xl-equivalent (week/year) and this container's full width
-    // (month view, which has far more columns and needs the room). The page
-    // itself has to be wide enough for that to have anywhere to expand into.
+    // max-w-7xl, not 4xl — a block's grid in month view has far more
+    // columns than week/year and needs the extra room; each block now
+    // renders its own fixed-width card (see HabitGroupAccordionItem), the
+    // page just has to be wide enough for the widest of them.
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
       <div className="mb-8 max-w-4xl">
         <h1 css={displayFont} className="text-3xl mb-1">

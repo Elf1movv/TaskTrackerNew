@@ -6,20 +6,35 @@ import { createAuthenticatedAgent } from "../test-utils/auth.js"
 import { db } from "../db.js"
 
 const app = createApp()
-const baseHabit = {
-  title: "Read",
-  icon: "📚",
-  color: "#6a9c74",
-  completedDates: [],
-  activeDays: [0, 1, 2, 3, 4, 5, 6],
+
+async function generalGroupId(agent: TestAgent): Promise<string> {
+  const groups = await agent.get("/api/habit-groups")
+  return groups.body[0].id
 }
 
 describe("habits router", () => {
   let agent: TestAgent
+  let baseHabit: {
+    title: string
+    icon: string
+    color: string
+    completedDates: string[]
+    activeDays: number[]
+    groupId: string
+  }
 
   beforeEach(async () => {
     await db.habit.deleteMany({})
+    await db.habitGroup.deleteMany({})
     agent = await createAuthenticatedAgent(app)
+    baseHabit = {
+      title: "Read",
+      icon: "📚",
+      color: "#6a9c74",
+      completedDates: [],
+      activeDays: [0, 1, 2, 3, 4, 5, 6],
+      groupId: await generalGroupId(agent),
+    }
   })
 
   it("requires a session", async () => {
@@ -33,6 +48,7 @@ describe("habits router", () => {
 
     const list = await agent.get("/api/habits")
     expect(list.body).toHaveLength(1)
+    expect(list.body[0].groupId).toBe(baseHabit.groupId)
   })
 
   it("toggles a completed date via patch, then rejects a stale patch", async () => {
@@ -86,9 +102,22 @@ describe("habits router", () => {
   it("only lists this user's own habits, not another user's", async () => {
     await agent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID(), title: "Mine" })
     const otherAgent = await createAuthenticatedAgent(app)
-    await otherAgent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID(), title: "Theirs" })
+    const otherGroupId = await generalGroupId(otherAgent)
+    await otherAgent
+      .post("/api/habits")
+      .send({ ...baseHabit, groupId: otherGroupId, id: crypto.randomUUID(), title: "Theirs" })
 
     const list = await agent.get("/api/habits")
     expect(list.body.map((h: { title: string }) => h.title)).toEqual(["Mine"])
+  })
+
+  it("rejects creating a habit with a group id that doesn't belong to this user", async () => {
+    const otherAgent = await createAuthenticatedAgent(app)
+    const otherGroupId = await generalGroupId(otherAgent)
+
+    const res = await agent
+      .post("/api/habits")
+      .send({ ...baseHabit, groupId: otherGroupId, id: crypto.randomUUID() })
+    expect(res.status).toBe(400)
   })
 })
