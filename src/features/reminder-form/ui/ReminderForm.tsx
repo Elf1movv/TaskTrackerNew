@@ -53,7 +53,11 @@ export function ReminderForm({
   const [date, setDate] = useState(reminder?.date ?? lockedDate ?? getTodayKey())
   const [time, setTime] = useState<string | null>(reminder?.time ?? null)
   const [priority, setPriority] = useState<ReminderPriority>(reminder?.priority ?? "normal")
-  const showDatePicker = !lockedDate
+  // `lockedDate` only streamlines quick-add from a specific day's panel —
+  // it shouldn't also make an existing reminder's date permanently
+  // unchangeable. Editing (`reminder` set) always shows the picker, so a
+  // reminder created from one day's panel can still be moved to another.
+  const showDatePicker = !lockedDate || !!reminder
 
   function handleSubmit() {
     if (!title.trim()) return

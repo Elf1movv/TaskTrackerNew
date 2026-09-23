@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { format, parseISO } from "date-fns"
 import { Bell } from "lucide-react"
 import { useNavigate } from "react-router"
 import {
@@ -8,7 +9,8 @@ import {
   useReminders,
 } from "@/entities/reminder"
 import { ReminderToggleCheckbox } from "@/features/toggle-reminder"
-import { useLanguage } from "@/shared/lib/i18n"
+import { getTodayKey } from "@/shared/lib/date"
+import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
@@ -19,7 +21,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
 // card on one page. Self-contained: reads reminders itself, no props.
 export function ReminderBell() {
   const { reminders } = useReminders()
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
+  const locale = getDateLocale(language)
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const upcoming = selectUpcomingReminders(reminders).filter(r => !r.completed)
@@ -58,25 +61,35 @@ export function ReminderBell() {
         </div>
         {upcoming.length > 0 ? (
           <div className="space-y-3">
-            {upcoming.map(reminder => (
-              <div key={reminder.id} className="flex items-center gap-2.5">
-                <span onClick={e => e.stopPropagation()} className="shrink-0">
-                  <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={14} />
-                </span>
-                <ReminderPriorityIcon priority={reminder.priority} size={12} />
-                <button
-                  onClick={() => goToReminderDay(reminder.date)}
-                  className="flex-1 min-w-0 text-left cursor-pointer"
-                >
-                  <span className="text-xs leading-snug line-clamp-2">{reminder.title}</span>
-                </button>
-                {reminder.time && (
-                  <span css={monoFont} className="text-xs text-muted-foreground shrink-0">
-                    {reminder.time}
+            {upcoming.map(reminder => {
+              const dateLabel =
+                reminder.date === getTodayKey()
+                  ? t("common.today")
+                  : format(parseISO(reminder.date), "d MMM", { locale })
+              return (
+                <div key={reminder.id} className="flex items-center gap-2.5">
+                  <span onClick={e => e.stopPropagation()} className="shrink-0">
+                    <ReminderToggleCheckbox
+                      reminderId={reminder.id}
+                      completed={reminder.completed}
+                      size={14}
+                    />
                   </span>
-                )}
-              </div>
-            ))}
+                  <span className="w-3.5 shrink-0 flex justify-center">
+                    <ReminderPriorityIcon priority={reminder.priority} size={12} />
+                  </span>
+                  <button
+                    onClick={() => goToReminderDay(reminder.date)}
+                    className="flex-1 min-w-0 text-left cursor-pointer"
+                  >
+                    <span className="text-xs leading-snug line-clamp-2">{reminder.title}</span>
+                  </button>
+                  <span css={monoFont} className="text-xs text-muted-foreground shrink-0 text-right">
+                    {reminder.time ? `${dateLabel}, ${reminder.time}` : dateLabel}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground py-3 text-center">{t("reminders.noRemindersYet")}</p>

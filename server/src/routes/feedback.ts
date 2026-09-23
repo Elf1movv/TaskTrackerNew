@@ -31,15 +31,23 @@ feedbackRouter.post("/", async (req, res) => {
   const imageData = parsed.data.imageData
   const base64Content = imageData?.includes(",") ? imageData.split(",")[1] : imageData
 
-  void sendEmail({
-    to,
-    subject: "MyTracker — new feedback",
-    html: `
-      <p><strong>From user:</strong> ${req.userId}</p>
-      <p><strong>Page:</strong> ${parsed.data.page ?? "unknown"}</p>
-      <p><strong>Message:</strong></p>
-      <p>${parsed.data.message}</p>
-    `,
-    attachments: base64Content ? [{ filename: "screenshot.png", content: base64Content }] : undefined,
-  })
+  void (async () => {
+    // The form itself has no name/email field — feedback is
+    // authenticated-only, so the submitter's account already has both;
+    // looking it up here beats asking them to type it in every time.
+    const user = await db.user.findUnique({ where: { id: req.userId }, select: { name: true, email: true } })
+    const from = user ? `${user.name} (${user.email})` : req.userId
+
+    await sendEmail({
+      to,
+      subject: "MyTracker — new feedback",
+      html: `
+        <p><strong>From:</strong> ${from}</p>
+        <p><strong>Page:</strong> ${parsed.data.page ?? "unknown"}</p>
+        <p><strong>Message:</strong></p>
+        <p>${parsed.data.message}</p>
+      `,
+      attachments: base64Content ? [{ filename: "screenshot.png", content: base64Content }] : undefined,
+    })
+  })()
 })

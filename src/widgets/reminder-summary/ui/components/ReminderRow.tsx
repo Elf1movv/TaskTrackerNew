@@ -1,12 +1,19 @@
+import { format, parseISO } from "date-fns"
 import { useNavigate } from "react-router"
 import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { ReminderToggleCheckbox } from "@/features/toggle-reminder"
+import { getTodayKey } from "@/shared/lib/date"
+import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 
 // Tapping the row navigates to the calendar, opened on this reminder's day
 // — the calendar is this feature's "home page" (see docs/requirements).
 export function ReminderRow({ reminder }: { reminder: Reminder }) {
   const navigate = useNavigate()
+  const { language, t } = useLanguage()
+  const locale = getDateLocale(language)
+  const dateLabel =
+    reminder.date === getTodayKey() ? t("common.today") : format(parseISO(reminder.date), "d MMM", { locale })
 
   return (
     <div
@@ -18,7 +25,12 @@ export function ReminderRow({ reminder }: { reminder: Reminder }) {
       <span onClick={e => e.stopPropagation()} className="shrink-0">
         <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={16} />
       </span>
-      <ReminderPriorityIcon priority={reminder.priority} size={12} />
+      {/* Fixed-width wrapper — ChevronsUp and Equal don't fill their size
+          box identically, so without this the title after it started at a
+          different x-offset depending on which icon a row got. */}
+      <span className="w-3.5 shrink-0 flex justify-center">
+        <ReminderPriorityIcon priority={reminder.priority} size={12} />
+      </span>
       <span
         className={`text-xs flex-1 leading-snug line-clamp-2 ${
           reminder.completed ? "line-through text-muted-foreground" : ""
@@ -26,11 +38,9 @@ export function ReminderRow({ reminder }: { reminder: Reminder }) {
       >
         {reminder.title}
       </span>
-      {reminder.time && (
-        <span css={monoFont} className="text-xs text-muted-foreground shrink-0">
-          {reminder.time}
-        </span>
-      )}
+      <span css={monoFont} className="text-xs text-muted-foreground shrink-0 text-right">
+        {reminder.time ? `${dateLabel}, ${reminder.time}` : dateLabel}
+      </span>
     </div>
   )
 }

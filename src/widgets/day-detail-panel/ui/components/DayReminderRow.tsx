@@ -13,7 +13,9 @@ export function DayReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdi
           {reminder.time}
         </span>
       )}
-      <ReminderPriorityIcon priority={reminder.priority} size={13} />
+      <span className="w-4 shrink-0 flex justify-center">
+        <ReminderPriorityIcon priority={reminder.priority} size={13} />
+      </span>
       <span
         className={`text-sm flex-1 text-left leading-snug ${
           reminder.completed ? "line-through text-muted-foreground" : ""
