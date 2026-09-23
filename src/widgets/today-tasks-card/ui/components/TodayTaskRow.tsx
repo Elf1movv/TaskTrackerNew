@@ -34,7 +34,10 @@ export function TodayTaskRow({ task, onEdit }: { task: Task; onEdit: () => void 
         </TooltipTrigger>
         <TooltipContent>{task.priority}</TooltipContent>
       </Tooltip>
-      <Badge variant="secondary" className="hidden sm:inline-flex shrink-0">
+      {/* Fixed width — see TaskRow.tsx's identical comment: without it,
+          category-name length shifts the whole trailing block (and the
+          priority icon with it) left/right from row to row. */}
+      <Badge variant="secondary" className="hidden sm:inline-flex w-20 justify-center truncate shrink-0">
         {task.category}
       </Badge>
       <EditTaskButton onClick={onEdit} />

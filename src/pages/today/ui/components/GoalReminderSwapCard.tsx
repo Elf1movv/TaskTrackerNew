@@ -6,6 +6,7 @@ import { summarizeReminders, type Reminder } from "@/entities/reminder"
 import { GoalProgressSummary } from "@/widgets/goal-progress-summary"
 import { ReminderSummary } from "@/widgets/reminder-summary"
 import { useLanguage } from "@/shared/lib/i18n"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
 
 const FRONT = { x: 0, y: 0, scale: 1, opacity: 1 }
 // Offset + scaled down + faded — the "peek" that shows a second card sits
@@ -45,22 +46,31 @@ export function GoalReminderSwapCard({
     setShowReminders(summarizeReminders(reminders).total > 0)
   }, [remindersLoaded, reminders])
   const { t } = useLanguage()
+  const { total, critical } = summarizeReminders(reminders)
 
   return (
     <div className="relative">
-      {/* Badge/tooltip with the count live only on the global bell
-          (widgets/reminder-bell) now — showing the same number here too
-          was redundant and, worse, its tooltip visually collided with the
-          "Add task" button right above this card (direct feedback,
-          2026-09-23). This button is just the swap toggle. */}
-      <button
-        type="button"
-        onClick={() => setShowReminders(v => !v)}
-        aria-label={showReminders ? t("today.showGoals") : t("today.showReminders")}
-        className="absolute -top-3 -right-3 z-20 flex size-9 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors"
-      >
-        {showReminders ? <Target size={16} /> : <Bell size={16} />}
-      </button>
+      {/* The global bell (widgets/reminder-bell) is hidden on /today (see
+          RootLayout.tsx) so this is now the only bell on this page — the
+          badge/tooltip lives here instead of being duplicated on both. */}
+      <Tooltip delayDuration={1500}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => setShowReminders(v => !v)}
+            aria-label={showReminders ? t("today.showGoals") : t("today.showReminders")}
+            className="absolute -top-3 -right-3 z-20 flex size-9 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showReminders ? <Target size={16} /> : <Bell size={16} />}
+            {total > 0 && (
+              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-white text-[10px] font-medium leading-none">
+                {total}
+              </span>
+            )}
+          </button>
+        </TooltipTrigger>
+        {total > 0 && <TooltipContent>{t("reminders.badgeTooltip", { total, critical })}</TooltipContent>}
+      </Tooltip>
 
       <div className="grid">
         <motion.div

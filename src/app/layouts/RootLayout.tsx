@@ -38,7 +38,11 @@ export function RootLayout() {
               <div className="flex h-screen bg-background text-foreground overflow-hidden">
                 <SidebarNav />
                 <SettingsPanel email={session.user.email} />
-                <ReminderBell />
+                {/* Hidden on /today — that page already has its own bell
+                    (with the same badge) on the goal/reminder swap card,
+                    see GoalReminderSwapCard.tsx; showing both was
+                    redundant. Every other page still gets this one. */}
+                {location.pathname !== "/today" && <ReminderBell />}
                 <DueDateReminders userId={session.user.id} />
                 <CriticalReminderAlert userId={session.user.id} />
 

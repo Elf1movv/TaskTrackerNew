@@ -16,31 +16,34 @@ export function ReminderRow({ reminder }: { reminder: Reminder }) {
     reminder.date === getTodayKey() ? t("common.today") : format(parseISO(reminder.date), "d MMM", { locale })
 
   return (
+    // Two rows via grid, not one flex row — cramming title+date+time onto
+    // one line squeezed the title until it clipped mid-word once dates got
+    // added (direct feedback, 2026-09-23). Left column (checkbox+icon) is
+    // fixed-content width; the right column stacks the full title above
+    // the date/time, both naturally starting at the same x without any
+    // manual offset math.
     <div
       onClick={() => navigate(`/calendar?date=${reminder.date}`)}
-      className="flex items-center gap-2.5 cursor-pointer select-none"
+      className="grid grid-cols-[auto_1fr] gap-x-2.5 items-start cursor-pointer select-none"
     >
-      {/* stopPropagation — the row itself navigates on click, but toggling
-          completion here shouldn't also trigger that navigation. */}
-      <span onClick={e => e.stopPropagation()} className="shrink-0">
-        <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={16} />
-      </span>
-      {/* Fixed-width wrapper — ChevronsUp and Equal don't fill their size
-          box identically, so without this the title after it started at a
-          different x-offset depending on which icon a row got. */}
-      <span className="w-3.5 shrink-0 flex justify-center">
+      <div className="flex items-center gap-2 pt-0.5">
+        {/* stopPropagation — the row itself navigates on click, but
+            toggling completion here shouldn't also trigger that. */}
+        <span onClick={e => e.stopPropagation()} className="shrink-0">
+          <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={16} />
+        </span>
         <ReminderPriorityIcon priority={reminder.priority} size={12} />
-      </span>
-      <span
-        className={`text-xs flex-1 leading-snug line-clamp-2 ${
-          reminder.completed ? "line-through text-muted-foreground" : ""
-        }`}
-      >
-        {reminder.title}
-      </span>
-      <span css={monoFont} className="text-xs text-muted-foreground shrink-0 text-right">
-        {reminder.time ? `${dateLabel}, ${reminder.time}` : dateLabel}
-      </span>
+      </div>
+      <div className="min-w-0">
+        <div
+          className={`text-xs leading-snug ${reminder.completed ? "line-through text-muted-foreground" : ""}`}
+        >
+          {reminder.title}
+        </div>
+        <div css={monoFont} className="text-[10px] text-muted-foreground mt-0.5">
+          {reminder.time ? `${dateLabel}, ${reminder.time}` : dateLabel}
+        </div>
+      </div>
     </div>
   )
 }

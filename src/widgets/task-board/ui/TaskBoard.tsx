@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { Plus, X } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
 import { useCategories, type Category } from "@/entities/category"
-import { type StatusFilter, type Task, useTasks } from "@/entities/task"
+import { isCompletedToday, type StatusFilter, type Task, useTasks } from "@/entities/task"
 import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
@@ -91,7 +91,11 @@ export function TaskBoard({
           <p css={monoFont} className="text-sm text-muted-foreground">
             {t("tasks.remainingDone", {
               remaining: allTasks.filter(t => !t.completed).length,
-              done: allTasks.filter(t => t.completed).length,
+              // Scoped to today, not all-time — otherwise this count only
+              // ever grows and stops meaning anything, and disagrees with
+              // the list below (filterTasks.ts already hides completed
+              // tasks from days other than today).
+              done: allTasks.filter(t => t.completed && isCompletedToday(t)).length,
             })}
           </p>
         </div>

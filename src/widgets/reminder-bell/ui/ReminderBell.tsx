@@ -67,26 +67,32 @@ export function ReminderBell() {
                   ? t("common.today")
                   : format(parseISO(reminder.date), "d MMM", { locale })
               return (
-                <div key={reminder.id} className="flex items-center gap-2.5">
-                  <span onClick={e => e.stopPropagation()} className="shrink-0">
-                    <ReminderToggleCheckbox
-                      reminderId={reminder.id}
-                      completed={reminder.completed}
-                      size={14}
-                    />
-                  </span>
-                  <span className="w-3.5 shrink-0 flex justify-center">
+                // Same two-row grid as ReminderSummary's ReminderRow —
+                // title gets the full row width instead of squeezing
+                // against a date+time suffix on the same line. A plain
+                // div, not a button — it already contains the checkbox's
+                // own <button>, and nested buttons are invalid HTML.
+                <div
+                  key={reminder.id}
+                  onClick={() => goToReminderDay(reminder.date)}
+                  className="grid grid-cols-[auto_1fr] gap-x-2.5 items-start cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <span onClick={e => e.stopPropagation()} className="shrink-0">
+                      <ReminderToggleCheckbox
+                        reminderId={reminder.id}
+                        completed={reminder.completed}
+                        size={14}
+                      />
+                    </span>
                     <ReminderPriorityIcon priority={reminder.priority} size={12} />
-                  </span>
-                  <button
-                    onClick={() => goToReminderDay(reminder.date)}
-                    className="flex-1 min-w-0 text-left cursor-pointer"
-                  >
-                    <span className="text-xs leading-snug line-clamp-2">{reminder.title}</span>
-                  </button>
-                  <span css={monoFont} className="text-xs text-muted-foreground shrink-0 text-right">
-                    {reminder.time ? `${dateLabel}, ${reminder.time}` : dateLabel}
-                  </span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs leading-snug">{reminder.title}</div>
+                    <div css={monoFont} className="text-[10px] text-muted-foreground mt-0.5">
+                      {reminder.time ? `${dateLabel}, ${reminder.time}` : dateLabel}
+                    </div>
+                  </div>
                 </div>
               )
             })}
