@@ -15,10 +15,15 @@ import { monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { AllDayRow, HourGrid } from "@/widgets/calendar-timeline"
 
+// Not redesigned this round (see CalendarDayView for the new popover-
+// based flow) — Week keeps its own sidebar, including full Goal add/edit,
+// deliberately, per "one view at a time." The only forced change here is
+// that AllDayGoalChip (calendar-timeline, shared with Day) is now a
+// passive marker with no click/drag, so editing an existing goal from
+// this sidebar is no longer reachable via the all-day row — only
+// creating a new one through the quick-add button still is.
 type Editing =
-  | { kind: "task" | "reminder" | "goal"; id: string }
-  | { kind: "new-task" | "new-reminder" | "new-goal" }
-  | null
+  { kind: "task" | "reminder"; id: string } | { kind: "new-task" | "new-reminder" | "new-goal" } | null
 
 // Same calendar-timeline widget as CalendarDayView, just 7 day columns
 // (buildWeekRange) instead of 1 — the widget itself is already generic
@@ -33,7 +38,6 @@ export function CalendarWeekView({
   allGoals,
   allHabits,
   onMoveTaskToDay,
-  onMoveGoalToDay,
   onRescheduleTaskTime,
 }: {
   anchorDate: Date
@@ -42,7 +46,6 @@ export function CalendarWeekView({
   allGoals: Goal[]
   allHabits: Habit[]
   onMoveTaskToDay: (taskId: string, day: Date) => void
-  onMoveGoalToDay: (goalId: string, day: Date) => void
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
 }) {
   const { language, t } = useLanguage()
@@ -77,7 +80,6 @@ export function CalendarWeekView({
   const editingTask = editing?.kind === "task" ? allTasks.find(t => t.id === editing.id) : undefined
   const editingReminder =
     editing?.kind === "reminder" ? allReminders.find(r => r.id === editing.id) : undefined
-  const editingGoal = editing?.kind === "goal" ? allGoals.find(g => g.id === editing.id) : undefined
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_280px] items-start">
@@ -107,9 +109,7 @@ export function CalendarWeekView({
           columns={allDayColumns}
           onEditTask={id => setEditing({ kind: "task", id })}
           onEditReminder={id => setEditing({ kind: "reminder", id })}
-          onEditGoal={id => setEditing({ kind: "goal", id })}
           onMoveTask={onMoveTaskToDay}
-          onMoveGoal={onMoveGoalToDay}
         />
         <HourGrid
           columns={hourGridColumns}
@@ -125,9 +125,6 @@ export function CalendarWeekView({
         )}
         {editing?.kind === "reminder" && editingReminder && (
           <ReminderForm reminder={editingReminder} lockedDate={firstDayKey} onDone={() => setEditing(null)} />
-        )}
-        {editing?.kind === "goal" && editingGoal && (
-          <GoalForm goal={editingGoal} onDone={() => setEditing(null)} />
         )}
         {editing?.kind === "new-task" && (
           <TaskForm defaultDueDate={firstDayKey} onDone={() => setEditing(null)} />

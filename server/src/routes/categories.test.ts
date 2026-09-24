@@ -81,6 +81,7 @@ describe("categories router", () => {
       category: "Errands",
       dueDate: null,
       time: null,
+      endTime: null,
       completedAt: null,
     })
     const elsewhere = await agent.post("/api/tasks").send({
@@ -91,6 +92,7 @@ describe("categories router", () => {
       category: "Work",
       dueDate: null,
       time: null,
+      endTime: null,
       completedAt: null,
     })
 

@@ -41,17 +41,23 @@ const PriorityToggle = styled.button<{ color: string }>`
 export function ReminderForm({
   reminder,
   lockedDate,
+  defaultTime,
+  embedded,
+  onDelete,
   onDone,
 }: {
   reminder?: Reminder
   lockedDate?: string
+  defaultTime?: string | null
+  embedded?: boolean
+  onDelete?: () => void
   onDone: () => void
 }) {
   const { addReminder, updateReminder } = useReminders()
   const { t } = useLanguage()
   const [title, setTitle] = useState(reminder?.title ?? "")
   const [date, setDate] = useState(reminder?.date ?? lockedDate ?? getTodayKey())
-  const [time, setTime] = useState<string | null>(reminder?.time ?? null)
+  const [time, setTime] = useState<string | null>(reminder?.time ?? defaultTime ?? null)
   const [priority, setPriority] = useState<ReminderPriority>(reminder?.priority ?? "normal")
   // `lockedDate` only streamlines quick-add from a specific day's panel —
   // it shouldn't also make an existing reminder's date permanently
@@ -71,7 +77,7 @@ export function ReminderForm({
   }
 
   return (
-    <div className="bg-card border border-primary/25 rounded-2xl p-5 space-y-4">
+    <div className={embedded ? "space-y-4" : "bg-card border border-primary/25 rounded-2xl p-5 space-y-4"}>
       <Input
         autoFocus
         value={title}
@@ -104,13 +110,20 @@ export function ReminderForm({
         <TimePicker value={time} onChange={setTime} />
       </div>
 
-      <div className="flex gap-2 justify-end pt-1">
-        <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
-          {t("common.cancel")}
-        </Button>
-        <Button size="sm" onClick={handleSubmit} className="text-xs">
-          {reminder ? t("common.save") : t("reminders.addReminder")}
-        </Button>
+      <div className="flex gap-2 justify-between pt-1">
+        {onDelete && (
+          <Button variant="ghost" size="sm" onClick={onDelete} className="text-xs text-destructive">
+            {t("common.delete")}
+          </Button>
+        )}
+        <div className="flex gap-2 justify-end ml-auto">
+          <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
+            {t("common.cancel")}
+          </Button>
+          <Button size="sm" onClick={handleSubmit} className="text-xs">
+            {reminder ? t("common.save") : t("reminders.addReminder")}
+          </Button>
+        </div>
       </div>
     </div>
   )

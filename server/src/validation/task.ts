@@ -32,6 +32,12 @@ const taskFields = z.object({
     .string()
     .regex(/^\d{2}:\d{2}$/, "time must be in HH:mm format")
     .nullable(),
+  // "HH:mm", nullable — end of the task's timed block, see the comment
+  // on Task.endTime in schema.prisma.
+  endTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, "endTime must be in HH:mm format")
+    .nullable(),
   completedAt: completedAtField,
 })
 

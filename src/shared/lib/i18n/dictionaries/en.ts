@@ -63,6 +63,7 @@ export const en = {
   "taskForm.noDueDate": "No due date",
   "taskForm.hasDueDate": "Has due date",
   "taskForm.pickDate": "Pick a date",
+  "taskForm.endTime": "End",
 
   "reminderForm.placeholder": "What to remind about?",
   "reminderForm.date": "Date",
@@ -146,6 +147,9 @@ export const en = {
   "calendar.view.week": "Week",
   "calendar.view.month": "Month",
   "calendar.view.year": "Year",
+  "calendar.typeTask": "Task",
+  "calendar.typeReminder": "Reminder",
+  "calendar.addUntimed": "Add untimed item",
 
   "toast.entityTask": "task",
   "toast.entityGoal": "goal",

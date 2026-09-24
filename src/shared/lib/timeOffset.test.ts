@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  addMinutesToTime,
   HOUR_HEIGHT_PX,
   minutesFromMidnight,
   offsetPxToTime,
@@ -53,5 +54,24 @@ describe("timeToOffsetPx / offsetPxToTime round-trip", () => {
   it("snaps a pixel offset that doesn't land on an exact minute", () => {
     // 100px at HOUR_HEIGHT_PX=64 -> 93.75 minutes -> snaps to 90 -> 01:30
     expect(offsetPxToTime(100)).toBe("01:30")
+  })
+})
+
+describe("addMinutesToTime", () => {
+  it("shifts forward and backward without rounding", () => {
+    expect(addMinutesToTime("14:30", 45)).toBe("15:15")
+    expect(addMinutesToTime("14:30", -45)).toBe("13:45")
+    expect(addMinutesToTime("09:00", 0)).toBe("09:00")
+  })
+
+  it("clamps at the same 00:00-23:45 range as offsetToTime, truncating an overshoot", () => {
+    expect(addMinutesToTime("23:30", 45)).toBe("23:45")
+    expect(addMinutesToTime("00:15", -30)).toBe("00:00")
+  })
+
+  it("does not re-round an already-exact delta (unlike offsetToTime's snapping)", () => {
+    // A delta of 7 minutes is not a multiple of 15 - offsetToTime would
+    // snap it away, addMinutesToTime must preserve it exactly.
+    expect(addMinutesToTime("10:00", 7)).toBe("10:07")
   })
 })

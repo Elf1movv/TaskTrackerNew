@@ -1,10 +1,12 @@
 import { useCallback } from "react"
-import { Repeat, Target } from "lucide-react"
+import { Plus, Repeat, Target } from "lucide-react"
 import type { Goal } from "@/entities/goal"
 import type { Habit } from "@/entities/habit"
-import { ReminderPriorityIcon, REMINDER_PRIORITY_COLORS, type Reminder } from "@/entities/reminder"
-import { PriorityDot, PRIORITY_COLORS, type Task } from "@/entities/task"
+import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
+import { PriorityDot, type Task } from "@/entities/task"
+import { ENTITY_TYPE_COLORS } from "@/shared/lib/colors"
 import { useDragItem, useDropTarget } from "@/shared/lib/dnd"
+import { useLanguage } from "@/shared/lib/i18n"
 
 export interface AllDayColumn {
   day: Date
@@ -20,30 +22,36 @@ export interface AllDayColumn {
 
 // Sits above HourGrid, same idea as Google Calendar/TickTick's all-day
 // strip. Drag here is whole-day only, reusing the exact same
-// "calendar-task-move"/"calendar-goal-move" types Month's CalendarDayCell
-// already accepts — an item with no time can only be rescheduled to a
-// different day, not a different minute. Habits are never draggable here
-// (see DayHabitRow — activeDays is a recurring pattern, not a per-instance
-// date to move) and reminders aren't draggable at all in this app's model.
+// "calendar-task-move" type Month's CalendarDayCell already accepts — an
+// item with no time can only be rescheduled to a different day, not a
+// different minute. Habits are never draggable here (see DayHabitRow —
+// activeDays is a recurring pattern, not a per-instance date to move) and
+// reminders aren't draggable at all in this app's model. Goals are a
+// passive marker only — no drag, no click, no edit — Day/Week give goals
+// no CRUD at all, only their own page can create/edit them (see
+// AllDayGoalChip).
+//
+// `onAddUntimed` is optional — the "+" affordance is Day-view-only this
+// round (see CalendarWeekView, which doesn't pass it); when absent, no
+// button is rendered and this row renders nothing on an empty day, same
+// as before.
 export function AllDayRow({
   columns,
   onEditTask,
   onEditReminder,
-  onEditGoal,
   onMoveTask,
-  onMoveGoal,
+  onAddUntimed,
 }: {
   columns: AllDayColumn[]
-  onEditTask: (taskId: string) => void
-  onEditReminder: (reminderId: string) => void
-  onEditGoal: (goalId: string) => void
+  onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
   onMoveTask: (taskId: string, day: Date) => void
-  onMoveGoal: (goalId: string, day: Date) => void
+  onAddUntimed?: (day: Date, anchorRect: DOMRect) => void
 }) {
   const hasAnyContent = columns.some(
     c => c.tasks.length + c.reminders.length + c.goals.length + c.habits.length > 0,
   )
-  if (!hasAnyContent) return null
+  if (!hasAnyContent && !onAddUntimed) return null
 
   return (
     <div className="flex border border-border rounded-2xl mb-2 divide-x divide-border overflow-hidden">
@@ -53,9 +61,8 @@ export function AllDayRow({
           column={column}
           onEditTask={onEditTask}
           onEditReminder={onEditReminder}
-          onEditGoal={onEditGoal}
           onMoveTask={onMoveTask}
-          onMoveGoal={onMoveGoal}
+          onAddUntimed={onAddUntimed}
         />
       ))}
     </div>
@@ -66,60 +73,42 @@ function AllDayColumnCell({
   column,
   onEditTask,
   onEditReminder,
-  onEditGoal,
   onMoveTask,
-  onMoveGoal,
+  onAddUntimed,
 }: {
   column: AllDayColumn
-  onEditTask: (taskId: string) => void
-  onEditReminder: (reminderId: string) => void
-  onEditGoal: (goalId: string) => void
+  onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
   onMoveTask: (taskId: string, day: Date) => void
-  onMoveGoal: (goalId: string, day: Date) => void
+  onAddUntimed?: (day: Date, anchorRect: DOMRect) => void
 }) {
+  const { t } = useLanguage()
   const handleTaskDrop = useCallback(
     (taskId: string) => onMoveTask(taskId, column.day),
     [onMoveTask, column.day],
   )
-  const handleGoalDrop = useCallback(
-    (goalId: string) => onMoveGoal(goalId, column.day),
-    [onMoveGoal, column.day],
-  )
-  const { ref: taskDropRef, isOver: isTaskOver } = useDropTarget<HTMLDivElement>({
+  const { ref, isOver } = useDropTarget<HTMLDivElement>({
     type: "calendar-task-move",
     onDrop: handleTaskDrop,
   })
-  const { ref: goalDropRef, isOver: isGoalOver } = useDropTarget<HTMLDivElement>({
-    type: "calendar-goal-move",
-    onDrop: handleGoalDrop,
-  })
-  const ref = useCallback(
-    (node: HTMLDivElement | null) => {
-      taskDropRef(node)
-      goalDropRef(node)
-    },
-    [taskDropRef, goalDropRef],
-  )
 
   return (
     <div
       ref={ref}
-      className={`flex-1 min-w-[120px] p-1.5 flex flex-col gap-1 ${
-        isTaskOver || isGoalOver ? "bg-primary/5" : ""
-      }`}
+      className={`flex-1 min-w-[120px] p-1.5 flex flex-col gap-1 ${isOver ? "bg-primary/5" : ""}`}
     >
       {column.tasks.map(task => (
-        <AllDayTaskChip key={task.id} task={task} onEdit={() => onEditTask(task.id)} />
+        <AllDayTaskChip key={task.id} task={task} onEdit={rect => onEditTask(task.id, rect)} />
       ))}
       {column.reminders.map(reminder => (
         <AllDayReminderChip
           key={reminder.id}
           reminder={reminder}
-          onEdit={() => onEditReminder(reminder.id)}
+          onEdit={rect => onEditReminder(reminder.id, rect)}
         />
       ))}
       {column.goals.map(goal => (
-        <AllDayGoalChip key={goal.id} goal={goal} onEdit={() => onEditGoal(goal.id)} />
+        <AllDayGoalChip key={goal.id} goal={goal} />
       ))}
       {column.habits.length > 0 && (
         <div className="flex items-center gap-1 text-[10px] text-muted-foreground px-1">
@@ -127,22 +116,31 @@ function AllDayColumnCell({
           {column.habits.length}
         </div>
       )}
+      {onAddUntimed && (
+        <button
+          onClick={e => onAddUntimed(column.day, e.currentTarget.getBoundingClientRect())}
+          aria-label={t("calendar.addUntimed")}
+          className="inline-flex items-center justify-center size-5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+        >
+          <Plus size={12} />
+        </button>
+      )}
     </div>
   )
 }
 
-function AllDayTaskChip({ task, onEdit }: { task: Task; onEdit: () => void }) {
+function AllDayTaskChip({ task, onEdit }: { task: Task; onEdit: (anchorRect: DOMRect) => void }) {
   const { ref, isDragging } = useDragItem<HTMLButtonElement>({ type: "calendar-task-move", id: task.id })
   return (
     <button
       ref={ref}
-      onClick={onEdit}
-      style={{ opacity: isDragging ? 0.4 : 1, borderLeftColor: PRIORITY_COLORS[task.priority] }}
-      className={`flex items-center gap-1 rounded-md border-l-2 bg-card px-1.5 py-0.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden ${
+      onClick={e => onEdit(e.currentTarget.getBoundingClientRect())}
+      style={{ opacity: isDragging ? 0.4 : 1, borderLeftColor: ENTITY_TYPE_COLORS.task }}
+      className={`inline-flex max-w-full items-center gap-1 rounded-md border-l-2 bg-card px-1.5 py-0.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden ${
         task.completed ? "opacity-60" : ""
       }`}
     >
-      <PriorityDot priority={task.priority} size={9} />
+      <PriorityDot priority={task.priority} size={9} colorOverride={ENTITY_TYPE_COLORS.task} />
       <span className={`truncate ${task.completed ? "line-through text-muted-foreground" : ""}`}>
         {task.title}
       </span>
@@ -150,32 +148,44 @@ function AllDayTaskChip({ task, onEdit }: { task: Task; onEdit: () => void }) {
   )
 }
 
-function AllDayReminderChip({ reminder, onEdit }: { reminder: Reminder; onEdit: () => void }) {
+function AllDayReminderChip({
+  reminder,
+  onEdit,
+}: {
+  reminder: Reminder
+  onEdit: (anchorRect: DOMRect) => void
+}) {
   return (
     <button
-      onClick={onEdit}
-      style={{ borderLeftColor: REMINDER_PRIORITY_COLORS[reminder.priority] }}
-      className={`flex items-center gap-1 rounded-md border-l-2 px-1.5 py-0.5 text-left text-[11px] overflow-hidden ${
-        reminder.priority === "critical" ? "bg-destructive/10" : "bg-primary/10"
-      }`}
+      onClick={e => onEdit(e.currentTarget.getBoundingClientRect())}
+      style={{ borderLeftColor: ENTITY_TYPE_COLORS.reminder }}
+      className="inline-flex max-w-full items-center gap-1 rounded-full border-l-2 bg-card px-1.5 py-0.5 text-left text-[11px] overflow-hidden"
     >
-      <ReminderPriorityIcon priority={reminder.priority} size={9} />
+      <ReminderPriorityIcon
+        priority={reminder.priority}
+        size={9}
+        colorOverride={ENTITY_TYPE_COLORS.reminder}
+      />
       <span className="truncate">{reminder.title}</span>
     </button>
   )
 }
 
-function AllDayGoalChip({ goal, onEdit }: { goal: Goal; onEdit: () => void }) {
-  const { ref, isDragging } = useDragItem<HTMLButtonElement>({ type: "calendar-goal-move", id: goal.id })
+// Passive marker only — a <div>, not a <button>: no drag, no click, no
+// edit, no tab-stop for a control that doesn't do anything. Reads as a
+// "pin" (filled icon badge + plain label) rather than an editable chip,
+// reinforcing at a glance that it isn't one, unlike the task/reminder
+// chips' colored-edge-stripe language.
+function AllDayGoalChip({ goal }: { goal: Goal }) {
   return (
-    <button
-      ref={ref}
-      onClick={onEdit}
-      style={{ opacity: isDragging ? 0.4 : 1, borderLeftColor: goal.color }}
-      className="flex items-center gap-1 rounded-md border-l-2 bg-card px-1.5 py-0.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden"
-    >
-      <Target size={9} />
+    <div className="inline-flex max-w-full items-center gap-1.5 rounded-full pl-0.5 pr-2 py-0.5 text-[11px] overflow-hidden">
+      <span
+        className="flex items-center justify-center size-4 rounded-full shrink-0"
+        style={{ backgroundColor: ENTITY_TYPE_COLORS.goal }}
+      >
+        <Target size={10} color="white" />
+      </span>
       <span className="truncate">{goal.title}</span>
-    </button>
+    </div>
   )
 }

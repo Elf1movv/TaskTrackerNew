@@ -77,6 +77,7 @@ function CalendarPageContent() {
     moveTaskToDay,
     moveGoalDeadline,
     rescheduleTaskTime,
+    resizeTask,
   } = useCalendarContext()
   const { language, t } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -127,7 +128,7 @@ function CalendarPageContent() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto">
+    <div className="p-4 md:p-6">
       <div className="flex gap-0.5 bg-muted rounded-lg p-0.5 w-fit mb-5">
         {BUILT_VIEWS.map(v => (
           <button
@@ -212,8 +213,8 @@ function CalendarPageContent() {
           allGoals={allGoals}
           allHabits={allHabits}
           onMoveTaskToDay={moveTaskToDay}
-          onMoveGoalToDay={moveGoalDeadline}
           onRescheduleTaskTime={rescheduleTaskTime}
+          onResizeTask={resizeTask}
         />
       )}
 
@@ -225,7 +226,6 @@ function CalendarPageContent() {
           allGoals={allGoals}
           allHabits={allHabits}
           onMoveTaskToDay={moveTaskToDay}
-          onMoveGoalToDay={moveGoalDeadline}
           onRescheduleTaskTime={rescheduleTaskTime}
         />
       )}

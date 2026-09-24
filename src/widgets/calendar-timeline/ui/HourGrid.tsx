@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
-import { ReminderPriorityIcon, REMINDER_PRIORITY_COLORS, type Reminder } from "@/entities/reminder"
-import { PriorityDot, PRIORITY_COLORS, type Task } from "@/entities/task"
+import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
+import { PriorityDot, type Task } from "@/entities/task"
+import { ENTITY_TYPE_COLORS } from "@/shared/lib/colors"
 import { useDragItem, useDropTarget } from "@/shared/lib/dnd"
 import { monoFont } from "@/shared/lib/typography"
-import { HOUR_HEIGHT_PX, offsetPxToTime, timeToOffsetPx } from "../lib/timeOffset"
+import { HOUR_HEIGHT_PX, offsetPxToTime, timeToOffsetPx } from "@/shared/lib/timeOffset"
+import { useCreateDrag } from "../lib/useCreateDrag"
+import { useResizeDrag } from "../lib/useResizeDrag"
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h)
 const GRID_HEIGHT_PX = 24 * HOUR_HEIGHT_PX
@@ -20,21 +23,31 @@ export interface HourGridColumn {
 
 // 24 fixed-height hour rows with tasks/reminders positioned by absolute
 // pixel offset from minutesFromMidnight (not a 96-row CSS grid — see
-// lib/timeOffset.ts) — generic over N day columns so Day (1) and Week (7)
-// share this exact component. Only Tasks are draggable-by-time here: a
-// Goal's deadline has day precision everywhere in this app (see
+// shared/lib/timeOffset.ts) — generic over N day columns so Day (1) and Week (7)
+// share this exact component. Only Tasks are draggable-by-time/resizable
+// here: a Goal's deadline has day precision everywhere in this app (see
 // isGoalDueOnDay), so it never appears in the hour grid at all, only in
-// AllDayRow.
+// AllDayRow; Reminders keep a single point in time, no resize handle.
+//
+// `onCreateDraft`/`onResizeTask` are optional — click/drag-to-create and
+// resize are Day-view-only this round (see CalendarWeekView, which simply
+// doesn't pass them): when absent, the column attaches no pointerdown
+// listener at all and no resize handle is rendered, so Week keeps its
+// existing whole-block-move-only behavior unchanged.
 export function HourGrid({
   columns,
   onEditTask,
   onEditReminder,
   onRescheduleTask,
+  onResizeTask,
+  onCreateDraft,
 }: {
   columns: HourGridColumn[]
-  onEditTask: (taskId: string) => void
-  onEditReminder: (reminderId: string) => void
+  onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
   onRescheduleTask: (taskId: string, day: Date, time: string) => void
+  onResizeTask?: (taskId: string, endTime: string) => void
+  onCreateDraft?: (day: Date, startTime: string, endTime: string, anchorRect: DOMRect) => void
 }) {
   const [now, setNow] = useState(new Date())
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -82,6 +95,8 @@ export function HourGrid({
             onEditTask={onEditTask}
             onEditReminder={onEditReminder}
             onRescheduleTask={onRescheduleTask}
+            onResizeTask={onResizeTask}
+            onCreateDraft={onCreateDraft}
           />
         ))}
       </div>
@@ -95,12 +110,16 @@ function TimelineDayColumn({
   onEditTask,
   onEditReminder,
   onRescheduleTask,
+  onResizeTask,
+  onCreateDraft,
 }: {
   column: HourGridColumn
   nowTop: number | null
-  onEditTask: (taskId: string) => void
-  onEditReminder: (reminderId: string) => void
+  onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
   onRescheduleTask: (taskId: string, day: Date, time: string) => void
+  onResizeTask?: (taskId: string, endTime: string) => void
+  onCreateDraft?: (day: Date, startTime: string, endTime: string, anchorRect: DOMRect) => void
 }) {
   const columnEl = useRef<HTMLDivElement | null>(null)
 
@@ -117,6 +136,14 @@ function TimelineDayColumn({
       onRescheduleTask(taskId, column.day, offsetPxToTime(clientOffset.y - rect.top))
     },
   })
+
+  const { onPointerDown: onCreatePointerDown, preview } = useCreateDrag({
+    columnRef: columnEl,
+    onCreateDraft: (startTime, endTime, anchorRect) => {
+      onCreateDraft?.(column.day, startTime, endTime, anchorRect)
+    },
+  })
+
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
       dropRef(node)
@@ -128,9 +155,10 @@ function TimelineDayColumn({
   return (
     <div
       ref={ref}
+      onPointerDown={onCreateDraft ? onCreatePointerDown : undefined}
       className={`relative flex-1 min-w-[120px] border-r border-border last:border-r-0 ${
         isOver ? "bg-primary/5" : ""
-      }`}
+      } ${onCreateDraft ? "cursor-crosshair" : ""}`}
       style={{ height: GRID_HEIGHT_PX }}
     >
       {HOURS.slice(1).map(hour => (
@@ -150,70 +178,150 @@ function TimelineDayColumn({
         </div>
       )}
 
+      {preview && (
+        <div
+          className="absolute left-1 right-1 z-30 rounded-md border-2 border-dashed pointer-events-none"
+          style={{
+            top: timeToOffsetPx(preview.startTime),
+            height: Math.max(4, timeToOffsetPx(preview.endTime) - timeToOffsetPx(preview.startTime)),
+            borderColor: ENTITY_TYPE_COLORS.task,
+            backgroundColor: `${ENTITY_TYPE_COLORS.task}1a`,
+          }}
+        />
+      )}
+
       {column.tasks.map(task => (
-        <TimedTaskBlock key={task.id} task={task} onEdit={() => onEditTask(task.id)} />
+        <TimedTaskBlock
+          key={task.id}
+          task={task}
+          columnRef={columnEl}
+          onEdit={rect => onEditTask(task.id, rect)}
+          onResizeTask={onResizeTask ? endTime => onResizeTask(task.id, endTime) : undefined}
+        />
       ))}
       {column.reminders.map(reminder => (
         <TimedReminderBlock
           key={reminder.id}
           reminder={reminder}
-          onEdit={() => onEditReminder(reminder.id)}
+          onEdit={rect => onEditReminder(reminder.id, rect)}
         />
       ))}
     </div>
   )
 }
 
-// Fixed block height — this app has no end-time/duration for tasks or
-// reminders, only a start time, so blocks can't stretch to represent a
-// duration. Two items at the same time will visually overlap; a real
-// side-by-side lane layout is a much bigger feature than was asked for
-// here, so it's left as a known limitation for this personal-scale app.
-const BLOCK_HEIGHT_PX = 22
+// Fallback height for a task with no endTime yet (pre-migration data, or
+// one created before this feature existed) — unchanged from before this
+// round. MIN_BLOCK_HEIGHT_PX floors a real but very short duration so it
+// stays legible/clickable rather than collapsing to a sliver.
+const FALLBACK_BLOCK_HEIGHT_PX = 22
+const MIN_BLOCK_HEIGHT_PX = 18
 
-function TimedTaskBlock({ task, onEdit }: { task: Task; onEdit: () => void }) {
-  const { ref, isDragging } = useDragItem<HTMLButtonElement>({ type: "calendar-task-time-move", id: task.id })
+function blockHeightPx(task: Task): number {
+  if (!task.endTime || !task.time) return FALLBACK_BLOCK_HEIGHT_PX
+  const raw = timeToOffsetPx(task.endTime) - timeToOffsetPx(task.time)
+  return raw > 0 ? Math.max(MIN_BLOCK_HEIGHT_PX, raw) : FALLBACK_BLOCK_HEIGHT_PX
+}
+
+function TimedTaskBlock({
+  task,
+  columnRef,
+  onEdit,
+  onResizeTask,
+}: {
+  task: Task
+  columnRef: React.RefObject<HTMLDivElement | null>
+  onEdit: (anchorRect: DOMRect) => void
+  onResizeTask?: (endTime: string) => void
+}) {
+  const { ref, isDragging } = useDragItem<HTMLDivElement>({ type: "calendar-task-time-move", id: task.id })
+  const { onPointerDown: onResizePointerDown, draftEndTime } = useResizeDrag({
+    startTime: task.time ?? "00:00",
+    columnRef,
+    onResizeTask: onResizeTask ?? (() => {}),
+  })
+
+  const height = draftEndTime
+    ? Math.max(MIN_BLOCK_HEIGHT_PX, timeToOffsetPx(draftEndTime) - timeToOffsetPx(task.time!))
+    : blockHeightPx(task)
+
   return (
-    <button
+    // A resize-handle child needs its own pointer handlers, which is
+    // invalid nested inside a native <button> (and risks event
+    // bubbling/synthetic-click oddities) — role="button" + tabIndex give
+    // the same keyboard/a11y affordances instead.
+    <div
       ref={ref}
-      onClick={onEdit}
+      role="button"
+      tabIndex={0}
+      // Stops the column's create-drag (an ancestor listener) from also
+      // starting when the gesture begins on this existing block.
+      onPointerDown={e => e.stopPropagation()}
+      onClick={e => onEdit(e.currentTarget.getBoundingClientRect())}
+      onKeyDown={e => {
+        if (e.key === "Enter" || e.key === " ") onEdit(e.currentTarget.getBoundingClientRect())
+      }}
       style={{
         top: timeToOffsetPx(task.time!),
-        height: BLOCK_HEIGHT_PX,
+        height,
         opacity: isDragging ? 0.4 : 1,
-        borderLeftColor: PRIORITY_COLORS[task.priority],
+        borderLeftColor: ENTITY_TYPE_COLORS.task,
+        zIndex: draftEndTime ? 40 : 10,
       }}
-      className={`absolute left-1 right-1 z-10 flex items-center gap-1 rounded-md border-l-2 bg-card px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden ${
+      className={`absolute left-1 right-1 flex items-center gap-1 rounded-md border-l-2 bg-card px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden ${
         task.completed ? "opacity-60" : ""
       }`}
       title={`${task.time} · ${task.title}`}
     >
-      <PriorityDot priority={task.priority} size={9} />
+      <PriorityDot priority={task.priority} size={9} colorOverride={ENTITY_TYPE_COLORS.task} />
       <span css={monoFont} className="shrink-0 text-muted-foreground">
         {task.time}
       </span>
       <span className={`truncate ${task.completed ? "line-through text-muted-foreground" : ""}`}>
         {task.title}
       </span>
-    </button>
+      {onResizeTask && (
+        <div
+          onPointerDown={onResizePointerDown}
+          // stopPropagation on pointerdown only stops THAT event from
+          // bubbling — it does not suppress the separate `click` event
+          // the browser still dispatches after mouseup on this same
+          // element, which would otherwise bubble up and fire the
+          // block's own onClick (opening the edit popover right after a
+          // resize). Needs its own, independent stopPropagation.
+          onClick={e => e.stopPropagation()}
+          draggable={false}
+          className="absolute inset-x-0 bottom-0 h-2 cursor-ns-resize"
+        />
+      )}
+    </div>
   )
 }
 
-function TimedReminderBlock({ reminder, onEdit }: { reminder: Reminder; onEdit: () => void }) {
+function TimedReminderBlock({
+  reminder,
+  onEdit,
+}: {
+  reminder: Reminder
+  onEdit: (anchorRect: DOMRect) => void
+}) {
   return (
     <button
-      onClick={onEdit}
+      onPointerDown={e => e.stopPropagation()}
+      onClick={e => onEdit(e.currentTarget.getBoundingClientRect())}
       style={{
         top: timeToOffsetPx(reminder.time!),
-        height: BLOCK_HEIGHT_PX,
-        borderLeftColor: REMINDER_PRIORITY_COLORS[reminder.priority],
+        height: FALLBACK_BLOCK_HEIGHT_PX,
+        borderLeftColor: ENTITY_TYPE_COLORS.reminder,
       }}
-      className={`absolute left-1 right-1 z-10 flex items-center gap-1 rounded-md border-l-2 px-1.5 text-left text-[11px] overflow-hidden ${
-        reminder.priority === "critical" ? "bg-destructive/10" : "bg-primary/10"
-      }`}
+      className="absolute left-1 right-1 z-10 flex items-center gap-1 rounded-full border-l-2 bg-card px-1.5 text-left text-[11px] overflow-hidden"
       title={`${reminder.time} · ${reminder.title}`}
     >
-      <ReminderPriorityIcon priority={reminder.priority} size={9} />
+      <ReminderPriorityIcon
+        priority={reminder.priority}
+        size={9}
+        colorOverride={ENTITY_TYPE_COLORS.reminder}
+      />
       <span css={monoFont} className="shrink-0 text-muted-foreground">
         {reminder.time}
       </span>

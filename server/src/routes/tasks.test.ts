@@ -13,6 +13,7 @@ const baseTask = {
   category: "Work",
   dueDate: null,
   time: null,
+  endTime: null,
   completedAt: null,
 }
 
@@ -77,6 +78,36 @@ describe("tasks router", () => {
 
   it("rejects a time that isn't in HH:mm format", async () => {
     const res = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID(), time: "2:30pm" })
+    expect(res.status).toBe(400)
+  })
+
+  it("round-trips endTime alongside time, independently of it", async () => {
+    const created = await agent
+      .post("/api/tasks")
+      .send({ ...baseTask, id: crypto.randomUUID(), dueDate: "2026-01-01", time: "14:30", endTime: "15:15" })
+    expect(created.status).toBe(201)
+    expect(created.body.endTime).toBe("15:15")
+
+    // Resizing (dragging the block's bottom edge) — time untouched, only
+    // endTime changes.
+    const resized = await agent
+      .patch(`/api/tasks/${created.body.id}`)
+      .send({ patch: { endTime: "16:00" }, expectedUpdatedAt: created.body.updatedAt })
+    expect(resized.status).toBe(200)
+    expect(resized.body.endTime).toBe("16:00")
+    expect(resized.body.time).toBe("14:30")
+
+    const cleared = await agent
+      .patch(`/api/tasks/${created.body.id}`)
+      .send({ patch: { endTime: null }, expectedUpdatedAt: resized.body.updatedAt })
+    expect(cleared.status).toBe(200)
+    expect(cleared.body.endTime).toBeNull()
+  })
+
+  it("rejects an endTime that isn't in HH:mm format", async () => {
+    const res = await agent
+      .post("/api/tasks")
+      .send({ ...baseTask, id: crypto.randomUUID(), time: "14:30", endTime: "3:15pm" })
     expect(res.status).toBe(400)
   })
 

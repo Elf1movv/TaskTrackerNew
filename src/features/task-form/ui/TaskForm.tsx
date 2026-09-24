@@ -37,15 +37,33 @@ const PriorityToggle = styled.button<{ color: string }>`
 // silently created in that category and the category picker is hidden —
 // used when adding a task from a specific category tab (e.g. Health) so it
 // lands back in that same tab. Editing always shows the full picker.
+//
+// `defaultTime`/`defaultEndTime` and `startExpanded` are for the calendar's
+// click/drag-to-create flow (CalendarItemPopover): unlike `defaultDueDate`,
+// which only ever suggests a value without flipping the due-date toggle on
+// (every other creation path defaults it off), these seed the toggle ON
+// too — the user just performed the literal drag gesture that IS the time
+// selection, so defaulting it collapsed would immediately hide what they
+// just picked.
 export function TaskForm({
   task,
   lockedCategory,
   defaultDueDate,
+  defaultTime,
+  defaultEndTime,
+  startExpanded,
+  embedded,
+  onDelete,
   onDone,
 }: {
   task?: Task
   lockedCategory?: string
   defaultDueDate?: string
+  defaultTime?: string | null
+  defaultEndTime?: string | null
+  startExpanded?: boolean
+  embedded?: boolean
+  onDelete?: () => void
   onDone: () => void
 }) {
   const { addTask, updateTask } = useTasks()
@@ -54,14 +72,13 @@ export function TaskForm({
   const [title, setTitle] = useState(task?.title ?? "")
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
-  // hasDueDate starts on only when editing a task that already has a date
-  // — defaultDueDate (e.g. the day clicked in the calendar's day panel)
-  // still pre-fills what the date field WOULD be if the toggle is turned
-  // on, but merely suggesting a value shouldn't flip the toggle itself;
-  // every other place a new task is created defaults it off.
-  const [hasDueDate, setHasDueDate] = useState(!!task?.dueDate)
+  // hasDueDate starts on when editing a task that already has a date, or
+  // when startExpanded is set (see the prop comment above) — defaultDueDate
+  // alone still only suggests a value, per every other creation path.
+  const [hasDueDate, setHasDueDate] = useState(!!task?.dueDate || !!startExpanded)
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? getTodayKey())
-  const [time, setTime] = useState<string | null>(task?.time ?? null)
+  const [time, setTime] = useState<string | null>(task?.time ?? defaultTime ?? null)
+  const [endTime, setEndTime] = useState<string | null>(task?.endTime ?? defaultEndTime ?? null)
   const showCategoryPicker = !!task || !lockedCategory
 
   function handleSubmit() {
@@ -71,10 +88,11 @@ export function TaskForm({
       priority,
       category,
       dueDate: hasDueDate ? dueDate : null,
-      // Time only ever makes sense alongside a due date — clearing the
-      // date clears whatever time was set too, rather than leaving an
-      // orphaned time on an undated task.
+      // Time (and endTime, which depends on it) only ever make sense
+      // alongside a due date — clearing the date clears both rather than
+      // leaving an orphaned time/endTime on an undated task.
       time: hasDueDate ? time : null,
+      endTime: hasDueDate && time ? endTime : null,
     }
     if (task) {
       updateTask(task.id, { ...patch, completed: task.completed })
@@ -85,7 +103,7 @@ export function TaskForm({
   }
 
   return (
-    <div className="bg-card border border-primary/25 rounded-2xl p-5 space-y-4">
+    <div className={embedded ? "space-y-4" : "bg-card border border-primary/25 rounded-2xl p-5 space-y-4"}>
       <Input
         autoFocus
         value={title}
@@ -153,16 +171,33 @@ export function TaskForm({
           </Button>
           {hasDueDate && <DatePicker value={dueDate} onChange={setDueDate} />}
           {hasDueDate && <TimePicker value={time} onChange={setTime} />}
+          {/* Labeled, unlike the start-time picker above — two unlabeled
+              "Has time"/"No time" toggles side by side would be impossible
+              to tell apart. The start picker stays unlabeled since it's
+              already the familiar one used everywhere else in the app. */}
+          {hasDueDate && time && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">{t("taskForm.endTime")}</span>
+              <TimePicker value={endTime} onChange={setEndTime} />
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex gap-2 justify-end pt-1">
-        <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
-          {t("common.cancel")}
-        </Button>
-        <Button size="sm" onClick={handleSubmit} className="text-xs">
-          {task ? t("common.save") : t("tasks.addTask")}
-        </Button>
+      <div className="flex gap-2 justify-between pt-1">
+        {onDelete && (
+          <Button variant="ghost" size="sm" onClick={onDelete} className="text-xs text-destructive">
+            {t("common.delete")}
+          </Button>
+        )}
+        <div className="flex gap-2 justify-end ml-auto">
+          <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
+            {t("common.cancel")}
+          </Button>
+          <Button size="sm" onClick={handleSubmit} className="text-xs">
+            {task ? t("common.save") : t("tasks.addTask")}
+          </Button>
+        </div>
       </div>
     </div>
   )

@@ -65,6 +65,7 @@ export const ru: Record<keyof typeof en, string> = {
   "taskForm.noDueDate": "Без срока",
   "taskForm.hasDueDate": "Со сроком",
   "taskForm.pickDate": "Выбрать дату",
+  "taskForm.endTime": "Конец",
 
   "reminderForm.placeholder": "О чём напомнить?",
   "reminderForm.date": "Дата",
@@ -148,6 +149,9 @@ export const ru: Record<keyof typeof en, string> = {
   "calendar.view.week": "Неделя",
   "calendar.view.month": "Месяц",
   "calendar.view.year": "Год",
+  "calendar.typeTask": "Задача",
+  "calendar.typeReminder": "Напоминание",
+  "calendar.addUntimed": "Добавить без времени",
 
   "toast.entityTask": "задачу",
   "toast.entityGoal": "цель",

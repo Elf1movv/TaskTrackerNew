@@ -15,3 +15,17 @@ export const PALETTE_COLORS = [
   "#3ac9a0",
   "#c98f5b",
 ]
+
+// Fixed per-entity-TYPE color — the primary at-a-glance cue on the
+// calendar's Day/Week timeline, orthogonal to Task's PRIORITY_COLORS
+// (entities/task/model/task.ts) and Reminder's REMINDER_PRIORITY_COLORS
+// (entities/reminder/model/reminder.ts): priority stays visible through
+// the icon's shape (PriorityDot/ReminderPriorityIcon), not color, once
+// this is in play. Chosen from the palette above rather than new hex
+// values, checked against PRIORITY_COLORS (#6a9c74/#c97b3a/#c9503a) and
+// REMINDER_PRIORITY_COLORS (#8a8578/#c9503a) — no collisions.
+export const ENTITY_TYPE_COLORS = {
+  task: "#5b7fc7",
+  reminder: "#c9a63a",
+  goal: "#a35bc7",
+} as const

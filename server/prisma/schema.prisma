@@ -23,6 +23,10 @@ model Task {
   // for not offering a time picker while the due-date toggle is off, the
   // server doesn't enforce that relationship.
   time        String?
+  // "HH:mm", 24h — optional end of the task's timed block on the Day/Week
+  // calendar timeline. Only meaningful when both dueDate and time are
+  // set; nullable and never backfilled, same convention as time itself.
+  endTime     String?
   // Set when `completed` flips to true, cleared when it flips back to
   // false. Deliberately separate from `updatedAt`, which changes on any
   // edit (e.g. renaming a task weeks later would otherwise make it look

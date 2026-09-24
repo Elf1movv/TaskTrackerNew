@@ -5,6 +5,7 @@ import { selectHabitsOnDay, useHabits } from "@/entities/habit"
 import { selectRemindersOnDay, useReminders } from "@/entities/reminder"
 import { isTaskOnDay, useTasks } from "@/entities/task"
 import { formatDateKey } from "@/shared/lib/date"
+import { addMinutesToTime, minutesFromMidnight } from "@/shared/lib/timeOffset"
 import { CalendarContext, type CalendarView } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
@@ -106,14 +107,31 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   )
 
   // Day/Week's hour-timeline drag-to-reschedule — a plain PATCH, same
-  // shape as moveTaskToDay, just also carrying the new time.
+  // shape as moveTaskToDay, just also carrying the new time. Shifts
+  // endTime by the same delta as time so the block's duration survives
+  // the move instead of silently collapsing to whatever the old endTime
+  // now means relative to the new start. Dropping onto the all-day row
+  // (time === null) clears endTime too, same "clearing the anchor clears
+  // what depends on it" rule TaskForm already applies to time itself.
   const rescheduleTaskTime = useCallback(
     (taskId: string, day: Date, time: string | null) => {
       const task = tasks.find(t => t.id === taskId)
       if (!task) return
-      updateTask(taskId, { dueDate: formatDateKey(day), time })
+      let endTime: string | null = null
+      if (time && task.time && task.endTime) {
+        const deltaMinutes = minutesFromMidnight(time) - minutesFromMidnight(task.time)
+        endTime = addMinutesToTime(task.endTime, deltaMinutes)
+      }
+      updateTask(taskId, { dueDate: formatDateKey(day), time, endTime })
     },
     [tasks, updateTask],
+  )
+
+  // The hour-timeline's resize handle — start time is untouched, only how
+  // far the block stretches changes.
+  const resizeTask = useCallback(
+    (taskId: string, endTime: string) => updateTask(taskId, { endTime }),
+    [updateTask],
   )
 
   const value = useMemo(
@@ -138,6 +156,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       moveTaskToDay,
       moveGoalDeadline,
       rescheduleTaskTime,
+      resizeTask,
     }),
     [
       view,
@@ -159,6 +178,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       moveTaskToDay,
       moveGoalDeadline,
       rescheduleTaskTime,
+      resizeTask,
     ],
   )
 
