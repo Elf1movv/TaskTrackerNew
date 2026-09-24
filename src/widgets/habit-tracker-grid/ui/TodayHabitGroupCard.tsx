@@ -108,18 +108,21 @@ export function TodayHabitGroupCard({
               so a trigger sharing a flex row with a sibling button group
               never gets the extra width `justify-center` would need to
               center within — it just hugs the left edge instead. */}
-          <div className="relative px-4 pt-3.5 cursor-grab active:cursor-grabbing">
-            {/* relative + a negative `top` (not a negative margin) shifts
-                the trigger up by roughly half the pill's own height, so
-                its vertical center lands exactly on the card's top
-                border (a fieldset-legend look), without also shrinking
-                the space this row reserves in the page's normal flow —
-                a negative margin here would do that instead, and could
-                bleed into the *previous* card's spacing once this one's
-                collapsed down to just the pill (see LEARNING.md). The
-                wrapper's own pt-3.5 keeps that reserved space matching
-                the shift, so nothing jumps when toggling open/closed. */}
-            <AccordionTrigger className="hover:no-underline !py-0 relative -top-3.5 justify-center">
+          <div className="relative px-4 cursor-grab active:cursor-grabbing">
+            {/* The trigger sits in normal flow with no top padding — its
+                unshifted box starts exactly at the card's top border, so
+                `relative` + a negative `top` of half the pill's own
+                rendered height (22px tall, incl. its py-1 padding — half
+                is 11px) pulls it up just enough that the pill ends up
+                centered ON that border: 50% above, 50% below. Using
+                `top`, not a negative margin, matters here — margin would
+                also shrink the space this row reserves in the page's
+                flow, which is what let two collapsed cards' pills
+                overlap each other before (see LEARNING.md, 2026-09-24).
+                Don't also add top padding to compensate "visually" —
+                that cancels the offset back to zero, landing the pill's
+                TOP (not its center) on the border instead. */}
+            <AccordionTrigger className="hover:no-underline !py-0 relative -top-[11px] justify-center">
               <span
                 className="px-4 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1.5 text-white"
                 style={{ backgroundColor: group.color }}
@@ -128,7 +131,7 @@ export function TodayHabitGroupCard({
                 <span className="leading-none">{getHabitGroupTitle(group, t)}</span>
               </span>
             </AccordionTrigger>
-            <div className="absolute right-4 top-1 flex items-center gap-1">
+            <div className="absolute right-4 top-3 flex items-center gap-1">
               <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
               {!group.isGeneral && <DeleteHabitGroupButton group={group} />}
             </div>
