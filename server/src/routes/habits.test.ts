@@ -93,6 +93,55 @@ describe("habits router", () => {
     expect(withFreshTimestamp.status).toBe(200)
   })
 
+  it("reorder-today writes todayOrder, independently of order", async () => {
+    const a = await agent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID(), title: "A" })
+    const b = await agent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID(), title: "B" })
+
+    // Reorder on /habits (writes `order`) — must not move `todayOrder`.
+    await agent.patch("/api/habits/reorder").send([
+      { id: b.body.id, order: 0 },
+      { id: a.body.id, order: 1 },
+    ])
+    const afterHabitsReorder = await agent.get("/api/habits")
+    expect(afterHabitsReorder.body.find((h: { id: string }) => h.id === a.body.id).todayOrder).toBe(
+      a.body.todayOrder,
+    )
+
+    // Reorder on Today (writes `todayOrder`) — response and fresh
+    // updatedAt work the same way the /reorder response already does.
+    const reorderedToday = await agent.patch("/api/habits/reorder-today").send([
+      { id: b.body.id, order: 0 },
+      { id: a.body.id, order: 1 },
+    ])
+    expect(reorderedToday.status).toBe(200)
+    const freshUpdatedAt = reorderedToday.body.find((h: { id: string }) => h.id === a.body.id).updatedAt
+
+    const withStaleTimestamp = await agent
+      .patch(`/api/habits/${a.body.id}`)
+      .send({ patch: { completedDates: ["2026-09-16"] }, expectedUpdatedAt: a.body.updatedAt })
+    expect(withStaleTimestamp.status).toBe(409)
+
+    const withFreshTimestamp = await agent
+      .patch(`/api/habits/${a.body.id}`)
+      .send({ patch: { completedDates: ["2026-09-16"] }, expectedUpdatedAt: freshUpdatedAt })
+    expect(withFreshTimestamp.status).toBe(200)
+
+    // And the earlier /habits reorder's `order` values must still hold —
+    // reorder-today didn't move them back. `order` itself is never sent to
+    // the client (same convention as always), so check it directly in the
+    // DB; `todayOrder` IS client-exposed, checked via the GET response.
+    const [dbA, dbB] = await Promise.all([
+      db.habit.findUniqueOrThrow({ where: { id: a.body.id } }),
+      db.habit.findUniqueOrThrow({ where: { id: b.body.id } }),
+    ])
+    expect(dbB.order).toBeLessThan(dbA.order)
+
+    const finalList = await agent.get("/api/habits")
+    const finalA = finalList.body.find((h: { id: string }) => h.id === a.body.id)
+    const finalB = finalList.body.find((h: { id: string }) => h.id === b.body.id)
+    expect(finalB.todayOrder).toBeLessThan(finalA.todayOrder)
+  })
+
   it("deletes a habit", async () => {
     const created = await agent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID() })
     expect((await agent.delete(`/api/habits/${created.body.id}`)).status).toBe(204)

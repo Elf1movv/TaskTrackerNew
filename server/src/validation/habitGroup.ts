@@ -8,6 +8,7 @@ const habitGroupFields = z.object({
   id: z.string().uuid(),
   title: z.string().min(1),
   icon: z.string().min(1),
+  color: z.string().min(1),
 })
 
 export const createHabitGroupSchema = habitGroupFields

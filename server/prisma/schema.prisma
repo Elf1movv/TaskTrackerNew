@@ -70,6 +70,12 @@ model Habit {
   // it via HabitForm.
   activeDays     Int[]      @default([0, 1, 2, 3, 4, 5, 6])
   order          Int
+  // Independent from `order` above: `order` is this habit's position
+  // within its group on the /habits page, `todayOrder` is its position
+  // within the same group's card on the Today page — dragging on one
+  // screen must not move the habit on the other (see PROJECT_BRAIN.md /
+  // the habit-groups feature docs for why one screen isn't enough).
+  todayOrder     Int
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   userId         String
@@ -82,6 +88,7 @@ model Habit {
   group          HabitGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
 
   @@index([order])
+  @@index([todayOrder])
   @@index([userId])
   @@index([groupId])
 }
@@ -95,12 +102,18 @@ model HabitGroup {
   id        String   @id @default(uuid())
   title     String
   icon      String
-  // The one auto-seeded, undeletable/unrenameable "General" bucket every
-  // user gets (see User.habitGroupsSeeded) — habits land here by default
-  // and whenever their real group gets deleted. Its `title` on this row is
-  // just a placeholder; the client always substitutes its own localized
-  // label for a group with isGeneral: true, since the server has no
-  // concept of the user's language.
+  // Only used by the Today page's card header (a colored pill behind the
+  // block's name) — the /habits page's accordion header doesn't use it.
+  color     String
+  // The one auto-seeded, undeletable "General" bucket every user gets (see
+  // User.habitGroupsSeeded) — habits land here by default and whenever
+  // their real group gets deleted. Renaming/re-icon/re-coloring it is
+  // allowed like any other group; only deleting it is blocked, since its
+  // habits would have nowhere left to go. Its title/icon/color on this row
+  // are just placeholders until the user first edits them — the client
+  // substitutes its own localized label/icon while they still match the
+  // placeholder, since the server has no concept of the user's language
+  // (see habitGroupDisplay.ts).
   isGeneral Boolean  @default(false)
   order     Int
   createdAt DateTime @default(now())

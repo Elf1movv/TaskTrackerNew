@@ -37,7 +37,7 @@ describe("habit groups router", () => {
     await agent.get("/api/habit-groups") // triggers the General seed
     const created = await agent
       .post("/api/habit-groups")
-      .send({ id: crypto.randomUUID(), title: "Morning", icon: "🌅" })
+      .send({ id: crypto.randomUUID(), title: "Morning", icon: "🌅", color: "#c97b3a" })
     expect(created.status).toBe(201)
     expect(created.body.isGeneral).toBe(false)
 
@@ -45,14 +45,16 @@ describe("habit groups router", () => {
     expect(list.body.map((g: { title: string }) => g.title)).toEqual(["General", "Morning"])
   })
 
-  it("rejects renaming the General group", async () => {
+  it("allows renaming/re-icon/re-coloring the General group, only deleting stays blocked", async () => {
     const list = await agent.get("/api/habit-groups")
     const general = list.body[0]
 
-    const res = await agent
-      .patch(`/api/habit-groups/${general.id}`)
-      .send({ patch: { title: "Renamed" }, expectedUpdatedAt: general.updatedAt })
-    expect(res.status).toBe(400)
+    const res = await agent.patch(`/api/habit-groups/${general.id}`).send({
+      patch: { title: "Misc", icon: "🗂️", color: "#5b7fc7" },
+      expectedUpdatedAt: general.updatedAt,
+    })
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ title: "Misc", icon: "🗂️", color: "#5b7fc7", isGeneral: true })
   })
 
   it("rejects deleting the General group", async () => {
@@ -67,7 +69,7 @@ describe("habit groups router", () => {
     const generalId = (await agent.get("/api/habit-groups")).body[0].id
     const morning = await agent
       .post("/api/habit-groups")
-      .send({ id: crypto.randomUUID(), title: "Morning", icon: "🌅" })
+      .send({ id: crypto.randomUUID(), title: "Morning", icon: "🌅", color: "#c97b3a" })
 
     const habit = await agent.post("/api/habits").send({
       id: crypto.randomUUID(),
@@ -88,8 +90,12 @@ describe("habit groups router", () => {
 
   it("reorder returns fresh updatedAt so a follow-up patch isn't a false conflict", async () => {
     await agent.get("/api/habit-groups") // triggers the General seed
-    const a = await agent.post("/api/habit-groups").send({ id: crypto.randomUUID(), title: "A", icon: "🅰️" })
-    const b = await agent.post("/api/habit-groups").send({ id: crypto.randomUUID(), title: "B", icon: "🅱️" })
+    const a = await agent
+      .post("/api/habit-groups")
+      .send({ id: crypto.randomUUID(), title: "A", icon: "🅰️", color: "#c97b3a" })
+    const b = await agent
+      .post("/api/habit-groups")
+      .send({ id: crypto.randomUUID(), title: "B", icon: "🅱️", color: "#6a9c74" })
 
     const reordered = await agent.patch("/api/habit-groups/reorder").send([
       { id: b.body.id, order: 0 },
@@ -111,11 +117,15 @@ describe("habit groups router", () => {
 
   it("only lists this user's own habit groups, not another user's", async () => {
     await agent.get("/api/habit-groups")
-    await agent.post("/api/habit-groups").send({ id: crypto.randomUUID(), title: "Mine", icon: "🅰️" })
+    await agent
+      .post("/api/habit-groups")
+      .send({ id: crypto.randomUUID(), title: "Mine", icon: "🅰️", color: "#c97b3a" })
 
     const otherAgent = await createAuthenticatedAgent(app)
     await otherAgent.get("/api/habit-groups")
-    await otherAgent.post("/api/habit-groups").send({ id: crypto.randomUUID(), title: "Theirs", icon: "🅱️" })
+    await otherAgent
+      .post("/api/habit-groups")
+      .send({ id: crypto.randomUUID(), title: "Theirs", icon: "🅱️", color: "#6a9c74" })
 
     const list = await agent.get("/api/habit-groups")
     expect(list.body.map((g: { title: string }) => g.title)).toEqual(["General", "Mine"])

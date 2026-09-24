@@ -144,7 +144,19 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
   const pendingReorder = useRef<Promise<void>>(Promise.resolve())
 
   const reorder = useCallback(
-    (nextItems: T[]) => {
+    (
+      nextItems: T[],
+      // Which network call to send the reordered {id, order}[] payload to
+      // — defaults to this repository's own `reorder`. An entity with a
+      // second, independent ordering axis (Habit's todayOrder, alongside
+      // its usual order) passes a different function here instead, and
+      // gets the exact same optimistic-update/pendingReorder-queue/
+      // pendingUpdates-seeding protection for free, since it's the same
+      // code path either way.
+      reorderRequest: (
+        order: { id: string; order: number }[],
+      ) => Promise<{ id: string; updatedAt: string }[]> = repository.reorder,
+    ) => {
       const previous = items
       // Most callers pass the whole collection in its new order, but some
       // (e.g. habits reordering within one group) pass only a subset —
@@ -158,7 +170,7 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
       setItems([...previous.filter(i => !nextIds.has(i.id)), ...nextItems])
       const thisReorder = pendingReorder.current.then(async () => {
         try {
-          const updated = await repository.reorder(
+          const updated = await reorderRequest(
             nextItems.map((item, index) => ({ id: item.id, order: index })),
           )
           const freshUpdatedAt = new Map(updated.map(u => [u.id, u.updatedAt]))

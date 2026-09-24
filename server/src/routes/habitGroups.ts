@@ -11,6 +11,7 @@ interface ClientHabitGroup {
   id: string
   title: string
   icon: string
+  color: string
   isGeneral: boolean
   updatedAt: Date
 }
@@ -19,6 +20,7 @@ function toClientHabitGroup(group: {
   id: string
   title: string
   icon: string
+  color: string
   isGeneral: boolean
   updatedAt: Date
 }): ClientHabitGroup {
@@ -26,17 +28,20 @@ function toClientHabitGroup(group: {
     id: group.id,
     title: group.title,
     icon: group.icon,
+    color: group.color,
     isGeneral: group.isGeneral,
     updatedAt: group.updatedAt,
   }
 }
 
 // Placeholder values for the one auto-seeded "General" row — never shown
-// as-is, the client always substitutes its own localized label/icon for
-// isGeneral: true (see docs/requirements), since the server has no concept
-// of the user's language.
+// as-is until the user edits them, the client substitutes its own
+// localized label/icon for isGeneral: true while they still match these
+// (see docs/requirements, habitGroupDisplay.ts), since the server has no
+// concept of the user's language.
 const GENERAL_GROUP_TITLE = "General"
 const GENERAL_GROUP_ICON = "📋"
+const GENERAL_GROUP_COLOR = "#c97b3a"
 // Sorts last by default among a user's blocks, without hardcoding "last
 // index" — still freely draggable earlier like any other group.
 const GENERAL_GROUP_ORDER = 999999
@@ -56,6 +61,7 @@ habitGroupsRouter.get("/", async (req, res) => {
         data: {
           title: GENERAL_GROUP_TITLE,
           icon: GENERAL_GROUP_ICON,
+          color: GENERAL_GROUP_COLOR,
           isGeneral: true,
           order: GENERAL_GROUP_ORDER,
           userId: req.userId,
@@ -121,10 +127,9 @@ habitGroupsRouter.patch("/:id", async (req, res) => {
     res.status(404).json({ error: "Habit group not found" })
     return
   }
-  if (current.isGeneral) {
-    res.status(400).json({ error: "The General group can't be renamed" })
-    return
-  }
+  // Unlike DELETE below, isGeneral no longer blocks a rename/re-icon/
+  // re-color — only deletion is still refused (its habits would have
+  // nowhere left to go).
 
   const result = await db.habitGroup.updateMany({
     where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },

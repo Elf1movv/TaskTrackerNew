@@ -123,12 +123,10 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                 </span>
               </div>
             </AccordionTrigger>
-            {!group.isGeneral && (
-              <div className="flex items-center gap-1 pt-4 shrink-0">
-                <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
-                <DeleteHabitGroupButton group={group} />
-              </div>
-            )}
+            <div className="flex items-center gap-1 pt-4 shrink-0">
+              <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
+              {!group.isGeneral && <DeleteHabitGroupButton group={group} />}
+            </div>
           </div>
 
           <AccordionContent className="px-6 pb-6 space-y-6">

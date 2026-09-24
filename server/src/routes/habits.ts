@@ -15,6 +15,12 @@ interface ClientHabit {
   completedDates: string[]
   activeDays: number[]
   groupId: string
+  // Deliberate exception to "order is never exposed to the client": this
+  // habit's position within its group on the Today page, independent of
+  // `order` (its position within the same group on /habits) — the server
+  // can only pre-sort one way per request, so the client needs the raw
+  // number to sort the same fetched list a second, independent way.
+  todayOrder: number
   updatedAt: Date
   createdAt: Date
 }
@@ -27,6 +33,7 @@ function toClientHabit(habit: {
   completedDates: string[]
   activeDays: number[]
   groupId: string
+  todayOrder: number
   updatedAt: Date
   createdAt: Date
 }): ClientHabit {
@@ -38,6 +45,7 @@ function toClientHabit(habit: {
     completedDates: habit.completedDates,
     activeDays: habit.activeDays,
     groupId: habit.groupId,
+    todayOrder: habit.todayOrder,
     updatedAt: habit.updatedAt,
     createdAt: habit.createdAt,
   }
@@ -65,10 +73,20 @@ habitsRouter.post("/", async (req, res) => {
   }
 
   // New habits are appended on the client (added habits show up last), so
-  // they need an order larger than everything currently stored.
-  const { _max } = await db.habit.aggregate({ where: { userId: req.userId }, _max: { order: true } })
+  // they need an order larger than everything currently stored — on both
+  // axes, so the habit lands last on Today too, not wherever `order`'s
+  // value happens to place it.
+  const [{ _max: maxOrder }, { _max: maxTodayOrder }] = await Promise.all([
+    db.habit.aggregate({ where: { userId: req.userId }, _max: { order: true } }),
+    db.habit.aggregate({ where: { userId: req.userId }, _max: { todayOrder: true } }),
+  ])
   const created = await db.habit.create({
-    data: { ...parsed.data, userId: req.userId, order: (_max.order ?? -1) + 1 },
+    data: {
+      ...parsed.data,
+      userId: req.userId,
+      order: (maxOrder.order ?? -1) + 1,
+      todayOrder: (maxTodayOrder.todayOrder ?? -1) + 1,
+    },
   })
   res.status(201).json(toClientHabit(created))
 })
@@ -92,6 +110,29 @@ habitsRouter.patch("/reorder", async (req, res) => {
   // only `order` changed — the client must learn the new values, or its
   // next per-item PATCH on any of these habits will carry a stale
   // expectedUpdatedAt and get a false 409 "changed elsewhere".
+  const updated = await db.habit.findMany({
+    where: { id: { in: parsed.data.map(d => d.id) }, userId: req.userId },
+    select: { id: true, updatedAt: true },
+  })
+  res.json(updated)
+})
+
+// Same shape and logic as /reorder above, writing `todayOrder` instead of
+// `order` — the Today page's independent ordering axis (see schema.prisma).
+habitsRouter.patch("/reorder-today", async (req, res) => {
+  const parsed = reorderSchema.safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid reorder payload", details: parsed.error.flatten() })
+    return
+  }
+
+  await db.$transaction(
+    [...parsed.data]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(({ id, order }) =>
+        db.habit.updateMany({ where: { id, userId: req.userId }, data: { todayOrder: order } }),
+      ),
+  )
   const updated = await db.habit.findMany({
     where: { id: { in: parsed.data.map(d => d.id) }, userId: req.userId },
     select: { id: true, updatedAt: true },

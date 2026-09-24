@@ -163,3 +163,55 @@ describe("usePersistedCollection: update() then reorder() on the same item", () 
     expect(updated?.value).toBe("moved again")
   })
 })
+
+describe("usePersistedCollection: reorder() with a second, independent axis", () => {
+  it("sends the reorder to the passed-in request function, not the repository's own reorder, and still seeds pendingUpdates from its response", async () => {
+    // Mirrors habitRepository.reorderToday — a completely separate network
+    // call/column (e.g. todayOrder) from the repository's default reorder
+    // (e.g. order), sharing the same server-side updatedAt bump behavior.
+    let defaultReorderCalls = 0
+    let secondaryTick = 100
+    let secondaryUpdatedAt = "t0"
+    const repo: Repository<Item> = {
+      list: async () => [{ id: "1", updatedAt: "t0", value: "a" }],
+      create: async i => i,
+      update: async (_id, patch, expectedUpdatedAt) => {
+        if (expectedUpdatedAt !== secondaryUpdatedAt) {
+          const { ConflictError } = await import("./repository")
+          throw new ConflictError({ id: "1", updatedAt: secondaryUpdatedAt, value: "a" })
+        }
+        secondaryTick += 1
+        secondaryUpdatedAt = `t${secondaryTick}`
+        return { id: "1", updatedAt: secondaryUpdatedAt, value: patch.value ?? "a" }
+      },
+      remove: async () => {},
+      reorder: async order => {
+        defaultReorderCalls += 1
+        return order.map(o => ({ id: o.id, updatedAt: "should-not-be-used" }))
+      },
+    }
+    const secondaryReorder = async (order: { id: string; order: number }[]) => {
+      secondaryTick += 1
+      secondaryUpdatedAt = `t${secondaryTick}`
+      return order.map(o => ({ id: o.id, updatedAt: secondaryUpdatedAt }))
+    }
+
+    const { result } = renderHook(() => usePersistedCollection<Item>(repo, "task"), {
+      wrapper: ({ children }) => <LanguageProvider>{children}</LanguageProvider>,
+    })
+    await waitFor(() => expect(result.current.isLoaded).toBe(true))
+
+    await act(async () => {
+      await result.current.reorder([{ id: "1", updatedAt: "t0", value: "a" }], secondaryReorder)
+    })
+    expect(defaultReorderCalls).toBe(0)
+
+    // A follow-up update() must use the secondary reorder's confirmed
+    // updatedAt, not the pre-reorder one — same pendingUpdates-seeding
+    // protection the default axis already gets.
+    await act(async () => {
+      await result.current.update("1", { value: "b" })
+    })
+    expect(result.current.items.find(i => i.id === "1")?.value).toBe("b")
+  })
+})

@@ -3,18 +3,24 @@ import type { Habit } from "./habit"
 
 export interface HabitContextValue {
   habits: Habit[]
-  addHabit: (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates">) => void
-  updateHabit: (id: string, patch: Partial<Omit<Habit, "id" | "updatedAt">>) => void
+  // todayOrder, like id/updatedAt/createdAt/completedDates, is assigned
+  // automatically (a placeholder here, the server's real value once
+  // create() resolves) — never supplied by the caller.
+  addHabit: (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates" | "todayOrder">) => void
+  // todayOrder is excluded here too — it only ever changes via
+  // reorderHabitsToday/moveHabitToGroupToday below, never a generic patch.
+  updateHabit: (id: string, patch: Partial<Omit<Habit, "id" | "updatedAt" | "todayOrder">>) => void
   deleteHabit: (id: string) => void
-  reorderHabits: (draggedId: string, targetId: string) => void
-  // Reorders only within one group — used by the Habits page, where each
-  // block is its own independent drag list. Unlike reorderHabits above
-  // (still used by Today's flat HabitTrackerGrid), this only touches the
-  // order of habits already in `groupId`.
+  // Reorders within one group on the /habits page (writes `order`).
   reorderHabitsInGroup: (groupId: string, draggedId: string, targetId: string) => void
-  // Cross-group drag-and-drop: moves a habit into a different group and
-  // appends it at the end of that group's list.
+  // Cross-group drag-and-drop on /habits: moves a habit into a different
+  // group and appends it at the end of that group's list (writes `order`).
   moveHabitToGroup: (habitId: string, targetGroupId: string) => void
+  // Today-page equivalents of the two above — same group membership
+  // (groupId is shared), but reorder against `todayOrder` instead of
+  // `order`, so dragging on Today never moves anything on /habits.
+  reorderHabitsToday: (groupId: string, draggedId: string, targetId: string) => void
+  moveHabitToGroupToday: (habitId: string, targetGroupId: string) => void
   toggleHabit: (id: string, date: string) => void
   // Re-fetches every habit from the server — for when a habit group is
   // deleted: the backend reassigns its habits to General in the same

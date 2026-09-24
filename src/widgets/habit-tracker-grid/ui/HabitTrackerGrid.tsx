@@ -1,20 +1,29 @@
 import { useState } from "react"
-import { AnimatePresence, motion } from "motion/react"
 import { LayoutGrid, List, Plus } from "lucide-react"
-import { HabitForm } from "@/features/habit-form"
+import { HabitGroupForm } from "@/features/habit-group-form"
+import { useHabitGroups } from "@/entities/habit-group"
 import { type Habit } from "@/entities/habit"
 import { useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group"
-import { HabitGridItem } from "./components"
+import { TodayHabitGroupCard } from "./TodayHabitGroupCard"
 import { useHabitViewMode } from "../lib/habitViewMode"
 
+// Today's habit widget — a list of block cards (TodayHabitGroupCard), one
+// per HabitGroup that has at least one habit scheduled today (a block
+// with nothing due today is skipped here — it's still fully visible and
+// manageable on /habits, this just keeps the main screen uncluttered).
+// Adding a habit always happens via a specific block's own "+", same
+// convention /habits already uses — this widget's own "+" only creates a
+// new block.
 export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
-  const [isAdding, setIsAdding] = useState(false)
-  const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
+  const { habitGroups } = useHabitGroups()
+  const [isAddingGroup, setIsAddingGroup] = useState(false)
   const [viewMode, setViewMode] = useHabitViewMode()
   const { t } = useLanguage()
+
+  const groupsWithHabitsToday = habitGroups.filter(g => habits.some(h => h.groupId === g.id))
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6">
@@ -37,56 +46,32 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
               <List size={13} />
             </ToggleGroupItem>
           </ToggleGroup>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 text-xs"
-            onClick={() => {
-              setEditingHabit(null)
-              setIsAdding(v => !v)
-            }}
-          >
+          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsAddingGroup(v => !v)}>
             <Plus size={13} />
-            {t("habits.addHabit")}
+            {t("habits.group.addBlock")}
           </Button>
         </div>
       </div>
 
-      <AnimatePresence>
-        {(isAdding || editingHabit) && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.18 }}
-            className="overflow-hidden mb-4"
-          >
-            <HabitForm
-              habit={editingHabit ?? undefined}
-              onDone={() => {
-                setIsAdding(false)
-                setEditingHabit(null)
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isAddingGroup && (
+        <div className="mb-4">
+          <HabitGroupForm onDone={() => setIsAddingGroup(false)} />
+        </div>
+      )}
 
-      {habits.length > 0 ? (
-        <div
-          className={viewMode === "grid" ? "grid grid-cols-2 md:grid-cols-4 gap-3" : "flex flex-col gap-2"}
-        >
-          {habits.map(habit => (
-            <HabitGridItem
-              key={habit.id}
-              habit={habit}
+      {groupsWithHabitsToday.length > 0 ? (
+        <div className="space-y-3">
+          {groupsWithHabitsToday.map(group => (
+            <TodayHabitGroupCard
+              key={group.id}
+              group={group}
+              habits={habits.filter(h => h.groupId === group.id)}
               viewMode={viewMode}
-              onEdit={() => setEditingHabit(habit)}
             />
           ))}
         </div>
       ) : (
-        !isAdding && (
+        !isAddingGroup && (
           <div className="text-center py-8 text-muted-foreground text-sm">{t("habits.noHabitsYet")}</div>
         )
       )}

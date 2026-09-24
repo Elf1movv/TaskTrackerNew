@@ -10,6 +10,11 @@ export interface Habit {
   // Every habit belongs to a group — including the auto-seeded "General"
   // one (see entities/habit-group) for habits not in a custom block.
   groupId: string
+  // This habit's position within its group on the Today page — independent
+  // of the (server-only, never sent to the client) `order` used by the
+  // same group on /habits. Set only via HabitProvider's
+  // reorderHabitsToday/moveHabitToGroupToday, never via updateHabit.
+  todayOrder: number
   updatedAt: string
   createdAt: string
 }
