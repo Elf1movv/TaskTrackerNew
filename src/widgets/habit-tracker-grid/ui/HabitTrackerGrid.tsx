@@ -60,7 +60,12 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
       )}
 
       {groupsWithHabitsToday.length > 0 ? (
-        <div className="space-y-3">
+        // space-y-5, not -3: each card's pill overhangs its top edge by
+        // ~14px (see TodayHabitGroupCard's border-straddle comment) — a
+        // smaller gap here let two collapsed cards' pills visually
+        // collide, since a collapsed card's own height barely clears
+        // that overhang on its own.
+        <div className="space-y-5">
           {groupsWithHabitsToday.map(group => (
             <TodayHabitGroupCard
               key={group.id}

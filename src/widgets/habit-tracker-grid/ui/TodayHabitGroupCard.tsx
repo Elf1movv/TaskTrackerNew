@@ -108,12 +108,18 @@ export function TodayHabitGroupCard({
               so a trigger sharing a flex row with a sibling button group
               never gets the extra width `justify-center` would need to
               center within — it just hugs the left edge instead. */}
-          <div className="relative px-4 cursor-grab active:cursor-grabbing">
-            {/* -mt-3.5 pulls the trigger row up by roughly half the
-                pill's own height, so the pill's vertical center lands
-                exactly on the card's top border (a fieldset-legend look)
-                instead of floating below it. */}
-            <AccordionTrigger className="hover:no-underline !py-0 -mt-3.5 justify-center">
+          <div className="relative px-4 pt-3.5 cursor-grab active:cursor-grabbing">
+            {/* relative + a negative `top` (not a negative margin) shifts
+                the trigger up by roughly half the pill's own height, so
+                its vertical center lands exactly on the card's top
+                border (a fieldset-legend look), without also shrinking
+                the space this row reserves in the page's normal flow —
+                a negative margin here would do that instead, and could
+                bleed into the *previous* card's spacing once this one's
+                collapsed down to just the pill (see LEARNING.md). The
+                wrapper's own pt-3.5 keeps that reserved space matching
+                the shift, so nothing jumps when toggling open/closed. */}
+            <AccordionTrigger className="hover:no-underline !py-0 relative -top-3.5 justify-center">
               <span
                 className="px-4 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1.5 text-white"
                 style={{ backgroundColor: group.color }}
