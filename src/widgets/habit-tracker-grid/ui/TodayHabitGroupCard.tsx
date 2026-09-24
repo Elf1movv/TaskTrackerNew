@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import { Plus } from "lucide-react"
+import { ChevronDown, Plus } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { EditHabitGroupButton } from "@/features/edit-habit-group"
 import { DeleteHabitGroupButton } from "@/features/delete-habit-group"
@@ -122,13 +122,25 @@ export function TodayHabitGroupCard({
                 Don't also add top padding to compensate "visually" —
                 that cancels the offset back to zero, landing the pill's
                 TOP (not its center) on the border instead. */}
-            <AccordionTrigger className="hover:no-underline !py-0 relative -top-[11px] justify-center">
+            {/* [&>svg]:hidden — this hides the chevron the shared
+                AccordionTrigger normally appends after its children on
+                its own, floating outside the pill next to it (that's
+                the stray arrow this whole block exists to get rid of).
+                Rendering our own ChevronDown inside the pill span below
+                instead keeps it visually part of the pill (same
+                colored background, rotates with `isOpen` like the
+                built-in one does). */}
+            <AccordionTrigger className="hover:no-underline !py-0 relative -top-[11px] justify-center [&>svg]:hidden">
               <span
                 className="px-4 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1.5 text-white"
                 style={{ backgroundColor: group.color }}
               >
                 <span className="leading-none">{getHabitGroupIcon(group)}</span>
                 <span className="leading-none">{getHabitGroupTitle(group, t)}</span>
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                />
               </span>
             </AccordionTrigger>
             <div className="absolute right-4 top-3 flex items-center gap-1">
