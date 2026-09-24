@@ -91,7 +91,16 @@ export function TodayHabitGroupCard({
       >
         <AccordionItem
           value={group.id}
-          className="!border-b-0 bg-muted/30 border border-border rounded-2xl overflow-hidden"
+          // Border/background only show while open — collapsed, the block
+          // is just the pill floating with nothing around it. The border
+          // is always rendered (1px, color toggles to transparent) rather
+          // than added/removed, so nothing shifts by a pixel when it
+          // appears. No overflow-hidden here (unlike the /habits
+          // accordion): the pill below straddles this box's top edge on
+          // purpose, and clipping would cut its top half off.
+          className={`!border-b-0 rounded-2xl border transition-colors ${
+            isOpen ? "border-border bg-muted/30" : "border-transparent"
+          }`}
         >
           {/* relative + absolute buttons, not a flex row: AccordionTrigger
               only ever sizes to its own content (a flex item with no
@@ -99,8 +108,12 @@ export function TodayHabitGroupCard({
               so a trigger sharing a flex row with a sibling button group
               never gets the extra width `justify-center` would need to
               center within — it just hugs the left edge instead. */}
-          <div className="relative px-4 pt-4 cursor-grab active:cursor-grabbing">
-            <AccordionTrigger className="hover:no-underline pb-4 justify-center">
+          <div className="relative px-4 cursor-grab active:cursor-grabbing">
+            {/* -mt-3.5 pulls the trigger row up by roughly half the
+                pill's own height, so the pill's vertical center lands
+                exactly on the card's top border (a fieldset-legend look)
+                instead of floating below it. */}
+            <AccordionTrigger className="hover:no-underline !py-0 -mt-3.5 justify-center">
               <span
                 className="px-4 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1.5 text-white"
                 style={{ backgroundColor: group.color }}
@@ -109,13 +122,13 @@ export function TodayHabitGroupCard({
                 <span className="leading-none">{getHabitGroupTitle(group, t)}</span>
               </span>
             </AccordionTrigger>
-            <div className="absolute right-4 top-4 flex items-center gap-1">
+            <div className="absolute right-4 top-1 flex items-center gap-1">
               <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
               {!group.isGeneral && <DeleteHabitGroupButton group={group} />}
             </div>
           </div>
 
-          <AccordionContent className="px-4 pb-4 space-y-3">
+          <AccordionContent className="px-4 pb-4 pt-3 space-y-3">
             {isEditingGroup && <HabitGroupForm group={group} onDone={() => setIsEditingGroup(false)} />}
 
             <div className="flex justify-end">
