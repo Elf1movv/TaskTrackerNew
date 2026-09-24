@@ -9,9 +9,8 @@ import {
 import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
-import { DatePicker } from "@/shared/ui/date-picker"
+import { DateTimeField } from "@/shared/ui/date-time-field"
 import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
 import { TimePicker } from "@/shared/ui/time-picker"
 
 const PRIORITIES: ReminderPriority[] = ["normal", "critical"]
@@ -100,14 +99,17 @@ export function ReminderForm({
           </PriorityToggle>
         </div>
 
-        {showDatePicker && (
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground font-normal">{t("reminderForm.date")}</Label>
-            <DatePicker value={date} onChange={setDate} />
-          </div>
+        {showDatePicker ? (
+          <DateTimeField
+            date={date}
+            onDateChange={d => d && setDate(d)}
+            clearable={false}
+            time={time}
+            onTimeChange={setTime}
+          />
+        ) : (
+          <TimePicker value={time} onChange={setTime} />
         )}
-
-        <TimePicker value={time} onChange={setTime} />
       </div>
 
       <div className="flex gap-2 justify-between pt-1">

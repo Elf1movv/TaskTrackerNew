@@ -10,6 +10,13 @@
 export const HOUR_HEIGHT_PX = 64
 const PIXELS_PER_MINUTE = HOUR_HEIGHT_PX / 60
 
+// Nominal duration for a point-in-time item (a Reminder, or a Task with no
+// endTime) — used both as the fallback block a create-drag click produces
+// (useCreateDrag.ts) and as the logical window a point-in-time item
+// occupies for overlap-lane purposes (computeLanes.ts). One shared
+// constant so the two meanings can't drift apart.
+export const DEFAULT_BLOCK_MINUTES = 30
+
 // "14:30" -> 870 (minutes since midnight).
 export function minutesFromMidnight(time: string): number {
   const [hours, minutes] = time.split(":").map(Number)

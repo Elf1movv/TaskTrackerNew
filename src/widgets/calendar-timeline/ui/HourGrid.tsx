@@ -1,16 +1,43 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
 import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { PriorityDot, type Task } from "@/entities/task"
 import { ENTITY_TYPE_COLORS } from "@/shared/lib/colors"
 import { useDragItem, useDropTarget } from "@/shared/lib/dnd"
 import { monoFont } from "@/shared/lib/typography"
-import { HOUR_HEIGHT_PX, offsetPxToTime, timeToOffsetPx } from "@/shared/lib/timeOffset"
+import {
+  DEFAULT_BLOCK_MINUTES,
+  HOUR_HEIGHT_PX,
+  minutesFromMidnight,
+  offsetPxToTime,
+  timeToOffsetPx,
+} from "@/shared/lib/timeOffset"
+import { computeLanes, type LaneAssignment } from "../lib/computeLanes"
 import { useCreateDrag } from "../lib/useCreateDrag"
 import { useResizeDrag } from "../lib/useResizeDrag"
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h)
 const GRID_HEIGHT_PX = 24 * HOUR_HEIGHT_PX
+
+// Side-by-side positioning for overlapping same-time blocks — see
+// computeLanes.ts. `laneCount<=1` reproduces the exact 4px/4px gutter the
+// single-item case always had (no visual change for the overwhelmingly
+// common non-overlapping case); for laneCount>1 the track between those
+// same two 4px outer gutters is split into laneCount equal cells with a
+// small 4px gap between adjacent lanes.
+const BLOCK_GUTTER_PX = 4
+const LANE_GAP_PX = 2
+
+function laneStyle(laneIndex: number, laneCount: number): { left: string; width: string } {
+  if (laneCount <= 1) {
+    return { left: `${BLOCK_GUTTER_PX}px`, width: `calc(100% - ${BLOCK_GUTTER_PX * 2}px)` }
+  }
+  const track = `(100% - ${BLOCK_GUTTER_PX * 2}px)`
+  return {
+    left: `calc(${BLOCK_GUTTER_PX}px + ${track} * ${laneIndex} / ${laneCount} + ${laneIndex * LANE_GAP_PX}px)`,
+    width: `calc(${track} / ${laneCount} - ${LANE_GAP_PX}px)`,
+  }
+}
 
 export interface HourGridColumn {
   day: Date
@@ -144,6 +171,29 @@ function TimelineDayColumn({
     },
   })
 
+  // Tasks and reminders share one combined lane computation (not one per
+  // entity type) — the reported bug was specifically a task overlapping a
+  // reminder, so they must compete for lanes together. Id-prefixed so a
+  // task and a reminder can never collide even if their raw ids happened
+  // to match (they're different collections/tables).
+  const laneById = useMemo(() => {
+    const items = [
+      ...column.tasks.map(t => {
+        const start = minutesFromMidnight(t.time!)
+        return {
+          id: `task:${t.id}`,
+          startMinutes: start,
+          endMinutes: t.endTime ? minutesFromMidnight(t.endTime) : start + DEFAULT_BLOCK_MINUTES,
+        }
+      }),
+      ...column.reminders.map(r => {
+        const start = minutesFromMidnight(r.time!)
+        return { id: `reminder:${r.id}`, startMinutes: start, endMinutes: start + DEFAULT_BLOCK_MINUTES }
+      }),
+    ]
+    return new Map(computeLanes(items).map(a => [a.id, a]))
+  }, [column.tasks, column.reminders])
+
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
       dropRef(node)
@@ -194,6 +244,7 @@ function TimelineDayColumn({
         <TimedTaskBlock
           key={task.id}
           task={task}
+          lane={laneById.get(`task:${task.id}`) ?? { id: "", laneIndex: 0, laneCount: 1 }}
           columnRef={columnEl}
           onEdit={rect => onEditTask(task.id, rect)}
           onResizeTask={onResizeTask ? endTime => onResizeTask(task.id, endTime) : undefined}
@@ -203,6 +254,7 @@ function TimelineDayColumn({
         <TimedReminderBlock
           key={reminder.id}
           reminder={reminder}
+          lane={laneById.get(`reminder:${reminder.id}`) ?? { id: "", laneIndex: 0, laneCount: 1 }}
           onEdit={rect => onEditReminder(reminder.id, rect)}
         />
       ))}
@@ -225,11 +277,13 @@ function blockHeightPx(task: Task): number {
 
 function TimedTaskBlock({
   task,
+  lane,
   columnRef,
   onEdit,
   onResizeTask,
 }: {
   task: Task
+  lane: LaneAssignment
   columnRef: React.RefObject<HTMLDivElement | null>
   onEdit: (anchorRect: DOMRect) => void
   onResizeTask?: (endTime: string) => void
@@ -264,11 +318,12 @@ function TimedTaskBlock({
       style={{
         top: timeToOffsetPx(task.time!),
         height,
+        ...laneStyle(lane.laneIndex, lane.laneCount),
         opacity: isDragging ? 0.4 : 1,
         borderLeftColor: ENTITY_TYPE_COLORS.task,
         zIndex: draftEndTime ? 40 : 10,
       }}
-      className={`absolute left-1 right-1 flex items-center gap-1 rounded-md border-l-2 bg-card px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden ${
+      className={`absolute flex items-center gap-1 rounded-md border-l-2 bg-card px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden ${
         task.completed ? "opacity-60" : ""
       }`}
       title={`${task.time} · ${task.title}`}
@@ -300,9 +355,11 @@ function TimedTaskBlock({
 
 function TimedReminderBlock({
   reminder,
+  lane,
   onEdit,
 }: {
   reminder: Reminder
+  lane: LaneAssignment
   onEdit: (anchorRect: DOMRect) => void
 }) {
   return (
@@ -312,9 +369,10 @@ function TimedReminderBlock({
       style={{
         top: timeToOffsetPx(reminder.time!),
         height: FALLBACK_BLOCK_HEIGHT_PX,
+        ...laneStyle(lane.laneIndex, lane.laneCount),
         borderLeftColor: ENTITY_TYPE_COLORS.reminder,
       }}
-      className="absolute left-1 right-1 z-10 flex items-center gap-1 rounded-full border-l-2 bg-card px-1.5 text-left text-[11px] overflow-hidden"
+      className="absolute z-10 flex items-center gap-1 rounded-full border-l-2 bg-card px-1.5 text-left text-[11px] overflow-hidden"
       title={`${reminder.time} · ${reminder.title}`}
     >
       <ReminderPriorityIcon

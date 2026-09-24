@@ -1,12 +1,14 @@
-import { formatDateKey } from "@/shared/lib/date"
 import type { Task } from "../model/task"
 
-// A task belongs to a calendar day either because it's due that day, or —
-// for tasks with no due date — because it was completed that day. Without
-// this second case, an undated task that gets completed would vanish from
-// the Tasks page (see isCompletedToday) without ever appearing anywhere.
+// A task belongs to a calendar day exactly when it's due that day — used
+// by every calendar view (Month/Day/Week/Agenda/Year). Deliberately NOT
+// falling back to completedAt for undated tasks (an earlier version did):
+// an undated task completed today would then show up on the calendar as
+// if it were "due today," which read as confusing/broken (a struck-through
+// task with no visible reason for being there) — direct feedback,
+// 2026-09-24. Today's own page (selectTodayTasks) keeps its own separate
+// completedAt-fallback logic for undated tasks — that's a different,
+// intentional "still relevant to look at today" concept, not this one.
 export function isTaskOnDay(task: Task, dayKey: string): boolean {
-  if (task.dueDate) return task.dueDate === dayKey
-  if (task.completed && task.completedAt) return formatDateKey(new Date(task.completedAt)) === dayKey
-  return false
+  return task.dueDate === dayKey
 }

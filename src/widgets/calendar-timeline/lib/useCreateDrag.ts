@@ -1,5 +1,11 @@
 import { useCallback, useRef, useState, type RefObject } from "react"
-import { minutesFromMidnight, offsetPxToTime, offsetToTime, timeToOffsetPx } from "@/shared/lib/timeOffset"
+import {
+  DEFAULT_BLOCK_MINUTES,
+  minutesFromMidnight,
+  offsetPxToTime,
+  offsetToTime,
+  timeToOffsetPx,
+} from "@/shared/lib/timeOffset"
 import { usePointerVerticalDrag } from "./usePointerVerticalDrag"
 
 // A drag shorter than this many minutes (measured after snapping) is
@@ -7,7 +13,6 @@ import { usePointerVerticalDrag } from "./usePointerVerticalDrag"
 // user: press-and-drag-down defines a range, but a plain click still
 // creates a sensible default block instead of a useless zero-length one.
 const CLICK_FALLBACK_MINUTES = 15
-const DEFAULT_BLOCK_MINUTES = 30
 
 export interface CreateDragPreview {
   startTime: string

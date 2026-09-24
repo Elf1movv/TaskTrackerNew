@@ -9,6 +9,7 @@ export const ru: Record<keyof typeof en, string> = {
   "common.hasTime": "Есть время",
   "common.noTime": "Без времени",
   "common.delete": "Удалить",
+  "common.clear": "Очистить",
 
   "nav.today": "Сегодня",
   "nav.tasks": "Задачи",
@@ -63,12 +64,10 @@ export const ru: Record<keyof typeof en, string> = {
   "taskForm.category": "Категория",
   "taskForm.newCategoryPlaceholder": "Новая категория",
   "taskForm.noDueDate": "Без срока",
-  "taskForm.hasDueDate": "Со сроком",
   "taskForm.pickDate": "Выбрать дату",
   "taskForm.endTime": "Конец",
 
   "reminderForm.placeholder": "О чём напомнить?",
-  "reminderForm.date": "Дата",
   "reminderForm.priority": "Приоритет",
   "reminderForm.priorityNormal": "Обычное",
   "reminderForm.priorityCritical": "Критично",
@@ -85,7 +84,6 @@ export const ru: Record<keyof typeof en, string> = {
   "goalForm.titlePlaceholder": "Название цели",
   "goalForm.descriptionPlaceholder": "Описание (необязательно)",
   "goalForm.noTargetDate": "Без срока",
-  "goalForm.hasTargetDate": "Со сроком",
 
   "habitForm.namePlaceholder": "Название привычки",
   "habitForm.activeDays": "Повторять по дням",
@@ -142,7 +140,6 @@ export const ru: Record<keyof typeof en, string> = {
   "calendar.noGoalsScheduled": "Нет целей с дедлайном",
   "calendar.noHabitsScheduled": "Нет запланированных привычек",
   "calendar.agendaEmpty": "На ближайшие 30 дней ничего не запланировано",
-  "calendar.quickAdd": "Быстрое добавление",
   "calendar.backToToday": "К сегодня",
   "calendar.view.agenda": "Повестка",
   "calendar.view.day": "День",

@@ -227,6 +227,7 @@ function CalendarPageContent() {
           allHabits={allHabits}
           onMoveTaskToDay={moveTaskToDay}
           onRescheduleTaskTime={rescheduleTaskTime}
+          onResizeTask={resizeTask}
         />
       )}
 

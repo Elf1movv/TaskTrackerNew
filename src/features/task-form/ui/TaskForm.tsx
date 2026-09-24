@@ -5,11 +5,10 @@ import { PRIORITY_COLORS, useTasks, type Priority, type Task } from "@/entities/
 import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
-import { DatePicker } from "@/shared/ui/date-picker"
+import { DateTimeField } from "@/shared/ui/date-time-field"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
-import { TimePicker } from "@/shared/ui/time-picker"
 
 const PRIORITIES: Priority[] = ["low", "medium", "high"]
 const PRIORITY_LABEL_KEYS: Record<Priority, TranslationKey> = {
@@ -151,37 +150,22 @@ export function TaskForm({
           </div>
         )}
 
-        {/* flex-wrap of its own — narrow containers (e.g. the calendar
-            day panel's ~260px card) don't have room for both buttons on
-            one line; without this the DatePicker's trigger overflowed the
-            card instead of wrapping. */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-xs h-8"
-            onClick={() => {
-              const next = !hasDueDate
-              setHasDueDate(next)
-              if (next && !dueDate) setDueDate(getTodayKey())
-            }}
-          >
-            {hasDueDate ? t("taskForm.hasDueDate") : t("taskForm.noDueDate")}
-          </Button>
-          {hasDueDate && <DatePicker value={dueDate} onChange={setDueDate} />}
-          {hasDueDate && <TimePicker value={time} onChange={setTime} />}
-          {/* Labeled, unlike the start-time picker above — two unlabeled
-              "Has time"/"No time" toggles side by side would be impossible
-              to tell apart. The start picker stays unlabeled since it's
-              already the familiar one used everywhere else in the app. */}
-          {hasDueDate && time && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs text-muted-foreground">{t("taskForm.endTime")}</span>
-              <TimePicker value={endTime} onChange={setEndTime} />
-            </div>
-          )}
-        </div>
+        <DateTimeField
+          date={hasDueDate ? dueDate : null}
+          onDateChange={d => {
+            if (d) {
+              setHasDueDate(true)
+              setDueDate(d)
+            } else {
+              setHasDueDate(false)
+            }
+          }}
+          placeholder={t("taskForm.noDueDate")}
+          time={time}
+          onTimeChange={setTime}
+          endTime={endTime}
+          onEndTimeChange={setEndTime}
+        />
       </div>
 
       <div className="flex gap-2 justify-between pt-1">

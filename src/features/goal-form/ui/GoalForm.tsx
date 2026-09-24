@@ -4,7 +4,7 @@ import { formatDateKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
 import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { Button } from "@/shared/ui/button"
-import { DatePicker } from "@/shared/ui/date-picker"
+import { DateTimeField } from "@/shared/ui/date-time-field"
 import { Input } from "@/shared/ui/input"
 import { Textarea } from "@/shared/ui/textarea"
 
@@ -70,22 +70,18 @@ export function GoalForm({
       />
 
       <div className="flex gap-4 flex-wrap items-center">
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-xs h-8"
-            onClick={() => {
-              const next = !hasTargetDate
-              setHasTargetDate(next)
-              if (next && !targetDate) setTargetDate(formatDateKey(new Date()))
-            }}
-          >
-            {hasTargetDate ? t("goalForm.hasTargetDate") : t("goalForm.noTargetDate")}
-          </Button>
-          {hasTargetDate && <DatePicker value={targetDate} onChange={setTargetDate} />}
-        </div>
+        <DateTimeField
+          date={hasTargetDate ? targetDate : null}
+          onDateChange={d => {
+            if (d) {
+              setHasTargetDate(true)
+              setTargetDate(d)
+            } else {
+              setHasTargetDate(false)
+            }
+          }}
+          placeholder={t("goalForm.noTargetDate")}
+        />
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("common.color")}</span>

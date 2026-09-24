@@ -7,6 +7,7 @@ export const en = {
   "common.hasTime": "Has time",
   "common.noTime": "No time",
   "common.delete": "Delete",
+  "common.clear": "Clear",
 
   "nav.today": "Today",
   "nav.tasks": "Tasks",
@@ -61,12 +62,10 @@ export const en = {
   "taskForm.category": "Category",
   "taskForm.newCategoryPlaceholder": "New category",
   "taskForm.noDueDate": "No due date",
-  "taskForm.hasDueDate": "Has due date",
   "taskForm.pickDate": "Pick a date",
   "taskForm.endTime": "End",
 
   "reminderForm.placeholder": "What to remind about?",
-  "reminderForm.date": "Date",
   "reminderForm.priority": "Priority",
   "reminderForm.priorityNormal": "Normal",
   "reminderForm.priorityCritical": "Critical",
@@ -83,7 +82,6 @@ export const en = {
   "goalForm.titlePlaceholder": "Goal title",
   "goalForm.descriptionPlaceholder": "Description (optional)",
   "goalForm.noTargetDate": "No deadline",
-  "goalForm.hasTargetDate": "Has deadline",
 
   "habitForm.namePlaceholder": "Habit name",
   "habitForm.activeDays": "Repeats on",
@@ -140,7 +138,6 @@ export const en = {
   "calendar.noGoalsScheduled": "No goals due",
   "calendar.noHabitsScheduled": "No habits scheduled",
   "calendar.agendaEmpty": "Nothing scheduled in the next 30 days",
-  "calendar.quickAdd": "Quick add",
   "calendar.backToToday": "Back to today",
   "calendar.view.agenda": "Agenda",
   "calendar.view.day": "Day",
