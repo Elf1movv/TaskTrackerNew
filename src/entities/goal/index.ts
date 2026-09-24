@@ -1,5 +1,6 @@
 export type { Goal, Milestone } from "./model/goal"
 export { GoalProvider } from "./model/GoalProvider"
 export { useGoals } from "./model/goalContext"
+export { isGoalDueOnDay } from "./lib/isGoalDueOnDay"
 export { ProgressRing } from "./ui/ProgressRing"
 export { GoalProgressBar } from "./ui/GoalProgressBar"

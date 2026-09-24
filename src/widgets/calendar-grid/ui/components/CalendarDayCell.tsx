@@ -1,5 +1,8 @@
 import { useCallback } from "react"
 import { format } from "date-fns"
+import { Repeat, Target } from "lucide-react"
+import type { Goal } from "@/entities/goal"
+import type { Habit } from "@/entities/habit"
 import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { PriorityDot, type Task } from "@/entities/task"
 import { useDropTarget } from "@/shared/lib/dnd"
@@ -16,29 +19,53 @@ export function CalendarDayCell({
   isCurrentMonth,
   dayTasks,
   dayReminders,
+  dayGoals,
+  dayHabits,
   isSelected,
   isCurrent,
   onSelect,
   onMoveTaskToDay,
+  onMoveGoalToDay,
 }: {
   day: Date
   isCurrentMonth: boolean
   dayTasks: Task[]
   dayReminders: Reminder[]
+  dayGoals: Goal[]
+  dayHabits: Habit[]
   isSelected: boolean
   isCurrent: boolean
   onSelect: () => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
+  onMoveGoalToDay: (goalId: string, day: Date) => void
 }) {
   // Composed here (not passed down as a ready-made per-day closure from the
   // parent's .map()) so it stays referentially stable across renders where
   // `day` and `onMoveTaskToDay` don't change — useDropTarget's ref callback
   // depends on this identity staying stable, see useDropTarget's comment.
-  const handleDrop = useCallback((taskId: string) => onMoveTaskToDay(taskId, day), [onMoveTaskToDay, day])
-  const { ref, isOver } = useDropTarget<HTMLButtonElement>({
+  const handleTaskDrop = useCallback((taskId: string) => onMoveTaskToDay(taskId, day), [onMoveTaskToDay, day])
+  const handleGoalDrop = useCallback((goalId: string) => onMoveGoalToDay(goalId, day), [onMoveGoalToDay, day])
+  // Two drop targets, one per draggable type, composed onto the same node
+  // (same pattern used for the habit-group header's drag+drop composition)
+  // — react-dnd's useDrop only ever accepts one `type` per call, so a cell
+  // that must accept both a dragged task AND a dragged goal needs two
+  // hook instances, not one hook with a type union.
+  const { ref: taskDropRef, isOver: isTaskOver } = useDropTarget<HTMLButtonElement>({
     type: "calendar-task-move",
-    onDrop: handleDrop,
+    onDrop: handleTaskDrop,
   })
+  const { ref: goalDropRef, isOver: isGoalOver } = useDropTarget<HTMLButtonElement>({
+    type: "calendar-goal-move",
+    onDrop: handleGoalDrop,
+  })
+  const ref = useCallback(
+    (node: HTMLButtonElement | null) => {
+      taskDropRef(node)
+      goalDropRef(node)
+    },
+    [taskDropRef, goalDropRef],
+  )
+  const isOver = isTaskOver || isGoalOver
 
   const visibleReminders = dayReminders.slice(0, MAX_VISIBLE_REMINDERS)
   const overflowCount = dayReminders.length - visibleReminders.length
@@ -110,6 +137,27 @@ export function CalendarDayCell({
               colorOverride={isSelected ? "rgba(255,255,255,0.65)" : undefined}
             />
           ))}
+        </div>
+      )}
+
+      {/* One compact row, max 2 markers — a goal-deadline icon (present/
+          absent, not per-goal — the day panel is where you see which
+          goal) and a single habit-count badge (not one chip per habit,
+          there can be many scheduled on one day). Keeps this already
+          tight cell layout from growing further. */}
+      {(dayGoals.length > 0 || dayHabits.length > 0) && (
+        <div
+          className={`flex items-center gap-1.5 text-[9px] ${
+            isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+          }`}
+        >
+          {dayGoals.length > 0 && <Target size={9} />}
+          {dayHabits.length > 0 && (
+            <span className="flex items-center gap-0.5">
+              <Repeat size={9} />
+              {dayHabits.length}
+            </span>
+          )}
         </div>
       )}
     </button>

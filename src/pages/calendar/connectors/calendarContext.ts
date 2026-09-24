@@ -1,22 +1,46 @@
 import { createContext, useContext } from "react"
+import type { Goal } from "@/entities/goal"
+import type { Habit } from "@/entities/habit"
 import type { Reminder } from "@/entities/reminder"
 import type { Task } from "@/entities/task"
-import type { MonthGridDay } from "@/widgets/calendar-grid"
+
+export type CalendarView = "agenda" | "day" | "week" | "month" | "year"
 
 export interface CalendarContextValue {
-  calMonth: Date
-  monthGrid: MonthGridDay[]
+  view: CalendarView
+  setView: (view: CalendarView) => void
+
+  // Single source of truth for "where are we" — each view builds its own
+  // grid/range from this (via shared/lib/calendarGrid.ts) instead of the
+  // provider holding one Date-state variable per view, which could drift
+  // out of sync with each other as views change independently.
+  anchorDate: Date
+  goToPrev: () => void
+  goToNext: () => void
+  goToToday: () => void
+  goToDate: (date: Date) => void
+
+  // Only meaningful for the "month" view (the day-detail side panel) —
+  // Week/Day have their own hour timeline as the detail view, Agenda's
+  // rows already show everything inline, neither needs a separate panel.
   selectedDay: Date | null
-  selectedTasks: Task[]
-  selectedReminders: Reminder[]
+  selectDay: (day: Date | null) => void
+
   allTasks: Task[]
   allReminders: Reminder[]
-  selectDay: (day: Date | null) => void
-  goToPrevMonth: () => void
-  goToNextMonth: () => void
-  goToToday: () => void
-  goToMonth: (date: Date) => void
+  allGoals: Goal[]
+  allHabits: Habit[]
+  selectedTasks: Task[]
+  selectedReminders: Reminder[]
+  selectedGoals: Goal[]
+  // Habits scheduled on selectedDay's weekday — read-only on the calendar
+  // (see DayHabitRow), so unlike the other three there's no corresponding
+  // moveHabitTo* action.
+  selectedHabits: Habit[]
+
   moveTaskToDay: (taskId: string, day: Date) => void
+  moveGoalDeadline: (goalId: string, day: Date) => void
+  rescheduleTaskTime: (taskId: string, day: Date, time: string | null) => void
 }
 
 export const CalendarContext = createContext<CalendarContextValue | null>(null)

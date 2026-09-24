@@ -1,25 +1,33 @@
 import { format, isSameDay, isToday } from "date-fns"
+import { isGoalDueOnDay, type Goal } from "@/entities/goal"
+import { selectHabitsOnDay, type Habit } from "@/entities/habit"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task } from "@/entities/task"
+import type { MonthGridDay } from "@/shared/lib/calendarGrid"
 import { getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
-import type { MonthGridDay } from "../lib/buildMonthGrid"
 import { CalendarDayCell } from "./components"
 
 export function CalendarGrid({
   days,
   tasks,
   reminders,
+  goals,
+  habits,
   selectedDay,
   onSelectDay,
   onMoveTaskToDay,
+  onMoveGoalToDay,
 }: {
   days: MonthGridDay[]
   tasks: Task[]
   reminders: Reminder[]
+  goals: Goal[]
+  habits: Habit[]
   selectedDay: Date | null
   onSelectDay: (day: Date, isCurrentMonth: boolean) => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
+  onMoveGoalToDay: (goalId: string, day: Date) => void
 }) {
   const { language } = useLanguage()
 
@@ -41,6 +49,8 @@ export function CalendarGrid({
           const dayStr = format(date, "yyyy-MM-dd")
           const dayTasks = tasks.filter(t => isTaskOnDay(t, dayStr))
           const dayReminders = selectRemindersOnDay(reminders, dayStr)
+          const dayGoals = goals.filter(g => isGoalDueOnDay(g, dayStr))
+          const dayHabits = selectHabitsOnDay(habits, date)
 
           return (
             <CalendarDayCell
@@ -49,10 +59,13 @@ export function CalendarGrid({
               isCurrentMonth={isCurrentMonth}
               dayTasks={dayTasks}
               dayReminders={dayReminders}
+              dayGoals={dayGoals}
+              dayHabits={dayHabits}
               isSelected={selectedDay ? isSameDay(date, selectedDay) : false}
               isCurrent={isToday(date)}
               onSelect={() => onSelectDay(date, isCurrentMonth)}
               onMoveTaskToDay={onMoveTaskToDay}
+              onMoveGoalToDay={onMoveGoalToDay}
             />
           )
         })}

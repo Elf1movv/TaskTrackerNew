@@ -17,7 +17,7 @@ function lastDropSpec() {
   const calls = vi.mocked(reactDnd.useDrop).mock.calls
   const specFactory = calls[calls.length - 1][0] as unknown as () => {
     accept: string
-    drop: (item: { id: string }, monitor: { didDrop: () => boolean }) => void
+    drop: (item: { id: string }, monitor: { didDrop: () => boolean; getClientOffset: () => unknown }) => void
   }
   return specFactory()
 }
@@ -26,7 +26,7 @@ function lastDropSpec() {
 // row inside its block's header) still gets `didDrop: () => false` from the
 // real react-dnd monitor on the innermost target — only an ancestor target
 // that already handled the same drop sees `true`.
-const notYetHandled = { didDrop: () => false }
+const notYetHandled = { didDrop: () => false, getClientOffset: () => null }
 
 describe("useDropTarget: drop behavior", () => {
   it("builds a drop spec that accepts the given type", () => {
@@ -35,20 +35,20 @@ describe("useDropTarget: drop behavior", () => {
     expect(lastDropSpec().accept).toBe("task")
   })
 
-  it("fires onDrop with the dropped item's id", () => {
+  it("fires onDrop with the dropped item's id and the drop's client offset", () => {
     const onDrop = vi.fn()
     renderHook(() => useDropTarget({ type: "task", onDrop }))
 
     lastDropSpec().drop({ id: "dragged-task" }, notYetHandled)
 
-    expect(onDrop).toHaveBeenCalledExactlyOnceWith("dragged-task")
+    expect(onDrop).toHaveBeenCalledExactlyOnceWith("dragged-task", null)
   })
 
   it("does not fire onDrop when a nested target already handled the drop", () => {
     const onDrop = vi.fn()
     renderHook(() => useDropTarget({ type: "task", onDrop }))
 
-    lastDropSpec().drop({ id: "dragged-task" }, { didDrop: () => true })
+    lastDropSpec().drop({ id: "dragged-task" }, { didDrop: () => true, getClientOffset: () => null })
 
     expect(onDrop).not.toHaveBeenCalled()
   })

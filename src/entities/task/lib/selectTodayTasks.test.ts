@@ -10,6 +10,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     priority: "medium",
     category: "Work",
     dueDate: null,
+    time: null,
     completedAt: null,
     updatedAt: "2026-09-22T00:00:00.000Z",
     createdAt: "2026-09-22T00:00:00.000Z",

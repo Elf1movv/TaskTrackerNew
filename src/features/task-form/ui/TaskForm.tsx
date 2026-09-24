@@ -9,6 +9,7 @@ import { DatePicker } from "@/shared/ui/date-picker"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
+import { TimePicker } from "@/shared/ui/time-picker"
 
 const PRIORITIES: Priority[] = ["low", "medium", "high"]
 const PRIORITY_LABEL_KEYS: Record<Priority, TranslationKey> = {
@@ -60,11 +61,21 @@ export function TaskForm({
   // every other place a new task is created defaults it off.
   const [hasDueDate, setHasDueDate] = useState(!!task?.dueDate)
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? getTodayKey())
+  const [time, setTime] = useState<string | null>(task?.time ?? null)
   const showCategoryPicker = !!task || !lockedCategory
 
   function handleSubmit() {
     if (!title.trim()) return
-    const patch = { title: title.trim(), priority, category, dueDate: hasDueDate ? dueDate : null }
+    const patch = {
+      title: title.trim(),
+      priority,
+      category,
+      dueDate: hasDueDate ? dueDate : null,
+      // Time only ever makes sense alongside a due date — clearing the
+      // date clears whatever time was set too, rather than leaving an
+      // orphaned time on an undated task.
+      time: hasDueDate ? time : null,
+    }
     if (task) {
       updateTask(task.id, { ...patch, completed: task.completed })
     } else {
@@ -141,6 +152,7 @@ export function TaskForm({
             {hasDueDate ? t("taskForm.hasDueDate") : t("taskForm.noDueDate")}
           </Button>
           {hasDueDate && <DatePicker value={dueDate} onChange={setDueDate} />}
+          {hasDueDate && <TimePicker value={time} onChange={setTime} />}
         </div>
       </div>
 

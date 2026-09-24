@@ -9,14 +9,26 @@ import { useDrag } from "react-dnd"
 // `ref` is memoized (useCallback) so it doesn't get a new identity every
 // render — an unstable callback ref makes React detach/reattach the node on
 // every render, including mid-drag, which breaks native HTML5 drag mid-gesture.
-export function useDragItem<T extends HTMLElement>({ type, id }: { type: string; id: string }) {
+export function useDragItem<T extends HTMLElement>({
+  type,
+  id,
+  canDrag = true,
+}: {
+  type: string
+  id: string
+  // Off in views with nowhere valid to drop the item (e.g. the calendar's
+  // Agenda list — a flat list has no day-cell equivalent to drop onto),
+  // so the row doesn't pick up and snap back with nothing useful to do.
+  canDrag?: boolean
+}) {
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type,
       item: () => ({ id }),
+      canDrag,
       collect: monitor => ({ isDragging: monitor.isDragging() }),
     }),
-    [type, id],
+    [type, id, canDrag],
   )
 
   const ref = useCallback(

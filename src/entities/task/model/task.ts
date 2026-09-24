@@ -7,6 +7,10 @@ export interface Task {
   priority: Priority
   category: string
   dueDate: string | null
+  // "HH:mm", 24h — only meaningful when dueDate is set (see TaskForm,
+  // which clears it whenever the due-date toggle turns off). Same
+  // convention as Reminder.time.
+  time: string | null
   completedAt: string | null
   updatedAt: string
   createdAt: string

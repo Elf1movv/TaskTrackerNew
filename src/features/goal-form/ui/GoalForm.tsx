@@ -10,15 +10,30 @@ import { Textarea } from "@/shared/ui/textarea"
 
 // Handles both creating a new goal and editing an existing one — pass
 // `goal` to pre-fill the fields and save via update instead of create.
+// `defaultTargetDate` is for create mode only (e.g. the day clicked in the
+// calendar's day panel) — seeds what the date field WOULD be if the
+// toggle is turned on, same as TaskForm's `defaultDueDate`; merely
+// suggesting a value shouldn't flip the toggle itself, so a goal added
+// from elsewhere still defaults to "no deadline" like it always has.
 // Milestones are managed separately (see features/add-milestone and
 // features/milestone-row), not part of this form.
-export function GoalForm({ goal, onDone }: { goal?: Goal; onDone: () => void }) {
+export function GoalForm({
+  goal,
+  defaultTargetDate,
+  onDone,
+}: {
+  goal?: Goal
+  defaultTargetDate?: string
+  onDone: () => void
+}) {
   const { addGoal, updateGoal } = useGoals()
   const { t } = useLanguage()
   const [title, setTitle] = useState(goal?.title ?? "")
   const [description, setDescription] = useState(goal?.description ?? "")
   const [hasTargetDate, setHasTargetDate] = useState(!!goal?.targetDate)
-  const [targetDate, setTargetDate] = useState(goal?.targetDate ?? formatDateKey(new Date()))
+  const [targetDate, setTargetDate] = useState(
+    goal?.targetDate ?? defaultTargetDate ?? formatDateKey(new Date()),
+  )
   const [color, setColor] = useState(goal?.color ?? PALETTE_COLORS[0])
 
   function handleSubmit() {

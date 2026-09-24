@@ -25,14 +25,19 @@ export function useDropTarget<T extends HTMLElement>({
   onDrop,
 }: {
   type: string
-  onDrop: (draggedId: string) => void
+  // Second argument is the drop's client (viewport) pixel position, when
+  // react-dnd has one — null for e.g. a keyboard-triggered drop. Existing
+  // callers that only take `draggedId` simply ignore it; the timeline's
+  // per-column drop target is the one consumer that needs it, to turn a
+  // drop's Y position into a time-of-day.
+  onDrop: (draggedId: string, clientOffset: { x: number; y: number } | null) => void
 }) {
   const [{ isOver }, drop] = useDrop<DragItem, void, { isOver: boolean }>(
     () => ({
       accept: type,
       drop: (item, monitor) => {
         if (monitor.didDrop()) return
-        onDrop(item.id)
+        onDrop(item.id, monitor.getClientOffset())
       },
       collect: monitor => ({ isOver: monitor.isOver() }),
     }),

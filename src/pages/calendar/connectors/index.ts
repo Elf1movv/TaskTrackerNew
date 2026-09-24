@@ -1,2 +1,2 @@
 export { CalendarProvider } from "./CalendarProvider"
-export { useCalendarContext } from "./calendarContext"
+export { useCalendarContext, type CalendarView } from "./calendarContext"

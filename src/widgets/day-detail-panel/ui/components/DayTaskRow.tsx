@@ -6,14 +6,29 @@ import { useDragItem } from "@/shared/lib/dnd"
 
 // Drag source only (see useDragItem vs useDragReorder): dragging this row
 // onto a day cell in CalendarGrid moves the task to that day — it doesn't
-// reorder within this panel's own list.
-export function DayTaskRow({ task, onEdit }: { task: Task; onEdit: () => void }) {
-  const { ref, isDragging } = useDragItem<HTMLDivElement>({ type: "calendar-task-move", id: task.id })
+// reorder within this panel's own list. `draggable=false` for callers with
+// no day-cell equivalent to drop onto (the calendar's Agenda list).
+export function DayTaskRow({
+  task,
+  onEdit,
+  draggable = true,
+}: {
+  task: Task
+  onEdit: () => void
+  draggable?: boolean
+}) {
+  const { ref, isDragging } = useDragItem<HTMLDivElement>({
+    type: "calendar-task-move",
+    id: task.id,
+    canDrag: draggable,
+  })
 
   return (
     <div
       ref={ref}
-      className="w-full flex items-start gap-2.5 text-left group cursor-grab active:cursor-grabbing select-none"
+      className={`w-full flex items-start gap-2.5 text-left group select-none ${
+        draggable ? "cursor-grab active:cursor-grabbing" : ""
+      }`}
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={16} />

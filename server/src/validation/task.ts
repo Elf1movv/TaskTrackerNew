@@ -26,6 +26,12 @@ const taskFields = z.object({
   priority: z.enum(["low", "medium", "high"]),
   category: z.string().min(1),
   dueDate: dueDateField,
+  // "HH:mm", nullable — same convention as Reminder.time, see the
+  // comment on Task.time in schema.prisma.
+  time: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, "time must be in HH:mm format")
+    .nullable(),
   completedAt: completedAtField,
 })
 

@@ -32,9 +32,13 @@
   - [03.04. Today Habit Groups-FRONTEND](./03.%20Habits/03.04.%20Today%20Habit%20Groups-FRONTEND.md)
     (без BACKEND — использует те же методы Habit/HabitGroup CRUD)
 - [04. Calendar](./04.%20Calendar.md)
-  - [04.01. Calendar-FRONTEND](./04.%20Calendar/04.01.%20Calendar-FRONTEND.md)
-    (без BACKEND — использует обычный CRUD задач, своих серверных
-    методов нет)
+  - [04.01. Calendar Infrastructure-FRONTEND](./04.%20Calendar/04.01.%20Calendar%20Infrastructure-FRONTEND.md)
+    (без BACKEND — использует обычный CRUD задач/целей/напоминаний/
+    привычек, своих серверных методов нет)
+  - [04.02. Month View-FRONTEND](./04.%20Calendar/04.02.%20Month%20View-FRONTEND.md)
+  - [04.03. Agenda View-FRONTEND](./04.%20Calendar/04.03.%20Agenda%20View-FRONTEND.md)
+  - [04.04. Day & Week Timeline-FRONTEND](./04.%20Calendar/04.04.%20Day%20%26%20Week%20Timeline-FRONTEND.md)
+  - [04.05. Year View-FRONTEND](./04.%20Calendar/04.05.%20Year%20View-FRONTEND.md)
 - [05. Today (Dashboard)](./05.%20Today.md)
   - [05.01. Today Dashboard-FRONTEND](./05.%20Today/05.01.%20Today%20Dashboard-FRONTEND.md)
     (без BACKEND — собирает уже существующие данные, не хранит своих)
@@ -205,3 +209,30 @@ Habit History-FRONTEND" (сетка/график теперь в масштаб�
 "Общие", `color`), "03.03. Habit Groups-FRONTEND" (условная подмена
 локализованного названия — только пока оно ещё равно заглушке — и
 цветовой пикер блока) и новый "03.04. Today Habit Groups-FRONTEND".
+
+Обновлено 2026-09-24 (крупная фича, "04. Calendar" полностью
+переработана в пять видов, один бывший файл разделён на пять новых):
+календарь в стиле TickTick получил переключатель видов — Повестка дня
+(плоский список на 30 дней вперёд), День и Неделя (часовая шкала +
+строка "весь день", перетаскивание задачи по времени), Месяц (прежний
+единственный вид, без изменения поведения), Год (12 мини-месяцев,
+клик по дню переключает на "День"). Задача получила новое поле
+`'time'` (`"HH:mm"`, аддитивная nullable-миграция, тот же паттерн, что у
+`Reminder.time`) и общий с напоминанием `TimePicker` (переехал из
+`features/reminder-form/ui/components` в `shared/ui`, ничего
+reminder-специфичного в нём не было). Цели и привычки, раньше видимые
+только на своих страницах, теперь тоже показываются на календаре
+(`isGoalDueOnDay`, `selectHabitsOnDay` — новые селекторы; перенос цели на
+другой день перетаскиванием — новое действие `moveGoalDeadline`).
+`buildMonthGrid` переехал из `widgets/calendar-grid/lib` в `shared/lib`,
+потому что виджет "Год" не может импортировать из виджета-соседа
+(`fsd/forbidden-imports`). Старый единственный файл "04.01.
+Calendar-FRONTEND" удалён, вместо него — новые "04.01. Calendar
+Infrastructure-FRONTEND" (общее состояние/навигация/URL, разделяемые
+всеми видами), "04.02. Month View-FRONTEND" (прежнее поведение плюс цели/
+привычки в панели дня), "04.03. Agenda View-FRONTEND", "04.04. Day & Week
+Timeline-FRONTEND", "04.05. Year View-FRONTEND". Заодно правки в "01.
+Tasks" (`'time'` в `TaskForm`) и "02. Goals" (`'defaultTargetDate'` в
+`GoalForm` для добавления цели с конкретным сроком из календаря) —
+ссылки на старый файл "04.01. Calendar-FRONTEND" в "01. Tasks" и "13.
+Reminders" обновлены на новые файлы-преемники.

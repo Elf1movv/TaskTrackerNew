@@ -26,6 +26,7 @@ function toClientTask(task: {
   priority: string
   category: string
   dueDate: Date | null
+  time: string | null
   completedAt: Date | null
   updatedAt: Date
   createdAt: Date
@@ -37,6 +38,7 @@ function toClientTask(task: {
     priority: task.priority,
     category: task.category,
     dueDate: task.dueDate ? task.dueDate.toISOString().slice(0, 10) : null,
+    time: task.time,
     completedAt: task.completedAt ? task.completedAt.toISOString() : null,
     updatedAt: task.updatedAt,
     createdAt: task.createdAt,

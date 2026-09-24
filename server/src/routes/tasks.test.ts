@@ -12,6 +12,7 @@ const baseTask = {
   priority: "medium",
   category: "Work",
   dueDate: null,
+  time: null,
   completedAt: null,
 }
 
@@ -46,6 +47,37 @@ describe("tasks router", () => {
 
     const list = await agent.get("/api/tasks")
     expect(list.body[0].dueDate).toBe("2026-01-01")
+  })
+
+  it("round-trips time alongside dueDate, and clears it independently via patch", async () => {
+    const created = await agent
+      .post("/api/tasks")
+      .send({ ...baseTask, id: crypto.randomUUID(), dueDate: "2026-01-01", time: "14:30" })
+    expect(created.status).toBe(201)
+    expect(created.body.time).toBe("14:30")
+
+    const list = await agent.get("/api/tasks")
+    expect(list.body[0].time).toBe("14:30")
+
+    // Rescheduling to a new time (the calendar's day/week drag) — dueDate
+    // untouched, only time changes.
+    const rescheduled = await agent
+      .patch(`/api/tasks/${created.body.id}`)
+      .send({ patch: { time: "09:15" }, expectedUpdatedAt: created.body.updatedAt })
+    expect(rescheduled.status).toBe(200)
+    expect(rescheduled.body.time).toBe("09:15")
+    expect(rescheduled.body.dueDate).toBe("2026-01-01")
+
+    const cleared = await agent
+      .patch(`/api/tasks/${created.body.id}`)
+      .send({ patch: { time: null }, expectedUpdatedAt: rescheduled.body.updatedAt })
+    expect(cleared.status).toBe(200)
+    expect(cleared.body.time).toBeNull()
+  })
+
+  it("rejects a time that isn't in HH:mm format", async () => {
+    const res = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID(), time: "2:30pm" })
+    expect(res.status).toBe(400)
   })
 
   it("round-trips completedAt when a task is marked completed", async () => {

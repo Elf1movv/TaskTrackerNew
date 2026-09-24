@@ -1,17 +1,20 @@
-import { Button } from "@/shared/ui/button"
+import { Button } from "./button"
 import { useLanguage } from "@/shared/lib/i18n"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"))
 // 5-minute steps — a native minute-by-minute list would be 60 rows, most of
-// which nobody actually needs when picking a reminder time.
+// which nobody actually needs when picking a time.
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"))
 const DEFAULT_TIME = "09:00"
 
 // Replaces the native <input type="time"> — its browser-native picker UI
 // didn't match the app's theme and looked out of place. Same
 // toggle-then-reveal pattern TaskForm/GoalForm already use for optional
-// due dates: off by default, "Есть время" reveals the two selects.
+// due dates: off by default, a toggle button reveals the two selects.
+// Originally lived in features/reminder-form (the first caller), moved
+// here once TaskForm needed the exact same picker for Task.time — it
+// never had any reminder-specific logic.
 export function TimePicker({
   value,
   onChange,
@@ -31,7 +34,7 @@ export function TimePicker({
         className="text-xs h-8"
         onClick={() => onChange(value ? null : DEFAULT_TIME)}
       >
-        {value ? t("reminderForm.hasTime") : t("reminderForm.noTime")}
+        {value ? t("common.hasTime") : t("common.noTime")}
       </Button>
       {value && (
         <div className="flex items-center gap-1">

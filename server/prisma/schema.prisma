@@ -17,6 +17,12 @@ model Task {
   // client's "YYYY-MM-DD" wire format exactly and avoids timezone drift
   // that a full timestamp would introduce.
   dueDate     DateTime? @db.Date
+  // "HH:mm", 24h — same convention as Reminder.time: a user-facing label
+  // with no instant/timezone attached, not a DB time type. Only
+  // meaningful when dueDate is set; the client (TaskForm) is responsible
+  // for not offering a time picker while the due-date toggle is off, the
+  // server doesn't enforce that relationship.
+  time        String?
   // Set when `completed` flips to true, cleared when it flips back to
   // false. Deliberately separate from `updatedAt`, which changes on any
   // edit (e.g. renaming a task weeks later would otherwise make it look

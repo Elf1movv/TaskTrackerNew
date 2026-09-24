@@ -12,7 +12,7 @@ import { Button } from "@/shared/ui/button"
 import { DatePicker } from "@/shared/ui/date-picker"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
-import { TimePicker } from "./components"
+import { TimePicker } from "@/shared/ui/time-picker"
 
 const PRIORITIES: ReminderPriority[] = ["normal", "critical"]
 const PRIORITY_LABEL_KEYS: Record<ReminderPriority, TranslationKey> = {

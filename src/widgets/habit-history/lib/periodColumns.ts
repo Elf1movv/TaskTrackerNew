@@ -12,7 +12,7 @@ import {
 export type HabitHistoryPeriod = "week" | "month" | "year"
 
 // Monday-first, matching the rest of the app (see
-// pages/calendar/lib/buildMonthGrid.ts).
+// shared/lib/calendarGrid.ts's buildMonthGrid).
 export function getPeriodDays(period: "week" | "month", today: Date): Date[] {
   if (period === "week") {
     return eachDayOfInterval({

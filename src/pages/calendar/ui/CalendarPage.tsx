@@ -1,72 +1,156 @@
-import { useEffect } from "react"
-import { format, isSameMonth, parseISO } from "date-fns"
-import { AnimatePresence, motion } from "motion/react"
+import { useEffect, useRef } from "react"
+import { format, isSameDay, isSameMonth, isSameWeek, type Locale } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useSearchParams } from "react-router"
-import { CalendarGrid } from "@/widgets/calendar-grid"
-import { DayDetailPanel } from "@/widgets/day-detail-panel"
-import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
+import { buildAgendaRange, buildWeekRange } from "@/shared/lib/calendarGrid"
+import { formatDateKey } from "@/shared/lib/date"
+import { getDateLocale, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
-import { CalendarProvider, useCalendarContext } from "../connectors"
+import { CalendarYear } from "@/widgets/calendar-year"
+import { CalendarProvider, useCalendarContext, type CalendarView } from "../connectors"
+import { CalendarAgendaView } from "./CalendarAgendaView"
+import { CalendarDayView } from "./CalendarDayView"
+import { CalendarMonthView } from "./CalendarMonthView"
+import { CalendarWeekView } from "./CalendarWeekView"
+
+// All five views from the plan are now built. Kept in this exact
+// declaration order (matches TickTick's own tab order) for both the
+// switcher UI and validating an incoming `?view=` URL param.
+const BUILT_VIEWS: CalendarView[] = ["agenda", "day", "week", "month", "year"]
+
+// Whether the "Today" button should read as "Today" (already there) or
+// "Back to today" (browsed away) — Agenda is always "current" (its window
+// starts at anchorDate, "today" just resets that window rather than
+// landing inside a fixed range). Extend the switch per-view
+// (isSameDay/isSameWeek/isSameYear) as each one gets built.
+function isViewingCurrentPeriod(view: CalendarView, anchorDate: Date): boolean {
+  if (view === "month") return isSameMonth(anchorDate, new Date())
+  if (view === "day") return isSameDay(anchorDate, new Date())
+  if (view === "week") return isSameWeek(anchorDate, new Date(), { weekStartsOn: 1 })
+  if (view === "year") return anchorDate.getFullYear() === new Date().getFullYear()
+  return true
+}
+
+function formatPeriodTitle(view: CalendarView, anchorDate: Date, locale: Locale): string {
+  switch (view) {
+    case "month":
+      return format(anchorDate, "MMMM yyyy", { locale })
+    case "year":
+      return format(anchorDate, "yyyy", { locale })
+    case "day":
+      return format(anchorDate, "EEEE, d MMMM yyyy", { locale })
+    case "agenda": {
+      const range = buildAgendaRange(anchorDate)
+      const last = range[range.length - 1]
+      return `${format(anchorDate, "d MMM", { locale })} – ${format(last, "d MMM yyyy", { locale })}`
+    }
+    case "week": {
+      const range = buildWeekRange(anchorDate)
+      const last = range[range.length - 1]
+      return `${format(range[0], "d MMM", { locale })} – ${format(last, "d MMM yyyy", { locale })}`
+    }
+    default:
+      return format(anchorDate, "d MMMM yyyy", { locale })
+  }
+}
 
 function CalendarPageContent() {
   const {
-    calMonth,
-    monthGrid,
+    view,
+    setView,
+    anchorDate,
     selectedDay,
     selectedTasks,
     selectedReminders,
+    selectedGoals,
+    selectedHabits,
     allTasks,
     allReminders,
+    allGoals,
+    allHabits,
     selectDay,
-    goToPrevMonth,
-    goToNextMonth,
+    goToPrev,
+    goToNext,
     goToToday,
-    goToMonth,
+    goToDate,
     moveTaskToDay,
+    moveGoalDeadline,
+    rescheduleTaskTime,
   } = useCalendarContext()
   const { language, t } = useLanguage()
-  const isViewingCurrentMonth = isSameMonth(calMonth, new Date())
   const [searchParams, setSearchParams] = useSearchParams()
+  const hasConsumedInitialParams = useRef(false)
 
-  // One-shot deep link from the reminders summary card on Today ("open
-  // this reminder's day on the calendar") — consumed once on mount, then
-  // stripped from the URL so it doesn't re-fire on a later re-render.
+  // One-time reconciliation of the URL the page was opened with — either an
+  // external deep link (Today's reminder card sends `?date=`, no `?view=`,
+  // implying month) or a previously-shared/bookmarked calendar URL
+  // (`?view=week&date=...`). Deliberately empty deps: this must run only
+  // once, against whatever the URL was at mount, not on every subsequent
+  // param change (the effect below writes those, and re-running this one
+  // in response would fight it).
   useEffect(() => {
+    if (hasConsumedInitialParams.current) return
+    hasConsumedInitialParams.current = true
+
+    const viewParam = searchParams.get("view")
+    if (viewParam && (BUILT_VIEWS as string[]).includes(viewParam)) setView(viewParam as CalendarView)
+
     const dateParam = searchParams.get("date")
-    if (!dateParam) return
-    const day = parseISO(dateParam)
-    goToMonth(day)
-    selectDay(day)
-    // Clears the param, which re-runs this effect once more — that second
-    // run finds no `date` param and no-ops, so this only ever acts once.
+    if (dateParam) {
+      const day = new Date(dateParam)
+      goToDate(day)
+      selectDay(day)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Continuously reflects the current view+anchor into the URL (not
+  // selectedDay — that's the month view's own day-panel concern, not part
+  // of "where in the calendar am I browsing"). `replace`, not push: prev/
+  // next clicking would otherwise spam browser history into uselessness.
+  useEffect(() => {
     setSearchParams(
       prev => {
         const next = new URLSearchParams(prev)
-        next.delete("date")
+        next.set("view", view)
+        next.set("date", formatDateKey(anchorDate))
         return next
       },
       { replace: true },
     )
-  }, [searchParams, goToMonth, selectDay, setSearchParams])
+  }, [view, anchorDate, setSearchParams])
 
   function handleSelectDay(day: Date, isCurrentMonth: boolean) {
-    if (!isCurrentMonth) goToMonth(day)
+    if (!isCurrentMonth) goToDate(day)
     selectDay(day)
   }
 
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
+      <div className="flex gap-0.5 bg-muted rounded-lg p-0.5 w-fit mb-5">
+        {BUILT_VIEWS.map(v => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            className={`px-3 py-1 rounded-md text-xs transition-all ${
+              view === v ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t(`calendar.view.${v}` as TranslationKey)}
+          </button>
+        ))}
+      </div>
+
       <div className="flex items-center justify-between mb-8">
-        <h1 css={displayFont} className="text-3xl">
-          {format(calMonth, "MMMM yyyy", { locale: getDateLocale(language) })}
+        <h1 css={displayFont} className="text-3xl capitalize">
+          {formatPeriodTitle(view, anchorDate, getDateLocale(language))}
         </h1>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            onClick={goToPrevMonth}
+            onClick={goToPrev}
             className="rounded-xl text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft size={16} />
@@ -78,12 +162,12 @@ function CalendarPageContent() {
             css={monoFont}
             className="rounded-xl text-xs text-muted-foreground hover:text-foreground"
           >
-            {isViewingCurrentMonth ? t("common.today") : t("calendar.backToToday")}
+            {isViewingCurrentPeriod(view, anchorDate) ? t("common.today") : t("calendar.backToToday")}
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            onClick={goToNextMonth}
+            onClick={goToNext}
             className="rounded-xl text-muted-foreground hover:text-foreground"
           >
             <ChevronRight size={16} />
@@ -91,47 +175,74 @@ function CalendarPageContent() {
         </div>
       </div>
 
-      {/* justify-center + layout on the row below: with no reserved
-          260px column, the row's width is just its actual content, so
-          centering it re-centers the calendar alone when the panel is
-          closed, and re-centers the calendar+panel pair together (calendar
-          shifting left) once it opens — with a smooth slide via `layout`
-          instead of a jump. */}
-      <div className="flex justify-center">
-        <motion.div layout className="flex flex-col lg:flex-row gap-5 items-start w-full lg:w-auto">
-          <div className="w-full lg:w-[640px] shrink-0">
-            <CalendarGrid
-              days={monthGrid}
-              tasks={allTasks}
-              reminders={allReminders}
-              selectedDay={selectedDay}
-              onSelectDay={handleSelectDay}
-              onMoveTaskToDay={moveTaskToDay}
-            />
-          </div>
-          <AnimatePresence>
-            {selectedDay && (
-              // No per-day `key` on purpose — switching between two already-
-              // open days should just swap content, not replay the
-              // enter/exit animation; that's reserved for null <-> a day.
-              <motion.div
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 12 }}
-                transition={{ duration: 0.2 }}
-                className="w-full lg:w-[260px] shrink-0"
-              >
-                <DayDetailPanel
-                  day={selectedDay}
-                  tasks={selectedTasks}
-                  reminders={selectedReminders}
-                  onClose={() => selectDay(null)}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </div>
+      {view === "month" && (
+        <CalendarMonthView
+          anchorDate={anchorDate}
+          selectedDay={selectedDay}
+          selectedTasks={selectedTasks}
+          selectedReminders={selectedReminders}
+          selectedGoals={selectedGoals}
+          selectedHabits={selectedHabits}
+          allTasks={allTasks}
+          allReminders={allReminders}
+          allGoals={allGoals}
+          allHabits={allHabits}
+          onSelectDay={handleSelectDay}
+          onCloseDayPanel={() => selectDay(null)}
+          onMoveTaskToDay={moveTaskToDay}
+          onMoveGoalToDay={moveGoalDeadline}
+        />
+      )}
+
+      {view === "agenda" && (
+        <CalendarAgendaView
+          anchorDate={anchorDate}
+          allTasks={allTasks}
+          allReminders={allReminders}
+          allGoals={allGoals}
+          allHabits={allHabits}
+        />
+      )}
+
+      {view === "day" && (
+        <CalendarDayView
+          anchorDate={anchorDate}
+          allTasks={allTasks}
+          allReminders={allReminders}
+          allGoals={allGoals}
+          allHabits={allHabits}
+          onMoveTaskToDay={moveTaskToDay}
+          onMoveGoalToDay={moveGoalDeadline}
+          onRescheduleTaskTime={rescheduleTaskTime}
+        />
+      )}
+
+      {view === "week" && (
+        <CalendarWeekView
+          anchorDate={anchorDate}
+          allTasks={allTasks}
+          allReminders={allReminders}
+          allGoals={allGoals}
+          allHabits={allHabits}
+          onMoveTaskToDay={moveTaskToDay}
+          onMoveGoalToDay={moveGoalDeadline}
+          onRescheduleTaskTime={rescheduleTaskTime}
+        />
+      )}
+
+      {view === "year" && (
+        <CalendarYear
+          year={anchorDate}
+          tasks={allTasks}
+          reminders={allReminders}
+          goals={allGoals}
+          habits={allHabits}
+          onSelectDay={day => {
+            goToDate(day)
+            setView("day")
+          }}
+        />
+      )}
     </div>
   )
 }
