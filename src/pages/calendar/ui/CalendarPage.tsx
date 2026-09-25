@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import { format, isSameDay, isSameMonth, isSameWeek, type Locale } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useSearchParams } from "react-router"
-import { buildAgendaRange, buildWeekRange } from "@/shared/lib/calendarGrid"
+import { buildWeekRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
@@ -40,11 +40,10 @@ function formatPeriodTitle(view: CalendarView, anchorDate: Date, locale: Locale)
       return format(anchorDate, "yyyy", { locale })
     case "day":
       return format(anchorDate, "EEEE, d MMMM yyyy", { locale })
-    case "agenda": {
-      const range = buildAgendaRange(anchorDate)
-      const last = range[range.length - 1]
-      return `${format(anchorDate, "d MMM", { locale })} – ${format(last, "d MMM yyyy", { locale })}`
-    }
+    // Agenda's own visible window is dynamic now (starts at 6 days, grows
+    // via its own "show more" state) — no fixed end date to show here
+    // (see CalendarAgendaView.tsx), so this just shows the starting date,
+    // same as the "day"/default case below.
     case "week": {
       const range = buildWeekRange(anchorDate)
       const last = range[range.length - 1]
@@ -199,7 +198,6 @@ function CalendarPageContent() {
           allTasks={allTasks}
           allReminders={allReminders}
           allGoals={allGoals}
-          allHabits={allHabits}
         />
       )}
 
@@ -227,7 +225,6 @@ function CalendarPageContent() {
         <CalendarYear
           year={anchorDate}
           tasks={allTasks}
-          reminders={allReminders}
           goals={allGoals}
           habits={allHabits}
           onSelectDay={day => {

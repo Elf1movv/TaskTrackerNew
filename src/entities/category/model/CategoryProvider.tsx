@@ -9,21 +9,27 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
   const {
     items: categories,
     create,
+    update,
     remove,
   } = usePersistedCollection<Category>(categoryRepository, "category")
 
   const addCategory = useCallback(
-    (name: string) => {
-      create({ id: generateId(), name, updatedAt: new Date().toISOString() })
+    (name: string, color: string) => {
+      create({ id: generateId(), name, color, updatedAt: new Date().toISOString() })
     },
     [create],
+  )
+
+  const updateCategory = useCallback(
+    (id: string, patch: Partial<Omit<Category, "id" | "updatedAt">>) => update(id, patch),
+    [update],
   )
 
   const deleteCategory = useCallback((id: string) => remove(id), [remove])
 
   const value = useMemo(
-    () => ({ categories, addCategory, deleteCategory }),
-    [categories, addCategory, deleteCategory],
+    () => ({ categories, addCategory, updateCategory, deleteCategory }),
+    [categories, addCategory, updateCategory, deleteCategory],
   )
 
   return <CategoryContext.Provider value={value}>{children}</CategoryContext.Provider>

@@ -143,6 +143,9 @@ model HabitGroup {
 model Category {
   id        String   @id @default(uuid())
   name      String
+  // Drives the pastel fill of that category's task blocks on the calendar
+  // (Day/Week/Month) — see resolveCategoryColor.ts on the client.
+  color     String
   order     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

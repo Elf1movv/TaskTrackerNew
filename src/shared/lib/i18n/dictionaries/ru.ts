@@ -130,16 +130,18 @@ export const ru: Record<keyof typeof en, string> = {
 
   "reminderSummary.title": "Напоминания",
 
-  "today.title": "Задачи на сегодня",
+  "today.title": "Общие задачи",
   "today.doneCount": "{done}/{total} выполнено",
-  "today.noTasksToday": "На сегодня задач нет",
+  "today.noTasksToday": "Нет незавершённых задач",
   "today.showReminders": "Показать напоминания",
   "today.showGoals": "Показать цели",
 
   "calendar.noTasksScheduled": "Нет запланированных задач",
   "calendar.noGoalsScheduled": "Нет целей с дедлайном",
   "calendar.noHabitsScheduled": "Нет запланированных привычек",
-  "calendar.agendaEmpty": "На ближайшие 30 дней ничего не запланировано",
+  "calendar.agendaEmpty": "Ничего не запланировано",
+  "calendar.agendaLoadMore": "Показать ещё {count} дней",
+  "calendar.yearMonthSummary": "{done} из {total} выполнено",
   "calendar.backToToday": "К сегодня",
   "calendar.view.agenda": "Повестка",
   "calendar.view.day": "День",

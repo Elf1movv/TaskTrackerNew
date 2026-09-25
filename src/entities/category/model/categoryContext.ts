@@ -3,7 +3,8 @@ import type { Category } from "./category"
 
 export interface CategoryContextValue {
   categories: Category[]
-  addCategory: (name: string) => void
+  addCategory: (name: string, color: string) => void
+  updateCategory: (id: string, patch: Partial<Omit<Category, "id" | "updatedAt">>) => void
   deleteCategory: (id: string) => void
 }
 

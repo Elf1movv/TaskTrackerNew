@@ -128,16 +128,18 @@ export const en = {
 
   "reminderSummary.title": "Reminders",
 
-  "today.title": "Today's Tasks",
+  "today.title": "General Tasks",
   "today.doneCount": "{done}/{total} done",
-  "today.noTasksToday": "No tasks for today",
+  "today.noTasksToday": "No unfinished tasks",
   "today.showReminders": "Show reminders",
   "today.showGoals": "Show goals",
 
   "calendar.noTasksScheduled": "No tasks scheduled",
   "calendar.noGoalsScheduled": "No goals due",
   "calendar.noHabitsScheduled": "No habits scheduled",
-  "calendar.agendaEmpty": "Nothing scheduled in the next 30 days",
+  "calendar.agendaEmpty": "Nothing scheduled",
+  "calendar.agendaLoadMore": "Show {count} more days",
+  "calendar.yearMonthSummary": "{done} of {total} done",
   "calendar.backToToday": "Back to today",
   "calendar.view.agenda": "Agenda",
   "calendar.view.day": "Day",

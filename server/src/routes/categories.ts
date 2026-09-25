@@ -8,8 +8,8 @@ export const categoriesRouter = Router()
 
 categoriesRouter.use(requireAuth)
 
-function toClientCategory(category: { id: string; name: string; updatedAt: Date }) {
-  return { id: category.id, name: category.name, updatedAt: category.updatedAt }
+function toClientCategory(category: { id: string; name: string; color: string; updatedAt: Date }) {
+  return { id: category.id, name: category.name, color: category.color, updatedAt: category.updatedAt }
 }
 
 // The 4 categories every new account used to get for free when categories
@@ -17,7 +17,16 @@ function toClientCategory(category: { id: string; name: string; updatedAt: Date 
 // they're per-user, each account is seeded with these once, the first time
 // it asks for its category list — not tied to a Better Auth lifecycle hook,
 // since which hooks are stable across versions wasn't fully confirmed.
-const DEFAULT_CATEGORY_NAMES = ["Work", "Personal", "Health", "Learning"]
+// Colors are 4 distinct entries from the client's own PALETTE_COLORS
+// (src/shared/lib/colors.ts) — duplicated here rather than shared across
+// the workspace boundary, same as every other small color constant in this
+// codebase (see HabitGroup's seeded default color).
+const DEFAULT_CATEGORIES = [
+  { name: "Work", color: "#5b7fc7" },
+  { name: "Personal", color: "#6a9c74" },
+  { name: "Health", color: "#c75b8f" },
+  { name: "Learning", color: "#c9a63a" },
+]
 
 categoriesRouter.get("/", async (req, res) => {
   // categoriesSeeded (not "does the user have zero categories right now")
@@ -37,7 +46,12 @@ categoriesRouter.get("/", async (req, res) => {
       // default name that collides with one the user already made would
       // throw and crash this request instead of just skipping that name.
       db.category.createMany({
-        data: DEFAULT_CATEGORY_NAMES.map((name, order) => ({ name, order, userId: req.userId })),
+        data: DEFAULT_CATEGORIES.map(({ name, color }, order) => ({
+          name,
+          color,
+          order,
+          userId: req.userId,
+        })),
         skipDuplicates: true,
       }),
       db.user.update({ where: { id: req.userId }, data: { categoriesSeeded: true } }),

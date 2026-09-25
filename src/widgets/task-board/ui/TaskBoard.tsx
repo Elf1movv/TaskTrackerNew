@@ -5,6 +5,7 @@ import { TaskForm } from "@/features/task-form"
 import { useCategories, type Category } from "@/entities/category"
 import { isCompletedToday, type StatusFilter, type Task, useTasks } from "@/entities/task"
 import { getTodayKey } from "@/shared/lib/date"
+import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import {
@@ -19,6 +20,7 @@ import {
 } from "@/shared/ui/alert-dialog"
 import { Button, buttonVariants } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { TaskRow } from "./components"
 
 const STATUS_LABEL_KEYS: Record<StatusFilter, TranslationKey> = {
@@ -48,21 +50,23 @@ export function TaskBoard({
   remainingCompletedCount: number
   onLoadMoreCompleted: () => void
 }) {
-  const { categories, addCategory, deleteCategory } = useCategories()
+  const { categories, addCategory, updateCategory, deleteCategory } = useCategories()
   const { refreshTasks } = useTasks()
   const { t } = useLanguage()
   const [isAdding, setIsAdding] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
+  const [newCategoryColor, setNewCategoryColor] = useState(PALETTE_COLORS[0])
   const [categoryPendingDelete, setCategoryPendingDelete] = useState<Category | null>(null)
   const today = getTodayKey()
 
   function handleCreateCategory() {
     const name = newCategoryName.trim()
     if (!name) return
-    addCategory(name)
+    addCategory(name, newCategoryColor)
     setNewCategoryName("")
+    setNewCategoryColor(PALETTE_COLORS[0])
     setIsAddingCategory(false)
   }
 
@@ -156,17 +160,45 @@ export function TaskBoard({
           {t("tasks.categoryAll")}
         </button>
         {categories.map(c => (
-          <div key={c.id} className="relative group">
-            <button
-              onClick={() => onCategoryFilterChange(c.name)}
-              className={`pl-3 pr-6 py-1.5 rounded-lg text-xs transition-all ${
-                categoryFilter === c.name
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
-              }`}
-            >
-              {c.name}
-            </button>
+          <div
+            key={c.id}
+            className={`relative group flex items-center gap-1.5 pl-2 pr-6 py-1.5 rounded-lg text-xs transition-all ${
+              categoryFilter === c.name
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  onClick={e => e.stopPropagation()}
+                  aria-label={`${t("common.color")}: ${c.name}`}
+                  className="size-2.5 rounded-full shrink-0 transition-transform hover:scale-125"
+                  style={{ backgroundColor: c.color }}
+                />
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2" align="start">
+                <div className="flex gap-1.5 flex-wrap max-w-40">
+                  {PALETTE_COLORS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => updateCategory(c.id, { color })}
+                      aria-label={`Color ${color}`}
+                      aria-pressed={c.color === color}
+                      className="w-5 h-5 rounded-full transition-transform"
+                      style={{
+                        backgroundColor: color,
+                        outline: c.color === color ? "2px solid var(--foreground)" : "none",
+                        outlineOffset: 2,
+                      }}
+                    />
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            <button onClick={() => onCategoryFilterChange(c.name)}>{c.name}</button>
             <button
               onClick={() => setCategoryPendingDelete(c)}
               aria-label={`Delete category ${c.name}`}
@@ -189,6 +221,23 @@ export function TaskBoard({
               placeholder={t("taskForm.newCategoryPlaceholder")}
               className="text-xs h-8 w-32"
             />
+            <div className="flex gap-1 flex-wrap max-w-32">
+              {PALETTE_COLORS.map(color => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setNewCategoryColor(color)}
+                  aria-label={`Color ${color}`}
+                  aria-pressed={newCategoryColor === color}
+                  className="w-4 h-4 rounded-full transition-transform"
+                  style={{
+                    backgroundColor: color,
+                    outline: newCategoryColor === color ? "2px solid var(--foreground)" : "none",
+                    outlineOffset: 2,
+                  }}
+                />
+              ))}
+            </div>
             <Button type="button" size="sm" className="text-xs h-8" onClick={handleCreateCategory}>
               {t("common.add")}
             </Button>

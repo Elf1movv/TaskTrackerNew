@@ -3,6 +3,7 @@ import { z } from "zod"
 const categoryFields = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
+  color: z.string().min(1),
 })
 
 export const createCategorySchema = categoryFields

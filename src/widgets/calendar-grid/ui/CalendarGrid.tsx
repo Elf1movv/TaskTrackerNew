@@ -1,4 +1,5 @@
 import { format, isSameDay, isToday } from "date-fns"
+import { useCategories } from "@/entities/category"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task } from "@/entities/task"
 import type { MonthGridDay } from "@/shared/lib/calendarGrid"
@@ -14,6 +15,7 @@ export function CalendarGrid({
   onSelectDay,
   onMoveTaskToDay,
   onMoveGoalToDay,
+  onEditTask,
 }: {
   days: MonthGridDay[]
   tasks: Task[]
@@ -22,8 +24,10 @@ export function CalendarGrid({
   onSelectDay: (day: Date, isCurrentMonth: boolean) => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
   onMoveGoalToDay: (goalId: string, day: Date) => void
+  onEditTask: (taskId: string, anchorRect: DOMRect) => void
 }) {
   const { language } = useLanguage()
+  const { categories } = useCategories()
 
   return (
     <div>
@@ -51,11 +55,13 @@ export function CalendarGrid({
               isCurrentMonth={isCurrentMonth}
               dayTasks={dayTasks}
               dayReminders={dayReminders}
+              categories={categories}
               isSelected={selectedDay ? isSameDay(date, selectedDay) : false}
               isCurrent={isToday(date)}
               onSelect={() => onSelectDay(date, isCurrentMonth)}
               onMoveTaskToDay={onMoveTaskToDay}
               onMoveGoalToDay={onMoveGoalToDay}
+              onEditTask={onEditTask}
             />
           )
         })}

@@ -16,16 +16,10 @@ export const PALETTE_COLORS = [
   "#c98f5b",
 ]
 
-// Fixed per-entity-TYPE color — the primary at-a-glance cue on the
-// calendar's Day/Week timeline, orthogonal to Task's PRIORITY_COLORS
-// (entities/task/model/task.ts) and Reminder's REMINDER_PRIORITY_COLORS
-// (entities/reminder/model/reminder.ts): priority stays visible through
-// the icon's shape (PriorityDot/ReminderPriorityIcon), not color, once
-// this is in play. Chosen from the palette above rather than new hex
-// values, checked against PRIORITY_COLORS (#6a9c74/#c97b3a/#c9503a) and
-// REMINDER_PRIORITY_COLORS (#8a8578/#c9503a) — no collisions.
-export const ENTITY_TYPE_COLORS = {
-  task: "#5b7fc7",
-  reminder: "#c9a63a",
-  goal: "#a35bc7",
-} as const
+// Task blocks on the calendar are now filled by their own category's color
+// (see resolveCategoryColor.ts) instead of one fixed per-entity-type color
+// — this is the fallback for a task whose category string doesn't match
+// any existing Category record (deleted category, or none assigned).
+// Deliberately outside PALETTE_COLORS so it never gets handed out as a
+// real category's own color and reads unambiguously as "uncategorized".
+export const CATEGORY_FALLBACK_COLOR = "#8a8a8a"

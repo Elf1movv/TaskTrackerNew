@@ -21,16 +21,19 @@ describe("categories router", () => {
     expect(res.status).toBe(401)
   })
 
-  it("seeds the 4 default categories the first time a new user asks for their list", async () => {
+  it("seeds the 4 default categories, each with a distinct color, the first time a new user asks for their list", async () => {
     const list = await agent.get("/api/categories")
     expect(list.body.map((c: { name: string }) => c.name)).toEqual(["Work", "Personal", "Health", "Learning"])
+    const colors = list.body.map((c: { color: string }) => c.color)
+    expect(colors.every((c: string) => typeof c === "string" && c.length > 0)).toBe(true)
+    expect(new Set(colors).size).toBe(4)
   })
 
   it("does not reseed defaults once the user already has categories", async () => {
     await agent.get("/api/categories") // triggers the seed
     const created = await agent
       .post("/api/categories")
-      .send({ id: crypto.randomUUID(), name: "Side project" })
+      .send({ id: crypto.randomUUID(), name: "Side project", color: "#c97b3a" })
     expect(created.status).toBe(201)
 
     const list = await agent.get("/api/categories")
@@ -44,10 +47,15 @@ describe("categories router", () => {
   })
 
   it("creates and lists a category, appended after existing ones", async () => {
-    const first = await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work" })
+    const first = await agent
+      .post("/api/categories")
+      .send({ id: crypto.randomUUID(), name: "Work", color: "#5b7fc7" })
     expect(first.status).toBe(201)
+    expect(first.body.color).toBe("#5b7fc7")
 
-    const second = await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Personal" })
+    const second = await agent
+      .post("/api/categories")
+      .send({ id: crypto.randomUUID(), name: "Personal", color: "#6a9c74" })
     expect(second.status).toBe(201)
 
     const list = await agent.get("/api/categories")
@@ -55,23 +63,43 @@ describe("categories router", () => {
   })
 
   it("rejects a duplicate category name for the same user with a clean 409, not a raw 500", async () => {
-    await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work" })
-    const res = await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work" })
+    await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work", color: "#c97b3a" })
+    const res = await agent
+      .post("/api/categories")
+      .send({ id: crypto.randomUUID(), name: "Work", color: "#c97b3a" })
     expect(res.status).toBe(409)
     expect(res.body.error).toBeTruthy()
   })
 
   it("allows two different users to each have a category with the same name", async () => {
-    const first = await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work" })
+    const first = await agent
+      .post("/api/categories")
+      .send({ id: crypto.randomUUID(), name: "Work", color: "#c97b3a" })
     expect(first.status).toBe(201)
 
     const otherAgent = await createAuthenticatedAgent(app)
-    const second = await otherAgent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work" })
+    const second = await otherAgent
+      .post("/api/categories")
+      .send({ id: crypto.randomUUID(), name: "Work", color: "#c97b3a" })
     expect(second.status).toBe(201)
   })
 
+  it("updates a category's color", async () => {
+    const created = await agent
+      .post("/api/categories")
+      .send({ id: crypto.randomUUID(), name: "Errands", color: "#c97b3a" })
+
+    const patched = await agent
+      .patch(`/api/categories/${created.body.id}`)
+      .send({ patch: { color: "#6a9c74" }, expectedUpdatedAt: created.body.updatedAt })
+    expect(patched.status).toBe(200)
+    expect(patched.body.color).toBe("#6a9c74")
+  })
+
   it("deleting a category also deletes tasks that were in it, but not other categories' tasks", async () => {
-    const category = await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Errands" })
+    const category = await agent
+      .post("/api/categories")
+      .send({ id: crypto.randomUUID(), name: "Errands", color: "#c97b3a" })
 
     const inCategory = await agent.post("/api/tasks").send({
       id: crypto.randomUUID(),

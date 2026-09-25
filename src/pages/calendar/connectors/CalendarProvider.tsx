@@ -14,7 +14,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const { goals, updateGoal } = useGoals()
   const { habits } = useHabits()
 
-  const [view, setView] = useState<CalendarView>("month")
+  const [view, setView] = useState<CalendarView>("day")
   const [anchorDate, setAnchorDate] = useState(new Date())
   // No day selected by default — the day panel only appears once the user
   // actually taps a day (see docs/requirements), not pre-filled with today.

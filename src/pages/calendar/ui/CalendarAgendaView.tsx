@@ -3,25 +3,33 @@ import { format, isToday } from "date-fns"
 import { TaskForm } from "@/features/task-form"
 import { ReminderForm } from "@/features/reminder-form"
 import { GoalForm } from "@/features/goal-form"
-import { DayGoalRow, DayHabitRow, DayReminderRow, DayTaskRow } from "@/widgets/day-detail-panel"
+import { DayGoalRow, DayReminderRow, DayTaskRow } from "@/widgets/day-detail-panel"
 import { isGoalDueOnDay, type Goal } from "@/entities/goal"
-import { selectHabitsOnDay, type Habit } from "@/entities/habit"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task } from "@/entities/task"
 import { buildAgendaRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
+import { Button } from "@/shared/ui/button"
 
 type EditingItem = { kind: "task" | "reminder" | "goal"; id: string } | null
 
-// A flat, scannable list over a fixed forward window (see
-// shared/lib/calendarGrid.ts's buildAgendaRange for why fixed, not
-// infinite scroll) — days with nothing scheduled are skipped entirely,
-// unlike Month's grid which always shows every day. Reuses the exact same
-// row components the day panel already has (DayTaskRow etc., exported
-// from widgets/day-detail-panel) instead of a second rendering for the
-// same four entity types.
+const INITIAL_WINDOW_DAYS = 6
+const LOAD_MORE_INCREMENT_DAYS = 6
+
+// A flat, scannable list, windowed forward from `anchorDate` — starts at
+// just the next INITIAL_WINDOW_DAYS days (not a fixed 30-day eager render),
+// growing by LOAD_MORE_INCREMENT_DAYS each time "show more" is clicked, no
+// upper cap (this is a personal single-user tracker — infinite scroll's
+// extra engineering isn't proportionate, but eagerly rendering 30 days
+// nobody asked to see yet was pure waste). Days with nothing scheduled are
+// skipped entirely, unlike Month's grid which always shows every day.
+// Habits are deliberately absent — they have their own dedicated tabs
+// (Habits page, Today's habit grid), repeating them here per-day was
+// noise. Reuses the exact same row components the day panel already has
+// (DayTaskRow etc., exported from widgets/day-detail-panel) instead of a
+// second rendering for the same three entity types.
 //
 // Deliberately no "+ add" here, unlike the day panel — this view's job is
 // scanning what's ahead and making quick edits, not primary data entry;
@@ -33,19 +41,30 @@ export function CalendarAgendaView({
   allTasks,
   allReminders,
   allGoals,
-  allHabits,
 }: {
   anchorDate: Date
   allTasks: Task[]
   allReminders: Reminder[]
   allGoals: Goal[]
-  allHabits: Habit[]
 }) {
   const { language, t } = useLanguage()
   const locale = getDateLocale(language)
   const [editing, setEditing] = useState<EditingItem>(null)
+  const [visibleDays, setVisibleDays] = useState(INITIAL_WINDOW_DAYS)
 
-  const days = useMemo(() => buildAgendaRange(anchorDate), [anchorDate])
+  // A new anchor (browsing to a different starting point) should start
+  // narrow again — an expanded window from browsing around earlier doesn't
+  // mean anything once the range itself has moved. Adjusted during render
+  // (React's documented pattern for this, same as TasksProvider's
+  // pagination reset) rather than in a useEffect, which would cause an
+  // extra render pass.
+  const [prevAnchorDate, setPrevAnchorDate] = useState(anchorDate)
+  if (prevAnchorDate !== anchorDate) {
+    setPrevAnchorDate(anchorDate)
+    setVisibleDays(INITIAL_WINDOW_DAYS)
+  }
+
+  const days = useMemo(() => buildAgendaRange(anchorDate, visibleDays), [anchorDate, visibleDays])
 
   const groups = useMemo(() => {
     return days
@@ -56,11 +75,10 @@ export function CalendarAgendaView({
           tasks: allTasks.filter(t => isTaskOnDay(t, dayKey)),
           reminders: selectRemindersOnDay(allReminders, dayKey),
           goals: allGoals.filter(g => isGoalDueOnDay(g, dayKey)),
-          habits: selectHabitsOnDay(allHabits, day),
         }
       })
-      .filter(g => g.tasks.length + g.reminders.length + g.goals.length + g.habits.length > 0)
-  }, [days, allTasks, allReminders, allGoals, allHabits])
+      .filter(g => g.tasks.length + g.reminders.length + g.goals.length > 0)
+  }, [days, allTasks, allReminders, allGoals])
 
   if (groups.length === 0) {
     return <div className="text-center py-16 text-muted-foreground text-sm">{t("calendar.agendaEmpty")}</div>
@@ -123,13 +141,21 @@ export function CalendarAgendaView({
                   />
                 ),
               )}
-              {group.habits.map(habit => (
-                <DayHabitRow key={habit.id} habit={habit} />
-              ))}
             </div>
           </div>
         )
       })}
+
+      <div className="flex justify-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setVisibleDays(v => v + LOAD_MORE_INCREMENT_DAYS)}
+          className="text-xs"
+        >
+          {t("calendar.agendaLoadMore", { count: LOAD_MORE_INCREMENT_DAYS })}
+        </Button>
+      </div>
     </div>
   )
 }

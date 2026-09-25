@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
-import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
+import { resolveCategoryColor, useCategories, type Category } from "@/entities/category"
+import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { PriorityDot, type Task } from "@/entities/task"
-import { ENTITY_TYPE_COLORS } from "@/shared/lib/colors"
+import { TaskToggleCheckbox } from "@/features/toggle-task"
 import { useDragItem, useDropTarget } from "@/shared/lib/dnd"
 import { monoFont } from "@/shared/lib/typography"
 import {
@@ -78,6 +79,7 @@ export function HourGrid({
   onResizeTask?: (taskId: string, endTime: string) => void
   onCreateDraft?: (day: Date, startTime: string, endTime: string, anchorRect: DOMRect) => void
 }) {
+  const { categories } = useCategories()
   const [now, setNow] = useState(new Date())
   const scrollRef = useRef<HTMLDivElement>(null)
   const hasScrolledToNow = useRef(false)
@@ -120,6 +122,7 @@ export function HourGrid({
           <TimelineDayColumn
             key={column.day.toISOString()}
             column={column}
+            categories={categories}
             nowTop={isToday(column.day) ? nowTop : null}
             onEditTask={onEditTask}
             onEditReminder={onEditReminder}
@@ -135,6 +138,7 @@ export function HourGrid({
 
 function TimelineDayColumn({
   column,
+  categories,
   nowTop,
   onEditTask,
   onEditReminder,
@@ -143,6 +147,7 @@ function TimelineDayColumn({
   onCreateDraft,
 }: {
   column: HourGridColumn
+  categories: Category[]
   nowTop: number | null
   onEditTask: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
@@ -236,8 +241,9 @@ function TimelineDayColumn({
           style={{
             top: timeToOffsetPx(preview.startTime),
             height: Math.max(4, timeToOffsetPx(preview.endTime) - timeToOffsetPx(preview.startTime)),
-            borderColor: ENTITY_TYPE_COLORS.task,
-            backgroundColor: `${ENTITY_TYPE_COLORS.task}1a`,
+            borderColor: "var(--primary)",
+            backgroundColor: "var(--primary)",
+            opacity: 0.1,
           }}
         />
       )}
@@ -246,6 +252,7 @@ function TimelineDayColumn({
         <TimedTaskBlock
           key={task.id}
           task={task}
+          categoryColor={resolveCategoryColor(task.category, categories)}
           lane={laneById.get(`task:${task.id}`) ?? { id: "", laneIndex: 0, laneCount: 1 }}
           columnRef={columnEl}
           onEdit={rect => onEditTask(task.id, rect)}
@@ -277,14 +284,23 @@ function blockHeightPx(task: Task): number {
   return raw > 0 ? Math.max(MIN_BLOCK_HEIGHT_PX, raw) : FALLBACK_BLOCK_HEIGHT_PX
 }
 
+// Low-alpha fill over the category's own color — a pastel tint rather than
+// a solid block, so the title text stays legible without needing its own
+// per-category contrast logic.
+function pastelFill(hex: string): string {
+  return `${hex}33`
+}
+
 function TimedTaskBlock({
   task,
+  categoryColor,
   lane,
   columnRef,
   onEdit,
   onResizeTask,
 }: {
   task: Task
+  categoryColor: string
   lane: LaneAssignment
   columnRef: React.RefObject<HTMLDivElement | null>
   onEdit: (anchorRect: DOMRect) => void
@@ -322,15 +338,20 @@ function TimedTaskBlock({
         height,
         ...laneStyle(lane.laneIndex, lane.laneCount),
         opacity: isDragging ? 0.4 : 1,
-        borderLeftColor: ENTITY_TYPE_COLORS.task,
+        backgroundColor: task.completed ? "var(--muted)" : pastelFill(categoryColor),
         zIndex: draftEndTime ? 40 : 10,
       }}
-      className={`absolute flex items-center gap-1 rounded-md border-l-2 bg-card px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden ${
-        task.completed ? "opacity-60" : ""
-      }`}
+      className="absolute flex items-center gap-1 rounded-md px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden"
       title={`${task.time} · ${task.title}`}
     >
-      <PriorityDot priority={task.priority} size={9} colorOverride={ENTITY_TYPE_COLORS.task} />
+      <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+        <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={14} />
+      </div>
+      <PriorityDot
+        priority={task.priority}
+        size={9}
+        colorOverride={task.completed ? "var(--muted-foreground)" : undefined}
+      />
       <span css={monoFont} className="shrink-0 text-muted-foreground">
         {task.time}
       </span>
@@ -372,15 +393,18 @@ function TimedReminderBlock({
         top: timeToOffsetPx(reminder.time!),
         height: FALLBACK_BLOCK_HEIGHT_PX,
         ...laneStyle(lane.laneIndex, lane.laneCount),
-        borderLeftColor: ENTITY_TYPE_COLORS.reminder,
+        borderColor: REMINDER_BORDER_COLORS[reminder.priority],
       }}
-      className="absolute z-10 flex items-center gap-1 rounded-full border-l-2 bg-card px-1.5 text-left text-[11px] overflow-hidden"
+      // Full border (not just a left stripe) + neutral fill — stays
+      // distinguishable from a task's colored fill even when a category
+      // color happens to be yellow/red-ish, per explicit user feedback.
+      className="absolute z-10 flex items-center gap-1 rounded-full border-2 bg-card px-1.5 text-left text-[11px] overflow-hidden"
       title={`${reminder.time} · ${reminder.title}`}
     >
       <ReminderPriorityIcon
         priority={reminder.priority}
         size={9}
-        colorOverride={ENTITY_TYPE_COLORS.reminder}
+        colorOverride={REMINDER_BORDER_COLORS[reminder.priority]}
       />
       <span css={monoFont} className="shrink-0 text-muted-foreground">
         {reminder.time}
