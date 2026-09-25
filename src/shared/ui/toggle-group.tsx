@@ -24,10 +24,11 @@ function ToggleGroup({
       data-slot="toggle-group"
       data-variant={variant}
       data-size={size}
-      className={cn(
-        "group/toggle-group flex w-fit items-center rounded-md data-[variant=outline]:shadow-xs",
-        className,
-      )}
+      // No longer one continuous joined pill (see ToggleGroupItem's comment
+      // for why) — the group is just a flex row of independently-shaped
+      // items with a real gap between them, so no group-level rounding/
+      // shadow of its own.
+      className={cn("group/toggle-group flex w-fit items-center gap-1.5", className)}
       {...props}
     >
       <ToggleGroupContext.Provider value={{ variant, size }}>{children}</ToggleGroupContext.Provider>
@@ -49,19 +50,22 @@ function ToggleGroupItem({
       data-slot="toggle-group-item"
       data-variant={context.variant || variant}
       data-size={context.size || size}
+      // Used to be one joined pill (items sharing a seam, `rounded-none`
+      // except at the two outer ends) with only a translucent border-color
+      // token separating a selected item's fill from its neighbor — even
+      // the more-visible of the two theme border tokens (--border, 10%
+      // opacity) read as no separation at all at a glance, since a hairline
+      // is still a hairline. Each item now keeps its own full rounding
+      // (from toggleVariants' base `rounded-md`, no longer overridden) and
+      // sits in a real gap (see ToggleGroup's `gap-1.5`) — a selected
+      // item's solid fill now has actual empty space around it before the
+      // next item starts, not just a thin line.
       className={cn(
         toggleVariants({
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        // toggleVariants' own outline border uses --input, a near-invisible
-        // 6%-opacity token meant for plain form fields — against a
-        // selected item's solid bg-accent fill, that seam basically
-        // disappears, reading as the fill "bleeding into" the neighboring
-        // item with no separation. --border (10%, the same token used for
-        // divide-x separators elsewhere, e.g. AllDayRow's day columns) is
-        // still subtle but actually visible here.
-        "min-w-0 flex-1 shrink-0 rounded-none shadow-none first:rounded-l-md last:rounded-r-md focus:z-10 focus-visible:z-10 data-[variant=outline]:border-l-0 data-[variant=outline]:first:border-l data-[variant=outline]:border-border",
+        "min-w-0 flex-1 shrink-0 shadow-none",
         className,
       )}
       {...props}
