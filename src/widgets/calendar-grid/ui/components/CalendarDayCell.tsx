@@ -87,12 +87,14 @@ export function CalendarDayCell({
       onKeyDown={e => {
         if (e.key === "Enter" || e.key === " ") onSelect()
       }}
-      // No longer a fixed min-height — cells grow with content (stacked
-      // task rows below), and every cell in a CSS Grid row stretches to
-      // that row's tallest cell by default, which is exactly the "week
-      // row is as tall as its busiest day" look the TickTick reference
-      // has.
-      className={`rounded-xl border flex flex-col items-stretch gap-1 pt-2 pb-1.5 px-1 text-sm transition-all cursor-pointer ${
+      // min-h keeps an empty day from collapsing to just its number (a
+      // week with nothing scheduled looked squashed/cramped next to a
+      // busy one otherwise, even though every cell in a CSS Grid row
+      // already stretches to that row's tallest cell by default) — cells
+      // still grow past this floor with content (stacked task rows
+      // below), matching the "week row is as tall as its busiest day"
+      // look the TickTick reference has.
+      className={`min-h-[84px] rounded-xl border flex flex-col items-stretch gap-1 pt-2 pb-1.5 px-1 text-sm transition-all cursor-pointer ${
         isSelected
           ? "bg-primary text-primary-foreground border-primary"
           : isCurrent
