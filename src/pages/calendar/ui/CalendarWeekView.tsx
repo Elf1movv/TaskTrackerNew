@@ -1,7 +1,5 @@
 import { useState } from "react"
 import { format, isToday } from "date-fns"
-import { isGoalDueOnDay, type Goal } from "@/entities/goal"
-import { selectHabitsOnDay, type Habit } from "@/entities/habit"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task } from "@/entities/task"
 import { buildWeekRange } from "@/shared/lib/calendarGrid"
@@ -26,8 +24,6 @@ export function CalendarWeekView({
   anchorDate,
   allTasks,
   allReminders,
-  allGoals,
-  allHabits,
   onMoveTaskToDay,
   onRescheduleTaskTime,
   onResizeTask,
@@ -35,8 +31,6 @@ export function CalendarWeekView({
   anchorDate: Date
   allTasks: Task[]
   allReminders: Reminder[]
-  allGoals: Goal[]
-  allHabits: Habit[]
   onMoveTaskToDay: (taskId: string, day: Date) => void
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizeTask: (taskId: string, endTime: string) => void
@@ -61,8 +55,6 @@ export function CalendarWeekView({
       day,
       tasks: dayTasks.filter(task => !task.time),
       reminders: dayReminders.filter(reminder => !reminder.time),
-      goals: allGoals.filter(goal => isGoalDueOnDay(goal, dayKey)),
-      habits: selectHabitsOnDay(allHabits, day),
     }
   })
 

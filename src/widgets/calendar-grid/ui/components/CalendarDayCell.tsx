@@ -1,8 +1,5 @@
 import { useCallback } from "react"
 import { format } from "date-fns"
-import { Repeat, Target } from "lucide-react"
-import type { Goal } from "@/entities/goal"
-import type { Habit } from "@/entities/habit"
 import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { PriorityDot, type Task } from "@/entities/task"
 import { useDropTarget } from "@/shared/lib/dnd"
@@ -19,8 +16,6 @@ export function CalendarDayCell({
   isCurrentMonth,
   dayTasks,
   dayReminders,
-  dayGoals,
-  dayHabits,
   isSelected,
   isCurrent,
   onSelect,
@@ -31,8 +26,6 @@ export function CalendarDayCell({
   isCurrentMonth: boolean
   dayTasks: Task[]
   dayReminders: Reminder[]
-  dayGoals: Goal[]
-  dayHabits: Habit[]
   isSelected: boolean
   isCurrent: boolean
   onSelect: () => void
@@ -137,27 +130,6 @@ export function CalendarDayCell({
               colorOverride={isSelected ? "rgba(255,255,255,0.65)" : undefined}
             />
           ))}
-        </div>
-      )}
-
-      {/* One compact row, max 2 markers — a goal-deadline icon (present/
-          absent, not per-goal — the day panel is where you see which
-          goal) and a single habit-count badge (not one chip per habit,
-          there can be many scheduled on one day). Keeps this already
-          tight cell layout from growing further. */}
-      {(dayGoals.length > 0 || dayHabits.length > 0) && (
-        <div
-          className={`flex items-center gap-1.5 text-[9px] ${
-            isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
-          }`}
-        >
-          {dayGoals.length > 0 && <Target size={9} />}
-          {dayHabits.length > 0 && (
-            <span className="flex items-center gap-0.5">
-              <Repeat size={9} />
-              {dayHabits.length}
-            </span>
-          )}
         </div>
       )}
     </button>

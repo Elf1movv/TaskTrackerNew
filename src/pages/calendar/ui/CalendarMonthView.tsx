@@ -31,8 +31,6 @@ export function CalendarMonthView({
   selectedHabits,
   allTasks,
   allReminders,
-  allGoals,
-  allHabits,
   onSelectDay,
   onCloseDayPanel,
   onMoveTaskToDay,
@@ -46,8 +44,6 @@ export function CalendarMonthView({
   selectedHabits: Habit[]
   allTasks: Task[]
   allReminders: Reminder[]
-  allGoals: Goal[]
-  allHabits: Habit[]
   onSelectDay: (day: Date, isCurrentMonth: boolean) => void
   onCloseDayPanel: () => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
@@ -69,8 +65,6 @@ export function CalendarMonthView({
             days={monthGrid}
             tasks={allTasks}
             reminders={allReminders}
-            goals={allGoals}
-            habits={allHabits}
             selectedDay={selectedDay}
             onSelectDay={onSelectDay}
             onMoveTaskToDay={onMoveTaskToDay}

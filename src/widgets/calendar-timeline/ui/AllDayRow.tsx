@@ -1,7 +1,5 @@
 import { useCallback } from "react"
-import { Plus, Repeat, Target } from "lucide-react"
-import type { Goal } from "@/entities/goal"
-import type { Habit } from "@/entities/habit"
+import { Plus } from "lucide-react"
 import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { PriorityDot, type Task } from "@/entities/task"
 import { ENTITY_TYPE_COLORS } from "@/shared/lib/colors"
@@ -10,26 +8,20 @@ import { useLanguage } from "@/shared/lib/i18n"
 
 export interface AllDayColumn {
   day: Date
-  // Undated-time tasks/reminders (dueDate/date set, no time) plus goal
-  // deadlines and habit occurrences — none of the latter two have a time
-  // field at all (see isGoalDueOnDay/selectHabitsOnDay), so they always
-  // live here, never in HourGrid.
+  // Undated-time tasks/reminders (dueDate/date set, no time) — the only
+  // things this row shows. Goal deadlines and habit occurrences used to
+  // get a passive icon marker here too, but that read as unclear/unlabeled
+  // to the user and was removed; goals/habits are still fully visible in
+  // Month's DayDetailPanel and their own pages.
   tasks: Task[]
   reminders: Reminder[]
-  goals: Goal[]
-  habits: Habit[]
 }
 
 // Sits above HourGrid, same idea as Google Calendar/TickTick's all-day
 // strip. Drag here is whole-day only, reusing the exact same
 // "calendar-task-move" type Month's CalendarDayCell already accepts — an
 // item with no time can only be rescheduled to a different day, not a
-// different minute. Habits are never draggable here (see DayHabitRow —
-// activeDays is a recurring pattern, not a per-instance date to move) and
-// reminders aren't draggable at all in this app's model. Goals are a
-// passive marker only — no drag, no click, no edit — Day/Week give goals
-// no CRUD at all, only their own page can create/edit them (see
-// AllDayGoalChip).
+// different minute. Reminders aren't draggable at all in this app's model.
 //
 // `onAddUntimed` is optional — the "+" affordance is Day-view-only this
 // round (see CalendarWeekView, which doesn't pass it); when absent, no
@@ -48,9 +40,7 @@ export function AllDayRow({
   onMoveTask: (taskId: string, day: Date) => void
   onAddUntimed?: (day: Date, anchorRect: DOMRect) => void
 }) {
-  const hasAnyContent = columns.some(
-    c => c.tasks.length + c.reminders.length + c.goals.length + c.habits.length > 0,
-  )
+  const hasAnyContent = columns.some(c => c.tasks.length + c.reminders.length > 0)
   if (!hasAnyContent && !onAddUntimed) return null
 
   return (
@@ -107,15 +97,6 @@ function AllDayColumnCell({
           onEdit={rect => onEditReminder(reminder.id, rect)}
         />
       ))}
-      {column.goals.map(goal => (
-        <AllDayGoalChip key={goal.id} goal={goal} />
-      ))}
-      {column.habits.length > 0 && (
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground px-1">
-          <Repeat size={10} />
-          {column.habits.length}
-        </div>
-      )}
       {onAddUntimed && (
         <button
           onClick={e => onAddUntimed(column.day, e.currentTarget.getBoundingClientRect())}
@@ -168,24 +149,5 @@ function AllDayReminderChip({
       />
       <span className="truncate">{reminder.title}</span>
     </button>
-  )
-}
-
-// Passive marker only — a <div>, not a <button>: no drag, no click, no
-// edit, no tab-stop for a control that doesn't do anything. Reads as a
-// "pin" (filled icon badge + plain label) rather than an editable chip,
-// reinforcing at a glance that it isn't one, unlike the task/reminder
-// chips' colored-edge-stripe language.
-function AllDayGoalChip({ goal }: { goal: Goal }) {
-  return (
-    <div className="inline-flex max-w-full items-center gap-1.5 rounded-full pl-0.5 pr-2 py-0.5 text-[11px] overflow-hidden">
-      <span
-        className="flex items-center justify-center size-4 rounded-full shrink-0"
-        style={{ backgroundColor: ENTITY_TYPE_COLORS.goal }}
-      >
-        <Target size={10} color="white" />
-      </span>
-      <span className="truncate">{goal.title}</span>
-    </div>
   )
 }

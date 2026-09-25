@@ -1,6 +1,4 @@
 import { useState } from "react"
-import { isGoalDueOnDay, type Goal } from "@/entities/goal"
-import { selectHabitsOnDay, type Habit } from "@/entities/habit"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task } from "@/entities/task"
 import { formatDateKey } from "@/shared/lib/date"
@@ -20,8 +18,6 @@ export function CalendarDayView({
   anchorDate,
   allTasks,
   allReminders,
-  allGoals,
-  allHabits,
   onMoveTaskToDay,
   onRescheduleTaskTime,
   onResizeTask,
@@ -29,8 +25,6 @@ export function CalendarDayView({
   anchorDate: Date
   allTasks: Task[]
   allReminders: Reminder[]
-  allGoals: Goal[]
-  allHabits: Habit[]
   onMoveTaskToDay: (taskId: string, day: Date) => void
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizeTask: (taskId: string, endTime: string) => void
@@ -46,8 +40,6 @@ export function CalendarDayView({
 
   const dayTasks = allTasks.filter(task => isTaskOnDay(task, dayKey))
   const dayReminders = selectRemindersOnDay(allReminders, dayKey)
-  const dayGoals = allGoals.filter(goal => isGoalDueOnDay(goal, dayKey))
-  const dayHabits = selectHabitsOnDay(allHabits, anchorDate)
 
   const timedTasks = dayTasks.filter(task => task.time)
   const untimedTasks = dayTasks.filter(task => !task.time)
@@ -76,8 +68,6 @@ export function CalendarDayView({
             day: anchorDate,
             tasks: untimedTasks,
             reminders: untimedReminders,
-            goals: dayGoals,
-            habits: dayHabits,
           },
         ]}
         onEditTask={openEditTask}

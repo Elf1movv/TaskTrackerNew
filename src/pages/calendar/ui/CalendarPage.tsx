@@ -186,8 +186,6 @@ function CalendarPageContent() {
           selectedHabits={selectedHabits}
           allTasks={allTasks}
           allReminders={allReminders}
-          allGoals={allGoals}
-          allHabits={allHabits}
           onSelectDay={handleSelectDay}
           onCloseDayPanel={() => selectDay(null)}
           onMoveTaskToDay={moveTaskToDay}
@@ -210,8 +208,6 @@ function CalendarPageContent() {
           anchorDate={anchorDate}
           allTasks={allTasks}
           allReminders={allReminders}
-          allGoals={allGoals}
-          allHabits={allHabits}
           onMoveTaskToDay={moveTaskToDay}
           onRescheduleTaskTime={rescheduleTaskTime}
           onResizeTask={resizeTask}
@@ -223,8 +219,6 @@ function CalendarPageContent() {
           anchorDate={anchorDate}
           allTasks={allTasks}
           allReminders={allReminders}
-          allGoals={allGoals}
-          allHabits={allHabits}
           onMoveTaskToDay={moveTaskToDay}
           onRescheduleTaskTime={rescheduleTaskTime}
           onResizeTask={resizeTask}
