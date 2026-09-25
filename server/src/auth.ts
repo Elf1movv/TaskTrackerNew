@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma"
 import { APIError, createAuthMiddleware } from "better-auth/api"
 import { db } from "./db.js"
 import { sendEmail } from "./lib/email.js"
+import { resetPasswordEmailHtml, verificationEmailHtml } from "./lib/emailTemplates.js"
 
 // Every request path where a new password is actually set — used by the
 // hooks.before check below. Must stay in sync with shared/lib/auth/
@@ -35,7 +36,7 @@ export const auth = betterAuth({
       void sendEmail({
         to: user.email,
         subject: "Восстановление пароля — MyTracker",
-        html: `<p>Чтобы задать новый пароль, перейдите по ссылке: <a href="${url}">${url}</a></p><p>Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.</p>`,
+        html: resetPasswordEmailHtml(url),
       })
     },
   },
@@ -43,8 +44,8 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url }) => {
       void sendEmail({
         to: user.email,
-        subject: "Подтвердите почту — MyTracker",
-        html: `<p>Чтобы подтвердить почту и войти в MyTracker, перейдите по ссылке: <a href="${url}">${url}</a></p>`,
+        subject: "Добро пожаловать в MyTracker — подтвердите почту",
+        html: verificationEmailHtml(url),
       })
     },
     // Without this, someone who tries to log in before verifying just gets

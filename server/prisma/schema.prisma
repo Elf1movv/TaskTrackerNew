@@ -190,6 +190,10 @@ model Reminder {
 model Feedback {
   id        String   @id @default(uuid())
   message   String
+  // "bug" | "suggestion" — plain string like Task.priority, validated at
+  // the zod layer, not a Postgres enum. Drives the outgoing email's
+  // subject line so the two can be filtered/searched in an inbox.
+  type      String
   // Base64 data URL of an optionally-attached screenshot — kept as a plain
   // column, not a separate file-storage table, since this is a low-volume,
   // temporary feature (see LEARNING.md for the "delete after beta" plan).

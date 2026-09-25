@@ -6,8 +6,11 @@ import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Textarea } from "@/shared/ui/textarea"
+import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group"
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+type FeedbackType = "bug" | "suggestion"
 
 interface FeedbackDialogProps {
   open: boolean
@@ -18,11 +21,13 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
   const { t } = useLanguage()
   const location = useLocation()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [type, setType] = useState<FeedbackType>("bug")
   const [message, setMessage] = useState("")
   const [imageData, setImageData] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   function reset() {
+    setType("bug")
     setMessage("")
     setImageData(null)
   }
@@ -49,6 +54,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: message.trim(),
+          type,
           imageData: imageData ?? undefined,
           page: location.pathname,
         }),
@@ -75,6 +81,20 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
               screen readers regardless. */}
           <DialogDescription className="sr-only">{t("feedback.messagePlaceholder")}</DialogDescription>
         </DialogHeader>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          value={type}
+          onValueChange={v => v && setType(v as FeedbackType)}
+        >
+          <ToggleGroupItem value="bug" className="text-xs flex-1">
+            {t("feedback.typeBug")}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="suggestion" className="text-xs flex-1">
+            {t("feedback.typeSuggestion")}
+          </ToggleGroupItem>
+        </ToggleGroup>
         <Textarea
           autoFocus
           rows={5}

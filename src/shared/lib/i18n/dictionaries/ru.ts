@@ -226,6 +226,8 @@ export const ru: Record<keyof typeof en, string> = {
 
   "feedback.bannerLabel": "Нашли баг или есть идея? Напишите нам",
   "feedback.dialogTitle": "Обратная связь",
+  "feedback.typeBug": "Баг",
+  "feedback.typeSuggestion": "Предложение",
   "feedback.messagePlaceholder": "Что случилось, или чего не хватает?",
   "feedback.attachScreenshot": "Прикрепить скриншот",
   "feedback.imageTooLarge": "Изображение слишком большое (максимум 5МБ)",

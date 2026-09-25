@@ -38,10 +38,16 @@ feedbackRouter.post("/", async (req, res) => {
     const user = await db.user.findUnique({ where: { id: req.userId }, select: { name: true, email: true } })
     const from = user ? `${user.name} (${user.email})` : req.userId
 
+    // A "[Bug]"/"[Suggestion]" subject tag, not just a body field, so the
+    // two can be told apart at a glance in an inbox list and filtered by
+    // subject text without opening each email.
+    const typeLabel = parsed.data.type === "bug" ? "Bug" : "Suggestion"
+
     await sendEmail({
       to,
-      subject: "MyTracker — new feedback",
+      subject: `MyTracker — [${typeLabel}] new feedback`,
       html: `
+        <p><strong>Type:</strong> ${typeLabel}</p>
         <p><strong>From:</strong> ${from}</p>
         <p><strong>Page:</strong> ${parsed.data.page ?? "unknown"}</p>
         <p><strong>Message:</strong></p>

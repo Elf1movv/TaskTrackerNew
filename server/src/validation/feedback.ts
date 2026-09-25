@@ -6,6 +6,7 @@ const MAX_IMAGE_DATA_LENGTH = 7_000_000
 
 export const createFeedbackSchema = z.object({
   message: z.string().min(1).max(5000),
+  type: z.enum(["bug", "suggestion"]),
   imageData: z.string().max(MAX_IMAGE_DATA_LENGTH).optional(),
   page: z.string().max(200).optional(),
 })

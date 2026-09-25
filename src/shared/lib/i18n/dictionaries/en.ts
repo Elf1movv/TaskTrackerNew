@@ -223,6 +223,8 @@ export const en = {
 
   "feedback.bannerLabel": "Found a bug or have an idea? Tell us",
   "feedback.dialogTitle": "Send feedback",
+  "feedback.typeBug": "Bug",
+  "feedback.typeSuggestion": "Suggestion",
   "feedback.messagePlaceholder": "What happened, or what's missing?",
   "feedback.attachScreenshot": "Attach a screenshot",
   "feedback.imageTooLarge": "Image is too large (max 5MB)",
