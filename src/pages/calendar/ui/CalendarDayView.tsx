@@ -2,7 +2,7 @@ import { useState } from "react"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task } from "@/entities/task"
 import { formatDateKey } from "@/shared/lib/date"
-import { AllDayRow, HourGrid } from "@/widgets/calendar-timeline"
+import { HourGrid } from "@/widgets/calendar-timeline"
 import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-item-popover"
 
 // Composes calendar-timeline full-width, edge to edge (no reserved
@@ -11,21 +11,27 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 // panel would duplicate what the timeline already shows visually), and
 // clicking any block or dragging on an empty slot opens
 // CalendarItemPopover anchored at that point, rather than a static
-// sidebar. Goals get no create/edit affordance here at all — only their
-// deadline marker in AllDayRow — Day/Week give goals no CRUD, only their
-// own page can create/edit them.
+// sidebar. Goals get no create/edit affordance here at all — Day/Week
+// give goals no CRUD, only their own page (or Month's day panel) can
+// create/edit them.
+//
+// No all-day/untimed strip above the grid — removed per user feedback
+// that it read as an unclear intermediate layer (a bare row of "+"
+// buttons above the actual calendar). This means an untimed task/
+// reminder (a due date but no time) has nowhere to render in Day/Week
+// specifically — it's still visible in Month, Agenda, and the Tasks/
+// Reminders pages, just not on this hour-grid timeline, which now only
+// ever shows items that have a time.
 export function CalendarDayView({
   anchorDate,
   allTasks,
   allReminders,
-  onMoveTaskToDay,
   onRescheduleTaskTime,
   onResizeTask,
 }: {
   anchorDate: Date
   allTasks: Task[]
   allReminders: Reminder[]
-  onMoveTaskToDay: (taskId: string, day: Date) => void
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizeTask: (taskId: string, endTime: string) => void
 }) {
@@ -42,9 +48,7 @@ export function CalendarDayView({
   const dayReminders = selectRemindersOnDay(allReminders, dayKey)
 
   const timedTasks = dayTasks.filter(task => task.time)
-  const untimedTasks = dayTasks.filter(task => !task.time)
   const timedReminders = dayReminders.filter(reminder => reminder.time)
-  const untimedReminders = dayReminders.filter(reminder => !reminder.time)
 
   function openEditTask(taskId: string, rect: DOMRect) {
     const task = dayTasks.find(t => t.id === taskId)
@@ -62,22 +66,6 @@ export function CalendarDayView({
 
   return (
     <div className="min-w-0">
-      <AllDayRow
-        columns={[
-          {
-            day: anchorDate,
-            tasks: untimedTasks,
-            reminders: untimedReminders,
-          },
-        ]}
-        onEditTask={openEditTask}
-        onEditReminder={openEditReminder}
-        onMoveTask={onMoveTaskToDay}
-        onAddUntimed={(day, rect) => {
-          setDraft({ mode: "create", day, defaultTime: null, defaultEndTime: null })
-          setAnchorRect(rect)
-        }}
-      />
       <HourGrid
         columns={[{ day: anchorDate, tasks: timedTasks, reminders: timedReminders }]}
         onEditTask={openEditTask}

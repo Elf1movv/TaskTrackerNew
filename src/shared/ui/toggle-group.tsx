@@ -54,7 +54,14 @@ function ToggleGroupItem({
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        "min-w-0 flex-1 shrink-0 rounded-none shadow-none first:rounded-l-md last:rounded-r-md focus:z-10 focus-visible:z-10 data-[variant=outline]:border-l-0 data-[variant=outline]:first:border-l",
+        // toggleVariants' own outline border uses --input, a near-invisible
+        // 6%-opacity token meant for plain form fields — against a
+        // selected item's solid bg-accent fill, that seam basically
+        // disappears, reading as the fill "bleeding into" the neighboring
+        // item with no separation. --border (10%, the same token used for
+        // divide-x separators elsewhere, e.g. AllDayRow's day columns) is
+        // still subtle but actually visible here.
+        "min-w-0 flex-1 shrink-0 rounded-none shadow-none first:rounded-l-md last:rounded-r-md focus:z-10 focus-visible:z-10 data-[variant=outline]:border-l-0 data-[variant=outline]:first:border-l data-[variant=outline]:border-border",
         className,
       )}
       {...props}

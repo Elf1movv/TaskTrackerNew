@@ -146,7 +146,6 @@ export const en = {
   "calendar.view.year": "Year",
   "calendar.typeTask": "Task",
   "calendar.typeReminder": "Reminder",
-  "calendar.addUntimed": "Add untimed item",
 
   "toast.entityTask": "task",
   "toast.entityGoal": "goal",

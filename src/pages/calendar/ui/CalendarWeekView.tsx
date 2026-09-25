@@ -6,32 +6,28 @@ import { buildWeekRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
-import { AllDayRow, HourGrid } from "@/widgets/calendar-timeline"
+import { HourGrid } from "@/widgets/calendar-timeline"
 import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-item-popover"
 
 // Same calendar-timeline widget as CalendarDayView, just 7 day columns
 // (buildWeekRange) instead of 1 — reaches full mechanical parity with Day
 // this round: CalendarItemPopover instead of a static sidebar,
 // click/drag-to-create, resize, immediate day+time reflection on drag.
-// Block visuals are unchanged (same shared HourGrid/AllDayRow components,
-// same styling) — only Day's own layout/interaction gap is closed here,
-// not its appearance. New items default onto the week's first day
-// (Monday) when created via a Task/Reminder's own date field; dragging an
-// all-day item to a different column moves it, same as Month's day cells.
-// No Goal create/edit anywhere in Week, same as Day — only Goals' own
-// page can create/edit them.
+// Block visuals are unchanged — only Day's own layout/interaction gap is
+// closed here, not its appearance. No all-day/untimed strip above the
+// grid (see CalendarDayView's comment) — Week shows only timed items,
+// same as Day. No Goal create/edit anywhere in Week, same as Day — only
+// Goals' own page can create/edit them.
 export function CalendarWeekView({
   anchorDate,
   allTasks,
   allReminders,
-  onMoveTaskToDay,
   onRescheduleTaskTime,
   onResizeTask,
 }: {
   anchorDate: Date
   allTasks: Task[]
   allReminders: Reminder[]
-  onMoveTaskToDay: (taskId: string, day: Date) => void
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizeTask: (taskId: string, endTime: string) => void
 }) {
@@ -46,17 +42,6 @@ export function CalendarWeekView({
   }
 
   const days = buildWeekRange(anchorDate)
-
-  const allDayColumns = days.map(day => {
-    const dayKey = formatDateKey(day)
-    const dayTasks = allTasks.filter(task => isTaskOnDay(task, dayKey))
-    const dayReminders = selectRemindersOnDay(allReminders, dayKey)
-    return {
-      day,
-      tasks: dayTasks.filter(task => !task.time),
-      reminders: dayReminders.filter(reminder => !reminder.time),
-    }
-  })
 
   const hourGridColumns = days.map(day => {
     const dayKey = formatDateKey(day)
@@ -110,16 +95,6 @@ export function CalendarWeekView({
         </div>
       </div>
 
-      <AllDayRow
-        columns={allDayColumns}
-        onEditTask={openEditTask}
-        onEditReminder={openEditReminder}
-        onMoveTask={onMoveTaskToDay}
-        onAddUntimed={(day, rect) => {
-          setDraft({ mode: "create", day, defaultTime: null, defaultEndTime: null })
-          setAnchorRect(rect)
-        }}
-      />
       <HourGrid
         columns={hourGridColumns}
         onEditTask={openEditTask}

@@ -148,7 +148,6 @@ export const ru: Record<keyof typeof en, string> = {
   "calendar.view.year": "Год",
   "calendar.typeTask": "Задача",
   "calendar.typeReminder": "Напоминание",
-  "calendar.addUntimed": "Добавить без времени",
 
   "toast.entityTask": "задачу",
   "toast.entityGoal": "цель",

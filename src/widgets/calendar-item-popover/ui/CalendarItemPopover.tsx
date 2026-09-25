@@ -15,10 +15,9 @@ export type CalendarItemDraft =
 
 // The click/drag-anchored replacement for Day's old static sidebar — one
 // popover that handles both creating a new task/reminder (anchored where
-// the create-drag ended, or where the all-day row's "+" was clicked) and
-// editing an existing one (anchored at the clicked block/chip). Goals are
-// deliberately absent from the type toggle: Day/Week give goals no CRUD at
-// all (see AllDayRow's now-passive AllDayGoalChip), only their own page
+// the create-drag ended in the hour grid) and editing an existing one
+// (anchored at the clicked block). Goals are deliberately absent from the
+// type toggle: Day/Week give goals no CRUD at all, only their own page
 // can create/edit them.
 //
 // Anchored via a Radix virtual reference (`PopoverAnchor`'s `virtualRef`)

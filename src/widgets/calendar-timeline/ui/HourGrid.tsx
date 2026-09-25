@@ -42,8 +42,10 @@ function laneStyle(laneIndex: number, laneCount: number): { left: string; width:
 export interface HourGridColumn {
   day: Date
   // Only items that have a time — the caller (CalendarDayView/WeekView)
-  // splits each day's tasks/reminders into this and AllDayRow's untimed
-  // half, same split CalendarDayCell already does for reminders/tasks.
+  // filters each day's tasks/reminders down to this; an untimed one isn't
+  // shown anywhere in Day/Week at all (no all-day strip exists to hold it
+  // — see CalendarDayView's comment), same split CalendarDayCell already
+  // does for reminders/tasks in Month.
   tasks: Task[]
   reminders: Reminder[]
 }
@@ -53,8 +55,8 @@ export interface HourGridColumn {
 // shared/lib/timeOffset.ts) — generic over N day columns so Day (1) and Week (7)
 // share this exact component. Only Tasks are draggable-by-time/resizable
 // here: a Goal's deadline has day precision everywhere in this app (see
-// isGoalDueOnDay), so it never appears in the hour grid at all, only in
-// AllDayRow; Reminders keep a single point in time, no resize handle.
+// isGoalDueOnDay), so it never appears in the hour grid at all; Reminders
+// keep a single point in time, no resize handle.
 //
 // `onCreateDraft`/`onResizeTask` are optional — click/drag-to-create and
 // resize are Day-view-only this round (see CalendarWeekView, which simply

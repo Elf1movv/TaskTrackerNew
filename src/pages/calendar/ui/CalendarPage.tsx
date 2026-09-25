@@ -208,7 +208,6 @@ function CalendarPageContent() {
           anchorDate={anchorDate}
           allTasks={allTasks}
           allReminders={allReminders}
-          onMoveTaskToDay={moveTaskToDay}
           onRescheduleTaskTime={rescheduleTaskTime}
           onResizeTask={resizeTask}
         />
@@ -219,7 +218,6 @@ function CalendarPageContent() {
           anchorDate={anchorDate}
           allTasks={allTasks}
           allReminders={allReminders}
-          onMoveTaskToDay={moveTaskToDay}
           onRescheduleTaskTime={rescheduleTaskTime}
           onResizeTask={resizeTask}
         />
