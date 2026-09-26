@@ -1,91 +1,144 @@
+/*
+ * MyTracker — redesign tokens (from the Design canvas, "MyTracker — Today").
+ *
+ * Drop-in replacement for src/styles/theme.css:
+ *   - keeps every shadcn variable name the app already uses (--background,
+ *     --primary, --muted-foreground, ...), so existing components re-skin
+ *     without code changes;
+ *   - adds the extra design tokens the new screens need (sunken, fill,
+ *     text-tertiary, status colors, shadows, segmented control, scrim).
+ *
+ * Mapping to the canvas source (.t-light / .t-dark in project/*.dc.html):
+ *   bg→--background  surface→--card/--popover  text1→--foreground
+ *   text2→--muted-foreground  text3→--text-tertiary  fill→--secondary/--muted/--accent
+ *   sunken→--input-background/--sunken  border→--border  accent→--primary
+ *   on-accent→--primary-foreground  error→--destructive
+ */
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
   --font-size: 16px;
-  --font-display: "Roboto Slab", Georgia, serif;
+  --font-app: "Manrope", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --font-display: var(--font-app);
   --font-mono: "JetBrains Mono", "Courier New", monospace;
-  /* Warm light palette — same brand orange accent as .dark below, just a
-     light warm-white ground instead of near-black, so the two themes read
-     as siblings rather than two unrelated apps. */
-  --background: #faf6f0;
-  --foreground: #241f19;
+
+  /* shadcn contract */
+  --background: #f4f6f8;
+  --foreground: #131c20;
   --card: #ffffff;
-  --card-foreground: #241f19;
+  --card-foreground: #131c20;
   --popover: #ffffff;
-  --popover-foreground: #241f19;
-  --primary: #c97b3a;
-  --primary-foreground: #fdf6ef;
-  --secondary: #f1ebe2;
-  --secondary-foreground: #241f19;
-  --muted: #f1ebe2;
-  --muted-foreground: #8a8074;
-  --accent: #ece4d8;
-  --accent-foreground: #241f19;
-  --destructive: #c9503a;
-  --destructive-foreground: #fff8f6;
-  --border: rgba(36, 31, 25, 0.1);
-  --input: rgba(36, 31, 25, 0.06);
-  --input-background: #f1ebe2;
-  --switch-background: #d8cfc2;
-  --font-weight-medium: 500;
+  --popover-foreground: #131c20;
+  --primary: #1c3049; /* accent — user-selectable, see --accent-options */
+  --primary-foreground: #ffffff;
+  --secondary: #edf0f3;
+  --secondary-foreground: #131c20;
+  --muted: #edf0f3;
+  --muted-foreground: #525c65;
+  --accent: #edf0f3; /* shadcn "accent" = hover background, NOT the brand accent */
+  --accent-foreground: #131c20;
+  --destructive: #c0453d;
+  --destructive-foreground: #ffffff;
+  --border: #dde2e6;
+  --input: #dde2e6;
+  --input-background: #f4f6f8;
+  --switch-background: #c6cdd3;
+  --font-weight-medium: 600;
   --font-weight-normal: 400;
-  --ring: rgba(201, 123, 58, 0.45);
+  --ring: color-mix(in srgb, var(--primary) 22%, transparent);
+  --radius: 0.75rem; /* 12px; sm 8 · md 10 · lg 12 · xl 16 */
+
+  /* habit / goal / category palette (same order as PALETTE_COLORS) */
   --chart-1: #c97b3a;
   --chart-2: #6a9c74;
-  --chart-3: #7b6bc9;
-  --chart-4: #4a8bc9;
-  --chart-5: #c9503a;
-  --radius: 0.75rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #241f19;
-  --sidebar-primary: #c97b3a;
-  --sidebar-primary-foreground: #fdf6ef;
-  --sidebar-accent: #ece4d8;
-  --sidebar-accent-foreground: #241f19;
-  --sidebar-border: rgba(36, 31, 25, 0.1);
-  --sidebar-ring: rgba(201, 123, 58, 0.45);
+  --chart-3: #5b7fc7;
+  --chart-4: #a35bc7;
+  --chart-5: #c75b8f;
+
+  --sidebar: #fbfcfd;
+  --sidebar-foreground: #131c20;
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #edf0f3;
+  --sidebar-accent-foreground: #131c20;
+  --sidebar-border: #dde2e6;
+  --sidebar-ring: var(--ring);
+
+  /* redesign extras */
+  --sunken: #f4f6f8;
+  --fill: #edf0f3;
+  --border-strong: #c6cdd3;
+  --card-border: transparent;
+  --text-tertiary: #79828b;
+  --success: #2e7d5b;
+  --success-bg: #e6f1ec;
+  --warning: #b8741f;
+  --warning-bg: #fbf1e2;
+  --error-bg: #f7e7e6;
+  --seg: #ffffff; /* active pill of a segmented control */
+  --scrim: rgba(19, 28, 32, 0.38);
+  --shadow-card: 0 1px 2px rgba(19, 28, 32, 0.04), 0 1px 3px rgba(19, 28, 32, 0.06);
+  --shadow-raised: 0 4px 12px rgba(19, 28, 32, 0.08), 0 1px 3px rgba(19, 28, 32, 0.05);
+  --shadow-pop: 0 16px 40px rgba(19, 28, 32, 0.16), 0 2px 6px rgba(19, 28, 32, 0.06);
+  --primary-soft: color-mix(in srgb, var(--primary) 9%, transparent);
+  --primary-line: color-mix(in srgb, var(--primary) 22%, transparent);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .dark {
-  --background: #0e0d0b;
-  --foreground: #e4dfd8;
-  --card: #181512;
-  --card-foreground: #e4dfd8;
-  --popover: #1c1915;
-  --popover-foreground: #e4dfd8;
-  --primary: #c97b3a;
-  --primary-foreground: #fdf6ef;
-  --secondary: #201e1a;
-  --secondary-foreground: #e4dfd8;
-  --muted: #201e1a;
-  --muted-foreground: #7a7268;
-  --accent: #1d1b17;
-  --accent-foreground: #e4dfd8;
-  --destructive: #c9503a;
-  --destructive-foreground: #fff8f6;
-  --border: rgba(228, 223, 216, 0.08);
-  --input: rgba(228, 223, 216, 0.06);
-  --input-background: #201e1a;
-  --switch-background: #3a3632;
-  --ring: rgba(201, 123, 58, 0.45);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: #c97b3a;
-  --chart-2: #6a9c74;
-  --chart-3: #7b6bc9;
-  --chart-4: #4a8bc9;
-  --chart-5: #c9503a;
-  --sidebar: #181512;
-  --sidebar-foreground: #e4dfd8;
-  --sidebar-primary: #c97b3a;
-  --sidebar-primary-foreground: #fdf6ef;
-  --sidebar-accent: #1d1b17;
-  --sidebar-accent-foreground: #e4dfd8;
-  --sidebar-border: rgba(228, 223, 216, 0.08);
-  --sidebar-ring: rgba(201, 123, 58, 0.45);
+  --background: #0b1117;
+  --foreground: #eef2f5;
+  --card: #141c24;
+  --card-foreground: #eef2f5;
+  --popover: #141c24;
+  --popover-foreground: #eef2f5;
+  --primary: #8ea9c8;
+  --primary-foreground: #0b1117;
+  --secondary: #1e2831;
+  --secondary-foreground: #eef2f5;
+  --muted: #1e2831;
+  --muted-foreground: #a3adb6;
+  --accent: #1e2831;
+  --accent-foreground: #eef2f5;
+  --destructive: #e4776e;
+  --destructive-foreground: #0b1117;
+  --border: #232e38;
+  --input: #232e38;
+  --input-background: #10171e;
+  --switch-background: #3a4652;
+
+  --sidebar: #0f161d;
+  --sidebar-foreground: #eef2f5;
+  --sidebar-primary-foreground: #0b1117;
+  --sidebar-accent: #1e2831;
+  --sidebar-accent-foreground: #eef2f5;
+  --sidebar-border: #232e38;
+
+  --sunken: #10171e;
+  --fill: #1e2831;
+  --border-strong: #3a4652;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --text-tertiary: #7d8892;
+  --success: #63b890;
+  --success-bg: rgba(99, 184, 144, 0.14);
+  --warning: #e0a55a;
+  --warning-bg: rgba(224, 165, 90, 0.14);
+  --error-bg: rgba(228, 119, 110, 0.14);
+  --seg: #2a3540;
+  --scrim: rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.28);
+  --shadow-raised: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
+/* Accent options offered in Settings › Appearance (light value / dark value):
+   navy #1C3049 / #8EA9C8 · steel #8EA9C8 · clay #C97B3A · green #2E7D5B.
+   Set by overriding --primary on <html>. */
+
 @theme inline {
+  --font-sans: var(--font-app);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -124,65 +177,70 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* extras → utilities: bg-sunken, bg-fill, text-tertiary, border-strong,
+     bg-success-bg, text-warning, bg-primary-soft, shadow-card, ... */
+  --color-sunken: var(--sunken);
+  --color-fill: var(--fill);
+  --color-border-strong: var(--border-strong);
+  --color-card-border: var(--card-border);
+  --color-tertiary: var(--text-tertiary);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-error-bg: var(--error-bg);
+  --color-seg: var(--seg);
+  --color-scrim: var(--scrim);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-line: var(--primary-line);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-pop: var(--shadow-pop);
+  --ease-standard: var(--ease-standard);
+  --ease-emphasized: var(--ease-emphasized);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
-
   html {
     font-size: var(--font-size);
   }
-
-  h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-app);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "tnum" 1; /* tabular digits for counters, dates, grids */
   }
+  /* Typography scale used on the canvas:
+     page title 40/1.1 800 -0.03em · section 20 700 -0.015em · card title 17-18 700
+     body 15 · secondary 14 · meta 13 · caption/labels 12 (700, 0.06-0.1em, uppercase) · micro 11 */
+  h1 { font-size: 40px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em; }
+  h2 { font-size: 20px; line-height: 1.3; font-weight: 700; letter-spacing: -0.015em; }
+  h3 { font-size: 17px; line-height: 1.35; font-weight: 700; }
+  h4 { font-size: 15px; line-height: 1.4; font-weight: 700; }
+  label, button { font-size: var(--text-sm); font-weight: var(--font-weight-medium); line-height: 1.5; }
+  input { font-size: var(--text-base); font-weight: var(--font-weight-normal); line-height: 1.5; }
+}
 
-  h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  button {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  input {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-normal);
-    line-height: 1.5;
-  }
+/* Motion used by the redesign. Animations run ONLY after a user action
+   (swap / period switch), never on first paint. */
+@keyframes deck-front {
+  0% { transform: translate(10px, 10px) scale(0.96); opacity: 0.55; }
+  45% { transform: translate(-18px, -8px) rotate(-2deg) scale(1.01); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes deck-back {
+  0% { transform: none; opacity: 1; }
+  45% { transform: translate(34px, 16px) rotate(2deg) scale(0.97); opacity: 0.8; }
+  100% { transform: translate(10px, 10px) scale(0.96); opacity: 0.55; }
+}
+@keyframes period-in {
+  from { transform: translateY(6px); }
+  to { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

@@ -3,6 +3,12 @@ dist
 dist-ssr
 *.local
 
+# Redesign reference archive (design/HANDOFF.md, screenshots, source) — a
+# working reference for the ongoing redesign, not project documentation;
+# 13MB of PNGs doesn't belong in git history. Kept locally on the
+# `redesign` branch for as long as the handoff steps are in progress.
+design/
+
 .env
 .env.test
 db.env
