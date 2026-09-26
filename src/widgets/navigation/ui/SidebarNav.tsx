@@ -1,11 +1,12 @@
 import { format } from "date-fns"
 import { NavLink } from "react-router"
-import { selectTodayTasks, useTasks } from "@/entities/task"
+import { getTaskCompletionsByDay, isTaskOnDay, useTasks } from "@/entities/task"
 import { useGoals } from "@/entities/goal"
-import { useHabits } from "@/entities/habit"
-import { getTodayKey } from "@/shared/lib/date"
-import { getDateLocale, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
+import { getHabitCompletionsByDay, useHabits } from "@/entities/habit"
+import { getLastNDays, getTodayKey } from "@/shared/lib/date"
+import { getDateLocale, getWeekdayLabels, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
+import { WeeklyActivityChart, type WeeklyActivityPoint } from "@/shared/ui/weekly-activity-chart"
 import { NAV_ITEMS } from "../model/navItems"
 
 export function SidebarNav() {
@@ -15,12 +16,16 @@ export function SidebarNav() {
   const { language, t } = useLanguage()
 
   const today = getTodayKey()
-  const todayTasks = selectTodayTasks(tasks)
+  // Tasks scheduled for today, not "all open tasks" (selectTodayTasks means
+  // something else now — see entities/task/lib/selectTodayTasks.ts) —
+  // this is specifically the "due today, done/total" reading the stat's
+  // label implies.
+  const tasksToday = tasks.filter(task => isTaskOnDay(task, today))
 
   const stats: { labelKey: TranslationKey; value: string }[] = [
     {
       labelKey: "sidebar.statTasksDone",
-      value: `${todayTasks.filter(t => t.completed).length} / ${todayTasks.length}`,
+      value: `${tasksToday.filter(t => t.completed).length} / ${tasksToday.length}`,
     },
     {
       labelKey: "sidebar.statHabits",
@@ -28,6 +33,15 @@ export function SidebarNav() {
     },
     { labelKey: "sidebar.statActiveGoals", value: String(goals.length) },
   ]
+
+  const last7Days = getLastNDays(7, new Date())
+  const taskCounts = getTaskCompletionsByDay(tasks, last7Days)
+  const habitCounts = getHabitCompletionsByDay(habits, last7Days)
+  const weekdayLabels = getWeekdayLabels(language)
+  const chartData: WeeklyActivityPoint[] = last7Days.map((day, i) => ({
+    label: weekdayLabels[(day.getDay() + 6) % 7],
+    value: taskCounts[i] + habitCounts[i],
+  }))
 
   return (
     <aside className="hidden md:flex w-56 lg:w-60 shrink-0 flex-col border-r border-border bg-card">
@@ -59,7 +73,14 @@ export function SidebarNav() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-border space-y-2">
+      <div className="p-4 border-t border-border space-y-3">
+        <div>
+          <div css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
+            {t("sidebar.statChartLabel")}
+          </div>
+          <WeeklyActivityChart data={chartData} />
+        </div>
+
         <div css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-3">
           {t("common.today")}
         </div>

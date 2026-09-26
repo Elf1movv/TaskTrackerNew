@@ -1221,6 +1221,44 @@ UI друг на друга наезжает), по пути владелец п
       отзыв с `<img src=x onerror=alert(1)>` и кавычками, принято `201`,
       тестовые данные убраны после проверки). См.
       `docs/requirements/10. Feedback/10.01. Feedback Widget-BACKEND.md`.
+- [x] **График недельной активности в сайдбаре + фикс счётчика "Tasks
+      done"** — сделано 2026-09-26. Над тремя текстовыми счётчиками
+      сайдбара (`src/widgets/navigation/ui/SidebarNav.tsx`) появился
+      компактный sparkline/area-график — по каждому из последних 7 дней
+      (скользящее окно, заканчивающееся сегодня, а не текущая
+      календарная неделя пн-вс) сумма "выполненных задач" + "выполненных
+      привычек" в одно число. Новый переиспользуемый компонент
+      `WeeklyActivityChart` (`src/shared/ui/weekly-activity-chart.tsx`) —
+      визуально компактный вариант "area"-стиля из уже существующего
+      `widgets/habit-history/ui/HabitHistoryChart.tsx` (та же заливка
+      градиентом через `var(--primary)`), но без оси Y и высотой `h-16`.
+      Положен в `shared/ui`, а не рядом с `HabitHistoryChart.tsx` в
+      `widgets/habit-history` — виджету `widgets/navigation` нельзя
+      импортировать из виджета-соседа напрямую (`fsd/forbidden-imports`),
+      та же причина, что уже приводила к переносу
+      `getHabitMonthCompletionStats` в `entities/habit` 2026-09-25. Три
+      новых lib-функции с юнит-тестами: `getLastNDays(n, referenceDate)`
+      (`src/shared/lib/date.ts`) строит скользящее окно дней;
+      `getTaskCompletionsByDay` (`src/entities/task/lib/`) считает по
+      `'completedAt'`, не по `'dueDate'`; `getHabitCompletionsByDay`
+      (`src/entities/habit/lib/`) засчитывает привычку только в дни,
+      входящие в её `'activeDays'`, и только если дата есть в
+      `'completedDates'`. Цели в график намеренно не включены —
+      `Goal.progress` хранит только текущее значение, без истории по
+      времени, честный тренд не построить. Новый ключ i18n
+      `sidebar.statChartLabel`. По ходу той же правки найден и исправлен
+      соседний баг в том же файле: счётчик `'Tasks done'` всегда
+      показывал `0 / X` — он фильтровал `selectTodayTasks(tasks)`
+      (список, который с переработки 2026-09-25 означает "все
+      невыполненные задачи", см. запись выше про Today) по
+      `'completed' === true`, что структурно невозможно для списка,
+      состоящего только из невыполненных. Исправлено переходом на уже
+      существующий `isTaskOnDay(task, dayKey)`
+      (`src/entities/task/lib/isTaskOnDay.ts`, уже использовался видами
+      календаря) — деноминатор снова "задачи со сроком сегодня",
+      числитель — те же, но выполненные. См.
+      `docs/requirements/06. Navigation/06.01. Sidebar Stats-FRONTEND.md`.
+
 - [ ] **Блокировка аккаунта после N неудачных попыток входа** —
       рассмотрено и осознанно отложено по решению пользователя
       2026-09-26 (находка 4 в `docs/SECURITY_AUDIT.md`): для текущего
