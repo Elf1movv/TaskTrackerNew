@@ -4,7 +4,7 @@ import { HabitForm } from "@/features/habit-form"
 import { EditHabitGroupButton } from "@/features/edit-habit-group"
 import { DeleteHabitGroupButton } from "@/features/delete-habit-group"
 import { HabitGroupForm } from "@/features/habit-group-form"
-import { useHabits, type Habit } from "@/entities/habit"
+import { HabitIcon, useHabits, type Habit } from "@/entities/habit"
 import {
   getHabitGroupIcon,
   getHabitGroupTitle,
@@ -135,7 +135,9 @@ export function TodayHabitGroupCard({
                 className="px-4 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1.5 text-white"
                 style={{ backgroundColor: group.color }}
               >
-                <span className="leading-none">{getHabitGroupIcon(group)}</span>
+                <span className="leading-none">
+                  <HabitIcon emoji={getHabitGroupIcon(group)} size={14} />
+                </span>
                 <span className="leading-none">{getHabitGroupTitle(group, t)}</span>
                 <ChevronDown
                   size={14}

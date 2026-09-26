@@ -1,4 +1,4 @@
-import { type Habit } from "@/entities/habit"
+import { HabitIcon, type Habit } from "@/entities/habit"
 
 // Read-only — unlike DayTaskRow/DayGoalRow, a habit has no per-day record
 // to drag or edit here: `activeDays` is a recurring weekday pattern, not a
@@ -8,7 +8,9 @@ import { type Habit } from "@/entities/habit"
 export function DayHabitRow({ habit }: { habit: Habit }) {
   return (
     <div className="w-full flex items-center gap-2.5 text-left">
-      <span className="text-base leading-none shrink-0">{habit.icon}</span>
+      <span className="leading-none shrink-0">
+        <HabitIcon emoji={habit.icon} size={16} />
+      </span>
       <span className="text-sm flex-1 text-left leading-snug">{habit.title}</span>
     </div>
   )

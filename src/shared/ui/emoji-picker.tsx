@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { HabitIcon } from "./habit-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 
 // A trigger button showing the current emoji, opening a popover grid to
@@ -22,10 +23,10 @@ export function EmojiPicker({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="w-14 h-10 shrink-0 rounded-md bg-muted text-lg hover:bg-accent transition-colors"
+          className="w-14 h-10 shrink-0 rounded-md bg-muted flex items-center justify-center hover:bg-accent transition-colors"
           aria-label={label}
         >
-          {value}
+          <HabitIcon emoji={value} size={20} />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-2">
@@ -40,11 +41,11 @@ export function EmojiPicker({
               }}
               aria-label={`Icon ${emoji}`}
               aria-pressed={value === emoji}
-              className={`size-7 flex items-center justify-center rounded text-lg hover:bg-accent transition-colors ${
-                value === emoji ? "bg-accent" : ""
+              className={`size-8 flex items-center justify-center rounded-md transition-colors ${
+                value === emoji ? "bg-primary-soft text-primary" : "hover:bg-accent"
               }`}
             >
-              {emoji}
+              <HabitIcon emoji={emoji} size={18} />
             </button>
           ))}
         </div>

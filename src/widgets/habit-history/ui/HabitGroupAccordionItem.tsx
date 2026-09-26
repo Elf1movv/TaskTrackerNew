@@ -7,7 +7,7 @@ import { DeleteHabitButton } from "@/features/delete-habit"
 import { EditHabitGroupButton } from "@/features/edit-habit-group"
 import { DeleteHabitGroupButton } from "@/features/delete-habit-group"
 import { HabitGroupForm } from "@/features/habit-group-form"
-import { getStreak, useHabits, type Habit } from "@/entities/habit"
+import { getStreak, HabitIcon, useHabits, type Habit } from "@/entities/habit"
 import {
   getHabitGroupIcon,
   getHabitGroupTitle,
@@ -116,7 +116,9 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
           <div className="flex items-start gap-1 px-6 pt-5 cursor-grab active:cursor-grabbing">
             <AccordionTrigger className="hover:no-underline pb-5 [&>svg]:mt-1">
               <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                <span className="text-lg leading-none shrink-0">{getHabitGroupIcon(group)}</span>
+                <span className="leading-none shrink-0">
+                  <HabitIcon emoji={getHabitGroupIcon(group)} size={18} />
+                </span>
                 <span className="text-base font-medium truncate">{getHabitGroupTitle(group, t)}</span>
                 <span css={monoFont} className="text-xs text-muted-foreground shrink-0">
                   {t("habits.group.habitCount", { count: habits.length })}
@@ -301,7 +303,9 @@ function HabitGridRow({
         }`}
         style={{ opacity: isDragging ? 0.4 : 1 }}
       >
-        <span className="text-base leading-none">{habit.icon}</span>
+        <span className="leading-none">
+          <HabitIcon emoji={habit.icon} size={16} />
+        </span>
         <span className="text-sm font-medium truncate flex-1">{habit.title}</span>
         <span css={monoFont} className="flex items-center gap-0.5 text-[10px] text-muted-foreground shrink-0">
           <Flame size={10} />

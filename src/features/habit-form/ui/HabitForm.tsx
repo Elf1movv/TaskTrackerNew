@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { HABIT_ICONS, useHabits, type Habit } from "@/entities/habit"
+import { HABIT_ICONS, HabitIcon, useHabits, type Habit } from "@/entities/habit"
 import { getHabitGroupIcon, getHabitGroupTitle, useHabitGroups } from "@/entities/habit-group"
 import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { MONDAY_FIRST_WEEKDAYS } from "@/shared/lib/date"
@@ -102,7 +102,10 @@ export function HabitForm({
               <SelectContent>
                 {habitGroups.map(g => (
                   <SelectItem key={g.id} value={g.id}>
-                    {getHabitGroupIcon(g)} {getHabitGroupTitle(g, t)}
+                    <span className="inline-flex items-center gap-1.5">
+                      <HabitIcon emoji={getHabitGroupIcon(g)} size={14} />
+                      {getHabitGroupTitle(g, t)}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -1,6 +1,6 @@
 import { Flame } from "lucide-react"
 import styled from "@emotion/styled"
-import { getStreak, useHabits, type Habit } from "@/entities/habit"
+import { getStreak, HabitIcon, useHabits, type Habit } from "@/entities/habit"
 import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
@@ -31,7 +31,9 @@ export function HabitListRow({ habit }: { habit: Habit }) {
       className="w-full px-4 py-3 rounded-xl border text-left transition-all flex items-center gap-3"
       aria-pressed={doneToday}
     >
-      <div className="text-xl leading-none shrink-0">{habit.icon}</div>
+      <div className="leading-none shrink-0">
+        <HabitIcon emoji={habit.icon} size={20} />
+      </div>
       <div className="text-sm font-medium flex-1 min-w-0 truncate">{habit.title}</div>
       {/* pr-14 reserves the corner HabitGridItem's absolute-positioned
           edit/delete overlay occupies on hover — without it this row's

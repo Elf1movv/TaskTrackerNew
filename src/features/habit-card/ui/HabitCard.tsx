@@ -1,6 +1,6 @@
 import { Flame } from "lucide-react"
 import styled from "@emotion/styled"
-import { getStreak, useHabits, type Habit } from "@/entities/habit"
+import { getStreak, HabitIcon, useHabits, type Habit } from "@/entities/habit"
 import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
@@ -29,7 +29,9 @@ export function HabitCard({ habit }: { habit: Habit }) {
       className="w-full h-full p-4 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
       aria-pressed={doneToday}
     >
-      <div className="text-2xl mb-2 leading-none">{habit.icon}</div>
+      <div className="mb-2 leading-none">
+        <HabitIcon emoji={habit.icon} size={24} />
+      </div>
       <div className="text-xs font-medium leading-snug mb-2.5 line-clamp-2 pr-6">{habit.title}</div>
       <StreakLabel
         color={streak > 0 ? habit.color : "var(--muted-foreground)"}
