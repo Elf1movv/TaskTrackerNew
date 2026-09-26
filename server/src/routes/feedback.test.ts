@@ -64,4 +64,32 @@ describe("feedback router", () => {
     const stored = await db.feedback.findUniqueOrThrow({ where: { id: res.body.id } })
     expect(stored.imageData).toBe("data:image/png;base64,aGVsbG8=")
   })
+
+  it("accepts other common raster image formats", async () => {
+    const res = await agent
+      .post("/api/feedback")
+      .send({ message: "Layout looks off", type: "bug", imageData: "data:image/jpeg;base64,aGVsbG8=" })
+    expect(res.status).toBe(201)
+  })
+
+  it("rejects imageData that isn't a recognized image data URL", async () => {
+    const notADataUrl = await agent
+      .post("/api/feedback")
+      .send({ message: "Sketchy attachment", type: "bug", imageData: "aGVsbG8gd29ybGQ=" })
+    expect(notADataUrl.status).toBe(400)
+
+    const wrongMimeType = await agent.post("/api/feedback").send({
+      message: "Sketchy attachment",
+      type: "bug",
+      imageData: "data:application/octet-stream;base64,aGVsbG8=",
+    })
+    expect(wrongMimeType.status).toBe(400)
+
+    const svg = await agent.post("/api/feedback").send({
+      message: "Sketchy attachment",
+      type: "bug",
+      imageData: "data:image/svg+xml;base64,aGVsbG8=",
+    })
+    expect(svg.status).toBe(400)
+  })
 })

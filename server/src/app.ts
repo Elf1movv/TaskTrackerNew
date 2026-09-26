@@ -39,21 +39,30 @@ export function createApp() {
   // have consumed the stream by the time this handler runs.
   app.all("/api/auth/*splat", toNodeHandler(auth))
 
-  // Default 100kb limit is too small for feedback's optional base64
-  // screenshot attachment (validated up to ~7MB in validation/feedback.ts).
-  app.use(express.json({ limit: "8mb" }))
-
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true })
   })
 
-  app.use("/api/tasks", tasksRouter)
-  app.use("/api/goals", goalsRouter)
-  app.use("/api/habits", habitsRouter)
-  app.use("/api/habit-groups", habitGroupsRouter)
-  app.use("/api/categories", categoriesRouter)
-  app.use("/api/reminders", remindersRouter)
-  app.use("/api/feedback", feedbackRouter)
+  // Body-parser mounted per-router, not globally — a single global
+  // express.json() runs ahead of every route's own requireAuth check, so
+  // whatever limit it has is the real ceiling an UNauthenticated request
+  // can force the server to parse before getting 401. Feedback is the one
+  // route that genuinely needs a large limit (its optional base64
+  // screenshot attachment, validated up to ~7MB in
+  // validation/feedback.ts); everything else gets a small default instead
+  // of inheriting feedback's 8mb just because they happen to share one
+  // app.use(). Mounting each limit directly on its own router path (rather
+  // than one global middleware followed by a second, larger one on
+  // feedback's own path) also avoids the smaller limit rejecting
+  // feedback's body before the larger one ever gets a chance to run.
+  const DEFAULT_JSON_LIMIT = "256kb"
+  app.use("/api/tasks", express.json({ limit: DEFAULT_JSON_LIMIT }), tasksRouter)
+  app.use("/api/goals", express.json({ limit: DEFAULT_JSON_LIMIT }), goalsRouter)
+  app.use("/api/habits", express.json({ limit: DEFAULT_JSON_LIMIT }), habitsRouter)
+  app.use("/api/habit-groups", express.json({ limit: DEFAULT_JSON_LIMIT }), habitGroupsRouter)
+  app.use("/api/categories", express.json({ limit: DEFAULT_JSON_LIMIT }), categoriesRouter)
+  app.use("/api/reminders", express.json({ limit: DEFAULT_JSON_LIMIT }), remindersRouter)
+  app.use("/api/feedback", express.json({ limit: "8mb" }), feedbackRouter)
 
   // Anything under /api/ that didn't match a route above is a genuine 404,
   // not a frontend route — return JSON here so it doesn't fall through to

@@ -1,6 +1,7 @@
 import { Router } from "express"
 import { db } from "../db.js"
 import { sendEmail } from "../lib/email.js"
+import { escapeHtml } from "../lib/escapeHtml.js"
 import { requireAuth } from "../middleware/requireAuth.js"
 import { createFeedbackSchema } from "../validation/feedback.js"
 
@@ -43,15 +44,20 @@ feedbackRouter.post("/", async (req, res) => {
     // subject text without opening each email.
     const typeLabel = parsed.data.type === "bug" ? "Bug" : "Suggestion"
 
+    // Every one of these is user-controlled (the feedback message itself,
+    // and the submitter's own account name/email, which nothing stops
+    // them from setting to contain markup) — escaped before going into an
+    // HTML email, or a message like "<img src=x onerror=...>" would reach
+    // whoever reads FEEDBACK_EMAIL_TO's inbox unescaped.
     await sendEmail({
       to,
       subject: `MyTracker — [${typeLabel}] new feedback`,
       html: `
-        <p><strong>Type:</strong> ${typeLabel}</p>
-        <p><strong>From:</strong> ${from}</p>
-        <p><strong>Page:</strong> ${parsed.data.page ?? "unknown"}</p>
+        <p><strong>Type:</strong> ${escapeHtml(typeLabel)}</p>
+        <p><strong>From:</strong> ${escapeHtml(from)}</p>
+        <p><strong>Page:</strong> ${escapeHtml(parsed.data.page ?? "unknown")}</p>
         <p><strong>Message:</strong></p>
-        <p>${parsed.data.message}</p>
+        <p>${escapeHtml(parsed.data.message)}</p>
       `,
       attachments: base64Content ? [{ filename: "screenshot.png", content: base64Content }] : undefined,
     })
