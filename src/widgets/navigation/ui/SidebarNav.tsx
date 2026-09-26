@@ -5,7 +5,7 @@ import { useGoals } from "@/entities/goal"
 import { getHabitCompletionsByDay, useHabits } from "@/entities/habit"
 import { getLastNDays, getTodayKey } from "@/shared/lib/date"
 import { getDateLocale, getWeekdayLabels, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
-import { displayFont, monoFont } from "@/shared/lib/typography"
+import { monoFont } from "@/shared/lib/typography"
 import { WeeklyActivityChart, type WeeklyActivityPoint } from "@/shared/ui/weekly-activity-chart"
 import { NAV_ITEMS } from "../model/navItems"
 
@@ -21,6 +21,10 @@ export function SidebarNav() {
   // this is specifically the "due today, done/total" reading the stat's
   // label implies.
   const tasksToday = tasks.filter(task => isTaskOnDay(task, today))
+  // Nav badge counts — deliberately a different reading than the "due
+  // today" stat below: a standing backlog size (all open tasks / all
+  // goals), same numbers the Tasks/Goals pages' own headers already show.
+  const openTasksCount = tasks.filter(task => !task.completed).length
 
   const stats: { labelKey: TranslationKey; value: string }[] = [
     {
@@ -43,56 +47,80 @@ export function SidebarNav() {
     value: taskCounts[i] + habitCounts[i],
   }))
 
+  const badgeCounts: Partial<Record<string, number>> = {
+    "/tasks": openTasksCount,
+    "/goals": goals.length,
+  }
+
   return (
-    <aside className="hidden md:flex w-56 lg:w-60 shrink-0 flex-col border-r border-border bg-card">
-      <div className="px-5 py-5 border-b border-border">
-        <div css={monoFont} className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground mb-1.5">
-          MyTracker
+    <aside className="hidden md:flex w-[264px] shrink-0 flex-col bg-sidebar border-r border-sidebar-border px-4 py-6">
+      <div className="flex items-center gap-3 px-2 pt-1 pb-7">
+        <div className="size-9 shrink-0 rounded-[10px] bg-primary text-primary-foreground flex items-center justify-center shadow-raised">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M21 12a9 9 0 1 1-6.2-8.56" />
+            <path d="m8.5 11.5 3 3L22 4" />
+          </svg>
         </div>
-        <div css={displayFont} className="text-lg leading-tight">
-          {format(new Date(), "MMMM yyyy", { locale: getDateLocale(language) })}
+        <div className="flex flex-col">
+          <span className="text-base font-bold tracking-[-0.01em]">MyTracker</span>
+          <span className="text-xs text-tertiary">
+            {format(new Date(), "MMMM yyyy", { locale: getDateLocale(language) })}
+          </span>
         </div>
       </div>
 
-      <nav className="flex-1 p-2.5 space-y-0.5">
+      <nav className="flex flex-col gap-0.5">
         {NAV_ITEMS.map(({ path, labelKey, Icon }) => (
           <NavLink
             key={path}
             to={path}
             className={({ isActive }) =>
-              `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              `flex h-10 items-center gap-3 rounded-[10px] px-3 text-[15px] transition-colors ${
+                isActive ? "bg-primary-soft text-primary font-semibold" : "text-muted-foreground font-medium"
               }`
             }
           >
-            <Icon size={15} />
-            <span>{t(labelKey)}</span>
+            <Icon size={18} strokeWidth={1.75} />
+            <span className="flex-1">{t(labelKey)}</span>
+            {badgeCounts[path] !== undefined && (
+              <span className="text-xs font-semibold text-tertiary">{badgeCounts[path]}</span>
+            )}
           </NavLink>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-border space-y-3">
-        <div>
-          <div css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
+      <section className="flex flex-col gap-4 mt-7 pt-5 border-t border-border">
+        <div className="bg-card border border-card-border rounded-xl shadow-card px-3.5 pt-3.5 pb-2.5 flex flex-col gap-2">
+          <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary">
             {t("sidebar.statChartLabel")}
-          </div>
+          </span>
           <WeeklyActivityChart data={chartData} />
         </div>
 
-        <div css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-3">
-          {t("common.today")}
+        <div className="flex flex-col gap-2.5 px-1.5">
+          <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary">
+            {t("common.today")}
+          </span>
+          {stats.map(({ labelKey, value }) => (
+            <div key={labelKey} className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">{t(labelKey)}</span>
+              <span css={monoFont} className="text-sm font-semibold">
+                {value}
+              </span>
+            </div>
+          ))}
         </div>
-        {stats.map(({ labelKey, value }) => (
-          <div key={labelKey} className="flex justify-between items-center py-0.5">
-            <span className="text-xs text-muted-foreground">{t(labelKey)}</span>
-            <span css={monoFont} className="text-xs">
-              {value}
-            </span>
-          </div>
-        ))}
-      </div>
+      </section>
     </aside>
   )
 }

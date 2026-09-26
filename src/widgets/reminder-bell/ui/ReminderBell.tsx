@@ -41,9 +41,9 @@ export function ReminderBell() {
             <button
               type="button"
               aria-label={t("reminderSummary.title")}
-              className="fixed top-4 right-16 md:top-6 md:right-20 z-40 flex size-9 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors"
+              className="fixed top-4 right-[58px] md:top-6 md:right-[78px] z-40 flex size-11 items-center justify-center rounded-full bg-card border border-border shadow-card text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Bell size={16} />
+              <Bell size={18} strokeWidth={1.75} />
               {total > 0 && (
                 <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-white text-[10px] font-medium leading-none">
                   {total}

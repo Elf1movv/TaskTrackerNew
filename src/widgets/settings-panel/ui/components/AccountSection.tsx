@@ -43,12 +43,30 @@ export function AccountSection({ email }: { email: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <div className="text-xs text-muted-foreground">{t("settings.account.email")}</div>
-        <div className="text-sm">{email}</div>
+      <div className="rounded-xl bg-muted overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="size-9 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+            {email.charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs text-muted-foreground">{t("settings.account.email")}</div>
+            <div className="text-sm font-semibold truncate">{email}</div>
+          </div>
+        </div>
+        <div className="border-t border-border px-4 py-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs text-muted-foreground">{t("settings.account.password")}</div>
+            <div className="text-sm tracking-widest">••••••••</div>
+          </div>
+          {!isChanging && (
+            <Button size="sm" variant="ghost" onClick={() => setIsChanging(true)}>
+              {t("settings.account.changePassword")}
+            </Button>
+          )}
+        </div>
       </div>
 
-      {isChanging ? (
+      {isChanging && (
         <div className="space-y-3">
           <div className="space-y-2">
             <Label htmlFor="settings-current-password">{t("settings.account.currentPassword")}</Label>
@@ -87,16 +105,6 @@ export function AccountSection({ email }: { email: string }) {
             </Button>
             <Button size="sm" variant="outline" className="flex-1" onClick={resetForm}>
               {t("common.cancel")}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">{t("settings.account.password")}</div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm tracking-widest">••••••••</span>
-            <Button size="sm" variant="ghost" onClick={() => setIsChanging(true)}>
-              {t("settings.account.changePassword")}
             </Button>
           </div>
         </div>

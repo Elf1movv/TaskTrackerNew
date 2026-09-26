@@ -1,18 +1,23 @@
 import { useLanguage } from "@/shared/lib/i18n"
-import { Button } from "./button"
+import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 
 export function LanguageToggle() {
   const { language, setLanguage } = useLanguage()
-  const isRu = language === "ru"
 
   return (
-    <Button
+    <ToggleGroup
+      type="single"
       variant="outline"
-      size="sm"
-      className="w-full justify-center text-xs"
-      onClick={() => setLanguage(isRu ? "en" : "ru")}
+      value={language}
+      onValueChange={v => v && setLanguage(v as "ru" | "en")}
+      className="w-full"
     >
-      {isRu ? "RU" : "EN"}
-    </Button>
+      <ToggleGroupItem value="ru" className="flex-1">
+        RU · Русский
+      </ToggleGroupItem>
+      <ToggleGroupItem value="en" className="flex-1">
+        EN · English
+      </ToggleGroupItem>
+    </ToggleGroup>
   )
 }
