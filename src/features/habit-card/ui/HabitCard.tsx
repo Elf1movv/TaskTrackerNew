@@ -6,8 +6,13 @@ import { useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 
 const Card = styled.button<{ active: boolean; color: string }>`
-  border-color: ${p => (p.active ? `${p.color}55` : "var(--border)")};
-  background-color: ${p => (p.active ? `${p.color}18` : "transparent")};
+  border-color: ${p => (p.active ? `color-mix(in srgb, ${p.color} 50%, transparent)` : "var(--border)")};
+  background-color: ${p => (p.active ? `color-mix(in srgb, ${p.color} 13%, var(--card))` : "var(--card)")};
+`
+
+const IconTile = styled.span<{ active: boolean; color: string }>`
+  background-color: ${p => (p.active ? p.color : `color-mix(in srgb, ${p.color} 14%, transparent)`)};
+  color: ${p => (p.active ? "#fff" : p.color)};
 `
 
 const StreakLabel = styled.div<{ color: string }>`
@@ -26,22 +31,26 @@ export function HabitCard({ habit }: { habit: Habit }) {
       active={doneToday}
       color={habit.color}
       onClick={() => toggleHabit(habit.id, today)}
-      className="w-full h-full p-4 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+      className="w-full h-full min-h-[150px] p-3.5 rounded-xl border shadow-card text-left transition-all hover:scale-[1.02] active:scale-[0.98] flex flex-col items-start gap-2.5"
       aria-pressed={doneToday}
     >
-      <div className="mb-2 leading-none">
-        <HabitIcon emoji={habit.icon} size={24} />
-      </div>
-      <div className="text-xs font-medium leading-snug mb-2.5 line-clamp-2 pr-6">{habit.title}</div>
-      <StreakLabel
-        color={streak > 0 ? habit.color : "var(--muted-foreground)"}
-        className="flex items-center gap-1"
+      <IconTile
+        active={doneToday}
+        color={habit.color}
+        className="size-9 shrink-0 rounded-[10px] flex items-center justify-center"
       >
-        <Flame size={11} />
-        <span css={monoFont} className="text-xs">
-          {streak}
-        </span>
-        <span className="text-xs text-muted-foreground">{t("habitCard.days")}</span>
+        <HabitIcon emoji={habit.icon} size={18} />
+      </IconTile>
+      <div className="text-sm font-semibold leading-snug flex-1 line-clamp-2">{habit.title}</div>
+      <StreakLabel
+        color={
+          streak > 0 ? `color-mix(in srgb, ${habit.color} 80%, var(--foreground))` : "var(--text-tertiary)"
+        }
+        className={`flex items-center gap-1 text-xs ${streak > 0 ? "font-extrabold" : "font-semibold"}`}
+      >
+        <Flame size={13} fill={streak > 0 ? "currentColor" : "none"} />
+        <span css={monoFont}>{streak}</span>
+        <span className="font-semibold text-muted-foreground">{t("habitCard.days")}</span>
       </StreakLabel>
     </Card>
   )

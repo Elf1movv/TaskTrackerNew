@@ -4,7 +4,6 @@ import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { ReminderToggleCheckbox } from "@/features/toggle-reminder"
 import { getTodayKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
 
 // Tapping the row navigates to the calendar, opened on this reminder's day
 // — the calendar is this feature's "home page" (see docs/requirements).
@@ -30,17 +29,19 @@ export function ReminderRow({ reminder }: { reminder: Reminder }) {
         {/* stopPropagation — the row itself navigates on click, but
             toggling completion here shouldn't also trigger that. */}
         <span onClick={e => e.stopPropagation()} className="shrink-0">
-          <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={16} />
+          <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={22} />
         </span>
-        <ReminderPriorityIcon priority={reminder.priority} size={12} />
+        <ReminderPriorityIcon priority={reminder.priority} size={16} />
       </div>
       <div className="min-w-0">
         <div
-          className={`text-xs leading-snug ${reminder.completed ? "line-through text-muted-foreground" : ""}`}
+          className={`text-[15px] leading-snug ${
+            reminder.completed ? "font-medium line-through text-tertiary" : "font-semibold"
+          }`}
         >
           {reminder.title}
         </div>
-        <div css={monoFont} className="text-[10px] text-muted-foreground mt-0.5">
+        <div className="text-xs text-tertiary mt-0.5">
           {reminder.time ? `${dateLabel}, ${reminder.time}` : dateLabel}
         </div>
       </div>

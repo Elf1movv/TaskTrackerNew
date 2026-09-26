@@ -1,10 +1,11 @@
 export type ReminderPriority = "normal" | "critical"
 
-// "critical" reuses the same red Task's "high" priority already uses
-// elsewhere in the app — one consistent meaning for that color.
+// Semantic tokens, not fixed hex (see Task's PRIORITY_COLORS) — "normal"
+// deliberately stays a muted/neutral tone rather than picking up the
+// warning color: only "critical" is meant to read as alarming.
 export const REMINDER_PRIORITY_COLORS: Record<ReminderPriority, string> = {
-  normal: "#8a8578",
-  critical: "#c9503a",
+  normal: "var(--muted-foreground)",
+  critical: "var(--destructive)",
 }
 
 // The calendar's reminder blocks (Day/Week/Month) need a border that's

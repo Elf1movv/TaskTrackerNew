@@ -24,9 +24,9 @@ export function GoalProgressRow({ goal }: { goal: Goal }) {
       className="cursor-grab active:cursor-grabbing select-none"
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
-      <div className="flex justify-between items-start mb-2">
-        <span className="text-xs leading-snug flex-1 pr-2 line-clamp-2">{goal.title}</span>
-        <PercentLabel css={monoFont} color={goal.color} className="text-xs shrink-0">
+      <div className="flex justify-between items-start gap-3 mb-2">
+        <span className="text-sm font-semibold leading-snug flex-1 line-clamp-2">{goal.title}</span>
+        <PercentLabel css={monoFont} color={goal.color} className="text-sm font-extrabold shrink-0">
           {goal.progress}%
         </PercentLabel>
       </div>

@@ -7,7 +7,7 @@ import { WelcomeBackGreeting, WelcomeModal } from "@/widgets/onboarding"
 import { HabitTrackerGrid } from "@/widgets/habit-tracker-grid"
 import { TodayTasksCard } from "@/widgets/today-tasks-card"
 import { useLanguage } from "@/shared/lib/i18n"
-import { displayFont, monoFont } from "@/shared/lib/typography"
+import { displayFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { TodayProvider, useTodayContext } from "../connectors"
 import { formatHeroDate } from "../lib/formatHeroDate"
@@ -38,20 +38,19 @@ function TodayPageContent() {
     <div className="p-6 md:p-10 max-w-4xl mx-auto">
       <div className="mb-10 flex items-end justify-between gap-4">
         <div>
-          <div css={monoFont} className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3">
-            {weekday}
-          </div>
-          <div className="flex items-baseline gap-5">
-            <span css={displayFont} className="text-8xl font-bold leading-none tracking-tight">
+          <div className="text-xs font-bold tracking-[0.14em] uppercase text-primary mb-1">{weekday}</div>
+          <div className="flex items-baseline gap-4">
+            <span css={displayFont} className="text-[104px] font-extrabold leading-none tracking-[-0.055em]">
               {day}
             </span>
-            <span css={monoFont} className="text-muted-foreground">
-              {monthYear}
-            </span>
+            <span className="text-[28px] font-semibold tracking-[-0.015em] text-tertiary">{monthYear}</span>
           </div>
         </div>
-        <Button size="sm" onClick={() => setIsAdding(v => !v)}>
-          <Plus size={14} />
+        <Button
+          onClick={() => setIsAdding(v => !v)}
+          className="h-11 px-5 gap-2 rounded-[10px] shadow-raised text-[15px]"
+        >
+          <Plus size={18} />
           {t("tasks.addTask")}
         </Button>
       </div>

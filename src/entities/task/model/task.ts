@@ -21,10 +21,13 @@ export interface Task {
   createdAt: string
 }
 
+// Semantic tokens (theme.css), not fixed hex — same 3 colors the redesign
+// uses everywhere else for low/medium/high meaning (success/warning/
+// destructive), and they adapt correctly in dark mode this way.
 export const PRIORITY_COLORS: Record<Priority, string> = {
-  low: "#6a9c74",
-  medium: "#c97b3a",
-  high: "#c9503a",
+  low: "var(--success)",
+  medium: "var(--warning)",
+  high: "var(--destructive)",
 }
 
 export type StatusFilter = "all" | "active" | "done"

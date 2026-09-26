@@ -1,11 +1,9 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus } from "lucide-react"
+import { BellRing, Plus } from "lucide-react"
 import { ReminderForm } from "@/features/reminder-form"
 import { type Reminder } from "@/entities/reminder"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
-import { Button } from "@/shared/ui/button"
 import { ReminderRow } from "./components/ReminderRow"
 
 // The "reduced" reminders view on the Today page — see GoalReminderSwapCard,
@@ -29,20 +27,18 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
     priorityFilter === "critical" ? reminders.filter(r => r.priority === "critical") : reminders
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-5">
-        <div css={monoFont} className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground">
-          {t("reminderSummary.title")}
-        </div>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="rounded-lg h-6 w-6 text-muted-foreground hover:text-foreground -mr-1.5"
+    <div className="min-h-[300px] bg-card border border-border rounded-2xl shadow-raised px-5 py-5 pr-9 flex flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <h2 className="flex-1 text-xl font-bold tracking-[-0.015em]">{t("reminderSummary.title")}</h2>
+        <button
+          type="button"
           onClick={() => setIsAdding(v => !v)}
           aria-label={t("reminders.addReminder")}
+          aria-expanded={isAdding}
+          className="size-8 rounded-full bg-primary-soft text-primary flex items-center justify-center transition-colors hover:bg-primary/15"
         >
-          <Plus size={14} />
-        </Button>
+          <Plus size={16} />
+        </button>
       </div>
 
       <AnimatePresence>
@@ -52,7 +48,7 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.18 }}
-            className="overflow-hidden mb-5"
+            className="overflow-hidden"
           >
             <ReminderForm onDone={() => setIsAdding(false)} />
           </motion.div>
@@ -60,15 +56,15 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
       </AnimatePresence>
 
       {reminders.length > 0 && (
-        <div className="flex gap-1.5 mb-4 flex-wrap items-center">
+        <div className="grid grid-cols-2 gap-0.5 p-0.5 rounded-[9px] bg-fill">
           {PRIORITY_FILTERS.map(f => (
             <button
               key={f}
               onClick={() => setPriorityFilter(f)}
-              className={`px-2.5 py-1 rounded-lg text-xs transition-all ${
+              className={`h-[30px] rounded-lg text-[13px] transition-all ${
                 priorityFilter === f
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  ? "bg-seg text-foreground font-bold shadow-card"
+                  : "text-muted-foreground font-medium"
               }`}
             >
               {t(PRIORITY_FILTER_LABEL_KEYS[f])}
@@ -78,14 +74,22 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
       )}
 
       {visibleReminders.length > 0 ? (
-        <div className="space-y-4">
-          {visibleReminders.map(reminder => (
-            <ReminderRow key={reminder.id} reminder={reminder} />
+        <div className="flex flex-col">
+          {visibleReminders.map((reminder, i) => (
+            <div key={reminder.id} className={i ? "pt-3 mt-3 border-t border-border" : ""}>
+              <ReminderRow reminder={reminder} />
+            </div>
           ))}
         </div>
       ) : (
         !isAdding && (
-          <p className="text-sm text-muted-foreground py-4 text-center">{t("reminders.noRemindersYet")}</p>
+          <div className="flex-1 py-7 px-2 flex flex-col items-center gap-2 text-center">
+            <span className="size-11 rounded-[13px] bg-primary-soft text-primary flex items-center justify-center">
+              <BellRing size={20} strokeWidth={1.75} />
+            </span>
+            <span className="text-[15px] font-bold">{t("reminders.noRemindersYet")}</span>
+            <span className="text-[13px] text-muted-foreground">{t("reminders.addHint")}</span>
+          </div>
         )
       )}
     </div>

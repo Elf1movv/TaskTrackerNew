@@ -75,6 +75,7 @@ export const ru: Record<keyof typeof en, string> = {
   "reminderForm.priorityCritical": "Критично",
   "reminders.addReminder": "Добавить напоминание",
   "reminders.noRemindersYet": "Пока нет напоминаний",
+  "reminders.addHint": "Нажмите «+», чтобы не забыть о важном.",
   "reminders.filterAll": "Все",
   "reminders.filterCritical": "Критичные",
   "reminders.badgeTooltip": "Напоминаний: {total} · критичных: {critical}",
@@ -92,8 +93,9 @@ export const ru: Record<keyof typeof en, string> = {
   "habitForm.group": "Блок",
 
   "habits.sectionLabel": "Привычки",
+  "habits.doneToday": "{done} из {total} сегодня",
   "habits.addHabit": "Добавить привычку",
-  "habits.viewGrid": "Сетка",
+  "habits.viewGrid": "Плитка",
   "habits.viewList": "Список",
   "habits.noHabitsYet": "Пока нет привычек",
   "habits.deleteTitle": "Удалить привычку?",
@@ -112,6 +114,7 @@ export const ru: Record<keyof typeof en, string> = {
 
   "habits.group.addBlock": "Добавить блок",
   "habits.group.generalTitle": "Общие",
+  "habits.group.general": "Основной",
   "habits.group.titlePlaceholder": "Название блока",
   "habits.group.editTitle": "Изменить блок",
   "habits.group.deleteTitle": "Удалить блок?",
@@ -129,6 +132,8 @@ export const ru: Record<keyof typeof en, string> = {
   "goals.noMilestonesYet": "Пока нет этапов",
   "goals.addMilestonePlaceholder": "Добавить этап…",
   "goalProgress.title": "Прогресс целей",
+  "goalProgress.viewAll": "Все цели",
+  "goalProgress.addGoal": "Добавить цель",
 
   "reminderSummary.title": "Напоминания",
 

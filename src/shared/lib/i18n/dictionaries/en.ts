@@ -73,6 +73,7 @@ export const en = {
   "reminderForm.priorityCritical": "Critical",
   "reminders.addReminder": "Add reminder",
   "reminders.noRemindersYet": "No reminders yet",
+  "reminders.addHint": "Tap “+” so you don't forget.",
   "reminders.filterAll": "All",
   "reminders.filterCritical": "Critical",
   "reminders.badgeTooltip": "Reminders: {total} · critical: {critical}",
@@ -90,6 +91,7 @@ export const en = {
   "habitForm.group": "Block",
 
   "habits.sectionLabel": "Habits",
+  "habits.doneToday": "{done} of {total} today",
   "habits.addHabit": "Add habit",
   "habits.viewGrid": "Grid view",
   "habits.viewList": "List view",
@@ -110,6 +112,7 @@ export const en = {
 
   "habits.group.addBlock": "Add block",
   "habits.group.generalTitle": "General",
+  "habits.group.general": "Default",
   "habits.group.titlePlaceholder": "Block name",
   "habits.group.editTitle": "Edit block",
   "habits.group.deleteTitle": "Delete block?",
@@ -127,6 +130,8 @@ export const en = {
   "goals.noMilestonesYet": "No milestones yet",
   "goals.addMilestonePlaceholder": "Add a milestone…",
   "goalProgress.title": "Goal Progress",
+  "goalProgress.viewAll": "All goals",
+  "goalProgress.addGoal": "Add goal",
 
   "reminderSummary.title": "Reminders",
 

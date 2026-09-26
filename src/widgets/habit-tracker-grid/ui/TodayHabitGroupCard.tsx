@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import { ChevronDown, Plus } from "lucide-react"
+import { ChevronDown, Lock, Plus } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { EditHabitGroupButton } from "@/features/edit-habit-group"
 import { DeleteHabitGroupButton } from "@/features/delete-habit-group"
@@ -12,6 +12,7 @@ import {
   type HabitGroup,
 } from "@/entities/habit-group"
 import { useDragReorder, useDropTarget } from "@/shared/lib/dnd"
+import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
 import { Button } from "@/shared/ui/button"
@@ -45,6 +46,7 @@ export function TodayHabitGroupCard({
   const [isAdding, setIsAdding] = useState(false)
   const [isEditingGroup, setIsEditingGroup] = useState(false)
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
+  const doneCount = habits.filter(h => h.completedDates.includes(getTodayKey())).length
 
   // Block reordering — same shared order/type as /habits' own block drag
   // (HabitGroupAccordionItem), since the blocks' relative order is shared
@@ -112,9 +114,9 @@ export function TodayHabitGroupCard({
             {/* The trigger sits in normal flow with no top padding — its
                 unshifted box starts exactly at the card's top border, so
                 `relative` + a negative `top` of half the pill's own
-                rendered height (22px tall, incl. its py-1 padding — half
-                is 11px) pulls it up just enough that the pill ends up
-                centered ON that border: 50% above, 50% below. Using
+                fixed height (30px — half is 15px) pulls it up just
+                enough that the pill ends up centered ON that border:
+                50% above, 50% below. Using
                 `top`, not a negative margin, matters here — margin would
                 also shrink the space this row reserves in the page's
                 flow, which is what let two collapsed cards' pills
@@ -130,22 +132,32 @@ export function TodayHabitGroupCard({
                 instead keeps it visually part of the pill (same
                 colored background, rotates with `isOpen` like the
                 built-in one does). */}
-            <AccordionTrigger className="hover:no-underline !py-0 relative -top-[11px] justify-center [&>svg]:hidden">
+            <AccordionTrigger className="hover:no-underline !py-0 relative -top-[15px] justify-center [&>svg]:hidden">
               <span
-                className="px-4 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1.5 text-white"
+                className="h-[30px] px-3.5 rounded-full text-sm font-bold inline-flex items-center gap-2 text-white shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)]"
                 style={{ backgroundColor: group.color }}
               >
                 <span className="leading-none">
-                  <HabitIcon emoji={getHabitGroupIcon(group)} size={14} />
+                  <HabitIcon emoji={getHabitGroupIcon(group)} size={15} />
                 </span>
                 <span className="leading-none">{getHabitGroupTitle(group, t)}</span>
+                <span className="text-xs font-bold opacity-85">
+                  {doneCount}/{habits.length}
+                </span>
                 <ChevronDown
                   size={14}
+                  strokeWidth={2.5}
                   className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                 />
               </span>
             </AccordionTrigger>
-            <div className="absolute right-4 top-3 flex items-center gap-1">
+            <div className="flex items-center justify-end gap-1 min-h-[30px]">
+              {group.isGeneral && (
+                <span className="mr-auto h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1">
+                  <Lock size={11} strokeWidth={2.25} />
+                  {t("habits.group.general")}
+                </span>
+              )}
               <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
               {!group.isGeneral && <DeleteHabitGroupButton group={group} />}
             </div>
@@ -156,15 +168,14 @@ export function TodayHabitGroupCard({
 
             <div className="flex justify-end">
               <Button
-                size="sm"
                 variant="ghost"
-                className="h-7 text-xs"
+                className="h-[30px] px-2.5 gap-1 text-[13px] font-bold"
                 onClick={() => {
                   setEditingHabit(null)
                   setIsAdding(v => !v)
                 }}
               >
-                <Plus size={13} />
+                <Plus size={14} strokeWidth={2.25} />
                 {t("habits.addHabit")}
               </Button>
             </div>
@@ -187,7 +198,11 @@ export function TodayHabitGroupCard({
                 </div>
               )
             ) : (
-              <div className={viewMode === "grid" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-2"}>
+              <div
+                className={
+                  viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-4 gap-2" : "flex flex-col gap-2"
+                }
+              >
                 {habits.map(habit => (
                   <HabitGridItem
                     key={habit.id}

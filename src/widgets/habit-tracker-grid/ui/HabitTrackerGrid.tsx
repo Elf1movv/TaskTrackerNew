@@ -1,10 +1,10 @@
 import { useState } from "react"
-import { LayoutGrid, List, Plus } from "lucide-react"
+import { LayoutGrid, List, Plus, Repeat } from "lucide-react"
 import { HabitGroupForm } from "@/features/habit-group-form"
 import { useHabitGroups } from "@/entities/habit-group"
 import { type Habit } from "@/entities/habit"
+import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group"
 import { TodayHabitGroupCard } from "./TodayHabitGroupCard"
@@ -24,14 +24,19 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
   const { t } = useLanguage()
 
   const groupsWithHabitsToday = habitGroups.filter(g => habits.some(h => h.groupId === g.id))
+  const today = getTodayKey()
+  const doneToday = habits.filter(h => h.completedDates.includes(today)).length
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-5">
-        <div css={monoFont} className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground">
-          {t("habits.sectionLabel")}
+    <div className="bg-card border border-card-border rounded-xl shadow-card p-6 flex flex-col gap-5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-baseline gap-3">
+          <h2 className="text-xl font-bold tracking-[-0.015em]">{t("habits.sectionLabel")}</h2>
+          <span className="text-[13px] font-semibold text-muted-foreground">
+            {t("habits.doneToday", { done: doneToday, total: habits.length })}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <ToggleGroup
             type="single"
             variant="outline"
@@ -39,22 +44,36 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
             value={viewMode}
             onValueChange={v => v && setViewMode(v as "grid" | "list")}
           >
-            <ToggleGroupItem value="grid" aria-label={t("habits.viewGrid")} className="h-7 w-7 p-0">
-              <LayoutGrid size={13} />
+            <ToggleGroupItem
+              value="grid"
+              aria-label={t("habits.viewGrid")}
+              className="h-[34px] px-2.5 gap-1.5"
+            >
+              <LayoutGrid size={17} strokeWidth={1.75} />
+              <span className="text-[13px]">{t("habits.viewGrid")}</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="list" aria-label={t("habits.viewList")} className="h-7 w-7 p-0">
-              <List size={13} />
+            <ToggleGroupItem
+              value="list"
+              aria-label={t("habits.viewList")}
+              className="h-[34px] px-2.5 gap-1.5"
+            >
+              <List size={17} strokeWidth={1.75} />
+              <span className="text-[13px]">{t("habits.viewList")}</span>
             </ToggleGroupItem>
           </ToggleGroup>
-          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsAddingGroup(v => !v)}>
-            <Plus size={13} />
+          <Button
+            variant="outline"
+            className="h-[34px] px-3 gap-1.5 rounded-[10px] border-primary/25 text-primary text-sm font-semibold"
+            onClick={() => setIsAddingGroup(v => !v)}
+          >
+            <Plus size={16} />
             {t("habits.group.addBlock")}
           </Button>
         </div>
       </div>
 
       {isAddingGroup && (
-        <div className="mb-4">
+        <div>
           <HabitGroupForm onDone={() => setIsAddingGroup(false)} />
         </div>
       )}
@@ -65,7 +84,7 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
         // smaller gap here let two collapsed cards' pills visually
         // collide, since a collapsed card's own height barely clears
         // that overhang on its own.
-        <div className="space-y-5">
+        <div className="space-y-5 pt-2.5">
           {groupsWithHabitsToday.map(group => (
             <TodayHabitGroupCard
               key={group.id}
@@ -77,7 +96,12 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
         </div>
       ) : (
         !isAddingGroup && (
-          <div className="text-center py-8 text-muted-foreground text-sm">{t("habits.noHabitsYet")}</div>
+          <div className="border border-dashed border-border-strong rounded-xl px-6 py-10 flex flex-col items-center gap-2.5 text-center">
+            <span className="size-12 rounded-[14px] bg-primary-soft text-primary flex items-center justify-center">
+              <Repeat size={22} strokeWidth={1.75} />
+            </span>
+            <span className="text-[17px] font-bold">{t("habits.noHabitsYet")}</span>
+          </div>
         )
       )}
     </div>

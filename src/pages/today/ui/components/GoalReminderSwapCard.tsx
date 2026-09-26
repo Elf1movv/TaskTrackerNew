@@ -64,9 +64,9 @@ export function GoalReminderSwapCard({
             type="button"
             onClick={() => setShowReminders(v => !v)}
             aria-label={showReminders ? t("today.showGoals") : t("today.showReminders")}
-            className="absolute -top-3 -right-3 z-20 flex size-9 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute -top-3 -right-0.5 z-20 flex size-10 items-center justify-center rounded-full bg-card border border-border shadow-card text-muted-foreground hover:text-foreground transition-colors"
           >
-            {showReminders ? <Target size={16} /> : <Bell size={16} />}
+            {showReminders ? <Target size={16} strokeWidth={1.75} /> : <Bell size={16} strokeWidth={1.75} />}
             {!showReminders && total > 0 && (
               <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-white text-[10px] font-medium leading-none">
                 {total}

@@ -1,7 +1,7 @@
 import styled from "@emotion/styled"
 
 const Track = styled.div`
-  height: 2px;
+  height: 6px;
   background-color: var(--muted);
   border-radius: 9999px;
   overflow: hidden;
