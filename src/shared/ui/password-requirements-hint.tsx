@@ -6,7 +6,7 @@ import { cn } from "./utils"
 function Requirement({ met, label }: { met: boolean; label: string }) {
   const Icon = met ? CheckCircle2 : Circle
   return (
-    <div className={cn("flex items-center gap-1.5 text-xs", met ? "text-primary" : "text-muted-foreground")}>
+    <div className={cn("flex items-center gap-1.5 text-xs", met ? "text-success" : "text-muted-foreground")}>
       <Icon size={13} />
       {label}
     </div>

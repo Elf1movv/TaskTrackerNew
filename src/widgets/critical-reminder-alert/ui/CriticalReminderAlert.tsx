@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { BellRing, ChevronsUp } from "lucide-react"
 import { useNavigate } from "react-router"
 import { useReminders } from "@/entities/reminder"
 import { useLanguage } from "@/shared/lib/i18n"
@@ -96,6 +97,15 @@ export function CriticalReminderAlert({ userId }: { userId: string }) {
     <AlertDialog open onOpenChange={open => !open && dismiss()}>
       <AlertDialogContent className="border-destructive border-2 shadow-[0_0_40px_-5px_rgba(201,80,58,0.5)]">
         <AlertDialogHeader>
+          <div className="flex items-center gap-3 mb-1">
+            <span className="size-11 shrink-0 rounded-full bg-error-bg text-destructive flex items-center justify-center">
+              <BellRing size={22} />
+            </span>
+            <span className="h-[26px] px-2.5 rounded-full bg-error-bg text-destructive text-xs font-extrabold tracking-[0.04em] uppercase inline-flex items-center gap-1">
+              <ChevronsUp size={12} strokeWidth={3} />
+              {t("reminderForm.priorityCritical")}
+            </span>
+          </div>
           <AlertDialogTitle>{active.reminder.title}</AlertDialogTitle>
           <AlertDialogDescription>
             {whenLabel}

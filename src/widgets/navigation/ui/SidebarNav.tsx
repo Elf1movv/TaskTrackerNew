@@ -6,6 +6,7 @@ import { getHabitCompletionsByDay, useHabits } from "@/entities/habit"
 import { getLastNDays, getTodayKey } from "@/shared/lib/date"
 import { getDateLocale, getWeekdayLabels, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
+import { BrandMark } from "@/shared/ui/brand-mark"
 import { WeeklyActivityChart, type WeeklyActivityPoint } from "@/shared/ui/weekly-activity-chart"
 import { NAV_ITEMS } from "../model/navItems"
 
@@ -55,22 +56,7 @@ export function SidebarNav() {
   return (
     <aside className="hidden md:flex w-[264px] shrink-0 flex-col bg-sidebar border-r border-sidebar-border px-4 py-6">
       <div className="flex items-center gap-3 px-2 pt-1 pb-7">
-        <div className="size-9 shrink-0 rounded-[10px] bg-primary text-primary-foreground flex items-center justify-center shadow-raised">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.25"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M21 12a9 9 0 1 1-6.2-8.56" />
-            <path d="m8.5 11.5 3 3L22 4" />
-          </svg>
-        </div>
+        <BrandMark size={36} iconSize={20} radius={10} />
         <div className="flex flex-col">
           <span className="text-base font-bold tracking-[-0.01em]">MyTracker</span>
           <span className="text-xs text-tertiary">

@@ -1,5 +1,6 @@
 import { CalendarDays, Flame, Layers, Target } from "lucide-react"
 import { useLanguage } from "@/shared/lib/i18n"
+import { BrandMark } from "@/shared/ui/brand-mark"
 import { Button } from "@/shared/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/ui/dialog"
 
@@ -22,6 +23,7 @@ export function WelcomeModal({ open, onClose }: WelcomeModalProps) {
     <Dialog open={open} onOpenChange={next => !next && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
+          <BrandMark size={56} iconSize={30} radius={16} className="mb-1" />
           <DialogTitle className="text-xl">{t("onboarding.welcome.title")}</DialogTitle>
           <DialogDescription>{t("onboarding.welcome.body")}</DialogDescription>
         </DialogHeader>
