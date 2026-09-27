@@ -7,9 +7,9 @@ import { monoFont } from "@/shared/lib/typography"
 export function DayReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdit: () => void }) {
   return (
     <div className="w-full flex items-center gap-2.5 text-left group">
-      <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={16} />
+      <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={22} />
       {reminder.time && (
-        <span css={monoFont} className="text-xs text-muted-foreground shrink-0">
+        <span css={monoFont} className="text-xs font-bold text-muted-foreground shrink-0">
           {reminder.time}
         </span>
       )}
@@ -17,8 +17,8 @@ export function DayReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdi
         <ReminderPriorityIcon priority={reminder.priority} size={13} />
       </span>
       <span
-        className={`text-sm flex-1 text-left leading-snug ${
-          reminder.completed ? "line-through text-muted-foreground" : ""
+        className={`text-sm font-semibold flex-1 text-left leading-snug ${
+          reminder.completed ? "line-through text-tertiary" : ""
         }`}
       >
         {reminder.title}

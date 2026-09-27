@@ -32,8 +32,8 @@ export function DayGoalRow({
       }`}
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
-      <span className="text-sm flex-1 text-left leading-snug">{goal.title}</span>
-      <span css={monoFont} className="text-xs text-muted-foreground shrink-0">
+      <span className="text-sm font-semibold flex-1 text-left leading-snug">{goal.title}</span>
+      <span css={monoFont} className="text-xs font-bold text-muted-foreground shrink-0">
         {goal.progress}%
       </span>
       <EditGoalButton onClick={onEdit} />

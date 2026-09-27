@@ -95,9 +95,9 @@ function YearMonthCard({
   const percent = total === 0 ? 0 : Math.round((done / total) * 100)
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-3">
+    <div className="bg-card border border-card-border rounded-xl shadow-card p-3">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <div css={monoFont} className="text-xs uppercase tracking-wider capitalize">
+        <div css={monoFont} className="text-xs font-bold uppercase tracking-wider capitalize">
           {format(month, "LLLL", { locale })}
         </div>
         {total > 0 && (
@@ -108,7 +108,12 @@ function YearMonthCard({
                 aria-label={monthLabel}
                 className="size-9 shrink-0 rounded-full transition-transform hover:scale-105"
               >
-                <ProgressRing progress={percent} color="var(--primary)" strokeWidth={4} />
+                <ProgressRing
+                  progress={percent}
+                  color="var(--primary)"
+                  strokeWidth={4}
+                  trackColor="var(--primary-soft)"
+                />
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto px-3 py-2" side="top">
@@ -122,7 +127,7 @@ function YearMonthCard({
       </div>
       <div className="grid grid-cols-7 gap-y-0.5">
         {getWeekdayLabels(language).map(label => (
-          <div key={label} className="text-center text-[8px] text-muted-foreground/70">
+          <div key={label} className="text-center text-[8px] font-bold text-tertiary">
             {label[0]}
           </div>
         ))}
@@ -130,12 +135,12 @@ function YearMonthCard({
           <button
             key={date.toISOString()}
             onClick={() => onSelectDay(date)}
-            className={`aspect-square rounded-md text-[10px] flex items-center justify-center ${
+            className={`aspect-square rounded-md text-[10px] font-semibold flex items-center justify-center ${
               isToday(date)
                 ? "bg-primary text-primary-foreground"
                 : isCurrentMonth
-                  ? "hover:bg-accent text-foreground"
-                  : "text-muted-foreground/40 hover:bg-accent/50"
+                  ? "hover:bg-sunken text-foreground"
+                  : "text-tertiary/60 hover:bg-sunken"
             }`}
           >
             {format(date, "d")}

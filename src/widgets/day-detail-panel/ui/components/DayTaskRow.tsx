@@ -31,10 +31,10 @@ export function DayTaskRow({
       }`}
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
-      <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={16} />
+      <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={22} />
       <span
-        className={`text-sm flex-1 text-left leading-snug ${
-          task.completed ? "line-through text-muted-foreground" : ""
+        className={`text-sm font-semibold flex-1 text-left leading-snug ${
+          task.completed ? "line-through text-tertiary" : ""
         }`}
       >
         {task.title}

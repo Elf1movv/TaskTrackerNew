@@ -128,13 +128,15 @@ function CalendarPageContent() {
 
   return (
     <div className="p-4 md:p-6">
-      <div className="flex gap-0.5 bg-muted rounded-lg p-0.5 w-fit mb-5">
+      <div className="flex gap-0.5 bg-fill rounded-[10px] p-0.5 w-fit mb-5">
         {BUILT_VIEWS.map(v => (
           <button
             key={v}
             onClick={() => setView(v)}
-            className={`px-3 py-1 rounded-md text-xs transition-all ${
-              view === v ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            className={`h-8 px-3 rounded-lg text-xs transition-all ${
+              view === v
+                ? "bg-seg text-foreground font-bold shadow-card"
+                : "text-muted-foreground font-medium hover:text-foreground"
             }`}
           >
             {t(`calendar.view.${v}` as TranslationKey)}
@@ -143,7 +145,10 @@ function CalendarPageContent() {
       </div>
 
       <div className="flex items-center justify-between mb-8">
-        <h1 css={displayFont} className="text-3xl capitalize">
+        <h1
+          css={displayFont}
+          className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em] capitalize"
+        >
           {formatPeriodTitle(view, anchorDate, getDateLocale(language))}
         </h1>
         <div className="flex items-center gap-1">
@@ -151,7 +156,7 @@ function CalendarPageContent() {
             variant="ghost"
             size="icon"
             onClick={goToPrev}
-            className="rounded-xl text-muted-foreground hover:text-foreground"
+            className="rounded-[10px] text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft size={16} />
           </Button>
@@ -160,7 +165,7 @@ function CalendarPageContent() {
             size="sm"
             onClick={goToToday}
             css={monoFont}
-            className="rounded-xl text-xs text-muted-foreground hover:text-foreground"
+            className="rounded-[10px] h-9 px-4 text-xs font-semibold shadow-card bg-card text-foreground hover:bg-card"
           >
             {isViewingCurrentPeriod(view, anchorDate) ? t("common.today") : t("calendar.backToToday")}
           </Button>
@@ -168,7 +173,7 @@ function CalendarPageContent() {
             variant="ghost"
             size="icon"
             onClick={goToNext}
-            className="rounded-xl text-muted-foreground hover:text-foreground"
+            className="rounded-[10px] text-muted-foreground hover:text-foreground"
           >
             <ChevronRight size={16} />
           </Button>

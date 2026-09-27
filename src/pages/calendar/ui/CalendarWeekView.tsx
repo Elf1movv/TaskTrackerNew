@@ -77,15 +77,15 @@ export function CalendarWeekView({
             <div key={day.toISOString()} className="text-center min-w-0">
               <div
                 css={monoFont}
-                className={`text-[10px] uppercase tracking-wider ${
-                  isToday(day) ? "text-primary" : "text-muted-foreground"
+                className={`text-[10px] uppercase tracking-wider font-bold ${
+                  isToday(day) ? "text-primary" : "text-tertiary"
                 }`}
               >
                 {format(day, "EEE", { locale })}
               </div>
               <div
-                className={`inline-flex items-center justify-center size-6 rounded-full text-sm ${
-                  isToday(day) ? "bg-primary text-primary-foreground font-medium" : ""
+                className={`inline-flex items-center justify-center size-7 rounded-full text-sm font-bold ${
+                  isToday(day) ? "bg-primary text-primary-foreground" : ""
                 }`}
               >
                 {format(day, "d")}

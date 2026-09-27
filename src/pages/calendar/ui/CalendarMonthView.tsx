@@ -71,6 +71,17 @@ export function CalendarMonthView({
     setAnchorRect(rect)
   }
 
+  // Same one-click-to-edit shortcut as tasks above — reminder chips used
+  // to have no click handler of their own and just bubbled up to the
+  // day-panel selection; per the redesign mockup they now open the same
+  // edit popover Day/Week already use for reminders.
+  function openEditReminder(reminderId: string, rect: DOMRect) {
+    const reminder = allReminders.find(r => r.id === reminderId)
+    if (!reminder) return
+    setDraft({ mode: "edit-reminder", reminder })
+    setAnchorRect(rect)
+  }
+
   return (
     // No `justify-center` — Day/Week's own convention (fill available
     // width, don't reserve empty side margins). `motion.div layout`
@@ -89,6 +100,7 @@ export function CalendarMonthView({
             onMoveTaskToDay={onMoveTaskToDay}
             onMoveGoalToDay={onMoveGoalToDay}
             onEditTask={openEditTask}
+            onEditReminder={openEditReminder}
           />
         </div>
         <AnimatePresence>

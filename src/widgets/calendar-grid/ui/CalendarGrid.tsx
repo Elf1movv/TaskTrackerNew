@@ -16,6 +16,7 @@ export function CalendarGrid({
   onMoveTaskToDay,
   onMoveGoalToDay,
   onEditTask,
+  onEditReminder,
 }: {
   days: MonthGridDay[]
   tasks: Task[]
@@ -25,24 +26,25 @@ export function CalendarGrid({
   onMoveTaskToDay: (taskId: string, day: Date) => void
   onMoveGoalToDay: (goalId: string, day: Date) => void
   onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
 }) {
   const { language } = useLanguage()
   const { categories } = useCategories()
 
   return (
-    <div>
+    <div className="bg-card border border-card-border rounded-xl shadow-card p-3">
       <div className="grid grid-cols-7 mb-1">
         {getWeekdayLabels(language).map(d => (
           <div
             key={d}
             css={monoFont}
-            className="text-center text-[10px] text-muted-foreground py-2 uppercase tracking-wider"
+            className="text-center text-[10px] text-tertiary py-2 uppercase tracking-wider font-bold"
           >
             {d}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1.5">
         {days.map(({ date, isCurrentMonth }) => {
           const dayStr = format(date, "yyyy-MM-dd")
           const dayTasks = tasks.filter(t => isTaskOnDay(t, dayStr))
@@ -62,6 +64,7 @@ export function CalendarGrid({
               onMoveTaskToDay={onMoveTaskToDay}
               onMoveGoalToDay={onMoveGoalToDay}
               onEditTask={onEditTask}
+              onEditReminder={onEditReminder}
             />
           )
         })}

@@ -13,10 +13,6 @@ import { monoFont } from "@/shared/lib/typography"
 // don't have one any more — see the task-row block's own comment.
 const MAX_VISIBLE_REMINDERS = 2
 
-function pastelFill(hex: string): string {
-  return `${hex}33`
-}
-
 export function CalendarDayCell({
   day,
   isCurrentMonth,
@@ -29,6 +25,7 @@ export function CalendarDayCell({
   onMoveTaskToDay,
   onMoveGoalToDay,
   onEditTask,
+  onEditReminder,
 }: {
   day: Date
   isCurrentMonth: boolean
@@ -41,6 +38,7 @@ export function CalendarDayCell({
   onMoveTaskToDay: (taskId: string, day: Date) => void
   onMoveGoalToDay: (goalId: string, day: Date) => void
   onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
 }) {
   // Composed here (not passed down as a ready-made per-day closure from the
   // parent's .map()) so it stays referentially stable across renders where
@@ -94,17 +92,22 @@ export function CalendarDayCell({
       // still grow past this floor with content (stacked task rows
       // below), matching the "week row is as tall as its busiest day"
       // look the TickTick reference has.
-      className={`min-h-[84px] rounded-xl border flex flex-col items-stretch gap-1 pt-2 pb-1.5 px-1 text-sm transition-all cursor-pointer ${
+      className={`min-h-[84px] rounded-[10px] border flex flex-col items-stretch gap-1 pt-2 pb-1.5 px-1 text-sm transition-all cursor-pointer ${
         isSelected
-          ? "bg-primary text-primary-foreground border-primary"
+          ? "border-2 border-primary bg-primary-soft"
           : isCurrent
-            ? "bg-primary/10 text-primary border-primary/30"
+            ? "border-primary-line bg-primary-soft"
             : isCurrentMonth
-              ? "border-border hover:bg-accent text-foreground"
-              : "border-border/40 hover:bg-accent/50 text-muted-foreground/50"
+              ? "border-border bg-card hover:bg-sunken text-foreground"
+              : "border-border bg-sunken/60 hover:bg-sunken text-tertiary"
       } ${isOver ? "ring-2 ring-primary" : ""}`}
     >
-      <span css={monoFont} className="text-xs shrink-0 text-center">
+      <span
+        css={monoFont}
+        className={`self-center w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
+          isCurrent ? "bg-primary text-primary-foreground" : ""
+        }`}
+      >
         {format(day, "d")}
       </span>
 
@@ -113,33 +116,38 @@ export function CalendarDayCell({
           {visibleReminders.map(reminder => (
             <div
               key={reminder.id}
-              className={`w-full flex items-center gap-1 rounded px-1 py-0.5 text-[9px] leading-tight border overflow-hidden ${
-                isSelected
-                  ? "bg-primary-foreground/20 text-primary-foreground border-primary-foreground/40"
-                  : "bg-card"
-              }`}
-              style={!isSelected ? { borderColor: REMINDER_BORDER_COLORS[reminder.priority] } : undefined}
+              role="button"
+              tabIndex={0}
+              onClick={e => {
+                e.stopPropagation()
+                onEditReminder(reminder.id, e.currentTarget.getBoundingClientRect())
+              }}
+              onKeyDown={e => {
+                if (e.key !== "Enter" && e.key !== " ") return
+                e.stopPropagation()
+                onEditReminder(reminder.id, e.currentTarget.getBoundingClientRect())
+              }}
+              className="w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-[9px] leading-tight border bg-card overflow-hidden cursor-pointer"
+              style={{ borderColor: REMINDER_BORDER_COLORS[reminder.priority] }}
             >
               <ReminderPriorityIcon
                 priority={reminder.priority}
                 size={8}
-                colorOverride={isSelected ? "currentColor" : REMINDER_BORDER_COLORS[reminder.priority]}
+                colorOverride={REMINDER_BORDER_COLORS[reminder.priority]}
               />
               {reminder.time && (
-                <span css={monoFont} className="shrink-0">
+                <span css={monoFont} className="shrink-0 text-muted-foreground font-bold">
                   {reminder.time}
                 </span>
               )}
-              <span className="truncate">{reminder.title}</span>
+              <span
+                className={`truncate font-semibold ${reminder.completed ? "line-through text-tertiary" : ""}`}
+              >
+                {reminder.title}
+              </span>
             </div>
           ))}
-          {overflowCount > 0 && (
-            <div
-              className={`text-[9px] px-1 ${isSelected ? "text-primary-foreground/70" : "text-muted-foreground"}`}
-            >
-              +{overflowCount}
-            </div>
-          )}
+          {overflowCount > 0 && <div className="text-[9px] px-1 text-muted-foreground">+{overflowCount}</div>}
         </div>
       )}
 
@@ -162,22 +170,24 @@ export function CalendarDayCell({
                 e.stopPropagation()
                 onEditTask(task.id, e.currentTarget.getBoundingClientRect())
               }}
-              className="w-full flex items-center gap-1 rounded px-1 py-0.5 text-[9px] leading-tight overflow-hidden cursor-pointer"
+              className="w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-[9px] leading-tight overflow-hidden cursor-pointer"
               style={{
                 backgroundColor: task.completed
-                  ? "var(--muted)"
-                  : pastelFill(resolveCategoryColor(task.category, categories)),
+                  ? "var(--fill)"
+                  : `color-mix(in srgb, ${resolveCategoryColor(task.category, categories)} 22%, var(--card))`,
               }}
             >
               <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                 <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={11} />
               </div>
               {task.time && (
-                <span css={monoFont} className="shrink-0 text-muted-foreground">
+                <span css={monoFont} className="shrink-0 text-muted-foreground font-bold">
                   {task.time}
                 </span>
               )}
-              <span className={`truncate ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+              <span
+                className={`truncate font-semibold ${task.completed ? "line-through text-tertiary" : ""}`}
+              >
                 {task.title}
               </span>
             </div>

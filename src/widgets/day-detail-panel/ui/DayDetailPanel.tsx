@@ -41,20 +41,23 @@ export function DayDetailPanel({
   const dueDate = formatDateKey(day)
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 min-w-0">
+    <div className="bg-card border border-card-border rounded-xl shadow-card p-5 min-w-0">
       <div className="flex items-start justify-between gap-2 mb-5">
         <div>
-          <div css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-1">
+          <div
+            css={monoFont}
+            className="text-[10px] uppercase tracking-[0.18em] text-tertiary font-bold mb-1"
+          >
             {format(day, "EEEE", { locale })}
           </div>
-          <div css={displayFont} className="text-2xl">
+          <div css={displayFont} className="text-2xl font-bold">
             {format(day, "MMMM d", { locale })}
           </div>
         </div>
         <Button
           size="icon"
           variant="ghost"
-          className="rounded-xl text-muted-foreground hover:text-foreground shrink-0"
+          className="rounded-[10px] text-muted-foreground hover:text-foreground hover:bg-fill shrink-0"
           onClick={onClose}
           aria-label="Close"
         >
@@ -63,13 +66,13 @@ export function DayDetailPanel({
       </div>
 
       <div className="flex items-center justify-between mb-2.5">
-        <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-tertiary font-bold">
           {t("tasks.title")}
         </span>
         <Button
           size="icon"
           variant="ghost"
-          className="rounded-lg h-6 w-6 text-muted-foreground hover:text-foreground"
+          className="rounded-lg h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-fill"
           onClick={() => {
             setEditingTaskId(null)
             setIsAddingTask(v => !v)
@@ -120,13 +123,13 @@ export function DayDetailPanel({
       )}
 
       <div className="flex items-center justify-between mb-2.5">
-        <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-tertiary font-bold">
           {t("reminderSummary.title")}
         </span>
         <Button
           size="icon"
           variant="ghost"
-          className="rounded-lg h-6 w-6 text-muted-foreground hover:text-foreground"
+          className="rounded-lg h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-fill"
           onClick={() => {
             setEditingReminderId(null)
             setIsAddingReminder(v => !v)
@@ -182,13 +185,13 @@ export function DayDetailPanel({
       )}
 
       <div className="flex items-center justify-between mb-2.5">
-        <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-tertiary font-bold">
           {t("nav.goals")}
         </span>
         <Button
           size="icon"
           variant="ghost"
-          className="rounded-lg h-6 w-6 text-muted-foreground hover:text-foreground"
+          className="rounded-lg h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-fill"
           onClick={() => {
             setEditingGoalId(null)
             setIsAddingGoal(v => !v)
@@ -239,7 +242,7 @@ export function DayDetailPanel({
       )}
 
       <div className="mb-2.5">
-        <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-tertiary font-bold">
           {t("nav.habits")}
         </span>
       </div>

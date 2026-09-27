@@ -89,15 +89,22 @@ export function CalendarAgendaView({
       {groups.map(group => {
         const dayKey = formatDateKey(group.day)
         return (
-          <div key={dayKey} className="bg-card border border-border rounded-2xl p-5">
+          <div key={dayKey} className="bg-card border border-card-border rounded-xl shadow-card p-5">
             <div className="flex items-baseline gap-2 mb-4">
               <span
                 css={monoFont}
-                className={`text-xs uppercase tracking-wider ${isToday(group.day) ? "text-primary" : "text-muted-foreground"}`}
+                className={`text-xs uppercase tracking-wider font-bold ${isToday(group.day) ? "text-primary" : "text-tertiary"}`}
               >
                 {format(group.day, "EEEE", { locale })}
               </span>
-              <span className="text-sm font-medium">{format(group.day, "d MMMM", { locale })}</span>
+              <span className="text-lg font-bold tracking-[-0.015em]">
+                {format(group.day, "d MMMM", { locale })}
+              </span>
+              {isToday(group.day) && (
+                <span className="h-[22px] px-2 rounded-md bg-primary-soft text-primary text-xs font-bold inline-flex items-center">
+                  {t("common.today")}
+                </span>
+              )}
             </div>
 
             <div className="space-y-2.5">
@@ -151,7 +158,7 @@ export function CalendarAgendaView({
           variant="outline"
           size="sm"
           onClick={() => setVisibleDays(v => v + LOAD_MORE_INCREMENT_DAYS)}
-          className="text-xs"
+          className="h-10 px-4 rounded-[10px] shadow-card text-sm font-semibold"
         >
           {t("calendar.agendaLoadMore", { count: LOAD_MORE_INCREMENT_DAYS })}
         </Button>

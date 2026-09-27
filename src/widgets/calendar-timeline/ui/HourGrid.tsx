@@ -103,13 +103,16 @@ export function HourGrid({
   const nowTop = timeToOffsetPx(format(now, "HH:mm"))
 
   return (
-    <div ref={scrollRef} className="flex border border-border rounded-2xl overflow-auto max-h-[65vh]">
+    <div
+      ref={scrollRef}
+      className="flex bg-card border border-card-border rounded-xl shadow-card overflow-auto max-h-[65vh]"
+    >
       <div className="shrink-0 w-12 border-r border-border" style={{ height: GRID_HEIGHT_PX }}>
         {HOURS.map(hour => (
           <div key={hour} className="relative" style={{ height: HOUR_HEIGHT_PX }}>
             <span
               css={monoFont}
-              className="absolute -top-[7px] right-1.5 text-[10px] text-muted-foreground bg-card px-0.5"
+              className="absolute -top-[7px] right-1.5 text-[10px] font-bold text-tertiary bg-card px-0.5"
             >
               {String(hour).padStart(2, "0")}:00
             </span>
@@ -284,13 +287,6 @@ function blockHeightPx(task: Task): number {
   return raw > 0 ? Math.max(MIN_BLOCK_HEIGHT_PX, raw) : FALLBACK_BLOCK_HEIGHT_PX
 }
 
-// Low-alpha fill over the category's own color — a pastel tint rather than
-// a solid block, so the title text stays legible without needing its own
-// per-category contrast logic.
-function pastelFill(hex: string): string {
-  return `${hex}33`
-}
-
 function TimedTaskBlock({
   task,
   categoryColor,
@@ -338,7 +334,9 @@ function TimedTaskBlock({
         height,
         ...laneStyle(lane.laneIndex, lane.laneCount),
         opacity: isDragging ? 0.4 : 1,
-        backgroundColor: task.completed ? "var(--muted)" : pastelFill(categoryColor),
+        backgroundColor: task.completed
+          ? "var(--fill)"
+          : `color-mix(in srgb, ${categoryColor} 22%, var(--card))`,
         zIndex: draftEndTime ? 40 : 10,
       }}
       className="absolute flex items-center gap-1 rounded-md px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden"
@@ -355,7 +353,7 @@ function TimedTaskBlock({
       <span css={monoFont} className="shrink-0 text-muted-foreground">
         {task.time}
       </span>
-      <span className={`truncate ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+      <span className={`truncate font-semibold ${task.completed ? "line-through text-tertiary" : ""}`}>
         {task.title}
       </span>
       {onResizeTask && (
@@ -406,10 +404,10 @@ function TimedReminderBlock({
         size={9}
         colorOverride={REMINDER_BORDER_COLORS[reminder.priority]}
       />
-      <span css={monoFont} className="shrink-0 text-muted-foreground">
+      <span css={monoFont} className="shrink-0 text-muted-foreground font-bold">
         {reminder.time}
       </span>
-      <span className="truncate">{reminder.title}</span>
+      <span className="truncate font-semibold">{reminder.title}</span>
     </button>
   )
 }
