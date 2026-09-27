@@ -33,7 +33,14 @@ export function MonthCell({ habit, month, today }: { habit: Habit; month: Date; 
           aria-label={`${habit.title} ${monthLabel}`}
           className="size-full rounded-full transition-transform hover:scale-105"
         >
-          <ProgressRing progress={percent} color={habit.color} strokeWidth={4} />
+          <ProgressRing
+            progress={percent}
+            color={habit.color}
+            strokeWidth={4}
+            trackColor={`color-mix(in srgb, ${habit.color} 18%, transparent)`}
+            labelClassName="text-[10px] font-extrabold"
+            labelColor="var(--foreground)"
+          />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto px-3 py-2" side="top">

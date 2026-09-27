@@ -15,6 +15,7 @@ export function ProgressRing({
   showLabel = true,
   trackColor = "var(--muted)",
   labelClassName = "text-[10px]",
+  labelColor = color,
 }: {
   progress: number
   color: string
@@ -26,6 +27,10 @@ export function ProgressRing({
    * when empty, like Goals' per-goal-colored rings. */
   trackColor?: string
   labelClassName?: string
+  /** Defaults to the ring's own `color` (every existing caller's
+   * behavior) — pass e.g. `var(--foreground)` where the percent text
+   * should read as neutral instead, like the Habits year view. */
+  labelColor?: string
 }) {
   return (
     <div className="relative w-full h-full">
@@ -59,7 +64,7 @@ export function ProgressRing({
         <span
           css={monoFont}
           className={`absolute inset-0 flex items-center justify-center ${labelClassName}`}
-          style={{ color }}
+          style={{ color: labelColor }}
         >
           {progress}%
         </span>

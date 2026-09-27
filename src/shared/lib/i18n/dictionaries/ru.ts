@@ -108,7 +108,8 @@ export const ru: Record<keyof typeof en, string> = {
   "habits.chartStyle.area": "Плавный график",
   "habits.chartStyle.bar": "Столбики",
   "habits.chartStyle.step": "Ступенчатая линия",
-  "habits.page.summary": "Выполнено: {completed} из {total} ({percent}%)",
+  "habits.page.summaryLabel": "Выполнено",
+  "habits.page.summary": "{completed} из {total} ({percent}%)",
   "habits.monthCellSummary": "{done} из {scheduled}",
   "habitCard.days": "дней",
 

@@ -106,7 +106,8 @@ export const en = {
   "habits.chartStyle.area": "Smooth chart",
   "habits.chartStyle.bar": "Bars",
   "habits.chartStyle.step": "Stepped line",
-  "habits.page.summary": "Done: {completed} of {total} ({percent}%)",
+  "habits.page.summaryLabel": "Done",
+  "habits.page.summary": "{completed} of {total} ({percent}%)",
   "habits.monthCellSummary": "{done} of {scheduled}",
   "habitCard.days": "days",
 

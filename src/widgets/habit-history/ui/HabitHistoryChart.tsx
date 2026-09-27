@@ -30,33 +30,43 @@ const tooltipContentStyle = {
 }
 
 // Shared by all three styles — only the plotted series itself
-// (Area/Bar/Line) differs between them.
-function ChartAxes() {
-  return (
-    <>
-      <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
-      <XAxis
-        dataKey="label"
-        tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-        axisLine={false}
-        tickLine={false}
-        tickMargin={8}
-      />
-      <YAxis
-        allowDecimals={false}
-        domain={[0, "dataMax"]}
-        tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-        axisLine={false}
-        tickLine={false}
-        width={24}
-      />
-      <Tooltip
-        contentStyle={tooltipContentStyle}
-        labelStyle={{ color: "var(--foreground)" }}
-        cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
-      />
-    </>
-  )
+// (Area/Bar/Line) differs between them. Returns an array, NOT a
+// wrapping component: Recharts' generateCategoricalChart reads
+// CartesianGrid/XAxis/YAxis/Tooltip by walking the chart's OWN direct
+// children, so a custom component wrapping them (e.g. a `<ChartAxes />`
+// this used to be) is invisible to it — axes/grid/tooltip silently fail to render, and
+// worse, the Y domain never gets registered, so Bar/Line series
+// compute wrong pixel heights (a real bug this caused, caught in
+// 2026-09-27 QA — see docs/BACKLOG.md). Spreading this array directly
+// as `{chartAxes()}` keeps every style's axis config in one place
+// without hitting that limitation.
+function chartAxes() {
+  return [
+    <CartesianGrid key="grid" vertical={false} stroke="var(--border)" strokeDasharray="4 4" />,
+    <XAxis
+      key="x"
+      dataKey="label"
+      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+      axisLine={false}
+      tickLine={false}
+      tickMargin={8}
+    />,
+    <YAxis
+      key="y"
+      allowDecimals={false}
+      domain={[0, "dataMax"]}
+      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+      axisLine={false}
+      tickLine={false}
+      width={24}
+    />,
+    <Tooltip
+      key="tooltip"
+      contentStyle={tooltipContentStyle}
+      labelStyle={{ color: "var(--foreground)" }}
+      cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
+    />,
+  ]
 }
 
 export function HabitHistoryChart({ data, style }: { data: ChartPoint[]; style: HabitChartStyle }) {
@@ -65,7 +75,7 @@ export function HabitHistoryChart({ data, style }: { data: ChartPoint[]; style: 
       <div css={monoFont} className="h-36 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
-            <ChartAxes />
+            {chartAxes()}
             <Bar dataKey="value" fill="var(--primary)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -78,7 +88,7 @@ export function HabitHistoryChart({ data, style }: { data: ChartPoint[]; style: 
       <div css={monoFont} className="h-36 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
-            <ChartAxes />
+            {chartAxes()}
             <Line
               type="stepAfter"
               dataKey="value"
@@ -103,7 +113,7 @@ export function HabitHistoryChart({ data, style }: { data: ChartPoint[]; style: 
               <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <ChartAxes />
+          {chartAxes()}
           <Area
             type="monotone"
             dataKey="value"

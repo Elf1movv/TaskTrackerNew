@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useState } from "react"
 import { format } from "date-fns"
-import { Activity, BarChart3, Flame, Plus, TrendingUp } from "lucide-react"
+import { Activity, BarChart3, Flame, Lock, Plus, TrendingUp } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { EditHabitButton } from "@/features/edit-habit"
 import { DeleteHabitButton } from "@/features/delete-habit"
@@ -111,39 +111,47 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
       >
         <AccordionItem
           value={group.id}
-          className="!border-b-0 bg-card border border-border rounded-2xl overflow-hidden"
+          className="!border-b-0 bg-card border border-card-border rounded-xl shadow-card overflow-hidden"
         >
-          <div className="flex items-start gap-1 px-6 pt-5 cursor-grab active:cursor-grabbing">
-            <AccordionTrigger className="hover:no-underline pb-5 [&>svg]:mt-1">
-              <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                <span className="leading-none shrink-0">
+          <div className="flex items-start gap-1 px-[22px] pt-[18px] cursor-grab active:cursor-grabbing">
+            <AccordionTrigger className="hover:no-underline pb-4 [&>svg]:mt-1.5">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <span className="size-9 shrink-0 rounded-[10px] bg-primary-soft text-primary flex items-center justify-center">
                   <HabitIcon emoji={getHabitGroupIcon(group)} size={18} />
                 </span>
-                <span className="text-base font-medium truncate">{getHabitGroupTitle(group, t)}</span>
-                <span css={monoFont} className="text-xs text-muted-foreground shrink-0">
+                <span className="text-xl font-bold tracking-[-0.015em] truncate">
+                  {getHabitGroupTitle(group, t)}
+                </span>
+                {group.isGeneral && (
+                  <span className="h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1 shrink-0">
+                    <Lock size={11} strokeWidth={2.25} />
+                    {t("habits.group.general")}
+                  </span>
+                )}
+                <span className="text-[13px] font-semibold text-tertiary shrink-0">
                   {t("habits.group.habitCount", { count: habits.length })}
                 </span>
               </div>
             </AccordionTrigger>
-            <div className="flex items-center gap-1 pt-4 shrink-0">
+            <div className="flex items-center gap-0.5 pt-3.5 shrink-0">
               <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
               {!group.isGeneral && <DeleteHabitGroupButton group={group} />}
             </div>
           </div>
 
-          <AccordionContent className="px-6 pb-6 space-y-6">
+          <AccordionContent className="px-[22px] pb-5 space-y-3.5">
             {isEditingGroup && <HabitGroupForm group={group} onDone={() => setIsEditingGroup(false)} />}
 
             <div className="flex items-center justify-end flex-wrap gap-3">
-              <div className="flex gap-0.5 bg-muted rounded-lg p-0.5">
+              <div className="grid grid-cols-3 w-[252px] p-0.5 rounded-[9px] bg-fill">
                 {PERIODS.map(p => (
                   <button
                     key={p}
                     onClick={() => setPeriod(p)}
-                    className={`px-2.5 py-1 rounded-md text-xs transition-all ${
+                    className={`h-[30px] rounded-lg text-[13px] transition-all ${
                       period === p
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-seg text-foreground font-bold shadow-card"
+                        : "text-muted-foreground font-medium"
                     }`}
                   >
                     {t(`habits.period.${p}`)}
@@ -151,13 +159,14 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                 ))}
               </div>
               <Button
-                size="sm"
+                variant="outline"
+                className="h-[34px] px-3 gap-1.5 rounded-[10px] border-primary/25 text-primary text-sm font-semibold"
                 onClick={() => {
                   setEditingHabit(null)
                   setIsAdding(v => !v)
                 }}
               >
-                <Plus size={14} />
+                <Plus size={16} />
                 {t("habits.addHabit")}
               </Button>
             </div>
@@ -182,32 +191,50 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
             ) : (
               <div className="grid gap-y-2 gap-x-1" style={{ gridTemplateColumns }}>
                 <div />
-                {days?.map((date, i) => (
-                  <div key={date.toISOString()} className="text-center self-end pb-1">
-                    {period === "month" && (
-                      <div css={monoFont} className="text-[9px] text-muted-foreground/70 leading-tight">
-                        {weekdayLabels[(date.getDay() + 6) % 7]}
-                      </div>
-                    )}
-                    <div css={monoFont} className="text-[10px] text-muted-foreground leading-tight">
-                      {period === "week" ? weekdayLabels[i] : date.getDate()}
-                    </div>
-                    {period === "week" && (
-                      <div css={monoFont} className="text-[9px] text-muted-foreground/70 leading-tight">
+                {days?.map((date, i) => {
+                  const isToday = formatDateKey(date) === formatDateKey(today)
+                  return (
+                    <div
+                      key={date.toISOString()}
+                      className={`flex flex-col items-center gap-1 self-end pb-1 ${isToday ? "text-primary" : "text-muted-foreground"}`}
+                    >
+                      {period === "month" && (
+                        <div css={monoFont} className="text-[9px] font-bold opacity-70 leading-tight">
+                          {weekdayLabels[(date.getDay() + 6) % 7]}
+                        </div>
+                      )}
+                      {period === "week" && (
+                        <div className="text-[11px] font-bold uppercase leading-tight">
+                          {weekdayLabels[i]}
+                        </div>
+                      )}
+                      <div
+                        css={monoFont}
+                        className={`flex items-center justify-center leading-tight ${
+                          period === "week"
+                            ? `size-7 rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
+                            : `size-[22px] rounded-full text-[11px] font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
+                        }`}
+                      >
                         {date.getDate()}
                       </div>
-                    )}
-                  </div>
-                ))}
-                {months?.map(month => (
-                  <div
-                    key={month.toISOString()}
-                    css={monoFont}
-                    className="text-[10px] text-muted-foreground text-center self-end pb-1 capitalize"
-                  >
-                    {format(month, "LLL", { locale })}
-                  </div>
-                ))}
+                    </div>
+                  )
+                })}
+                {months?.map(month => {
+                  const isCurrentMonth =
+                    month.getMonth() === today.getMonth() && month.getFullYear() === today.getFullYear()
+                  return (
+                    <div
+                      key={month.toISOString()}
+                      className={`text-[12px] font-bold text-center self-end pb-1 capitalize ${
+                        isCurrentMonth ? "text-primary" : "text-tertiary"
+                      }`}
+                    >
+                      {format(month, "LLL", { locale })}
+                    </div>
+                  )
+                })}
 
                 {habits.map(habit => (
                   <HabitGridRow
@@ -230,19 +257,19 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
             {habits.length > 0 && (
               <div className="pt-2 border-t border-border">
                 <div className="grid gap-x-1 items-center" style={{ gridTemplateColumns }}>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5 w-fit p-0.5 rounded-[9px] bg-fill">
                     {CHART_STYLES.map(({ style, Icon }) => (
                       <button
                         key={style}
                         onClick={() => setChartStyle(style)}
                         aria-label={t(`habits.chartStyle.${style}`)}
-                        className={`flex items-center justify-center size-6 rounded-md transition-all ${
+                        className={`flex items-center justify-center w-[34px] h-7 rounded-lg transition-all ${
                           chartStyle === style
-                            ? "bg-muted text-foreground"
-                            : "text-muted-foreground hover:text-foreground"
+                            ? "bg-seg text-foreground shadow-card"
+                            : "text-muted-foreground"
                         }`}
                       >
-                        <Icon size={13} />
+                        <Icon size={15} strokeWidth={1.75} />
                       </button>
                     ))}
                   </div>
@@ -250,9 +277,18 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                     <HabitHistoryChart data={summary.chartData} style={chartStyle} />
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground mt-3">
-                  {t("habits.page.summary", { completed: summary.completed, total: summary.total, percent })}
-                </p>
+                <div className="mt-3 flex flex-col gap-0.5">
+                  <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary">
+                    {t("habits.page.summaryLabel")}
+                  </span>
+                  <span className="text-[15px] font-semibold">
+                    {t("habits.page.summary", {
+                      completed: summary.completed,
+                      total: summary.total,
+                      percent,
+                    })}
+                  </span>
+                </div>
               </div>
             )}
           </AccordionContent>
@@ -294,22 +330,40 @@ function HabitGridRow({
     [dragRef, dropRef],
   )
 
+  const streak = getStreak(habit.completedDates, habit.activeDays)
+
   return (
     <Fragment>
       <div
         ref={ref}
-        className={`flex items-center gap-2 pr-2 group/row rounded-lg cursor-grab active:cursor-grabbing select-none ${
+        className={`flex items-center gap-2.5 pr-2 group/row rounded-lg cursor-grab active:cursor-grabbing select-none ${
           isOver ? "bg-accent" : ""
         }`}
         style={{ opacity: isDragging ? 0.4 : 1 }}
       >
-        <span className="leading-none">
-          <HabitIcon emoji={habit.icon} size={16} />
+        <span
+          className="size-8 shrink-0 rounded-[9px] flex items-center justify-center"
+          style={{
+            background: `color-mix(in srgb, ${habit.color} 16%, transparent)`,
+            color: habit.color,
+          }}
+        >
+          <HabitIcon emoji={habit.icon} size={15} />
         </span>
-        <span className="text-sm font-medium truncate flex-1">{habit.title}</span>
-        <span css={monoFont} className="flex items-center gap-0.5 text-[10px] text-muted-foreground shrink-0">
-          <Flame size={10} />
-          {getStreak(habit.completedDates, habit.activeDays)}
+        <span className="text-sm font-semibold truncate flex-1">{habit.title}</span>
+        <span
+          css={monoFont}
+          className="flex items-center gap-1 text-xs shrink-0"
+          style={{
+            color:
+              streak > 0
+                ? `color-mix(in srgb, ${habit.color} 80%, var(--foreground))`
+                : "var(--text-tertiary)",
+            fontWeight: streak > 0 ? 700 : 600,
+          }}
+        >
+          <Flame size={12} fill={streak > 0 ? "currentColor" : "none"} />
+          {streak}
         </span>
         <span className="hidden group-hover/row:flex items-center shrink-0">
           <EditHabitButton onClick={onEdit} />

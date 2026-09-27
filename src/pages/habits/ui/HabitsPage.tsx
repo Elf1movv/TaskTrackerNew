@@ -1,6 +1,9 @@
+import { useState } from "react"
+import { Plus } from "lucide-react"
+import { HabitGroupForm } from "@/features/habit-group-form"
 import { useHabits } from "@/entities/habit"
 import { useLanguage } from "@/shared/lib/i18n"
-import { displayFont } from "@/shared/lib/typography"
+import { Button } from "@/shared/ui/button"
 import { HabitHistoryGrid } from "@/widgets/habit-history"
 
 // All habits, always — regardless of today's schedule (see
@@ -9,6 +12,7 @@ import { HabitHistoryGrid } from "@/widgets/habit-history"
 export function HabitsPage() {
   const { habits } = useHabits()
   const { t } = useLanguage()
+  const [isAddingGroup, setIsAddingGroup] = useState(false)
 
   return (
     // max-w-7xl, not 4xl — a block's grid in month view has far more
@@ -16,12 +20,28 @@ export function HabitsPage() {
     // renders its own fixed-width card (see HabitGroupAccordionItem), the
     // page just has to be wide enough for the widest of them.
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
-      <div className="mb-8 max-w-4xl">
-        <h1 css={displayFont} className="text-3xl mb-1">
-          {t("habits.page.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">{t("habits.page.subtitle")}</p>
+      <div className="mb-6 max-w-4xl flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em]">
+            {t("habits.page.title")}
+          </h1>
+          <p className="text-[15px] text-muted-foreground">{t("habits.page.subtitle")}</p>
+        </div>
+        <Button
+          onClick={() => setIsAddingGroup(v => !v)}
+          className="h-11 px-5 gap-2 rounded-[10px] shadow-raised text-[15px]"
+        >
+          <Plus size={18} />
+          {t("habits.group.addBlock")}
+        </Button>
       </div>
+
+      {isAddingGroup && (
+        <div className="mb-6 max-w-4xl">
+          <HabitGroupForm onDone={() => setIsAddingGroup(false)} />
+        </div>
+      )}
+
       <HabitHistoryGrid habits={habits} />
     </div>
   )
