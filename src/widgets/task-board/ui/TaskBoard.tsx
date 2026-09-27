@@ -1,13 +1,12 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus, X } from "lucide-react"
+import { CheckSquare2, Plus, X } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
 import { useCategories, type Category } from "@/entities/category"
 import { isCompletedToday, type StatusFilter, type Task, useTasks } from "@/entities/task"
 import { getTodayKey } from "@/shared/lib/date"
 import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
-import { displayFont, monoFont } from "@/shared/lib/typography"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,12 +86,10 @@ export function TaskBoard({
 
   return (
     <>
-      <div className="flex items-end justify-between mb-8">
-        <div>
-          <h1 css={displayFont} className="text-3xl mb-1">
-            {t("tasks.title")}
-          </h1>
-          <p css={monoFont} className="text-sm text-muted-foreground">
+      <div className="flex items-end justify-between mb-6">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em]">{t("tasks.title")}</h1>
+          <p className="text-[15px] text-muted-foreground">
             {t("tasks.remainingDone", {
               remaining: allTasks.filter(t => !t.completed).length,
               // Scoped to today, not all-time — otherwise this count only
@@ -104,13 +101,13 @@ export function TaskBoard({
           </p>
         </div>
         <Button
-          size="sm"
           onClick={() => {
             setEditingTaskId(null)
             setIsAdding(v => !v)
           }}
+          className="h-11 px-5 gap-2 rounded-[10px] shadow-raised text-[15px]"
         >
-          <Plus size={14} />
+          <Plus size={18} />
           {t("tasks.addTask")}
         </Button>
       </div>
@@ -132,15 +129,15 @@ export function TaskBoard({
         )}
       </AnimatePresence>
 
-      <div className="flex gap-1.5 mb-3 flex-wrap items-center">
+      <div className="grid grid-cols-3 w-[280px] p-0.5 rounded-[10px] bg-fill mb-3.5">
         {(["all", "active", "done"] as const).map(f => (
           <button
             key={f}
             onClick={() => onStatusFilterChange(f)}
-            className={`px-3 py-1.5 rounded-lg text-xs capitalize transition-all ${
+            className={`h-8 rounded-lg text-sm transition-all ${
               statusFilter === f
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                ? "bg-seg text-foreground font-bold shadow-card"
+                : "text-muted-foreground font-medium"
             }`}
           >
             {t(STATUS_LABEL_KEYS[f])}
@@ -148,13 +145,13 @@ export function TaskBoard({
         ))}
       </div>
 
-      <div className="flex gap-1.5 mb-6 flex-wrap items-center">
+      <div className="flex gap-2 mb-6 flex-wrap items-center">
         <button
           onClick={() => onCategoryFilterChange("all")}
-          className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
+          className={`h-[34px] px-3.5 rounded-full text-[13px] font-semibold transition-all ${
             categoryFilter === "all"
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              ? "bg-primary text-primary-foreground border border-primary"
+              : "border border-border bg-card text-foreground"
           }`}
         >
           {t("tasks.categoryAll")}
@@ -162,10 +159,10 @@ export function TaskBoard({
         {categories.map(c => (
           <div
             key={c.id}
-            className={`relative group flex items-center gap-1.5 pl-2 pr-6 py-1.5 rounded-lg text-xs transition-all ${
+            className={`relative group flex items-center gap-2 h-[34px] pl-3.5 pr-6 rounded-full text-[13px] font-semibold transition-all ${
               categoryFilter === c.name
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                ? "bg-primary text-primary-foreground border border-primary"
+                : "border border-border bg-card text-foreground"
             }`}
           >
             <Popover>
@@ -174,7 +171,7 @@ export function TaskBoard({
                   type="button"
                   onClick={e => e.stopPropagation()}
                   aria-label={`${t("common.color")}: ${c.name}`}
-                  className="size-2.5 rounded-full shrink-0 transition-transform hover:scale-125"
+                  className="size-2 rounded-full shrink-0 transition-transform hover:scale-125 ring-2 ring-white/55"
                   style={{ backgroundColor: c.color }}
                 />
               </PopoverTrigger>
@@ -202,14 +199,14 @@ export function TaskBoard({
             <button
               onClick={() => setCategoryPendingDelete(c)}
               aria-label={`Delete category ${c.name}`}
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 size-5 rounded-full border border-border bg-card shadow-card flex items-center justify-center opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
             >
-              <X size={11} />
+              <X size={9} strokeWidth={3.5} />
             </button>
           </div>
         ))}
         {isAddingCategory ? (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2 h-10 pl-2 pr-1.5 rounded-full bg-card border border-primary/25 shadow-card">
             <Input
               autoFocus
               value={newCategoryName}
@@ -219,7 +216,7 @@ export function TaskBoard({
                 if (e.key === "Escape") setIsAddingCategory(false)
               }}
               placeholder={t("taskForm.newCategoryPlaceholder")}
-              className="text-xs h-8 w-32"
+              className="border-0 shadow-none focus-visible:ring-0 text-sm h-[30px] w-32 px-2"
             />
             <div className="flex gap-1 flex-wrap max-w-32">
               {PALETTE_COLORS.map(color => (
@@ -238,14 +235,17 @@ export function TaskBoard({
                 />
               ))}
             </div>
-            <Button type="button" size="sm" className="text-xs h-8" onClick={handleCreateCategory}>
+            <Button
+              type="button"
+              className="text-[13px] font-bold h-[30px] px-3 rounded-full"
+              onClick={handleCreateCategory}
+            >
               {t("common.add")}
             </Button>
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              className="text-xs h-8"
+              className="text-[13px] font-semibold h-[30px] px-2.5 rounded-full"
               onClick={() => setIsAddingCategory(false)}
             >
               {t("common.cancel")}
@@ -254,9 +254,10 @@ export function TaskBoard({
         ) : (
           <button
             onClick={() => setIsAddingCategory(true)}
-            className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+            className="h-[34px] px-3 rounded-full border border-dashed border-border-strong text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5"
           >
-            + {t("tasks.addCategory")}
+            <Plus size={14} />
+            {t("tasks.addCategory")}
           </button>
         )}
       </div>
@@ -295,36 +296,47 @@ export function TaskBoard({
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="space-y-1.5">
-        <AnimatePresence initial={false}>
-          {filteredTasks.map(task =>
-            editingTaskId === task.id ? (
-              <motion.div key={task.id} layout className="mb-1.5">
-                <TaskForm task={task} onDone={() => setEditingTaskId(null)} />
-              </motion.div>
-            ) : (
-              <TaskRow
-                key={task.id}
-                task={task}
-                today={today}
-                onEdit={() => {
-                  setIsAdding(false)
-                  setEditingTaskId(task.id)
-                }}
-              />
-            ),
-          )}
-        </AnimatePresence>
-        {filteredTasks.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground text-sm">
+      {filteredTasks.length > 0 ? (
+        <section className="bg-card border border-card-border rounded-xl shadow-card overflow-hidden">
+          <AnimatePresence initial={false}>
+            {filteredTasks.map((task, i) =>
+              editingTaskId === task.id ? (
+                <motion.div
+                  key={task.id}
+                  layout
+                  className={`bg-sunken px-6 py-4 ${i ? "border-t border-border" : ""}`}
+                >
+                  <TaskForm task={task} embedded onDone={() => setEditingTaskId(null)} />
+                </motion.div>
+              ) : (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  today={today}
+                  divider={i > 0}
+                  onEdit={() => {
+                    setIsAdding(false)
+                    setEditingTaskId(task.id)
+                  }}
+                />
+              ),
+            )}
+          </AnimatePresence>
+        </section>
+      ) : (
+        <div className="bg-card border border-dashed border-border-strong rounded-xl px-6 py-14 flex flex-col items-center gap-3 text-center">
+          <span className="size-[52px] rounded-[14px] bg-primary-soft text-primary flex items-center justify-center">
+            <CheckSquare2 size={24} strokeWidth={1.75} />
+          </span>
+          <span className="text-[17px] font-bold">
             {t("tasks.noTasks")}
             {statusFilter !== "all"
               ? t("tasks.noTasksMarkedAs", { status: t(STATUS_LABEL_KEYS[statusFilter]) })
               : ""}
             {categoryFilter !== "all" ? t("tasks.noTasksIn", { category: categoryFilter }) : ""}
-          </div>
-        )}
-      </div>
+          </span>
+        </div>
+      )}
 
       {hasMoreCompleted && (
         <div className="flex justify-center mt-4">
