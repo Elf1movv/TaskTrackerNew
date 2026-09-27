@@ -129,6 +129,8 @@ export const en = {
   "goals.due": "Due {date}",
   "goals.noMilestonesYet": "No milestones yet",
   "goals.addMilestonePlaceholder": "Add a milestone…",
+  "goals.deleteTitle": "Delete goal?",
+  "goals.deleteBody": "The goal “{title}” and all its milestones will be deleted. This can't be undone.",
   "goalProgress.title": "Goal Progress",
   "goalProgress.viewAll": "All goals",
   "goalProgress.addGoal": "Add goal",

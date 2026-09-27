@@ -1,3 +1,4 @@
+import { CalendarDays } from "lucide-react"
 import styled from "@emotion/styled"
 import { AddMilestoneForm } from "@/features/add-milestone"
 import { DeleteGoalButton } from "@/features/delete-goal"
@@ -6,27 +7,20 @@ import { MilestoneRow } from "@/features/milestone-row"
 import { ProgressRing, useGoals } from "@/entities/goal"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { useLanguage } from "@/shared/lib/i18n"
-import { displayFont, monoFont } from "@/shared/lib/typography"
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
 import type { GoalListItem } from "../GoalList"
 
 const StyledAccordionItem = styled(AccordionItem)<{ color: string }>`
-  border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   overflow: hidden;
   background-color: var(--card);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-card);
 
   &[data-state="open"] {
-    border-color: ${p => `${p.color}44`};
+    border-color: color-mix(in srgb, ${p => p.color} 45%, transparent);
+    box-shadow: var(--shadow-raised);
   }
-`
-
-const MilestonesSection = styled.div<{ color: string }>`
-  border-top: 1px solid ${p => `${p.color}28`};
-`
-
-const MilestoneCountLabel = styled.span<{ color: string }>`
-  color: ${p => p.color};
 `
 
 export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit: () => void }) {
@@ -49,37 +43,37 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <StyledAccordionItem value={goal.id} color={goal.color} className="!border-b-0">
-        <div className="flex items-start gap-1 px-6 pt-6">
-          <AccordionTrigger className="hover:no-underline [&>svg]:mt-0.5 pb-6">
-            <div className="flex items-start gap-4 flex-1">
+        <div className="flex items-center gap-1 pl-6 pr-5 py-5">
+          <AccordionTrigger className="hover:no-underline [&>svg]:mt-1 !py-0">
+            <div className="flex items-start gap-[18px] flex-1">
               <ProgressRing progress={goal.progress} color={goal.color} />
               <div className="flex-1 min-w-0 text-left">
-                <h3 css={displayFont} className="text-base leading-snug pr-2">
-                  {goal.title}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{goal.description}</p>
-                <div className="flex gap-4 mt-3">
-                  <MilestoneCountLabel css={monoFont} color={goal.color} className="text-xs">
+                <h3 className="text-lg font-bold tracking-[-0.01em] leading-snug pr-2">{goal.title}</h3>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>
+                <div className="flex items-center gap-4 mt-2">
+                  <span className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground">
+                    <span className="size-2 rounded-full shrink-0" style={{ background: goal.color }} />
                     {t("goals.milestonesCount", { completed: completedCount, total: goal.milestones.length })}
-                  </MilestoneCountLabel>
-                  <span css={monoFont} className="text-xs text-muted-foreground">
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[13px] font-semibold text-tertiary">
+                    <CalendarDays size={14} strokeWidth={1.75} />
                     {goal.dueLabel ? t("goals.due", { date: goal.dueLabel }) : t("goalForm.noTargetDate")}
                   </span>
                 </div>
               </div>
             </div>
           </AccordionTrigger>
-          <div className="flex items-center gap-1 pt-4 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0">
             <EditGoalButton onClick={onEdit} />
-            <DeleteGoalButton goalId={goal.id} />
+            <DeleteGoalButton goalId={goal.id} goalTitle={goal.title} />
           </div>
         </div>
-        <AccordionContent className="px-6 pb-0">
-          <MilestonesSection color={goal.color} className="pt-5 pb-6 space-y-4">
-            <div css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <AccordionContent className="px-5 pb-5">
+          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1">
+            <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary px-1 pb-2">
               {t("goals.milestones")}
-            </div>
-            <div className="space-y-3">
+            </span>
+            <div className="flex flex-col gap-1">
               {goal.milestones.map((milestone, idx) => (
                 <MilestoneRow
                   key={milestone.id}
@@ -90,11 +84,11 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
                 />
               ))}
               {goal.milestones.length === 0 && (
-                <p className="text-xs text-muted-foreground">{t("goals.noMilestonesYet")}</p>
+                <p className="text-sm text-tertiary px-1 pb-1">{t("goals.noMilestonesYet")}</p>
               )}
             </div>
             <AddMilestoneForm goalId={goal.id} />
-          </MilestonesSection>
+          </div>
         </AccordionContent>
       </StyledAccordionItem>
     </div>

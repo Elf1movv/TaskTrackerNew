@@ -16,21 +16,21 @@ export function AddMilestoneForm({ goalId }: { goalId: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 mt-1.5 h-11 pl-3.5 pr-1.5 rounded-[10px] border border-dashed border-border-strong">
       <Input
         value={title}
         onChange={e => setTitle(e.target.value)}
         onKeyDown={e => e.key === "Enter" && handleSubmit()}
         placeholder={t("goals.addMilestonePlaceholder")}
-        className="text-sm h-8 bg-muted border-0"
+        className="text-sm h-8 flex-1 bg-transparent border-0 shadow-none px-0"
       />
       <button
         onClick={handleSubmit}
         disabled={!title.trim()}
-        className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground disabled:opacity-40 transition-all"
+        className="shrink-0 size-8 rounded-lg bg-primary-soft text-primary disabled:opacity-40 transition-all flex items-center justify-center"
         aria-label="Add milestone"
       >
-        <Plus size={14} />
+        <Plus size={16} />
       </button>
     </div>
   )

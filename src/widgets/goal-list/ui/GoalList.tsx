@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { Plus } from "lucide-react"
+import { Target } from "lucide-react"
 import { GoalForm } from "@/features/goal-form"
 import { useGoals, type Goal } from "@/entities/goal"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Accordion } from "@/shared/ui/accordion"
-import { Button } from "@/shared/ui/button"
 import { GoalAccordionItem } from "./components"
 
 export interface GoalListItem extends Goal {
@@ -16,9 +15,23 @@ export interface GoalListItem extends Goal {
 // ("tap a goal there, land here with it expanded and moved to the top").
 // Read once on mount; the page that owns the URL is responsible for
 // clearing the query param, this just consumes the id it's handed.
-export function GoalList({ goals, initialGoalId }: { goals: GoalListItem[]; initialGoalId?: string }) {
+// `isAdding`/`onCloseAdding` — the "Add goal" toggle itself lives in
+// GoalsPage's header (next to the title, matching Tasks/Today), this just
+// renders the form when it's open and tells the header to close it again
+// once a goal's actually added, or when the user starts editing an
+// existing one instead (mutually exclusive with adding a new one).
+export function GoalList({
+  goals,
+  initialGoalId,
+  isAdding,
+  onCloseAdding,
+}: {
+  goals: GoalListItem[]
+  initialGoalId?: string
+  isAdding: boolean
+  onCloseAdding: () => void
+}) {
   const { reorderGoals } = useGoals()
-  const [isAdding, setIsAdding] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const { t } = useLanguage()
 
@@ -44,19 +57,6 @@ export function GoalList({ goals, initialGoalId }: { goals: GoalListItem[]; init
 
   return (
     <div>
-      <div className="flex justify-end mb-5">
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditingGoal(null)
-            setIsAdding(v => !v)
-          }}
-        >
-          <Plus size={14} />
-          {t("goals.addGoal")}
-        </Button>
-      </div>
-
       <AnimatePresence>
         {(isAdding || editingGoal) && (
           <motion.div
@@ -69,7 +69,7 @@ export function GoalList({ goals, initialGoalId }: { goals: GoalListItem[]; init
             <GoalForm
               goal={editingGoal ?? undefined}
               onDone={() => {
-                setIsAdding(false)
+                onCloseAdding()
                 setEditingGoal(null)
               }}
             />
@@ -83,15 +83,27 @@ export function GoalList({ goals, initialGoalId }: { goals: GoalListItem[]; init
           collapsible
           value={openGoalId}
           onValueChange={setOpenGoalId}
-          className="space-y-4"
+          className="space-y-3.5"
         >
           {goals.map(goal => (
-            <GoalAccordionItem key={goal.id} goal={goal} onEdit={() => setEditingGoal(goal)} />
+            <GoalAccordionItem
+              key={goal.id}
+              goal={goal}
+              onEdit={() => {
+                onCloseAdding()
+                setEditingGoal(goal)
+              }}
+            />
           ))}
         </Accordion>
       ) : (
         !isAdding && (
-          <div className="text-center py-16 text-muted-foreground text-sm">{t("goals.noGoalsYet")}</div>
+          <div className="bg-card border border-dashed border-border-strong rounded-xl px-6 py-14 flex flex-col items-center gap-3 text-center">
+            <span className="size-[52px] rounded-[14px] bg-primary-soft text-primary flex items-center justify-center">
+              <Target size={24} strokeWidth={1.75} />
+            </span>
+            <span className="text-[17px] font-bold">{t("goals.noGoalsYet")}</span>
+          </div>
         )
       )}
     </div>

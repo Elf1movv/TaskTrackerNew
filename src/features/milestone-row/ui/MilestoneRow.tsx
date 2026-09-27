@@ -50,7 +50,7 @@ export function MilestoneRow({
   return (
     <div
       ref={ref}
-      className="w-full flex items-center gap-3 group cursor-grab active:cursor-grabbing select-none"
+      className="w-full flex items-center gap-3 min-h-11 pl-3 pr-2 rounded-[10px] bg-card shadow-card group cursor-grab active:cursor-grabbing select-none"
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <button
@@ -62,9 +62,9 @@ export function MilestoneRow({
         <Circle
           completed={milestone.completed}
           color={color}
-          className="w-5 h-5 flex items-center justify-center"
+          className="w-[22px] h-[22px] flex items-center justify-center"
         >
-          {milestone.completed && <Check size={9} strokeWidth={3} className="text-white" />}
+          {milestone.completed && <Check size={12} strokeWidth={3} className="text-white" />}
         </Circle>
       </button>
 
@@ -86,24 +86,24 @@ export function MilestoneRow({
       ) : (
         <button
           onClick={() => setIsEditing(true)}
-          className={`text-sm flex-1 leading-snug text-left ${
-            milestone.completed ? "line-through text-muted-foreground" : ""
+          className={`text-sm font-medium flex-1 leading-snug text-left ${
+            milestone.completed ? "line-through text-tertiary" : ""
           }`}
         >
           {milestone.title}
         </button>
       )}
 
-      <span css={monoFont} className="text-xs text-muted-foreground">
+      <span css={monoFont} className="text-xs font-semibold text-tertiary">
         #{index + 1}
       </span>
 
       <button
         onClick={() => deleteMilestone(goalId, milestone.id)}
-        className="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-destructive transition-all"
+        className="shrink-0 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-destructive transition-all"
         aria-label="Delete milestone"
       >
-        <Trash2 size={12} />
+        <Trash2 size={13} />
       </button>
     </div>
   )

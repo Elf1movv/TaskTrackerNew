@@ -131,6 +131,8 @@ export const ru: Record<keyof typeof en, string> = {
   "goals.due": "Срок: {date}",
   "goals.noMilestonesYet": "Пока нет этапов",
   "goals.addMilestonePlaceholder": "Добавить этап…",
+  "goals.deleteTitle": "Удалить цель?",
+  "goals.deleteBody": "Цель «{title}» и все её этапы будут удалены. Это действие нельзя отменить.",
   "goalProgress.title": "Прогресс целей",
   "goalProgress.viewAll": "Все цели",
   "goalProgress.addGoal": "Добавить цель",

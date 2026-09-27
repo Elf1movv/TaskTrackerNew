@@ -37,7 +37,7 @@ export function DayGoalRow({
         {goal.progress}%
       </span>
       <EditGoalButton onClick={onEdit} />
-      <DeleteGoalButton goalId={goal.id} />
+      <DeleteGoalButton goalId={goal.id} goalTitle={goal.title} />
     </div>
   )
 }

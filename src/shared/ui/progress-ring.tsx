@@ -13,11 +13,19 @@ export function ProgressRing({
   color,
   strokeWidth = 3,
   showLabel = true,
+  trackColor = "var(--muted)",
+  labelClassName = "text-[10px]",
 }: {
   progress: number
   color: string
   strokeWidth?: number
   showLabel?: boolean
+  /** Defaults to the neutral --muted track every existing caller expects
+   * — pass a per-color tint (e.g. `color-mix(in srgb, ${color} 16%,
+   * transparent)`) where the ring's own color should carry through even
+   * when empty, like Goals' per-goal-colored rings. */
+  trackColor?: string
+  labelClassName?: string
 }) {
   return (
     <div className="relative w-full h-full">
@@ -33,7 +41,7 @@ export function ProgressRing({
           r={RADIUS}
           fill="none"
           strokeWidth={strokeWidth}
-          stroke="var(--muted)"
+          stroke={trackColor}
         />
         <circle
           cx={VIEWBOX / 2}
@@ -50,7 +58,7 @@ export function ProgressRing({
       {showLabel && (
         <span
           css={monoFont}
-          className="absolute inset-0 flex items-center justify-center text-[10px]"
+          className={`absolute inset-0 flex items-center justify-center ${labelClassName}`}
           style={{ color }}
         >
           {progress}%

@@ -1,19 +1,55 @@
+import { useState } from "react"
 import { Trash2 } from "lucide-react"
 import { useGoals } from "@/entities/goal"
+import { useLanguage } from "@/shared/lib/i18n"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/ui/alert-dialog"
+import { buttonVariants } from "@/shared/ui/button"
 
-export function DeleteGoalButton({ goalId }: { goalId: string }) {
+// A goal deletion takes every one of its milestones with it — the same
+// destructive-confirmation convention this project already uses for
+// deleting a category with tasks in it (see TaskBoard.tsx), not a bare
+// click-to-delete.
+export function DeleteGoalButton({ goalId, goalTitle }: { goalId: string; goalTitle: string }) {
   const { deleteGoal } = useGoals()
+  const { t } = useLanguage()
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   return (
-    <button
-      onClick={e => {
-        e.stopPropagation()
-        deleteGoal(goalId)
-      }}
-      className="p-1 rounded text-muted-foreground hover:text-destructive transition-all"
-      aria-label="Delete goal"
-    >
-      <Trash2 size={14} />
-    </button>
+    <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <button
+        onClick={e => {
+          e.stopPropagation()
+          setConfirmOpen(true)
+        }}
+        className="p-2 rounded-[10px] text-tertiary hover:text-foreground hover:bg-fill transition-all"
+        aria-label="Delete goal"
+      >
+        <Trash2 size={16} strokeWidth={1.75} />
+      </button>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("goals.deleteTitle")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("goals.deleteBody", { title: goalTitle })}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => deleteGoal(goalId)}
+            className={buttonVariants({ variant: "destructive" })}
+          >
+            {t("common.delete")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
