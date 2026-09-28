@@ -381,7 +381,12 @@ function TimedTaskBlock({
           : `color-mix(in srgb, ${categoryColor} 22%, var(--card))`,
         zIndex: draftEndTime ? 40 : 10,
       }}
-      className="absolute flex items-center gap-1 rounded-md px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden"
+      // select-none + touch-callout:none — without these, a press-and-hold
+      // to start a move-drag on mobile (see useMoveDrag.ts) is exactly the
+      // same gesture Safari/Chrome use for native text selection, which
+      // wins by default and highlights the block's text instead of (or
+      // alongside) dragging it. Direct user feedback, 2026-09-28.
+      className="absolute flex items-center gap-1 rounded-md px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden select-none [-webkit-touch-callout:none]"
       title={`${task.time} · ${task.title}`}
     >
       <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
