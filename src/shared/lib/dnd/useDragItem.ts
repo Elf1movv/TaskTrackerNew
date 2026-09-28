@@ -13,6 +13,7 @@ export function useDragItem<T extends HTMLElement>({
   type,
   id,
   canDrag = true,
+  durationMinutes,
 }: {
   type: string
   id: string
@@ -20,15 +21,21 @@ export function useDragItem<T extends HTMLElement>({
   // Agenda list — a flat list has no day-cell equivalent to drop onto),
   // so the row doesn't pick up and snap back with nothing useful to do.
   canDrag?: boolean
+  // Carried on the drag payload so a drop target can size a live preview to
+  // match (see HourGrid's whole-task time-move) — a number, not an object,
+  // so it compares by value in the deps array below instead of forcing a
+  // fresh useDrag registration on every render. Omitted by every other
+  // caller, which just get `undefined` here.
+  durationMinutes?: number
 }) {
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type,
-      item: () => ({ id }),
+      item: () => ({ id, durationMinutes }),
       canDrag,
       collect: monitor => ({ isDragging: monitor.isDragging() }),
     }),
-    [type, id, canDrag],
+    [type, id, canDrag, durationMinutes],
   )
 
   const ref = useCallback(

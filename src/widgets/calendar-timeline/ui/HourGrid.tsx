@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
 import { resolveCategoryColor, useCategories, type Category } from "@/entities/category"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
@@ -11,6 +11,7 @@ import {
   HOUR_HEIGHT_PX,
   minutesFromMidnight,
   offsetPxToTime,
+  offsetToTime,
   timeToOffsetPx,
 } from "@/shared/lib/timeOffset"
 import { computeLanes, type LaneAssignment } from "../lib/computeLanes"
@@ -165,7 +166,12 @@ function TimelineDayColumn({
   // double-fire bug `monitor.didDrop()` was added to useDropTarget to fix
   // earlier this session. The drop's Y position (relative to this column's
   // own top edge) is turned into a snapped time here instead.
-  const { ref: dropRef, isOver } = useDropTarget<HTMLDivElement>({
+  const {
+    ref: dropRef,
+    isOver,
+    clientOffset,
+    draggedItem,
+  } = useDropTarget<HTMLDivElement>({
     type: "calendar-task-time-move",
     onDrop: (taskId, clientOffset) => {
       if (!clientOffset || !columnEl.current) return
@@ -173,6 +179,32 @@ function TimelineDayColumn({
       onRescheduleTask(taskId, column.day, offsetPxToTime(clientOffset.y - rect.top))
     },
   })
+
+  // Live preview of where a whole-block move will snap to, while dragging
+  // — before this, the dragged block just sat dimmed at its OLD position
+  // (see TimedTaskBlock's opacity below) with no feedback about where it
+  // would actually land until the drop already happened. Direct user
+  // feedback, 2026-09-28: dragging "picks a bad time" because there was
+  // nothing to aim at. Same dashed-preview treatment as create-drag/resize
+  // below, just driven by the drop target's live hover position instead of
+  // a pointer-drag hook of its own. A layout effect (not read inline during
+  // render — reading a ref's `.current` during render is unsound, see the
+  // react-hooks/refs lint rule), fired on every hover-position update react-
+  // dnd gives us, re-measuring the column's rect fresh each time so a
+  // mid-drag scroll doesn't leave it stale.
+  const [movePreview, setMovePreview] = useState<{ startTime: string; endTime: string } | null>(null)
+  useLayoutEffect(() => {
+    if (!isOver || !clientOffset || !draggedItem || !columnEl.current) {
+      setMovePreview(null)
+      return
+    }
+    const rect = columnEl.current.getBoundingClientRect()
+    const startTime = offsetPxToTime(clientOffset.y - rect.top)
+    const endTime = offsetToTime(
+      minutesFromMidnight(startTime) + (draggedItem.durationMinutes ?? DEFAULT_BLOCK_MINUTES),
+    )
+    setMovePreview({ startTime, endTime })
+  }, [isOver, clientOffset, draggedItem])
 
   const { onPointerDown: onCreatePointerDown, preview } = useCreateDrag({
     columnRef: columnEl,
@@ -238,18 +270,8 @@ function TimelineDayColumn({
         </div>
       )}
 
-      {preview && (
-        <div
-          className="absolute left-1 right-1 z-30 rounded-md border-2 border-dashed pointer-events-none"
-          style={{
-            top: timeToOffsetPx(preview.startTime),
-            height: Math.max(4, timeToOffsetPx(preview.endTime) - timeToOffsetPx(preview.startTime)),
-            borderColor: "var(--primary)",
-            backgroundColor: "var(--primary)",
-            opacity: 0.1,
-          }}
-        />
-      )}
+      {preview && <TimePreviewBlock startTime={preview.startTime} endTime={preview.endTime} />}
+      {movePreview && <TimePreviewBlock startTime={movePreview.startTime} endTime={movePreview.endTime} />}
 
       {column.tasks.map(task => (
         <TimedTaskBlock
@@ -274,6 +296,24 @@ function TimelineDayColumn({
   )
 }
 
+// Dashed "this is where it'll land" outline, shared by create-drag and
+// whole-block move — same visual language for both since they answer the
+// same question (where does this snap to right now).
+function TimePreviewBlock({ startTime, endTime }: { startTime: string; endTime: string }) {
+  return (
+    <div
+      className="absolute left-1 right-1 z-30 rounded-md border-2 border-dashed pointer-events-none"
+      style={{
+        top: timeToOffsetPx(startTime),
+        height: Math.max(4, timeToOffsetPx(endTime) - timeToOffsetPx(startTime)),
+        borderColor: "var(--primary)",
+        backgroundColor: "var(--primary)",
+        opacity: 0.1,
+      }}
+    />
+  )
+}
+
 // Fallback height for a task with no endTime yet (pre-migration data, or
 // one created before this feature existed) — unchanged from before this
 // round. MIN_BLOCK_HEIGHT_PX floors a real but very short duration so it
@@ -285,6 +325,15 @@ function blockHeightPx(task: Task): number {
   if (!task.endTime || !task.time) return FALLBACK_BLOCK_HEIGHT_PX
   const raw = timeToOffsetPx(task.endTime) - timeToOffsetPx(task.time)
   return raw > 0 ? Math.max(MIN_BLOCK_HEIGHT_PX, raw) : FALLBACK_BLOCK_HEIGHT_PX
+}
+
+// Same duration a dragged task keeps, used to size the whole-block move's
+// live preview (see TimelineDayColumn's movePreview) — mirrors
+// blockHeightPx's own fallback for an endTime-less/malformed task.
+function taskDurationMinutes(task: Task): number {
+  if (!task.endTime || !task.time) return DEFAULT_BLOCK_MINUTES
+  const raw = minutesFromMidnight(task.endTime) - minutesFromMidnight(task.time)
+  return raw > 0 ? raw : DEFAULT_BLOCK_MINUTES
 }
 
 function TimedTaskBlock({
@@ -302,7 +351,11 @@ function TimedTaskBlock({
   onEdit: (anchorRect: DOMRect) => void
   onResizeTask?: (endTime: string) => void
 }) {
-  const { ref, isDragging } = useDragItem<HTMLDivElement>({ type: "calendar-task-time-move", id: task.id })
+  const { ref, isDragging } = useDragItem<HTMLDivElement>({
+    type: "calendar-task-time-move",
+    id: task.id,
+    durationMinutes: taskDurationMinutes(task),
+  })
   const { onPointerDown: onResizePointerDown, draftEndTime } = useResizeDrag({
     startTime: task.time ?? "00:00",
     columnRef,

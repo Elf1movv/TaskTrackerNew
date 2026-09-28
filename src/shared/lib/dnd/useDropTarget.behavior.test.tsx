@@ -18,6 +18,11 @@ function lastDropSpec() {
   const specFactory = calls[calls.length - 1][0] as unknown as () => {
     accept: string
     drop: (item: { id: string }, monitor: { didDrop: () => boolean; getClientOffset: () => unknown }) => void
+    collect: (monitor: {
+      isOver: () => boolean
+      getClientOffset: () => unknown
+      getItem: () => unknown
+    }) => unknown
   }
   return specFactory()
 }
@@ -51,5 +56,33 @@ describe("useDropTarget: drop behavior", () => {
     lastDropSpec().drop({ id: "dragged-task" }, { didDrop: () => true, getClientOffset: () => null })
 
     expect(onDrop).not.toHaveBeenCalled()
+  })
+
+  it("collects the live client offset and dragged item while this target is hovered", () => {
+    renderHook(() => useDropTarget({ type: "task", onDrop: () => {} }))
+
+    const collected = lastDropSpec().collect({
+      isOver: () => true,
+      getClientOffset: () => ({ x: 1, y: 2 }),
+      getItem: () => ({ id: "dragged-task", durationMinutes: 30 }),
+    })
+
+    expect(collected).toEqual({
+      isOver: true,
+      clientOffset: { x: 1, y: 2 },
+      draggedItem: { id: "dragged-task", durationMinutes: 30 },
+    })
+  })
+
+  it("reports no client offset or dragged item for a target that isn't hovered", () => {
+    renderHook(() => useDropTarget({ type: "task", onDrop: () => {} }))
+
+    const collected = lastDropSpec().collect({
+      isOver: () => false,
+      getClientOffset: () => ({ x: 1, y: 2 }),
+      getItem: () => ({ id: "dragged-task" }),
+    })
+
+    expect(collected).toEqual({ isOver: false, clientOffset: null, draggedItem: null })
   })
 })

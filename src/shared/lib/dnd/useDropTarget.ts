@@ -3,6 +3,7 @@ import { useDrop } from "react-dnd"
 
 interface DragItem {
   id: string
+  durationMinutes?: number
 }
 
 // Makes an element accept a drop of a given type and fire once when the
@@ -32,14 +33,26 @@ export function useDropTarget<T extends HTMLElement>({
   // drop's Y position into a time-of-day.
   onDrop: (draggedId: string, clientOffset: { x: number; y: number } | null) => void
 }) {
-  const [{ isOver }, drop] = useDrop<DragItem, void, { isOver: boolean }>(
+  const [{ isOver, clientOffset, draggedItem }, drop] = useDrop<
+    DragItem,
+    void,
+    { isOver: boolean; clientOffset: { x: number; y: number } | null; draggedItem: DragItem | null }
+  >(
     () => ({
       accept: type,
       drop: (item, monitor) => {
         if (monitor.didDrop()) return
         onDrop(item.id, monitor.getClientOffset())
       },
-      collect: monitor => ({ isOver: monitor.isOver() }),
+      // getClientOffset()/getItem() are live for whichever drop target is
+      // under the cursor across the whole page, not scoped to this one —
+      // gated on monitor.isOver() so a target the drag isn't currently over
+      // doesn't also think it has a live position/item to preview.
+      collect: monitor => ({
+        isOver: monitor.isOver(),
+        clientOffset: monitor.isOver() ? monitor.getClientOffset() : null,
+        draggedItem: monitor.isOver() ? monitor.getItem() : null,
+      }),
     }),
     [type, onDrop],
   )
@@ -51,5 +64,5 @@ export function useDropTarget<T extends HTMLElement>({
     [drop],
   )
 
-  return { ref, isOver }
+  return { ref, isOver, clientOffset, draggedItem }
 }
