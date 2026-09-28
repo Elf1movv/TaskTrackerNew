@@ -1,21 +1,20 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
 import { resolveCategoryColor, useCategories, type Category } from "@/entities/category"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { PriorityDot, type Task } from "@/entities/task"
 import { TaskToggleCheckbox } from "@/features/toggle-task"
-import { useDragItem, useDropTarget } from "@/shared/lib/dnd"
+import { formatDateKey } from "@/shared/lib/date"
 import { monoFont } from "@/shared/lib/typography"
 import {
   DEFAULT_BLOCK_MINUTES,
   HOUR_HEIGHT_PX,
   minutesFromMidnight,
-  offsetPxToTime,
-  offsetToTime,
   timeToOffsetPx,
 } from "@/shared/lib/timeOffset"
 import { computeLanes, type LaneAssignment } from "../lib/computeLanes"
 import { useCreateDrag } from "../lib/useCreateDrag"
+import { useMoveDrag, type MoveDragPreview } from "../lib/useMoveDrag"
 import { useResizeDrag } from "../lib/useResizeDrag"
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h)
@@ -84,6 +83,13 @@ export function HourGrid({
   const [now, setNow] = useState(new Date())
   const scrollRef = useRef<HTMLDivElement>(null)
   const hasScrolledToNow = useRef(false)
+  // Lifted up here, not owned by one TimelineDayColumn — a move-drag's
+  // live preview can land in a DIFFERENT day column than the one it
+  // started in (dragging across days in Week view), so whichever column
+  // it currently belongs to is decided by comparing `movePreview.day`
+  // against each column's own day when rendering, not by which column's
+  // own gesture produced it.
+  const [movePreview, setMovePreview] = useState<MoveDragPreview | null>(null)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
@@ -128,6 +134,8 @@ export function HourGrid({
             column={column}
             categories={categories}
             nowTop={isToday(column.day) ? nowTop : null}
+            movePreview={movePreview?.day === formatDateKey(column.day) ? movePreview : null}
+            onMovePreviewChange={setMovePreview}
             onEditTask={onEditTask}
             onEditReminder={onEditReminder}
             onRescheduleTask={onRescheduleTask}
@@ -144,6 +152,8 @@ function TimelineDayColumn({
   column,
   categories,
   nowTop,
+  movePreview,
+  onMovePreviewChange,
   onEditTask,
   onEditReminder,
   onRescheduleTask,
@@ -153,6 +163,11 @@ function TimelineDayColumn({
   column: HourGridColumn
   categories: Category[]
   nowTop: number | null
+  // Already filtered to this column by HourGrid (movePreview.day matched
+  // against this column's own day) — null here just means "no move-drag
+  // is currently over ME", not "no move-drag is happening at all".
+  movePreview: MoveDragPreview | null
+  onMovePreviewChange: (preview: MoveDragPreview | null) => void
   onEditTask: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
   onRescheduleTask: (taskId: string, day: Date, time: string) => void
@@ -160,51 +175,6 @@ function TimelineDayColumn({
   onCreateDraft?: (day: Date, startTime: string, endTime: string, anchorRect: DOMRect) => void
 }) {
   const columnEl = useRef<HTMLDivElement | null>(null)
-
-  // One drop target for the WHOLE column, not one per hour cell — 24
-  // nested drop targets inside one column would reproduce the exact
-  // double-fire bug `monitor.didDrop()` was added to useDropTarget to fix
-  // earlier this session. The drop's Y position (relative to this column's
-  // own top edge) is turned into a snapped time here instead.
-  const {
-    ref: dropRef,
-    isOver,
-    clientOffset,
-    draggedItem,
-  } = useDropTarget<HTMLDivElement>({
-    type: "calendar-task-time-move",
-    onDrop: (taskId, clientOffset) => {
-      if (!clientOffset || !columnEl.current) return
-      const rect = columnEl.current.getBoundingClientRect()
-      onRescheduleTask(taskId, column.day, offsetPxToTime(clientOffset.y - rect.top))
-    },
-  })
-
-  // Live preview of where a whole-block move will snap to, while dragging
-  // — before this, the dragged block just sat dimmed at its OLD position
-  // (see TimedTaskBlock's opacity below) with no feedback about where it
-  // would actually land until the drop already happened. Direct user
-  // feedback, 2026-09-28: dragging "picks a bad time" because there was
-  // nothing to aim at. Same dashed-preview treatment as create-drag/resize
-  // below, just driven by the drop target's live hover position instead of
-  // a pointer-drag hook of its own. A layout effect (not read inline during
-  // render — reading a ref's `.current` during render is unsound, see the
-  // react-hooks/refs lint rule), fired on every hover-position update react-
-  // dnd gives us, re-measuring the column's rect fresh each time so a
-  // mid-drag scroll doesn't leave it stale.
-  const [movePreview, setMovePreview] = useState<{ startTime: string; endTime: string } | null>(null)
-  useLayoutEffect(() => {
-    if (!isOver || !clientOffset || !draggedItem || !columnEl.current) {
-      setMovePreview(null)
-      return
-    }
-    const rect = columnEl.current.getBoundingClientRect()
-    const startTime = offsetPxToTime(clientOffset.y - rect.top)
-    const endTime = offsetToTime(
-      minutesFromMidnight(startTime) + (draggedItem.durationMinutes ?? DEFAULT_BLOCK_MINUTES),
-    )
-    setMovePreview({ startTime, endTime })
-  }, [isOver, clientOffset, draggedItem])
 
   const { onPointerDown: onCreatePointerDown, preview } = useCreateDrag({
     columnRef: columnEl,
@@ -236,20 +206,16 @@ function TimelineDayColumn({
     return new Map(computeLanes(items).map(a => [a.id, a]))
   }, [column.tasks, column.reminders])
 
-  const ref = useCallback(
-    (node: HTMLDivElement | null) => {
-      dropRef(node)
-      columnEl.current = node
-    },
-    [dropRef],
-  )
-
   return (
     <div
-      ref={ref}
+      ref={columnEl}
+      // Read by useMoveDrag (via document.elementFromPoint + .closest) to
+      // find which column the pointer is over mid-drag, without needing a
+      // column ref threaded down from HourGrid — see that hook's comment.
+      data-calendar-day={formatDateKey(column.day)}
       onPointerDown={onCreateDraft ? onCreatePointerDown : undefined}
       className={`relative flex-1 min-w-[120px] border-r border-border last:border-r-0 ${
-        isOver ? "bg-primary/5" : ""
+        movePreview ? "bg-primary/5" : ""
       } ${onCreateDraft ? "cursor-crosshair" : ""}`}
       style={{ height: GRID_HEIGHT_PX }}
     >
@@ -282,6 +248,8 @@ function TimelineDayColumn({
           columnRef={columnEl}
           onEdit={rect => onEditTask(task.id, rect)}
           onResizeTask={onResizeTask ? endTime => onResizeTask(task.id, endTime) : undefined}
+          onRescheduleTask={onRescheduleTask}
+          onMovePreviewChange={onMovePreviewChange}
         />
       ))}
       {column.reminders.map(reminder => (
@@ -343,6 +311,8 @@ function TimedTaskBlock({
   columnRef,
   onEdit,
   onResizeTask,
+  onRescheduleTask,
+  onMovePreviewChange,
 }: {
   task: Task
   categoryColor: string
@@ -350,11 +320,18 @@ function TimedTaskBlock({
   columnRef: React.RefObject<HTMLDivElement | null>
   onEdit: (anchorRect: DOMRect) => void
   onResizeTask?: (endTime: string) => void
+  onRescheduleTask: (taskId: string, day: Date, time: string) => void
+  onMovePreviewChange: (preview: MoveDragPreview | null) => void
 }) {
-  const { ref, isDragging } = useDragItem<HTMLDivElement>({
-    type: "calendar-task-time-move",
-    id: task.id,
+  const {
+    onPointerDown: onMovePointerDown,
+    isDragging,
+    wasDraggedRef,
+  } = useMoveDrag({
+    taskId: task.id,
     durationMinutes: taskDurationMinutes(task),
+    onRescheduleTask,
+    onPreviewChange: onMovePreviewChange,
   })
   const { onPointerDown: onResizePointerDown, draftEndTime } = useResizeDrag({
     startTime: task.time ?? "00:00",
@@ -372,13 +349,25 @@ function TimedTaskBlock({
     // bubbling/synthetic-click oddities) — role="button" + tabIndex give
     // the same keyboard/a11y affordances instead.
     <div
-      ref={ref}
       role="button"
       tabIndex={0}
       // Stops the column's create-drag (an ancestor listener) from also
-      // starting when the gesture begins on this existing block.
-      onPointerDown={e => e.stopPropagation()}
-      onClick={e => onEdit(e.currentTarget.getBoundingClientRect())}
+      // starting when the gesture begins on this existing block, then
+      // hands off to the whole-block move gesture (useMoveDrag).
+      onPointerDown={e => {
+        e.stopPropagation()
+        onMovePointerDown(e)
+      }}
+      // The browser fires `click` right after `pointerup` regardless of
+      // whether the pointer moved — a plain tap needs this to open the
+      // edit popover (useMoveDrag never calls onEdit itself), but a real
+      // drag-then-release would ALSO fire one, which must NOT also open
+      // the popover right after a successful move. wasDraggedRef is set
+      // by useMoveDrag for exactly this check.
+      onClick={e => {
+        if (wasDraggedRef.current) return
+        onEdit(e.currentTarget.getBoundingClientRect())
+      }}
       onKeyDown={e => {
         if (e.key === "Enter" || e.key === " ") onEdit(e.currentTarget.getBoundingClientRect())
       }}
@@ -417,7 +406,11 @@ function TimedTaskBlock({
           // the browser still dispatches after mouseup on this same
           // element, which would otherwise bubble up and fire the
           // block's own onClick (opening the edit popover right after a
-          // resize). Needs its own, independent stopPropagation.
+          // resize). Needs its own, independent stopPropagation. (Also
+          // stops the block's own onPointerDown above from starting a
+          // move-drag when the gesture begins on this handle instead —
+          // both move and resize are plain Pointer Events now, so this
+          // one stopPropagation is enough on its own.)
           onClick={e => e.stopPropagation()}
           draggable={false}
           className="absolute inset-x-0 bottom-0 h-2 cursor-ns-resize"

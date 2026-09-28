@@ -53,11 +53,12 @@ export function useResizeDrag({
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
-      // Must not also trigger the block's own whole-move drag (react-dnd,
-      // started via native HTML5 dragstart on the parent) or its
-      // click-to-edit — both stopPropagation and preventDefault are
-      // needed since dragstart is a separate native event this doesn't
-      // otherwise intercept.
+      // Must not also trigger the block's own whole-move drag (useMoveDrag,
+      // its onPointerDown sits on this same block) or its click-to-edit —
+      // stopPropagation keeps this from bubbling to that handler (both are
+      // plain Pointer Events now, so this alone is enough); preventDefault
+      // stops the block's native click from firing a second, unwanted edit
+      // right after a resize.
       e.stopPropagation()
       e.preventDefault()
       onPointerDownRaw(e)
