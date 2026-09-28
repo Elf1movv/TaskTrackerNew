@@ -151,13 +151,21 @@ export function TodayHabitGroupCard({
                 />
               </span>
             </AccordionTrigger>
-            <div className="flex items-center justify-end gap-1 min-h-[30px]">
-              {group.isGeneral && (
-                <span className="mr-auto h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1">
-                  <Lock size={11} strokeWidth={2.25} />
-                  {t("habits.group.general")}
-                </span>
-              )}
+            {/* Absolutely positioned, not normal flow — these sit beside
+                the pill (which itself straddles the card's top border, see
+                above), not stacked below it. This used to be `absolute`
+                before redesign step 4 accidentally dropped it in favor of
+                a flow div, which made the card reserve this row's own
+                height below the pill AS WELL AS the trigger's own
+                unshifted box, leaving a big dead gap between the pill and
+                everything below it (direct feedback, 2026-09-28). */}
+            {group.isGeneral && (
+              <span className="absolute left-4 top-1 h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1">
+                <Lock size={11} strokeWidth={2.25} />
+                {t("habits.group.general")}
+              </span>
+            )}
+            <div className="absolute right-4 top-1 flex items-center gap-1">
               <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
               {!group.isGeneral && <DeleteHabitGroupButton group={group} />}
             </div>

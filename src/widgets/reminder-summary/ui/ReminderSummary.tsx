@@ -21,6 +21,7 @@ const PRIORITY_FILTER_LABEL_KEYS: Record<PriorityFilter, TranslationKey> = {
 
 export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
   const [isAdding, setIsAdding] = useState(false)
+  const [editingReminderId, setEditingReminderId] = useState<string | null>(null)
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all")
   const { t } = useLanguage()
   const visibleReminders =
@@ -32,7 +33,10 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
         <h2 className="flex-1 text-xl font-bold tracking-[-0.015em]">{t("reminderSummary.title")}</h2>
         <button
           type="button"
-          onClick={() => setIsAdding(v => !v)}
+          onClick={() => {
+            setEditingReminderId(null)
+            setIsAdding(v => !v)
+          }}
           aria-label={t("reminders.addReminder")}
           aria-expanded={isAdding}
           className="size-8 rounded-full bg-primary-soft text-primary flex items-center justify-center transition-colors hover:bg-primary/15"
@@ -77,7 +81,17 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
         <div className="flex flex-col">
           {visibleReminders.map((reminder, i) => (
             <div key={reminder.id} className={i ? "pt-3 mt-3 border-t border-border" : ""}>
-              <ReminderRow reminder={reminder} />
+              {editingReminderId === reminder.id ? (
+                <ReminderForm reminder={reminder} onDone={() => setEditingReminderId(null)} />
+              ) : (
+                <ReminderRow
+                  reminder={reminder}
+                  onEdit={() => {
+                    setIsAdding(false)
+                    setEditingReminderId(reminder.id)
+                  }}
+                />
+              )}
             </div>
           ))}
         </div>

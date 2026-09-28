@@ -114,25 +114,37 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
           className="!border-b-0 bg-card border border-card-border rounded-xl shadow-card overflow-hidden"
         >
           <div className="flex items-start gap-1 px-[22px] pt-[18px] cursor-grab active:cursor-grabbing">
-            <AccordionTrigger className="hover:no-underline pb-4 [&>svg]:mt-1.5">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <span className="size-9 shrink-0 rounded-[10px] bg-primary-soft text-primary flex items-center justify-center">
-                  <HabitIcon emoji={getHabitGroupIcon(group)} size={18} />
-                </span>
-                <span className="text-xl font-bold tracking-[-0.015em] truncate">
-                  {getHabitGroupTitle(group, t)}
-                </span>
-                {group.isGeneral && (
-                  <span className="h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1 shrink-0">
-                    <Lock size={11} strokeWidth={2.25} />
-                    {t("habits.group.general")}
+            {/* flex-1 belongs on this wrapper, not the Trigger itself —
+                Radix wraps every AccordionTrigger in its own
+                <h3 class="flex"> (shared/ui/accordion.tsx), a plain flex
+                item with no grow of its own. flex-1 on the Trigger alone
+                had nothing to stretch against, so the row hugged its
+                title's content width and stranded edit/delete mid-card
+                instead of at its right edge (direct feedback, 2026-09-28
+                — same root cause as GoalAccordionItem's identical bug).
+                This wrapper is what actually sits in the outer flex row,
+                so it's the one that needs flex-1. */}
+            <div className="flex-1 min-w-0">
+              <AccordionTrigger className="hover:no-underline pb-4 [&>svg]:mt-1.5">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <span className="size-9 shrink-0 rounded-[10px] bg-primary-soft text-primary flex items-center justify-center">
+                    <HabitIcon emoji={getHabitGroupIcon(group)} size={18} />
                   </span>
-                )}
-                <span className="text-[13px] font-semibold text-tertiary shrink-0">
-                  {t("habits.group.habitCount", { count: habits.length })}
-                </span>
-              </div>
-            </AccordionTrigger>
+                  <span className="text-xl font-bold tracking-[-0.015em] truncate">
+                    {getHabitGroupTitle(group, t)}
+                  </span>
+                  {group.isGeneral && (
+                    <span className="h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1 shrink-0">
+                      <Lock size={11} strokeWidth={2.25} />
+                      {t("habits.group.general")}
+                    </span>
+                  )}
+                  <span className="text-[13px] font-semibold text-tertiary shrink-0">
+                    {t("habits.group.habitCount", { count: habits.length })}
+                  </span>
+                </div>
+              </AccordionTrigger>
+            </div>
             <div className="flex items-center gap-0.5 pt-3.5 shrink-0">
               <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
               {!group.isGeneral && <DeleteHabitGroupButton group={group} />}

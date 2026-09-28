@@ -159,7 +159,7 @@ export function TaskBoard({
         {categories.map(c => (
           <div
             key={c.id}
-            className={`relative group flex items-center gap-2 h-[34px] pl-3.5 pr-6 rounded-full text-[13px] font-semibold transition-all ${
+            className={`relative group flex items-center gap-2 h-[34px] pl-3.5 pr-7 rounded-full text-[13px] font-semibold transition-all ${
               categoryFilter === c.name
                 ? "bg-primary text-primary-foreground border border-primary"
                 : "border border-border bg-card text-foreground"
