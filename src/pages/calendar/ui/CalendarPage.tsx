@@ -7,6 +7,7 @@ import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
+import { useIsMobile } from "@/shared/ui/use-mobile"
 import { CalendarYear } from "@/widgets/calendar-year"
 import { CalendarProvider, useCalendarContext, type CalendarView } from "../connectors"
 import { CalendarAgendaView } from "./CalendarAgendaView"
@@ -81,6 +82,7 @@ function CalendarPageContent() {
   const { language, t } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
   const hasConsumedInitialParams = useRef(false)
+  const isMobile = useIsMobile()
 
   // One-time reconciliation of the URL the page was opened with — either an
   // external deep link (Today's reminder card sends `?date=`, no `?view=`,
@@ -94,7 +96,19 @@ function CalendarPageContent() {
     hasConsumedInitialParams.current = true
 
     const viewParam = searchParams.get("view")
-    if (viewParam && (BUILT_VIEWS as string[]).includes(viewParam)) setView(viewParam as CalendarView)
+    if (viewParam && (BUILT_VIEWS as string[]).includes(viewParam)) {
+      // Week's 7-day hourly grid doesn't fit a phone screen, and the swipe
+      // needed to scroll to the rest of the days conflicts with the
+      // existing press-and-drag-down "create a task" gesture on the grid
+      // (see HourGrid.tsx) — confirmed with the user, 2026-09-28: on
+      // mobile, Week opens Day instead. Read window.innerWidth directly
+      // here rather than the isMobile hook above — that hook's own
+      // detection runs one render behind on first mount, which would let a
+      // direct/bookmarked `?view=week` link slip through unredirected on
+      // the very first load.
+      const isMobileWidth = window.innerWidth < 768
+      setView(viewParam === "week" && isMobileWidth ? "day" : (viewParam as CalendarView))
+    }
 
     const dateParam = searchParams.get("date")
     if (dateParam) {
@@ -128,12 +142,20 @@ function CalendarPageContent() {
 
   return (
     <div className="p-4 md:p-6">
-      <div className="flex gap-0.5 bg-fill rounded-[10px] p-0.5 w-fit mb-5">
+      {/* mr-24 below md: below that width the sidebar is hidden (see
+          SidebarNav's own md:flex) and this row runs the full width of the
+          page, reaching the same top-right corner the page-shell's
+          fixed notification/settings buttons occupy — without this
+          clearance the row's own overflow-x-auto scrolling just moves
+          which tab sits UNDER those buttons, never actually revealing
+          "Год" from behind them. At md and up the sidebar already keeps
+          this row well clear of that corner, so no margin is needed. */}
+      <div className="flex gap-0.5 bg-fill rounded-[10px] p-0.5 w-fit mb-5 overflow-x-auto mr-24 md:mr-0">
         {BUILT_VIEWS.map(v => (
           <button
             key={v}
-            onClick={() => setView(v)}
-            className={`h-8 px-3 rounded-lg text-xs transition-all ${
+            onClick={() => setView(v === "week" && isMobile ? "day" : v)}
+            className={`h-8 px-3 rounded-lg text-xs transition-all shrink-0 ${
               view === v
                 ? "bg-seg text-foreground font-bold shadow-card"
                 : "text-muted-foreground font-medium hover:text-foreground"
@@ -144,7 +166,7 @@ function CalendarPageContent() {
         ))}
       </div>
 
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
         <h1
           css={displayFont}
           className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em] capitalize"

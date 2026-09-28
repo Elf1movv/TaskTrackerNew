@@ -97,7 +97,22 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   const days = period !== "year" ? getPeriodDays(period, today) : null
   const months = period === "year" ? getYearMonths(today) : null
   const columnCount = (days ?? months ?? []).length
-  const gridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(0, 1fr))`
+  // minmax(0, 1fr) columns let the day/month track collapse to nothing on a
+  // narrow screen — the weekday-label text doesn't wrap or clip there, it
+  // just spills into the neighboring column, rendering as an illegible
+  // overlap (direct feedback, 2026-09-28). minmax(44px, 1fr) gives each
+  // column a floor: at desktop widths, where there's already more than
+  // enough room, this is identical to before (every column is already
+  // wider than 44px); at mobile widths the grid now needs more space than
+  // its container has, so it scrolls horizontally instead (see the
+  // overflow-x-auto wrapper below) rather than crushing.
+  const gridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(44px, 1fr))`
+  // The chart row below reuses the same column count, but the chart itself
+  // is ONE cell spanning all of them (gridColumn: 2 / -1) rendered through
+  // Recharts' ResponsiveContainer, which is happy at any width — it doesn't
+  // need (or want) the 44px-per-column floor above, that would just force
+  // this row wider than necessary on mobile for no legibility benefit.
+  const chartGridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(0, 1fr))`
   const summary = getHabitHistorySummary(habits, period, today)
   const percent = summary.total === 0 ? 0 : Math.round((summary.completed / summary.total) * 100)
 
@@ -126,11 +141,11 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                 so it's the one that needs flex-1. */}
             <div className="flex-1 min-w-0">
               <AccordionTrigger className="hover:no-underline pb-4 [&>svg]:mt-1.5">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                   <span className="size-9 shrink-0 rounded-[10px] bg-primary-soft text-primary flex items-center justify-center">
                     <HabitIcon emoji={getHabitGroupIcon(group)} size={18} />
                   </span>
-                  <span className="text-xl font-bold tracking-[-0.015em] truncate">
+                  <span className="text-xl font-bold tracking-[-0.015em] truncate min-w-0">
                     {getHabitGroupTitle(group, t)}
                   </span>
                   {group.isGeneral && (
@@ -201,74 +216,79 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                 </div>
               )
             ) : (
-              <div className="grid gap-y-2 gap-x-1" style={{ gridTemplateColumns }}>
-                <div />
-                {days?.map((date, i) => {
-                  const isToday = formatDateKey(date) === formatDateKey(today)
-                  return (
-                    <div
-                      key={date.toISOString()}
-                      className={`flex flex-col items-center gap-1 self-end pb-1 ${isToday ? "text-primary" : "text-muted-foreground"}`}
-                    >
-                      {period === "month" && (
-                        <div css={monoFont} className="text-[9px] font-bold opacity-70 leading-tight">
-                          {weekdayLabels[(date.getDay() + 6) % 7]}
-                        </div>
-                      )}
-                      {period === "week" && (
-                        <div className="text-[11px] font-bold uppercase leading-tight">
-                          {weekdayLabels[i]}
-                        </div>
-                      )}
+              <div className="overflow-x-auto">
+                <div className="grid gap-y-2 gap-x-1" style={{ gridTemplateColumns }}>
+                  <div />
+                  {days?.map((date, i) => {
+                    const isToday = formatDateKey(date) === formatDateKey(today)
+                    return (
                       <div
-                        css={monoFont}
-                        className={`flex items-center justify-center leading-tight ${
-                          period === "week"
-                            ? `size-7 rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
-                            : `size-[22px] rounded-full text-[11px] font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
+                        key={date.toISOString()}
+                        className={`flex flex-col items-center gap-1 self-end pb-1 ${isToday ? "text-primary" : "text-muted-foreground"}`}
+                      >
+                        {period === "month" && (
+                          <div css={monoFont} className="text-[9px] font-bold opacity-70 leading-tight">
+                            {weekdayLabels[(date.getDay() + 6) % 7]}
+                          </div>
+                        )}
+                        {period === "week" && (
+                          <div className="text-[11px] font-bold uppercase leading-tight">
+                            {weekdayLabels[i]}
+                          </div>
+                        )}
+                        <div
+                          css={monoFont}
+                          className={`flex items-center justify-center leading-tight ${
+                            period === "week"
+                              ? `size-7 rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
+                              : `size-[22px] rounded-full text-[11px] font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
+                          }`}
+                        >
+                          {date.getDate()}
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {months?.map(month => {
+                    const isCurrentMonth =
+                      month.getMonth() === today.getMonth() && month.getFullYear() === today.getFullYear()
+                    return (
+                      <div
+                        key={month.toISOString()}
+                        className={`text-[12px] font-bold text-center self-end pb-1 capitalize ${
+                          isCurrentMonth ? "text-primary" : "text-tertiary"
                         }`}
                       >
-                        {date.getDate()}
+                        {format(month, "LLL", { locale })}
                       </div>
-                    </div>
-                  )
-                })}
-                {months?.map(month => {
-                  const isCurrentMonth =
-                    month.getMonth() === today.getMonth() && month.getFullYear() === today.getFullYear()
-                  return (
-                    <div
-                      key={month.toISOString()}
-                      className={`text-[12px] font-bold text-center self-end pb-1 capitalize ${
-                        isCurrentMonth ? "text-primary" : "text-tertiary"
-                      }`}
-                    >
-                      {format(month, "LLL", { locale })}
-                    </div>
-                  )
-                })}
+                    )
+                  })}
 
-                {habits.map(habit => (
-                  <HabitGridRow
-                    key={habit.id}
-                    habit={habit}
-                    days={days}
-                    months={months}
-                    today={today}
-                    onToggle={dateKey => toggleHabit(habit.id, dateKey)}
-                    onDropHabit={draggedId => handleHabitDrop(draggedId, habit.id)}
-                    onEdit={() => {
-                      setIsAdding(false)
-                      setEditingHabit(habit)
-                    }}
-                  />
-                ))}
+                  {habits.map(habit => (
+                    <HabitGridRow
+                      key={habit.id}
+                      habit={habit}
+                      days={days}
+                      months={months}
+                      today={today}
+                      onToggle={dateKey => toggleHabit(habit.id, dateKey)}
+                      onDropHabit={draggedId => handleHabitDrop(draggedId, habit.id)}
+                      onEdit={() => {
+                        setIsAdding(false)
+                        setEditingHabit(habit)
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
             {habits.length > 0 && (
               <div className="pt-2 border-t border-border">
-                <div className="grid gap-x-1 items-center" style={{ gridTemplateColumns }}>
+                <div
+                  className="grid gap-x-1 items-center"
+                  style={{ gridTemplateColumns: chartGridTemplateColumns }}
+                >
                   <div className="flex items-center gap-0.5 w-fit p-0.5 rounded-[9px] bg-fill">
                     {CHART_STYLES.map(({ style, Icon }) => (
                       <button

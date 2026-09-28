@@ -62,15 +62,15 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
                 <div className="flex-1 min-w-0 text-left">
                   <h3 className="text-lg font-bold tracking-[-0.01em] leading-snug pr-2">{goal.title}</h3>
                   <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <span className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground">
+                  <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2">
+                    <span className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground whitespace-nowrap">
                       <span className="size-2 rounded-full shrink-0" style={{ background: goal.color }} />
                       {t("goals.milestonesCount", {
                         completed: completedCount,
                         total: goal.milestones.length,
                       })}
                     </span>
-                    <span className="flex items-center gap-1.5 text-[13px] font-semibold text-tertiary">
+                    <span className="flex items-center gap-1.5 text-[13px] font-semibold text-tertiary whitespace-nowrap">
                       <CalendarDays size={14} strokeWidth={1.75} />
                       {goal.dueLabel ? t("goals.due", { date: goal.dueLabel }) : t("goalForm.noTargetDate")}
                     </span>

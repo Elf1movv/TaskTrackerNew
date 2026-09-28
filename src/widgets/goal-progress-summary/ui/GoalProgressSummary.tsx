@@ -8,7 +8,7 @@ export function GoalProgressSummary({ goals }: { goals: Goal[] }) {
   const { t } = useLanguage()
 
   return (
-    <div className="min-h-[300px] bg-card border border-border rounded-2xl shadow-raised px-5 py-5 pr-9 flex flex-col gap-4">
+    <div className="lg:min-h-[300px] bg-card border border-border rounded-2xl shadow-raised px-5 py-5 pr-9 flex flex-col gap-4">
       <h2 className="text-xl font-bold tracking-[-0.015em]">{t("goalProgress.title")}</h2>
       {goals.length > 0 ? (
         <>

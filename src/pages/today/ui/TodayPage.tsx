@@ -36,7 +36,7 @@ function TodayPageContent() {
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto">
-      <div className="mb-10 flex items-end justify-between gap-4">
+      <div className="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <div className="text-xs font-bold tracking-[0.14em] uppercase text-primary mb-1">{weekday}</div>
           <div className="flex items-baseline gap-4">

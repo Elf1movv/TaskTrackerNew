@@ -28,7 +28,7 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
     priorityFilter === "critical" ? reminders.filter(r => r.priority === "critical") : reminders
 
   return (
-    <div className="min-h-[300px] bg-card border border-border rounded-2xl shadow-raised px-5 py-5 pr-9 flex flex-col gap-4">
+    <div className="lg:min-h-[300px] bg-card border border-border rounded-2xl shadow-raised px-5 py-5 pr-9 flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <h2 className="flex-1 text-xl font-bold tracking-[-0.015em]">{t("reminderSummary.title")}</h2>
         <button
