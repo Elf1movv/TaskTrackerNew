@@ -20,7 +20,11 @@ export function HabitsPage() {
     // renders its own fixed-width card (see HabitGroupAccordionItem), the
     // page just has to be wide enough for the widest of them.
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
-      <div className="mb-6 max-w-4xl flex items-end justify-between gap-4">
+      {/* No max-w-4xl here (unlike the "add block" form below) — this
+          row's own button needs to reach the same right edge as the
+          block grid beneath it (max-w-7xl on the page wrapper), not a
+          narrower column of its own; direct feedback, 2026-09-28. */}
+      <div className="mb-6 flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <h1 className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em]">
             {t("habits.page.title")}
