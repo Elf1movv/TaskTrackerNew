@@ -28,7 +28,12 @@ function ToggleGroup({
       // for why) — the group is just a flex row of independently-shaped
       // items with a real gap between them, so no group-level rounding/
       // shadow of its own.
-      className={cn("group/toggle-group flex w-fit items-center gap-1.5", className)}
+      //
+      // w-full, not w-fit — every caller puts flex-1 on its items expecting
+      // an even split, but flex-1 only has slack to grow into once the
+      // parent itself has a real width; a w-fit parent sizes off the
+      // children, leaving no slack, so items just hugged their own label.
+      className={cn("group/toggle-group flex w-full items-center gap-1.5", className)}
       {...props}
     >
       <ToggleGroupContext.Provider value={{ variant, size }}>{children}</ToggleGroupContext.Provider>
