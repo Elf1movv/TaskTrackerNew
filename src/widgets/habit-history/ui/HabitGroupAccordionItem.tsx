@@ -107,12 +107,18 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   // its container has, so it scrolls horizontally instead (see the
   // overflow-x-auto wrapper below) rather than crushing.
   const gridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(44px, 1fr))`
-  // The chart row below reuses the same column count, but the chart itself
-  // is ONE cell spanning all of them (gridColumn: 2 / -1) rendered through
-  // Recharts' ResponsiveContainer, which is happy at any width — it doesn't
-  // need (or want) the 44px-per-column floor above, that would just force
-  // this row wider than necessary on mobile for no legibility benefit.
-  const chartGridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(0, 1fr))`
+  // Same 44px-per-column floor as the day/habit grid above, and for the
+  // same reason — a narrow "Месяц" chart (30 points) squeezed into
+  // whatever width happened to be left over gave Recharts' tooltip
+  // nowhere to render without overlapping the plotted line itself (direct
+  // feedback, 2026-09-28). The chart is one continuous ResponsiveContainer
+  // cell (gridColumn: 2 / -1), not per-column content, so it doesn't NEED
+  // the floor for its own sake — but scrolling this row (see the
+  // overflow-x-auto wrapper below) instead of crushing it gives the
+  // tooltip real room, exactly like it gave the day/habit grid legible
+  // columns. Reusing the same 44px constant, not inventing a second
+  // magic number.
+  const chartGridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(44px, 1fr))`
   const summary = getHabitHistorySummary(habits, period, today)
   const percent = summary.total === 0 ? 0 : Math.round((summary.completed / summary.total) * 100)
 
@@ -285,28 +291,30 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
 
             {habits.length > 0 && (
               <div className="pt-2 border-t border-border">
-                <div
-                  className="grid gap-x-1 items-center"
-                  style={{ gridTemplateColumns: chartGridTemplateColumns }}
-                >
-                  <div className="flex items-center gap-0.5 w-fit p-0.5 rounded-[9px] bg-fill">
-                    {CHART_STYLES.map(({ style, Icon }) => (
-                      <button
-                        key={style}
-                        onClick={() => setChartStyle(style)}
-                        aria-label={t(`habits.chartStyle.${style}`)}
-                        className={`flex items-center justify-center w-[34px] h-7 rounded-lg transition-all ${
-                          chartStyle === style
-                            ? "bg-seg text-foreground shadow-card"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        <Icon size={15} strokeWidth={1.75} />
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ gridColumn: `2 / -1` }}>
-                    <HabitHistoryChart data={summary.chartData} style={chartStyle} />
+                <div className="overflow-x-auto">
+                  <div
+                    className="grid gap-x-1 items-center"
+                    style={{ gridTemplateColumns: chartGridTemplateColumns }}
+                  >
+                    <div className="flex items-center gap-0.5 w-fit p-0.5 rounded-[9px] bg-fill">
+                      {CHART_STYLES.map(({ style, Icon }) => (
+                        <button
+                          key={style}
+                          onClick={() => setChartStyle(style)}
+                          aria-label={t(`habits.chartStyle.${style}`)}
+                          className={`flex items-center justify-center w-[34px] h-7 rounded-lg transition-all ${
+                            chartStyle === style
+                              ? "bg-seg text-foreground shadow-card"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          <Icon size={15} strokeWidth={1.75} />
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ gridColumn: `2 / -1` }}>
+                      <HabitHistoryChart data={summary.chartData} style={chartStyle} />
+                    </div>
                   </div>
                 </div>
                 <div className="mt-3 flex flex-col gap-0.5">
