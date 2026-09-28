@@ -26,10 +26,13 @@ describe("selectTodayTasks", () => {
     expect(selectTodayTasks([makeTask({ dueDate: null })])).toHaveLength(1)
   })
 
-  it("excludes a completed task immediately, regardless of when it was completed", () => {
-    expect(
-      selectTodayTasks([makeTask({ completed: true, completedAt: "2026-09-23T08:00:00.000Z" })]),
-    ).toHaveLength(0)
+  it("keeps a task completed earlier today", () => {
+    const now = new Date()
+    const completedTodayIso = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8).toISOString()
+    expect(selectTodayTasks([makeTask({ completed: true, completedAt: completedTodayIso })])).toHaveLength(1)
+  })
+
+  it("excludes a task completed on a previous day", () => {
     expect(
       selectTodayTasks([makeTask({ completed: true, completedAt: "2026-09-01T08:00:00.000Z" })]),
     ).toHaveLength(0)
@@ -39,12 +42,15 @@ describe("selectTodayTasks", () => {
     expect(selectTodayTasks([])).toEqual([])
   })
 
-  it("filters a mixed list down to only the incomplete tasks", () => {
+  it("filters a mixed list down to incomplete tasks plus ones completed today", () => {
+    const now = new Date()
+    const completedTodayIso = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8).toISOString()
     const tasks = [
       makeTask({ id: "a", completed: false }),
-      makeTask({ id: "b", completed: true }),
+      makeTask({ id: "b", completed: true, completedAt: "2020-01-01T08:00:00.000Z" }),
       makeTask({ id: "c", completed: false, dueDate: "2020-01-01" }),
+      makeTask({ id: "d", completed: true, completedAt: completedTodayIso }),
     ]
-    expect(selectTodayTasks(tasks).map(t => t.id)).toEqual(["a", "c"])
+    expect(selectTodayTasks(tasks).map(t => t.id)).toEqual(["a", "c", "d"])
   })
 })
