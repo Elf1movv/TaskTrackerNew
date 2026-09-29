@@ -20,6 +20,7 @@ import { getDateLocale, getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
 import { Button } from "@/shared/ui/button"
+import { useIsMobile } from "@/shared/ui/use-mobile"
 import { getDayCellState } from "../lib/habitCellState"
 import { getHabitHistorySummary } from "../lib/habitHistorySummary"
 import { getPeriodDays, getYearMonths, type HabitHistoryPeriod } from "../lib/periodColumns"
@@ -47,6 +48,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   const { t, language } = useLanguage()
   const locale = getDateLocale(language)
   const weekdayLabels = getWeekdayLabels(language)
+  const isMobile = useIsMobile()
 
   const [period, setPeriod] = useState<HabitHistoryPeriod>("week")
   const [chartStyle, setChartStyle] = useState<HabitChartStyle>("area")
@@ -101,24 +103,30 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   // narrow screen — the weekday-label text doesn't wrap or clip there, it
   // just spills into the neighboring column, rendering as an illegible
   // overlap (direct feedback, 2026-09-28). minmax(44px, 1fr) gives each
-  // column a floor: at desktop widths, where there's already more than
-  // enough room, this is identical to before (every column is already
-  // wider than 44px); at mobile widths the grid now needs more space than
-  // its container has, so it scrolls horizontally instead (see the
-  // overflow-x-auto wrapper below) rather than crushing.
-  const gridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(44px, 1fr))`
-  // Same 44px-per-column floor as the day/habit grid above, and for the
-  // same reason — a narrow "Месяц" chart (30 points) squeezed into
-  // whatever width happened to be left over gave Recharts' tooltip
+  // column a floor, but ONLY on mobile (isMobile) — a real desktop card is
+  // nowhere near wide enough for 30 columns × 44px either (month view
+  // needs ~1300px), so applying that floor unconditionally forced a
+  // horizontal scrollbar on the WEB version too, which never had one
+  // before and wasn't asked for (direct feedback, 2026-09-29 — the first
+  // version of this fix over-corrected). At mobile widths the grid needs
+  // more space than its container has, so it scrolls horizontally instead
+  // (see the overflow-x-auto wrapper below) rather than crushing; at
+  // every other width it's back to the original behavior — columns just
+  // shrink to fit, no scrollbar.
+  const dayColumnMin = isMobile ? "44px" : "0"
+  const gridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(${dayColumnMin}, 1fr))`
+  // Same floor as the day/habit grid above, same mobile-only condition,
+  // and for the same reason — a narrow "Месяц" chart (30 points) squeezed
+  // into whatever width happened to be left over gave Recharts' tooltip
   // nowhere to render without overlapping the plotted line itself (direct
   // feedback, 2026-09-28). The chart is one continuous ResponsiveContainer
   // cell (gridColumn: 2 / -1), not per-column content, so it doesn't NEED
   // the floor for its own sake — but scrolling this row (see the
   // overflow-x-auto wrapper below) instead of crushing it gives the
-  // tooltip real room, exactly like it gave the day/habit grid legible
-  // columns. Reusing the same 44px constant, not inventing a second
-  // magic number.
-  const chartGridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(44px, 1fr))`
+  // tooltip real room on mobile, exactly like it gives the day/habit grid
+  // legible columns; on desktop it's unnecessary and was forcing the same
+  // unwanted scrollbar the day/habit grid got.
+  const chartGridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(${dayColumnMin}, 1fr))`
   const summary = getHabitHistorySummary(habits, period, today)
   const percent = summary.total === 0 ? 0 : Math.round((summary.completed / summary.total) * 100)
 
@@ -313,7 +321,11 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                       ))}
                     </div>
                     <div style={{ gridColumn: `2 / -1` }}>
-                      <HabitHistoryChart data={summary.chartData} style={chartStyle} />
+                      <HabitHistoryChart
+                        data={summary.chartData}
+                        style={chartStyle}
+                        seriesName={t("habits.page.summaryLabel")}
+                      />
                     </div>
                   </div>
                 </div>
