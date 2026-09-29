@@ -23,6 +23,17 @@ export const auth = betterAuth({
   // origin. Not needed in prod: nginx serves frontend and API from the
   // same origin there, so BETTER_AUTH_URL already matches the real Origin.
   trustedOrigins: process.env.NODE_ENV === "production" ? undefined : ["http://localhost:5173"],
+  // Better Auth's own default (100 requests/10s, enabled in production
+  // only) is far too loose to meaningfully slow a password-guessing
+  // attempt against one account — it's a general anti-flood limit, not
+  // per-account brute-force protection (see docs/SECURITY_AUDIT.md,
+  // finding 4). Tightened only for sign-in; every other endpoint keeps
+  // the library default.
+  rateLimit: {
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
