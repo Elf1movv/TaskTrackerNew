@@ -212,6 +212,7 @@ function CalendarPageContent() {
           selectedHabits={selectedHabits}
           allTasks={allTasks}
           allReminders={allReminders}
+          allGoals={allGoals}
           onSelectDay={handleSelectDay}
           onCloseDayPanel={() => selectDay(null)}
           onMoveTaskToDay={moveTaskToDay}

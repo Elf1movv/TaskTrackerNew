@@ -1,6 +1,8 @@
 import { useCallback } from "react"
 import { format } from "date-fns"
+import { Target } from "lucide-react"
 import { resolveCategoryColor, type Category } from "@/entities/category"
+import { type Goal } from "@/entities/goal"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { type Task } from "@/entities/task"
 import { TaskToggleCheckbox } from "@/features/toggle-task"
@@ -18,6 +20,7 @@ export function CalendarDayCell({
   isCurrentMonth,
   dayTasks,
   dayReminders,
+  dayGoals,
   categories,
   isSelected,
   isCurrent,
@@ -31,6 +34,7 @@ export function CalendarDayCell({
   isCurrentMonth: boolean
   dayTasks: Task[]
   dayReminders: Reminder[]
+  dayGoals: Goal[]
   categories: Category[]
   isSelected: boolean
   isCurrent: boolean
@@ -190,6 +194,29 @@ export function CalendarDayCell({
               >
                 {task.title}
               </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* A goal's deadline day — deliberately a third, distinct visual
+          shape (left accent bar + Target icon, plain card background) so
+          it doesn't read as "just another task" (filled chip) or "just
+          another reminder" (outlined chip) at a glance. No click handler
+          of its own — unlike task/reminder rows, which open their own
+          inline-edit popover, a goal chip just falls through to the
+          cell's onSelect and opens the day panel, where DayGoalRow
+          already has full edit/delete (no need to build a second one). */}
+      {dayGoals.length > 0 && (
+        <div className="w-full flex flex-col gap-0.5">
+          {dayGoals.map(goal => (
+            <div
+              key={goal.id}
+              className="w-full flex items-center gap-1 rounded-md pl-1.5 pr-1 py-0.5 text-[9px] leading-tight bg-card overflow-hidden"
+              style={{ borderLeft: `2px solid ${goal.color}` }}
+            >
+              <Target size={8} strokeWidth={2.5} style={{ color: goal.color }} className="shrink-0" />
+              <span className="truncate font-semibold">{goal.title}</span>
             </div>
           ))}
         </div>
