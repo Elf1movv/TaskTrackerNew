@@ -69,14 +69,29 @@ function chartAxes() {
   ]
 }
 
-export function HabitHistoryChart({ data, style }: { data: ChartPoint[]; style: HabitChartStyle }) {
+export function HabitHistoryChart({
+  data,
+  style,
+  seriesName,
+}: {
+  data: ChartPoint[]
+  style: HabitChartStyle
+  // Recharts' tooltip falls back to the raw `dataKey` ("value") as the
+  // series label when no `name` is given — meaningless to someone reading
+  // the tooltip, since "value" isn't a term used anywhere else in the app.
+  // The caller passes the same "Выполнено"/"Done" label already shown
+  // right below this chart (habits.page.summaryLabel), so the tooltip
+  // reads "Выполнено: 2" instead of "value : 2" (direct feedback,
+  // 2026-09-29).
+  seriesName: string
+}) {
   if (style === "bar") {
     return (
       <div css={monoFont} className="h-36 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
             {chartAxes()}
-            <Bar dataKey="value" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="value" name={seriesName} fill="var(--primary)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -92,6 +107,7 @@ export function HabitHistoryChart({ data, style }: { data: ChartPoint[]; style: 
             <Line
               type="stepAfter"
               dataKey="value"
+              name={seriesName}
               stroke="var(--primary)"
               strokeWidth={2.5}
               dot={{ r: 2.5, fill: "var(--card)", stroke: "var(--primary)", strokeWidth: 2 }}
@@ -117,6 +133,7 @@ export function HabitHistoryChart({ data, style }: { data: ChartPoint[]; style: 
           <Area
             type="monotone"
             dataKey="value"
+            name={seriesName}
             stroke="var(--primary)"
             strokeWidth={2.5}
             strokeLinecap="round"

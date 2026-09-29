@@ -90,7 +90,7 @@ export function SidebarNav() {
           <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary">
             {t("sidebar.statChartLabel")}
           </span>
-          <WeeklyActivityChart data={chartData} />
+          <WeeklyActivityChart data={chartData} seriesName={t("sidebar.statChartValueLabel")} />
         </div>
 
         <div className="flex flex-col gap-2.5 px-1.5">

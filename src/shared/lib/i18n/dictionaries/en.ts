@@ -16,6 +16,7 @@ export const en = {
   "nav.calendar": "Calendar",
 
   "sidebar.statChartLabel": "Weekly activity",
+  "sidebar.statChartValueLabel": "Done",
   "sidebar.statTasksDone": "Tasks done",
   "sidebar.statHabits": "Habits",
   "sidebar.statActiveGoals": "Active goals",

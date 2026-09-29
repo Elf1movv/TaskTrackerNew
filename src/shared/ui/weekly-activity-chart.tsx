@@ -23,7 +23,16 @@ const tooltipContentStyle = {
 // navigation widget too, and widgets can't import each other directly
 // (FSD) — see docs/BACKLOG.md's note on getHabitMonthCompletionStats for
 // the same reasoning.
-export function WeeklyActivityChart({ data }: { data: WeeklyActivityPoint[] }) {
+export function WeeklyActivityChart({
+  data,
+  seriesName,
+}: {
+  data: WeeklyActivityPoint[]
+  // Same reasoning as HabitHistoryChart's own seriesName — without a
+  // `name`, Recharts' tooltip falls back to the raw dataKey ("value"),
+  // meaningless out of context (direct feedback, 2026-09-29).
+  seriesName: string
+}) {
   return (
     <div css={monoFont} className="h-16">
       <ResponsiveContainer width="100%" height="100%">
@@ -50,6 +59,7 @@ export function WeeklyActivityChart({ data }: { data: WeeklyActivityPoint[] }) {
           <Area
             type="monotone"
             dataKey="value"
+            name={seriesName}
             stroke="var(--primary)"
             strokeWidth={2}
             strokeLinecap="round"

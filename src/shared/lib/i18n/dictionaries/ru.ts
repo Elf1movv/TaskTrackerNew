@@ -18,6 +18,7 @@ export const ru: Record<keyof typeof en, string> = {
   "nav.calendar": "Календарь",
 
   "sidebar.statChartLabel": "Активность за неделю",
+  "sidebar.statChartValueLabel": "Выполнено",
   "sidebar.statTasksDone": "Задач выполнено",
   "sidebar.statHabits": "Привычки",
   "sidebar.statActiveGoals": "Активные цели",
