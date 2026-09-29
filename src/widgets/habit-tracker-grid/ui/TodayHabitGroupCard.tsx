@@ -19,8 +19,8 @@ import { Button } from "@/shared/ui/button"
 import { HabitGridItem } from "./components"
 import type { HabitViewMode } from "../lib/habitViewMode"
 
-// One block's card on the Today page — a pill-shaped, colored header
-// (block name centered, the block's own custom color) and its habits
+// One block's card on the Today page — a plain header (icon badge tinted
+// in the block's own custom color, bold name, count) and its habits
 // below, in the same compact grid/list style Today always used. Its own
 // independent collapse state and, via reorderHabitsToday/
 // moveHabitToGroupToday, its own independent habit ordering — completely
