@@ -93,16 +93,19 @@ export function TodayHabitGroupCard({
       >
         <AccordionItem
           value={group.id}
-          // bg-sunken + border-border, not bg-card/border-card-border:
-          // this card sits nested INSIDE the page's "Привычки" card
-          // (unlike /habits' own near-identical header, which sits
-          // directly on the page background), so a plain white-on-white
-          // card barely reads as its own block. bg-sunken is the same
-          // recessed-panel tone already used for this exact "block inside
-          // a card" situation elsewhere (GoalAccordionItem.tsx,
-          // TaskBoard.tsx's inline-edit row) — also the same tone as the
-          // "Добавить блок" button (direct feedback, 2026-09-29).
-          className="!border-b-0 bg-sunken border border-border rounded-xl overflow-hidden"
+          // bg/border both tinted with the group's own color (color-mix
+          // over bg-sunken/border-border, the same recessed-panel tone as
+          // the "Добавить блок" button) — a neutral grey card read as flat
+          // next to the rest of the redesign's colorful accents (direct
+          // feedback, 2026-09-29): mixing the block's color INTO the
+          // sunken tone keeps the "block nested inside a card" separation
+          // this was fixed for, while still giving each block its own
+          // visible color identity.
+          className="!border-b-0 border rounded-xl overflow-hidden"
+          style={{
+            backgroundColor: `color-mix(in srgb, ${group.color} 10%, var(--sunken))`,
+            borderColor: `color-mix(in srgb, ${group.color} 30%, var(--border))`,
+          }}
         >
           {/* relative, and the button group below is absolute — not a
               plain flex row: AccordionTrigger only ever sizes to its own
@@ -113,12 +116,14 @@ export function TodayHabitGroupCard({
           <div className="relative flex items-center gap-2.5 pl-4 pr-20 py-3 cursor-grab active:cursor-grabbing">
             <AccordionTrigger className="hover:no-underline !py-0 flex-1 justify-start gap-2.5 min-w-0 [&>svg]:hidden">
               <span className="flex-1 flex items-center gap-2.5 min-w-0">
+                {/* Solid color fill + white icon, not a soft tint — same
+                    "color as a small solid accent" treatment already used
+                    for a habit's own done-state tile (HabitListRow/
+                    HabitCard), just applied to the block's icon instead of
+                    spreading the solid color across the whole header. */}
                 <span
-                  className="size-9 shrink-0 rounded-[10px] flex items-center justify-center"
-                  style={{
-                    background: `color-mix(in srgb, ${group.color} 16%, var(--card))`,
-                    color: group.color,
-                  }}
+                  className="size-9 shrink-0 rounded-[10px] flex items-center justify-center text-white"
+                  style={{ background: group.color }}
                 >
                   <HabitIcon emoji={getHabitGroupIcon(group)} size={17} />
                 </span>
