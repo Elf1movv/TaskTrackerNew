@@ -93,79 +93,53 @@ export function TodayHabitGroupCard({
       >
         <AccordionItem
           value={group.id}
-          // Border/background only show while open — collapsed, the block
-          // is just the pill floating with nothing around it. The border
-          // is always rendered (1px, color toggles to transparent) rather
-          // than added/removed, so nothing shifts by a pixel when it
-          // appears. No overflow-hidden here (unlike the /habits
-          // accordion): the pill below straddles this box's top edge on
-          // purpose, and clipping would cut its top half off.
-          className={`!border-b-0 rounded-2xl border transition-colors ${
-            isOpen ? "border-border bg-muted/30" : "border-transparent"
-          }`}
+          // bg-sunken + border-border, not bg-card/border-card-border:
+          // this card sits nested INSIDE the page's "Привычки" card
+          // (unlike /habits' own near-identical header, which sits
+          // directly on the page background), so a plain white-on-white
+          // card barely reads as its own block. bg-sunken is the same
+          // recessed-panel tone already used for this exact "block inside
+          // a card" situation elsewhere (GoalAccordionItem.tsx,
+          // TaskBoard.tsx's inline-edit row) — also the same tone as the
+          // "Добавить блок" button (direct feedback, 2026-09-29).
+          className="!border-b-0 bg-sunken border border-border rounded-xl overflow-hidden"
         >
-          {/* relative + absolute buttons, not a flex row: AccordionTrigger
-              only ever sizes to its own content (a flex item with no
-              stretch unless it's the SOLE child of a block-level parent),
-              so a trigger sharing a flex row with a sibling button group
-              never gets the extra width `justify-center` would need to
-              center within — it just hugs the left edge instead. */}
-          <div className="relative px-4 cursor-grab active:cursor-grabbing">
-            {/* The trigger sits in normal flow with no top padding — its
-                unshifted box starts exactly at the card's top border, so
-                `relative` + a negative `top` of half the pill's own
-                fixed height (30px — half is 15px) pulls it up just
-                enough that the pill ends up centered ON that border:
-                50% above, 50% below. Using
-                `top`, not a negative margin, matters here — margin would
-                also shrink the space this row reserves in the page's
-                flow, which is what let two collapsed cards' pills
-                overlap each other before (see LEARNING.md, 2026-09-24).
-                Don't also add top padding to compensate "visually" —
-                that cancels the offset back to zero, landing the pill's
-                TOP (not its center) on the border instead. */}
-            {/* [&>svg]:hidden — this hides the chevron the shared
-                AccordionTrigger normally appends after its children on
-                its own, floating outside the pill next to it (that's
-                the stray arrow this whole block exists to get rid of).
-                Rendering our own ChevronDown inside the pill span below
-                instead keeps it visually part of the pill (same
-                colored background, rotates with `isOpen` like the
-                built-in one does). */}
-            <AccordionTrigger className="hover:no-underline !py-0 relative -top-[15px] justify-center [&>svg]:hidden">
-              <span
-                className="h-[30px] px-3.5 rounded-full text-sm font-bold inline-flex items-center gap-2 text-white shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)]"
-                style={{ backgroundColor: group.color }}
-              >
-                <span className="leading-none">
-                  <HabitIcon emoji={getHabitGroupIcon(group)} size={15} />
+          {/* relative, and the button group below is absolute — not a
+              plain flex row: AccordionTrigger only ever sizes to its own
+              content (a flex item with no stretch unless it's the SOLE
+              child of a block-level parent), so `flex-1` on it here would
+              NOT push a flex sibling to the row's right edge (same gotcha
+              this file already worked around for the old pill layout). */}
+          <div className="relative flex items-center gap-2.5 pl-4 pr-20 py-3 cursor-grab active:cursor-grabbing">
+            <AccordionTrigger className="hover:no-underline !py-0 flex-1 justify-start gap-2.5 min-w-0 [&>svg]:hidden">
+              <span className="flex-1 flex items-center gap-2.5 min-w-0">
+                <span
+                  className="size-9 shrink-0 rounded-[10px] flex items-center justify-center"
+                  style={{
+                    background: `color-mix(in srgb, ${group.color} 16%, var(--card))`,
+                    color: group.color,
+                  }}
+                >
+                  <HabitIcon emoji={getHabitGroupIcon(group)} size={17} />
                 </span>
-                <span className="leading-none">{getHabitGroupTitle(group, t)}</span>
-                <span className="text-xs font-bold opacity-85">
+                <span className="text-[15px] font-bold truncate min-w-0">{getHabitGroupTitle(group, t)}</span>
+                {group.isGeneral && (
+                  <span className="h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1 shrink-0">
+                    <Lock size={11} strokeWidth={2.25} />
+                    {t("habits.group.general")}
+                  </span>
+                )}
+                <span className="text-xs font-semibold text-tertiary shrink-0">
                   {doneCount}/{habits.length}
                 </span>
                 <ChevronDown
-                  size={14}
+                  size={16}
                   strokeWidth={2.5}
-                  className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                  className={`shrink-0 text-tertiary transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                 />
               </span>
             </AccordionTrigger>
-            {/* Absolutely positioned, not normal flow — these sit beside
-                the pill (which itself straddles the card's top border, see
-                above), not stacked below it. This used to be `absolute`
-                before redesign step 4 accidentally dropped it in favor of
-                a flow div, which made the card reserve this row's own
-                height below the pill AS WELL AS the trigger's own
-                unshifted box, leaving a big dead gap between the pill and
-                everything below it (direct feedback, 2026-09-28). */}
-            {group.isGeneral && (
-              <span className="absolute left-4 top-1 h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1">
-                <Lock size={11} strokeWidth={2.25} />
-                {t("habits.group.general")}
-              </span>
-            )}
-            <div className="absolute right-4 top-1 flex items-center gap-1">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1">
               <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
               {!group.isGeneral && <DeleteHabitGroupButton group={group} />}
             </div>
