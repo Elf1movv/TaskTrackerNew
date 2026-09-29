@@ -93,26 +93,21 @@ export function TodayHabitGroupCard({
       >
         <AccordionItem
           value={group.id}
-          // Mixed against var(--card)/transparent, not var(--sunken)/
-          // var(--border) — mixing color INTO a grey base still read as
-          // "mostly grey" (direct feedback, 2026-09-29): a pastel wash of
-          // the block's own color reads as colorful on its own, the same
-          // way the habit icon tiles below already do
-          // (color-mix(..., transparent)), without needing a grey base to
-          // separate from the white parent card.
-          className="!border-b-0 border rounded-xl overflow-hidden"
-          style={{
-            backgroundColor: `color-mix(in srgb, ${group.color} 12%, var(--card))`,
-            borderColor: `color-mix(in srgb, ${group.color} 35%, transparent)`,
-          }}
+          className="!border-b-0 bg-card border border-border rounded-xl overflow-hidden"
         >
-          {/* relative, and the button group below is absolute — not a
-              plain flex row: AccordionTrigger only ever sizes to its own
-              content (a flex item with no stretch unless it's the SOLE
-              child of a block-level parent), so `flex-1` on it here would
-              NOT push a flex sibling to the row's right edge (same gotcha
-              this file already worked around for the old pill layout). */}
-          <div className="relative flex items-center gap-2.5 pl-4 pr-20 py-3 cursor-grab active:cursor-grabbing">
+          {/* Color lives on the header strip only — the body below (where
+              the actual habits sit) stays plain bg-card, same neutral
+              tone as every other card in the app. relative, and the
+              button group below is absolute — not a plain flex row:
+              AccordionTrigger only ever sizes to its own content (a flex
+              item with no stretch unless it's the SOLE child of a
+              block-level parent), so `flex-1` on it here would NOT push a
+              flex sibling to the row's right edge (same gotcha this file
+              already worked around for the old pill layout). */}
+          <div
+            className="relative flex items-center gap-2.5 pl-4 pr-20 py-3 cursor-grab active:cursor-grabbing"
+            style={{ backgroundColor: `color-mix(in srgb, ${group.color} 14%, var(--card))` }}
+          >
             <AccordionTrigger className="hover:no-underline !py-0 flex-1 justify-start gap-2.5 min-w-0 [&>svg]:hidden">
               <span className="flex-1 flex items-center gap-2.5 min-w-0">
                 {/* Solid color fill + white icon, not a soft tint — same
