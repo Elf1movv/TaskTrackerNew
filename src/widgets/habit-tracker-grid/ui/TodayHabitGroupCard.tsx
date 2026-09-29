@@ -93,18 +93,17 @@ export function TodayHabitGroupCard({
       >
         <AccordionItem
           value={group.id}
-          // bg/border both tinted with the group's own color (color-mix
-          // over bg-sunken/border-border, the same recessed-panel tone as
-          // the "Добавить блок" button) — a neutral grey card read as flat
-          // next to the rest of the redesign's colorful accents (direct
-          // feedback, 2026-09-29): mixing the block's color INTO the
-          // sunken tone keeps the "block nested inside a card" separation
-          // this was fixed for, while still giving each block its own
-          // visible color identity.
+          // Mixed against var(--card)/transparent, not var(--sunken)/
+          // var(--border) — mixing color INTO a grey base still read as
+          // "mostly grey" (direct feedback, 2026-09-29): a pastel wash of
+          // the block's own color reads as colorful on its own, the same
+          // way the habit icon tiles below already do
+          // (color-mix(..., transparent)), without needing a grey base to
+          // separate from the white parent card.
           className="!border-b-0 border rounded-xl overflow-hidden"
           style={{
-            backgroundColor: `color-mix(in srgb, ${group.color} 10%, var(--sunken))`,
-            borderColor: `color-mix(in srgb, ${group.color} 30%, var(--border))`,
+            backgroundColor: `color-mix(in srgb, ${group.color} 12%, var(--card))`,
+            borderColor: `color-mix(in srgb, ${group.color} 35%, transparent)`,
           }}
         >
           {/* relative, and the button group below is absolute — not a
