@@ -4,7 +4,6 @@ import { CheckSquare2, Plus, X } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
 import { useCategories, type Category } from "@/entities/category"
 import { isCompletedToday, type StatusFilter, type Task, useTasks } from "@/entities/task"
-import { getTodayKey } from "@/shared/lib/date"
 import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import {
@@ -58,7 +57,6 @@ export function TaskBoard({
   const [newCategoryName, setNewCategoryName] = useState("")
   const [newCategoryColor, setNewCategoryColor] = useState(PALETTE_COLORS[0])
   const [categoryPendingDelete, setCategoryPendingDelete] = useState<Category | null>(null)
-  const today = getTodayKey()
 
   function handleCreateCategory() {
     const name = newCategoryName.trim()
@@ -91,12 +89,14 @@ export function TaskBoard({
           <h1 className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em]">{t("tasks.title")}</h1>
           <p className="text-[15px] text-muted-foreground">
             {t("tasks.remainingDone", {
-              remaining: allTasks.filter(t => !t.completed).length,
-              // Scoped to today, not all-time — otherwise this count only
-              // ever grows and stops meaning anything, and disagrees with
-              // the list below (filterTasks.ts already hides completed
-              // tasks from days other than today).
-              done: allTasks.filter(t => t.completed && isCompletedToday(t)).length,
+              // Scoped to undated tasks — this page is the undated inbox
+              // only, a dated task is a day-plan item shown in the Calendar
+              // instead (see filterTasks.ts), so counting it here would
+              // disagree with the list below.
+              remaining: allTasks.filter(t => !t.completed && t.dueDate === null).length,
+              // Also scoped to today, not all-time — otherwise this count
+              // only ever grows and stops meaning anything.
+              done: allTasks.filter(t => t.completed && t.dueDate === null && isCompletedToday(t)).length,
             })}
           </p>
         </div>
@@ -312,7 +312,6 @@ export function TaskBoard({
                 <TaskRow
                   key={task.id}
                   task={task}
-                  today={today}
                   divider={i > 0}
                   onEdit={() => {
                     setIsAdding(false)

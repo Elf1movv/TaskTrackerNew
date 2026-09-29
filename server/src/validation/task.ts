@@ -38,6 +38,7 @@ const taskFields = z.object({
     .string()
     .regex(/^\d{2}:\d{2}$/, "endTime must be in HH:mm format")
     .nullable(),
+  description: z.string().nullable(),
   completedAt: completedAtField,
 })
 

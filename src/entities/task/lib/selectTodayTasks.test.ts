@@ -12,6 +12,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     dueDate: null,
     time: null,
     endTime: null,
+    description: null,
     completedAt: null,
     updatedAt: "2026-09-22T00:00:00.000Z",
     createdAt: "2026-09-22T00:00:00.000Z",
@@ -20,10 +21,13 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 }
 
 describe("selectTodayTasks", () => {
-  it("includes an incomplete task regardless of its due date", () => {
-    expect(selectTodayTasks([makeTask({ dueDate: "2026-09-23" })])).toHaveLength(1)
-    expect(selectTodayTasks([makeTask({ dueDate: "2026-09-01" })])).toHaveLength(1)
+  it("includes an incomplete undated task", () => {
     expect(selectTodayTasks([makeTask({ dueDate: null })])).toHaveLength(1)
+  })
+
+  it("excludes a task that has a due date, regardless of which day", () => {
+    expect(selectTodayTasks([makeTask({ dueDate: "2026-09-23" })])).toHaveLength(0)
+    expect(selectTodayTasks([makeTask({ dueDate: "2026-09-01" })])).toHaveLength(0)
   })
 
   it("keeps a task completed earlier today", () => {
@@ -42,7 +46,7 @@ describe("selectTodayTasks", () => {
     expect(selectTodayTasks([])).toEqual([])
   })
 
-  it("filters a mixed list down to incomplete tasks plus ones completed today", () => {
+  it("filters a mixed list down to undated tasks that are incomplete or completed today", () => {
     const now = new Date()
     const completedTodayIso = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8).toISOString()
     const tasks = [
@@ -51,6 +55,6 @@ describe("selectTodayTasks", () => {
       makeTask({ id: "c", completed: false, dueDate: "2020-01-01" }),
       makeTask({ id: "d", completed: true, completedAt: completedTodayIso }),
     ]
-    expect(selectTodayTasks(tasks).map(t => t.id)).toEqual(["a", "c", "d"])
+    expect(selectTodayTasks(tasks).map(t => t.id)).toEqual(["a", "d"])
   })
 })

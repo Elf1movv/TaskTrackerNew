@@ -1,4 +1,3 @@
-import { CalendarDays } from "lucide-react"
 import { motion } from "motion/react"
 import { resolveCategoryColor, useCategories } from "@/entities/category"
 import { DeleteTaskButton } from "@/features/delete-task"
@@ -6,29 +5,16 @@ import { EditTaskButton } from "@/features/edit-task"
 import { TaskToggleCheckbox } from "@/features/toggle-task"
 import { PriorityDot, useTasks, type Task } from "@/entities/task"
 import { useDragReorder } from "@/shared/lib/dnd"
-import { useLanguage } from "@/shared/lib/i18n"
 
-export function TaskRow({
-  task,
-  today,
-  divider,
-  onEdit,
-}: {
-  task: Task
-  today: string
-  divider: boolean
-  onEdit: () => void
-}) {
+export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolean; onEdit: () => void }) {
   const { reorderTasks } = useTasks()
   const { categories } = useCategories()
-  const { t } = useLanguage()
   const categoryColor = resolveCategoryColor(task.category, categories)
   const { ref, isDragging } = useDragReorder<HTMLDivElement>({
     type: "task",
     id: task.id,
     onHoverMove: reorderTasks,
   })
-  const isToday = task.dueDate === today
 
   return (
     <motion.div
@@ -51,17 +37,7 @@ export function TaskRow({
         >
           {task.title}
         </div>
-        {task.dueDate && (
-          <div
-            className={`flex items-center gap-1.5 text-xs font-semibold ${
-              isToday ? "text-primary" : "text-tertiary"
-            }`}
-          >
-            <CalendarDays size={12} />
-            {isToday ? t("common.today") : task.dueDate}
-            {task.time && `, ${task.time}${task.endTime ? `–${task.endTime}` : ""}`}
-          </div>
-        )}
+        {task.description && <div className="text-xs text-tertiary truncate">{task.description}</div>}
       </div>
       <span className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <EditTaskButton onClick={onEdit} />

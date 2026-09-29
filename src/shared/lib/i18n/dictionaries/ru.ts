@@ -60,6 +60,7 @@ export const ru: Record<keyof typeof en, string> = {
   "tasks.loadMore": "Показать ещё {count}",
 
   "taskForm.placeholder": "Что нужно сделать?",
+  "taskForm.descriptionPlaceholder": "Описание (необязательно)",
   "taskForm.priority": "Приоритет",
   "taskForm.low": "Низкий",
   "taskForm.medium": "Средний",

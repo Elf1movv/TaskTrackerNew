@@ -23,9 +23,11 @@ export function SidebarNav() {
   // label implies.
   const tasksToday = tasks.filter(task => isTaskOnDay(task, today))
   // Nav badge counts — deliberately a different reading than the "due
-  // today" stat below: a standing backlog size (all open tasks / all
-  // goals), same numbers the Tasks/Goals pages' own headers already show.
-  const openTasksCount = tasks.filter(task => !task.completed).length
+  // today" stat below: a standing backlog size (all open goals; for tasks,
+  // only undated ones — the Tasks page is the undated inbox only, dated
+  // tasks live in the Calendar, see filterTasks.ts), same numbers the
+  // Tasks/Goals pages' own headers already show.
+  const openTasksCount = tasks.filter(task => !task.completed && task.dueDate === null).length
 
   const stats: { labelKey: TranslationKey; value: string }[] = [
     {

@@ -58,6 +58,7 @@ export const en = {
   "tasks.loadMore": "Load {count} more",
 
   "taskForm.placeholder": "What needs to be done?",
+  "taskForm.descriptionPlaceholder": "Description (optional)",
   "taskForm.priority": "Priority",
   "taskForm.low": "Low",
   "taskForm.medium": "Medium",

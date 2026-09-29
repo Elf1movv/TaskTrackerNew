@@ -17,6 +17,9 @@ export interface Task {
   // height in the timeline until edited (see HourGrid).
   endTime: string | null
   completedAt: string | null
+  // Optional free-text notes, same nullable-additive convention as endTime
+  // — existing tasks have no value until edited.
+  description: string | null
   updatedAt: string
   createdAt: string
 }

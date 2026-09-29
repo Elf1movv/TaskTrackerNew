@@ -15,6 +15,7 @@ const baseTask = {
   time: null,
   endTime: null,
   completedAt: null,
+  description: null,
 }
 
 describe("tasks router", () => {

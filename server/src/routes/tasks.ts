@@ -28,6 +28,7 @@ function toClientTask(task: {
   dueDate: Date | null
   time: string | null
   endTime: string | null
+  description: string | null
   completedAt: Date | null
   updatedAt: Date
   createdAt: Date
@@ -41,6 +42,7 @@ function toClientTask(task: {
     dueDate: task.dueDate ? task.dueDate.toISOString().slice(0, 10) : null,
     time: task.time,
     endTime: task.endTime,
+    description: task.description,
     completedAt: task.completedAt ? task.completedAt.toISOString() : null,
     updatedAt: task.updatedAt,
     createdAt: task.createdAt,

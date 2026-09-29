@@ -111,6 +111,7 @@ describe("categories router", () => {
       time: null,
       endTime: null,
       completedAt: null,
+      description: null,
     })
     const elsewhere = await agent.post("/api/tasks").send({
       id: crypto.randomUUID(),
@@ -122,6 +123,7 @@ describe("categories router", () => {
       time: null,
       endTime: null,
       completedAt: null,
+      description: null,
     })
 
     expect((await agent.delete(`/api/categories/${category.body.id}`)).status).toBe(204)

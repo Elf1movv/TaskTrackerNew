@@ -9,6 +9,7 @@ import { DateTimeField } from "@/shared/ui/date-time-field"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
+import { Textarea } from "@/shared/ui/textarea"
 
 const PRIORITIES: Priority[] = ["low", "medium", "high"]
 const PRIORITY_LABEL_KEYS: Record<Priority, TranslationKey> = {
@@ -69,6 +70,7 @@ export function TaskForm({
   const { categories } = useCategories()
   const { t } = useLanguage()
   const [title, setTitle] = useState(task?.title ?? "")
+  const [description, setDescription] = useState(task?.description ?? "")
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
   // hasDueDate starts on when editing a task that already has a date, or
@@ -84,6 +86,7 @@ export function TaskForm({
     if (!title.trim()) return
     const patch = {
       title: title.trim(),
+      description: description.trim() || null,
       priority,
       category,
       dueDate: hasDueDate ? dueDate : null,
@@ -110,6 +113,13 @@ export function TaskForm({
         onKeyDown={e => e.key === "Enter" && handleSubmit()}
         placeholder={t("taskForm.placeholder")}
         className="border-0 border-b border-border rounded-none bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary"
+      />
+
+      <Textarea
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+        placeholder={t("taskForm.descriptionPlaceholder")}
+        className="text-sm min-h-16 resize-none"
       />
 
       <div className="flex gap-4 flex-wrap items-center">
