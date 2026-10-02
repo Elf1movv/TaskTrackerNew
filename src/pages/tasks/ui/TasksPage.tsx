@@ -7,6 +7,8 @@ function TasksPageContent() {
     filteredTasks,
     statusFilter,
     setStatusFilter,
+    dateFilter,
+    setDateFilter,
     categoryFilter,
     setCategoryFilter,
     hasMoreCompleted,
@@ -21,6 +23,8 @@ function TasksPageContent() {
         filteredTasks={filteredTasks}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
+        dateFilter={dateFilter}
+        onDateFilterChange={setDateFilter}
         categoryFilter={categoryFilter}
         onCategoryFilterChange={setCategoryFilter}
         hasMoreCompleted={hasMoreCompleted}

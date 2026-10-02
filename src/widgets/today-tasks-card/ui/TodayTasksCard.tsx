@@ -1,5 +1,6 @@
 import { ClipboardCheck } from "lucide-react"
 import { useState } from "react"
+import { Link } from "react-router"
 import { TaskForm } from "@/features/task-form"
 import type { Task } from "@/entities/task"
 import { useLanguage } from "@/shared/lib/i18n"
@@ -44,6 +45,11 @@ export function TodayTasksCard({ tasks }: { tasks: Task[] }) {
           )}
         </div>
       )}
+      <div className="border-t border-border px-6 py-3">
+        <Link to="/tasks" className="text-sm font-semibold text-primary hover:underline">
+          {t("today.allTasks")} →
+        </Link>
+      </div>
     </div>
   )
 }

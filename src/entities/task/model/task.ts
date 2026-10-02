@@ -34,3 +34,4 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
 }
 
 export type StatusFilter = "all" | "active" | "done"
+export type TaskDateFilter = "all" | "undated" | "dated"

@@ -3,7 +3,7 @@ import { resolveCategoryColor, useCategories } from "@/entities/category"
 import { DeleteTaskButton } from "@/features/delete-task"
 import { EditTaskButton } from "@/features/edit-task"
 import { TaskToggleCheckbox } from "@/features/toggle-task"
-import { PriorityDot, useTasks, type Task } from "@/entities/task"
+import { PriorityDot, TaskScheduleLink, useTasks, type Task } from "@/entities/task"
 import { useDragReorder } from "@/shared/lib/dnd"
 
 export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolean; onEdit: () => void }) {
@@ -38,6 +38,7 @@ export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolea
           {task.title}
         </div>
         {task.description && <div className="text-xs text-tertiary truncate">{task.description}</div>}
+        <TaskScheduleLink task={task} />
       </div>
       <span className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <EditTaskButton onClick={onEdit} />

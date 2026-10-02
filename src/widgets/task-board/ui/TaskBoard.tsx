@@ -3,7 +3,13 @@ import { AnimatePresence, motion } from "motion/react"
 import { CheckSquare2, Plus, X } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
 import { useCategories, type Category } from "@/entities/category"
-import { isCompletedToday, type StatusFilter, type Task, useTasks } from "@/entities/task"
+import {
+  isCompletedToday,
+  type StatusFilter,
+  type Task,
+  type TaskDateFilter,
+  useTasks,
+} from "@/entities/task"
 import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
 import {
@@ -27,11 +33,19 @@ const STATUS_LABEL_KEYS: Record<StatusFilter, TranslationKey> = {
   done: "tasks.status.done",
 }
 
+const DATE_LABEL_KEYS: Record<TaskDateFilter, TranslationKey> = {
+  all: "tasks.date.all",
+  undated: "tasks.date.undated",
+  dated: "tasks.date.dated",
+}
+
 export function TaskBoard({
   allTasks,
   filteredTasks,
   statusFilter,
   onStatusFilterChange,
+  dateFilter,
+  onDateFilterChange,
   categoryFilter,
   onCategoryFilterChange,
   hasMoreCompleted,
@@ -42,6 +56,8 @@ export function TaskBoard({
   filteredTasks: Task[]
   statusFilter: StatusFilter
   onStatusFilterChange: (filter: StatusFilter) => void
+  dateFilter: TaskDateFilter
+  onDateFilterChange: (filter: TaskDateFilter) => void
   categoryFilter: string
   onCategoryFilterChange: (category: string) => void
   hasMoreCompleted: boolean
@@ -89,14 +105,10 @@ export function TaskBoard({
           <h1 className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em]">{t("tasks.title")}</h1>
           <p className="text-[15px] text-muted-foreground">
             {t("tasks.remainingDone", {
-              // Scoped to undated tasks — this page is the undated inbox
-              // only, a dated task is a day-plan item shown in the Calendar
-              // instead (see filterTasks.ts), so counting it here would
-              // disagree with the list below.
-              remaining: allTasks.filter(t => !t.completed && t.dueDate === null).length,
+              remaining: allTasks.filter(t => !t.completed).length,
               // Also scoped to today, not all-time — otherwise this count
               // only ever grows and stops meaning anything.
-              done: allTasks.filter(t => t.completed && t.dueDate === null && isCompletedToday(t)).length,
+              done: allTasks.filter(t => t.completed && isCompletedToday(t)).length,
             })}
           </p>
         </div>
@@ -141,6 +153,27 @@ export function TaskBoard({
             }`}
           >
             {t(STATUS_LABEL_KEYS[f])}
+          </button>
+        ))}
+      </div>
+
+      <div
+        className="flex flex-wrap items-center gap-2 mb-3.5"
+        role="group"
+        aria-label={t("tasks.date.label")}
+      >
+        <span className="text-xs font-semibold text-muted-foreground mr-1">{t("tasks.date.label")}</span>
+        {(["all", "undated", "dated"] as const).map(filter => (
+          <button
+            key={filter}
+            type="button"
+            aria-pressed={dateFilter === filter}
+            onClick={() => onDateFilterChange(filter)}
+            className={`h-8 px-3 rounded-lg text-sm font-semibold transition-colors ${
+              dateFilter === filter ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-fill"
+            }`}
+          >
+            {t(DATE_LABEL_KEYS[filter])}
           </button>
         ))}
       </div>
@@ -334,6 +367,9 @@ export function TaskBoard({
               : ""}
             {categoryFilter !== "all" ? t("tasks.noTasksIn", { category: categoryFilter }) : ""}
           </span>
+          {dateFilter !== "all" && (
+            <span className="text-sm text-muted-foreground">{t(DATE_LABEL_KEYS[dateFilter])}</span>
+          )}
         </div>
       )}
 

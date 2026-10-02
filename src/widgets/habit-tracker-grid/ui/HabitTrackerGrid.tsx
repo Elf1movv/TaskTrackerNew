@@ -11,9 +11,8 @@ import { TodayHabitGroupCard } from "./TodayHabitGroupCard"
 import { useHabitViewMode } from "../lib/habitViewMode"
 
 // Today's habit widget — a list of block cards (TodayHabitGroupCard), one
-// per HabitGroup that has at least one habit scheduled today (a block
-// with nothing due today is skipped here — it's still fully visible and
-// manageable on /habits, this just keeps the main screen uncluttered).
+// per HabitGroup, including empty groups. Creating a group must give an
+// immediate visible result and a place to add its first habit on Today.
 // Adding a habit always happens via a specific block's own "+", same
 // convention /habits already uses — this widget's own "+" only creates a
 // new block.
@@ -23,7 +22,6 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
   const [viewMode, setViewMode] = useHabitViewMode()
   const { t } = useLanguage()
 
-  const groupsWithHabitsToday = habitGroups.filter(g => habits.some(h => h.groupId === g.id))
   const today = getTodayKey()
   const doneToday = habits.filter(h => h.completedDates.includes(today)).length
 
@@ -78,14 +76,9 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
         </div>
       )}
 
-      {groupsWithHabitsToday.length > 0 ? (
-        // space-y-5, not -3: each card's pill overhangs its top edge by
-        // ~14px (see TodayHabitGroupCard's border-straddle comment) — a
-        // smaller gap here let two collapsed cards' pills visually
-        // collide, since a collapsed card's own height barely clears
-        // that overhang on its own.
+      {habitGroups.length > 0 ? (
         <div className="space-y-5 pt-2.5">
-          {groupsWithHabitsToday.map(group => (
+          {habitGroups.map(group => (
             <TodayHabitGroupCard
               key={group.id}
               group={group}

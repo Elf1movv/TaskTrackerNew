@@ -47,6 +47,7 @@ export function TodayHabitGroupCard({
   const [isEditingGroup, setIsEditingGroup] = useState(false)
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
   const doneCount = habits.filter(h => h.completedDates.includes(getTodayKey())).length
+  const hasHabitsInGroup = allHabits.some(habit => habit.groupId === group.id)
 
   // Block reordering — same shared order/type as /habits' own block drag
   // (HabitGroupAccordionItem), since the blocks' relative order is shared
@@ -175,7 +176,7 @@ export function TodayHabitGroupCard({
             {habits.length === 0 ? (
               !isAdding && (
                 <div className="text-center py-6 text-muted-foreground text-sm">
-                  {t("habits.noHabitsYet")}
+                  {t(hasHabitsInGroup ? "habits.group.noneToday" : "habits.group.empty")}
                 </div>
               )
             ) : (

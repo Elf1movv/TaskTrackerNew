@@ -69,7 +69,6 @@ export function CalendarItemPopover({
             {type === "task" ? (
               <TaskForm
                 embedded
-                startExpanded
                 defaultDueDate={formatDateKey(draft.day)}
                 defaultTime={draft.defaultTime}
                 defaultEndTime={draft.defaultEndTime}

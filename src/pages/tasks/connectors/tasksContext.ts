@@ -1,11 +1,13 @@
 import { createContext, useContext } from "react"
-import type { StatusFilter, Task } from "@/entities/task"
+import type { StatusFilter, Task, TaskDateFilter } from "@/entities/task"
 
 export interface TasksContextValue {
   allTasks: Task[]
   filteredTasks: Task[]
   statusFilter: StatusFilter
   setStatusFilter: (filter: StatusFilter) => void
+  dateFilter: TaskDateFilter
+  setDateFilter: (filter: TaskDateFilter) => void
   categoryFilter: string
   setCategoryFilter: (category: string) => void
   hasMoreCompleted: boolean

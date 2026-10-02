@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { selectTodayTasks } from "./selectTodayTasks"
 import type { Task } from "../model/task"
 
@@ -21,13 +21,22 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 }
 
 describe("selectTodayTasks", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 2, 12))
+  })
+
+  afterEach(() => vi.useRealTimers())
+
   it("includes an incomplete undated task", () => {
     expect(selectTodayTasks([makeTask({ dueDate: null })])).toHaveLength(1)
   })
 
-  it("excludes a task that has a due date, regardless of which day", () => {
-    expect(selectTodayTasks([makeTask({ dueDate: "2026-09-23" })])).toHaveLength(0)
-    expect(selectTodayTasks([makeTask({ dueDate: "2026-09-01" })])).toHaveLength(0)
+  it("keeps overdue, today's and future tasks visible after scheduling", () => {
+    const tasks = ["2026-09-23", "2026-10-02", "2026-11-01"].map((dueDate, i) =>
+      makeTask({ id: String(i), dueDate }),
+    )
+    expect(selectTodayTasks(tasks)).toEqual(tasks)
   })
 
   it("keeps a task completed earlier today", () => {
@@ -46,15 +55,15 @@ describe("selectTodayTasks", () => {
     expect(selectTodayTasks([])).toEqual([])
   })
 
-  it("filters a mixed list down to undated tasks that are incomplete or completed today", () => {
+  it("keeps dated tasks completed today, without resurrecting older completed tasks", () => {
     const now = new Date()
     const completedTodayIso = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8).toISOString()
     const tasks = [
       makeTask({ id: "a", completed: false }),
       makeTask({ id: "b", completed: true, completedAt: "2020-01-01T08:00:00.000Z" }),
       makeTask({ id: "c", completed: false, dueDate: "2020-01-01" }),
-      makeTask({ id: "d", completed: true, completedAt: completedTodayIso }),
+      makeTask({ id: "d", completed: true, dueDate: "2026-11-01", completedAt: completedTodayIso }),
     ]
-    expect(selectTodayTasks(tasks).map(t => t.id)).toEqual(["a", "d"])
+    expect(selectTodayTasks(tasks).map(t => t.id)).toEqual(["a", "c", "d"])
   })
 })

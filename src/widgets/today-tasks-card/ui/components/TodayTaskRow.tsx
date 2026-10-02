@@ -2,7 +2,7 @@ import { resolveCategoryColor, useCategories } from "@/entities/category"
 import { DeleteTaskButton } from "@/features/delete-task"
 import { EditTaskButton } from "@/features/edit-task"
 import { TaskToggleCheckbox } from "@/features/toggle-task"
-import { PriorityDot, useTasks, type Task } from "@/entities/task"
+import { PriorityDot, TaskScheduleLink, useTasks, type Task } from "@/entities/task"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
 
@@ -23,13 +23,16 @@ export function TodayTaskRow({ task, onEdit }: { task: Task; onEdit: () => void 
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={22} />
-      <span
-        className={`text-[15px] font-medium flex-1 leading-snug transition-colors ${
-          task.completed ? "line-through text-tertiary" : ""
-        }`}
-      >
-        {task.title}
-      </span>
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5 py-2">
+        <span
+          className={`text-[15px] font-medium leading-snug transition-colors ${
+            task.completed ? "line-through text-tertiary" : ""
+          }`}
+        >
+          {task.title}
+        </span>
+        <TaskScheduleLink task={task} />
+      </div>
       <span className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <EditTaskButton onClick={onEdit} />
         <DeleteTaskButton taskId={task.id} />

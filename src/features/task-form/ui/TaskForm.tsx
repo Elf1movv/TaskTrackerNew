@@ -38,20 +38,15 @@ const PriorityToggle = styled.button<{ color: string }>`
 // used when adding a task from a specific category tab (e.g. Health) so it
 // lands back in that same tab. Editing always shows the full picker.
 //
-// `defaultTime`/`defaultEndTime` and `startExpanded` are for the calendar's
-// click/drag-to-create flow (CalendarItemPopover): unlike `defaultDueDate`,
-// which only ever suggests a value without flipping the due-date toggle on
-// (every other creation path defaults it off), these seed the toggle ON
-// too — the user just performed the literal drag gesture that IS the time
-// selection, so defaulting it collapsed would immediately hide what they
-// just picked.
+// Calendar creation passes defaultDueDate (and optional time/endTime).
+// That selection is already the user's scheduling choice, so the date is
+// active immediately. Ordinary list creation has no defaultDueDate.
 export function TaskForm({
   task,
   lockedCategory,
   defaultDueDate,
   defaultTime,
   defaultEndTime,
-  startExpanded,
   embedded,
   onDelete,
   onDone,
@@ -61,7 +56,6 @@ export function TaskForm({
   defaultDueDate?: string
   defaultTime?: string | null
   defaultEndTime?: string | null
-  startExpanded?: boolean
   embedded?: boolean
   onDelete?: () => void
   onDone: () => void
@@ -73,14 +67,23 @@ export function TaskForm({
   const [description, setDescription] = useState(task?.description ?? "")
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
-  // hasDueDate starts on when editing a task that already has a date, or
-  // when startExpanded is set (see the prop comment above) — defaultDueDate
-  // alone still only suggests a value, per every other creation path.
-  const [hasDueDate, setHasDueDate] = useState(!!task?.dueDate || !!startExpanded)
+  const [hasDueDate, setHasDueDate] = useState(task ? !!task.dueDate : !!defaultDueDate)
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? getTodayKey())
   const [time, setTime] = useState<string | null>(task?.time ?? defaultTime ?? null)
   const [endTime, setEndTime] = useState<string | null>(task?.endTime ?? defaultEndTime ?? null)
   const showCategoryPicker = !!task || !lockedCategory
+
+  // The month panel stays mounted when another day is selected. Adjust
+  // only the creation date, preserving the draft's title/notes/options.
+  // Never replace an existing task's own date with the panel's day.
+  const [previousDefaultDueDate, setPreviousDefaultDueDate] = useState(defaultDueDate)
+  if (previousDefaultDueDate !== defaultDueDate) {
+    setPreviousDefaultDueDate(defaultDueDate)
+    if (!task && defaultDueDate) {
+      setHasDueDate(true)
+      setDueDate(defaultDueDate)
+    }
+  }
 
   function handleSubmit() {
     if (!title.trim()) return
