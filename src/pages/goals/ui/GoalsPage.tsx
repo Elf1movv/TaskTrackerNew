@@ -9,6 +9,7 @@ import { GoalsProvider, useGoalsContext } from "../connectors"
 function GoalsPageContent() {
   const { goals } = useGoalsContext()
   const { t } = useLanguage()
+  const [showAchieved, setShowAchieved] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const focusedGoalId = searchParams.get("goal") ?? undefined
@@ -45,8 +46,24 @@ function GoalsPageContent() {
         </Button>
       </div>
 
+      <div className="flex gap-2 mb-4">
+        <Button
+          size="sm"
+          variant={!showAchieved ? "default" : "outline"}
+          onClick={() => setShowAchieved(false)}
+        >
+          {t("goals.active")}
+        </Button>
+        <Button
+          size="sm"
+          variant={showAchieved ? "default" : "outline"}
+          onClick={() => setShowAchieved(true)}
+        >
+          {t("goals.achieved")}
+        </Button>
+      </div>
       <GoalList
-        goals={goals}
+        goals={goals.filter(goal => !!goal.achievedAt === showAchieved)}
         initialGoalId={focusedGoalId}
         isAdding={isAdding}
         onCloseAdding={() => setIsAdding(false)}

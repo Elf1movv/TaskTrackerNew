@@ -14,6 +14,9 @@ import { goalsRouter } from "./routes/goals.js"
 import { habitGroupsRouter } from "./routes/habitGroups.js"
 import { habitsRouter } from "./routes/habits.js"
 import { remindersRouter } from "./routes/reminders.js"
+import { transitionRouter } from "./routes/transition.js"
+import { notesRouter } from "./routes/notes.js"
+import { plansRouter } from "./routes/plans.js"
 import { tasksRouter } from "./routes/tasks.js"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -23,7 +26,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // browser talking to its own frontend never triggers CORS at all. This
 // list only matters for a request whose Origin genuinely differs, so it's
 // kept to exactly the domains this app is actually served from.
-const ALLOWED_ORIGINS = ["https://mytracker.space", "https://www.mytracker.space"]
+const ALLOWED_ORIGINS = process.env.APP_ORIGINS?.split(",")
+  .map(origin => origin.trim())
+  .filter(Boolean) ?? ["https://mytracker.space", "https://www.mytracker.space"]
 
 // Split out from index.ts so tests (supertest) can import the app without
 // binding a real port — index.ts is the only place that calls .listen().
@@ -56,6 +61,9 @@ export function createApp() {
   // feedback's own path) also avoids the smaller limit rejecting
   // feedback's body before the larger one ever gets a chance to run.
   const DEFAULT_JSON_LIMIT = "256kb"
+  app.use("/api/transition", express.json({ limit: DEFAULT_JSON_LIMIT }), transitionRouter)
+  app.use("/api/notes", express.json({ limit: DEFAULT_JSON_LIMIT }), notesRouter)
+  app.use("/api/plans", express.json({ limit: DEFAULT_JSON_LIMIT }), plansRouter)
   app.use("/api/tasks", express.json({ limit: DEFAULT_JSON_LIMIT }), tasksRouter)
   app.use("/api/goals", express.json({ limit: DEFAULT_JSON_LIMIT }), goalsRouter)
   app.use("/api/habits", express.json({ limit: DEFAULT_JSON_LIMIT }), habitsRouter)

@@ -48,9 +48,9 @@ export function TaskBoard({
   onDateFilterChange,
   categoryFilter,
   onCategoryFilterChange,
-  hasMoreCompleted,
-  remainingCompletedCount,
-  onLoadMoreCompleted,
+  page,
+  pageCount,
+  onPageChange,
 }: {
   allTasks: Task[]
   filteredTasks: Task[]
@@ -60,9 +60,9 @@ export function TaskBoard({
   onDateFilterChange: (filter: TaskDateFilter) => void
   categoryFilter: string
   onCategoryFilterChange: (category: string) => void
-  hasMoreCompleted: boolean
-  remainingCompletedCount: number
-  onLoadMoreCompleted: () => void
+  page: number
+  pageCount: number
+  onPageChange: (page: number) => void
 }) {
   const { categories, addCategory, updateCategory, deleteCategory } = useCategories()
   const { refreshTasks } = useTasks()
@@ -164,17 +164,17 @@ export function TaskBoard({
       >
         <span className="text-xs font-semibold text-muted-foreground mr-1">{t("tasks.date.label")}</span>
         {(["all", "undated", "dated"] as const).map(filter => (
-          <button
+          <Button
             key={filter}
             type="button"
+            size="sm"
+            variant={dateFilter === filter ? "default" : "outline"}
             aria-pressed={dateFilter === filter}
             onClick={() => onDateFilterChange(filter)}
-            className={`h-8 px-3 rounded-lg text-sm font-semibold transition-colors ${
-              dateFilter === filter ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-fill"
-            }`}
+            className="rounded-lg"
           >
             {t(DATE_LABEL_KEYS[filter])}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -373,12 +373,26 @@ export function TaskBoard({
         </div>
       )}
 
-      {hasMoreCompleted && (
-        <div className="flex justify-center mt-4">
-          <Button variant="outline" size="sm" onClick={onLoadMoreCompleted} className="text-xs">
-            {t("tasks.loadMore", { count: Math.min(remainingCompletedCount, 10) })}
+      {pageCount > 1 && (
+        <nav
+          className="flex flex-wrap justify-center items-center gap-3 mt-4"
+          aria-label={t("tasks.status.done")}
+        >
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+            {t("pagination.previous")}
           </Button>
-        </div>
+          <span className="text-xs text-muted-foreground">
+            {t("pagination.page", { page, total: pageCount })}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= pageCount}
+            onClick={() => onPageChange(page + 1)}
+          >
+            {t("pagination.next")}
+          </Button>
+        </nav>
       )}
     </>
   )

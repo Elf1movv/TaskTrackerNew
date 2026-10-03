@@ -1,3 +1,4 @@
+import { useGoals } from "@/entities/goal"
 import { useState } from "react"
 import styled from "@emotion/styled"
 import { useCategories } from "@/entities/category"
@@ -38,24 +39,20 @@ const PriorityToggle = styled.button<{ color: string }>`
 // used when adding a task from a specific category tab (e.g. Health) so it
 // lands back in that same tab. Editing always shows the full picker.
 //
-// Calendar creation passes defaultDueDate (and optional time/endTime).
-// That selection is already the user's scheduling choice, so the date is
-// active immediately. Ordinary list creation has no defaultDueDate.
+// A task date is a deadline. Scheduling happens separately in PlanForm.
 export function TaskForm({
   task,
   lockedCategory,
+  defaultGoalId,
   defaultDueDate,
-  defaultTime,
-  defaultEndTime,
   embedded,
   onDelete,
   onDone,
 }: {
   task?: Task
+  defaultGoalId?: string
   lockedCategory?: string
   defaultDueDate?: string
-  defaultTime?: string | null
-  defaultEndTime?: string | null
   embedded?: boolean
   onDelete?: () => void
   onDone: () => void
@@ -63,19 +60,18 @@ export function TaskForm({
   const { addTask, updateTask } = useTasks()
   const { categories } = useCategories()
   const { t } = useLanguage()
+  const { goals } = useGoals()
+  const [goalId, setGoalId] = useState(task?.goalId ?? defaultGoalId ?? "none")
   const [title, setTitle] = useState(task?.title ?? "")
   const [description, setDescription] = useState(task?.description ?? "")
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
   const [hasDueDate, setHasDueDate] = useState(task ? !!task.dueDate : !!defaultDueDate)
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? getTodayKey())
-  const [time, setTime] = useState<string | null>(task?.time ?? defaultTime ?? null)
-  const [endTime, setEndTime] = useState<string | null>(task?.endTime ?? defaultEndTime ?? null)
   const showCategoryPicker = !!task || !lockedCategory
 
-  // The month panel stays mounted when another day is selected. Adjust
-  // only the creation date, preserving the draft's title/notes/options.
-  // Never replace an existing task's own date with the panel's day.
+  // Preserve the draft when a caller changes the suggested deadline.
+  // An existing task always keeps its own deadline.
   const [previousDefaultDueDate, setPreviousDefaultDueDate] = useState(defaultDueDate)
   if (previousDefaultDueDate !== defaultDueDate) {
     setPreviousDefaultDueDate(defaultDueDate)
@@ -93,11 +89,11 @@ export function TaskForm({
       priority,
       category,
       dueDate: hasDueDate ? dueDate : null,
-      // Time (and endTime, which depends on it) only ever make sense
-      // alongside a due date — clearing the date clears both rather than
-      // leaving an orphaned time/endTime on an undated task.
-      time: hasDueDate ? time : null,
-      endTime: hasDueDate && time ? endTime : null,
+      // Old scheduling fields are retained for transition only. New tasks
+      // keep their work intervals in CalendarPlan.
+      time: null,
+      goalId: goalId === "none" ? null : goalId,
+      endTime: null,
     }
     if (task) {
       updateTask(task.id, { ...patch, completed: task.completed })
@@ -174,13 +170,24 @@ export function TaskForm({
             }
           }}
           placeholder={t("taskForm.noDueDate")}
-          time={time}
-          onTimeChange={setTime}
-          endTime={endTime}
-          onEndTimeChange={setEndTime}
         />
       </div>
 
+      <Select value={goalId} onValueChange={setGoalId}>
+        <SelectTrigger aria-label={t("tasks.goal")}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">{t("tasks.noGoal")}</SelectItem>
+          {goals
+            .filter(goal => !goal.achievedAt || goal.id === goalId)
+            .map(goal => (
+              <SelectItem key={goal.id} value={goal.id}>
+                {goal.title}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
       <div className="flex gap-2 justify-between pt-1">
         {onDelete && (
           <Button variant="ghost" size="sm" onClick={onDelete} className="text-xs text-destructive">

@@ -3,13 +3,14 @@ import { addDays, addMonths, addWeeks, addYears, subDays, subMonths, subWeeks, s
 import { isGoalDueOnDay, useGoals } from "@/entities/goal"
 import { selectHabitsOnDay, useHabits } from "@/entities/habit"
 import { selectRemindersOnDay, useReminders } from "@/entities/reminder"
-import { isTaskOnDay, useTasks } from "@/entities/task"
+import { isTaskOnDay } from "@/entities/task"
+import { usePlans } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
-import { addMinutesToTime, minutesFromMidnight } from "@/shared/lib/timeOffset"
+import { minutesFromMidnight } from "@/shared/lib/timeOffset"
 import { CalendarContext, type CalendarView } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
-  const { tasks, updateTask } = useTasks()
+  const { plans: tasks, updatePlan: updateTask } = usePlans()
   const { reminders } = useReminders()
   const { goals, updateGoal } = useGoals()
   const { habits } = useHabits()
@@ -92,7 +93,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     (taskId: string, day: Date) => {
       const task = tasks.find(t => t.id === taskId)
       if (!task) return
-      updateTask(taskId, { dueDate: formatDateKey(day) })
+      updateTask(taskId, { date: formatDateKey(day), onHold: false })
     },
     [tasks, updateTask],
   )
@@ -117,12 +118,24 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     (taskId: string, day: Date, time: string | null) => {
       const task = tasks.find(t => t.id === taskId)
       if (!task) return
-      let endTime: string | null = null
-      if (time && task.time && task.endTime) {
-        const deltaMinutes = minutesFromMidnight(time) - minutesFromMidnight(task.time)
-        endTime = addMinutesToTime(task.endTime, deltaMinutes)
-      }
-      updateTask(taskId, { dueDate: formatDateKey(day), time, endTime })
+      const duration =
+        task.time && task.endTime
+          ? minutesFromMidnight(task.endTime) - minutesFromMidnight(task.time)
+          : task.durationMinutes
+      const startMinutes = time ? Math.min(minutesFromMidnight(time), 1439 - duration) : null
+      // The drop is already snapped. Do not round an existing interval's
+      // duration again (legacy or manually entered intervals may be 20 min).
+      const clock = (minutes: number) =>
+        `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
+      const start = startMinutes === null ? null : clock(Math.max(0, startMinutes))
+      const endTime = startMinutes === null ? null : clock(Math.max(0, startMinutes) + duration)
+      updateTask(taskId, {
+        date: formatDateKey(day),
+        time: start,
+        endTime,
+        onHold: false,
+        durationMinutes: duration,
+      })
     },
     [tasks, updateTask],
   )
@@ -130,8 +143,15 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   // The hour-timeline's resize handle — start time is untouched, only how
   // far the block stretches changes.
   const resizeTask = useCallback(
-    (taskId: string, endTime: string) => updateTask(taskId, { endTime }),
-    [updateTask],
+    (taskId: string, endTime: string) => {
+      const task = tasks.find(t => t.id === taskId)
+      if (task?.time && endTime > task.time)
+        updateTask(taskId, {
+          endTime,
+          durationMinutes: minutesFromMidnight(endTime) - minutesFromMidnight(task.time),
+        })
+    },
+    [tasks, updateTask],
   )
 
   const value = useMemo(

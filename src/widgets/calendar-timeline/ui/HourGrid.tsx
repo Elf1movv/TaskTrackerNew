@@ -1,9 +1,11 @@
+import { useLanguage } from "@/shared/lib/i18n"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
 import { resolveCategoryColor, useCategories, type Category } from "@/entities/category"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
-import { PriorityDot, type Task } from "@/entities/task"
-import { TaskToggleCheckbox } from "@/features/toggle-task"
+import { PriorityDot } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { monoFont } from "@/shared/lib/typography"
 import {
@@ -290,7 +292,7 @@ const FALLBACK_BLOCK_HEIGHT_PX = 22
 const MIN_BLOCK_HEIGHT_PX = 18
 
 function blockHeightPx(task: Task): number {
-  if (!task.endTime || !task.time) return FALLBACK_BLOCK_HEIGHT_PX
+  if (!task.endTime || !task.time) return (task.durationMinutes * HOUR_HEIGHT_PX) / 60
   const raw = timeToOffsetPx(task.endTime) - timeToOffsetPx(task.time)
   return raw > 0 ? Math.max(MIN_BLOCK_HEIGHT_PX, raw) : FALLBACK_BLOCK_HEIGHT_PX
 }
@@ -299,7 +301,7 @@ function blockHeightPx(task: Task): number {
 // live preview (see TimelineDayColumn's movePreview) — mirrors
 // blockHeightPx's own fallback for an endTime-less/malformed task.
 function taskDurationMinutes(task: Task): number {
-  if (!task.endTime || !task.time) return DEFAULT_BLOCK_MINUTES
+  if (!task.endTime || !task.time) return task.durationMinutes
   const raw = minutesFromMidnight(task.endTime) - minutesFromMidnight(task.time)
   return raw > 0 ? raw : DEFAULT_BLOCK_MINUTES
 }
@@ -323,6 +325,7 @@ function TimedTaskBlock({
   onRescheduleTask: (taskId: string, day: Date, time: string) => void
   onMovePreviewChange: (preview: MoveDragPreview | null) => void
 }) {
+  const { t } = useLanguage()
   const {
     onPointerDown: onMovePointerDown,
     isDragging,
@@ -397,7 +400,7 @@ function TimedTaskBlock({
       // JS gets the whole gesture. Direct user feedback, 2026-09-28 (twice
       // — once for the selection, once for this).
       className="absolute flex items-center gap-1 rounded-md px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden select-none touch-none [-webkit-touch-callout:none]"
-      title={`${task.time} · ${task.title}`}
+      title={`${task.time} · ${task.title}${task.completed && task.taskId ? ` · ${t("plans.completed")}` : ""}`}
     >
       <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
         <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={14} />
@@ -410,8 +413,9 @@ function TimedTaskBlock({
       <span css={monoFont} className="shrink-0 text-muted-foreground">
         {task.time}
       </span>
-      <span className={`truncate font-semibold ${task.completed ? "line-through text-tertiary" : ""}`}>
-        {task.title}
+      <span className={`truncate font-semibold ${task.completed ? "text-tertiary" : ""}`}>
+        <span className={task.completed ? "line-through" : ""}>{task.title}</span>
+        {task.completed && task.taskId && <span className="ml-1 text-[10px]">· {t("plans.completed")}</span>}
       </span>
       {onResizeTask && (
         <div

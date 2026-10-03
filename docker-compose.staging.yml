@@ -1,0 +1,42 @@
+# Run with: docker compose --env-file .env.staging -p mytracker-staging -f docker-compose.staging.yml ...
+# No globally named containers/networks/volumes; never shares production storage.
+services:
+  app:
+    image: ${STAGING_IMAGE:?Set an immutable staging image tag}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://tasktracker_stage:${STAGING_DB_PASSWORD:?Required}@db:5432/tasktracker_stage
+      BETTER_AUTH_URL: ${STAGING_ORIGIN:?Required}
+      BETTER_AUTH_SECRET: ${STAGING_AUTH_SECRET:?Required}
+      AUTH_COOKIE_PREFIX: mytracker-staging
+      APP_ORIGINS: ${STAGING_ORIGIN}
+      EMAIL_DELIVERY: disabled
+    ports:
+      - "127.0.0.1:3002:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+  db:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tasktracker_stage
+      POSTGRES_DB: tasktracker_stage
+      POSTGRES_PASSWORD: ${STAGING_DB_PASSWORD:?Required}
+    volumes:
+      - staging-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tasktracker_stage -d tasktracker_stage"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+volumes:
+  staging-db:

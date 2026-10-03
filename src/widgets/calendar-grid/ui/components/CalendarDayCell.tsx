@@ -1,11 +1,13 @@
+import { useLanguage } from "@/shared/lib/i18n"
+import { formatDateKey } from "@/shared/lib/date"
 import { useCallback } from "react"
 import { format } from "date-fns"
 import { Target } from "lucide-react"
 import { resolveCategoryColor, type Category } from "@/entities/category"
 import { type Goal } from "@/entities/goal"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
-import { type Task } from "@/entities/task"
-import { TaskToggleCheckbox } from "@/features/toggle-task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { useDropTarget } from "@/shared/lib/dnd"
 import { monoFont } from "@/shared/lib/typography"
 
@@ -44,6 +46,7 @@ export function CalendarDayCell({
   onEditTask: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
 }) {
+  const { t } = useLanguage()
   // Composed here (not passed down as a ready-made per-day closure from the
   // parent's .map()) so it stays referentially stable across renders where
   // `day` and `onMoveTaskToDay` don't change — useDropTarget's ref callback
@@ -82,6 +85,7 @@ export function CalendarDayCell({
     // keyboard/a11y affordances instead, same pattern already established
     // for TimedTaskBlock in HourGrid.tsx.
     <div
+      data-plan-day={formatDateKey(day)}
       ref={ref}
       role="button"
       tabIndex={0}
@@ -193,6 +197,9 @@ export function CalendarDayCell({
                 className={`truncate font-semibold ${task.completed ? "line-through text-tertiary" : ""}`}
               >
                 {task.title}
+                {task.completed && task.taskId && (
+                  <span className="block text-[9px]">{t("plans.completed")}</span>
+                )}
               </span>
             </div>
           ))}

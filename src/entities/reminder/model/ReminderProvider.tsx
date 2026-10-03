@@ -7,12 +7,14 @@ import type { Reminder } from "./reminder"
 
 export function ReminderProvider({ children }: { children: ReactNode }) {
   const {
-    items: reminders,
+    items: storedReminders,
     isLoaded,
     create,
     update,
     remove,
   } = usePersistedCollection<Reminder>(reminderRepository, "reminder")
+
+  const reminders = useMemo(() => storedReminders.filter(reminder => !reminder.suspended), [storedReminders])
 
   const addReminder = useCallback(
     (reminder: Omit<Reminder, "id" | "updatedAt">) => {

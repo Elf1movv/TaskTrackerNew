@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
-import { isTaskOnDay, type Task } from "@/entities/task"
+import { isTaskOnDay } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { HourGrid } from "@/widgets/calendar-timeline"
 import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-item-popover"

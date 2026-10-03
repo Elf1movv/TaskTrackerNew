@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react"
 import { format, isToday } from "date-fns"
-import { TaskForm } from "@/features/task-form"
+import { PlanForm } from "@/features/plan-form"
 import { ReminderForm } from "@/features/reminder-form"
 import { GoalForm } from "@/features/goal-form"
 import { DayGoalRow, DayReminderRow, DayTaskRow } from "@/widgets/day-detail-panel"
 import { isGoalDueOnDay, type Goal } from "@/entities/goal"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
-import { isTaskOnDay, type Task } from "@/entities/task"
+import { isTaskOnDay } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { buildAgendaRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
@@ -110,7 +111,7 @@ export function CalendarAgendaView({
             <div className="space-y-2.5">
               {group.tasks.map(task =>
                 editing?.kind === "task" && editing.id === task.id ? (
-                  <TaskForm key={task.id} task={task} onDone={() => setEditing(null)} />
+                  <PlanForm key={task.id} plan={task} onDone={() => setEditing(null)} />
                 ) : (
                   <DayTaskRow
                     key={task.id}

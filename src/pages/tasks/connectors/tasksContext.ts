@@ -10,9 +10,9 @@ export interface TasksContextValue {
   setDateFilter: (filter: TaskDateFilter) => void
   categoryFilter: string
   setCategoryFilter: (category: string) => void
-  hasMoreCompleted: boolean
-  remainingCompletedCount: number
-  onLoadMoreCompleted: () => void
+  page: number
+  pageCount: number
+  setPage: (page: number) => void
 }
 
 export const TasksContext = createContext<TasksContextValue | null>(null)

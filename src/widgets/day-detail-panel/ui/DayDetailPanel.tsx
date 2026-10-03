@@ -2,13 +2,13 @@ import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { format } from "date-fns"
 import { Plus, X } from "lucide-react"
-import { TaskForm } from "@/features/task-form"
+import { PlanForm } from "@/features/plan-form"
 import { ReminderForm } from "@/features/reminder-form"
 import { GoalForm } from "@/features/goal-form"
 import { type Goal } from "@/entities/goal"
 import { type Habit } from "@/entities/habit"
 import { type Reminder } from "@/entities/reminder"
-import { type Task } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
@@ -67,7 +67,7 @@ export function DayDetailPanel({
 
       <div className="flex items-center justify-between mb-2.5">
         <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-tertiary font-bold">
-          {t("tasks.title")}
+          {t("plans.title")}
         </span>
         <Button
           size="icon"
@@ -92,7 +92,7 @@ export function DayDetailPanel({
             transition={{ duration: 0.18 }}
             className="overflow-hidden mb-3"
           >
-            <TaskForm defaultDueDate={dueDate} onDone={() => setIsAddingTask(false)} />
+            <PlanForm defaultDate={dueDate} onDone={() => setIsAddingTask(false)} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -101,7 +101,7 @@ export function DayDetailPanel({
         <div className="space-y-3 mb-6">
           {tasks.map(task =>
             editingTaskId === task.id ? (
-              <TaskForm key={task.id} task={task} onDone={() => setEditingTaskId(null)} />
+              <PlanForm key={task.id} plan={task} onDone={() => setEditingTaskId(null)} />
             ) : (
               <DayTaskRow
                 key={task.id}

@@ -8,11 +8,6 @@ export interface GoalContextValue {
   updateGoal: (id: string, patch: Partial<Omit<Goal, "id" | "updatedAt" | "milestones">>) => void
   deleteGoal: (id: string) => void
   reorderGoals: (draggedId: string, targetId: string) => void
-  addMilestone: (goalId: string, title: string) => void
-  updateMilestone: (goalId: string, milestoneId: string, title: string) => void
-  deleteMilestone: (goalId: string, milestoneId: string) => void
-  reorderMilestones: (goalId: string, draggedId: string, targetId: string) => void
-  toggleMilestone: (goalId: string, milestoneId: string) => void
 }
 
 export const GoalContext = createContext<GoalContextValue | null>(null)

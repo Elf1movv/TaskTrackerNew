@@ -15,3 +15,6 @@ db.env
 
 .DS_Store
 npm-debug.log*
+
+# Isolated preview environment credentials
+.env.staging

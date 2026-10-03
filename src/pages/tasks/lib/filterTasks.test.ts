@@ -53,12 +53,13 @@ describe("Tasks list visibility", () => {
     ]
     expect(filterTasks(tasks, "active", "Work", "dated").map(t => t.id)).toEqual(["scheduled"])
     expect(filterTasks(tasks, "all", "all", "undated").map(t => t.id)).toEqual(["undated"])
-    expect(filterTasks(tasks, "done", "Work", "dated").map(t => t.id)).toEqual(["done-today"])
+    expect(filterTasks(tasks, "done", "Work", "dated").map(t => t.id)).toEqual(["done-today", "done-before"])
     expect(filterTasks(tasks, "all", "all").map(t => t.id)).toEqual([
       "undated",
       "scheduled",
       "other-category",
       "done-today",
+      "done-before",
     ])
   })
 })

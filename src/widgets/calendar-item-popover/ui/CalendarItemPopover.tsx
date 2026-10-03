@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { TaskForm } from "@/features/task-form"
+import { PlanForm } from "@/features/plan-form"
 import { ReminderForm } from "@/features/reminder-form"
 import { useReminders, type Reminder } from "@/entities/reminder"
-import { useTasks, type Task } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Popover, PopoverAnchor, PopoverContent } from "@/shared/ui/popover"
@@ -34,7 +34,7 @@ export function CalendarItemPopover({
   onClose: () => void
 }) {
   const { t } = useLanguage()
-  const { deleteTask } = useTasks()
+
   const { deleteReminder } = useReminders()
   const [type, setType] = useState<"task" | "reminder">("task")
 
@@ -60,16 +60,16 @@ export function CalendarItemPopover({
               className="mb-4"
             >
               <ToggleGroupItem value="task" className="text-xs flex-1">
-                {t("calendar.typeTask")}
+                {t("plans.title")}
               </ToggleGroupItem>
               <ToggleGroupItem value="reminder" className="text-xs flex-1">
                 {t("calendar.typeReminder")}
               </ToggleGroupItem>
             </ToggleGroup>
             {type === "task" ? (
-              <TaskForm
+              <PlanForm
                 embedded
-                defaultDueDate={formatDateKey(draft.day)}
+                defaultDate={formatDateKey(draft.day)}
                 defaultTime={draft.defaultTime}
                 defaultEndTime={draft.defaultEndTime}
                 onDone={onClose}
@@ -85,17 +85,7 @@ export function CalendarItemPopover({
           </>
         )}
 
-        {draft?.mode === "edit-task" && (
-          <TaskForm
-            embedded
-            task={draft.task}
-            onDone={onClose}
-            onDelete={() => {
-              deleteTask(draft.task.id)
-              onClose()
-            }}
-          />
-        )}
+        {draft?.mode === "edit-task" && <PlanForm embedded plan={draft.task} onDone={onClose} />}
 
         {draft?.mode === "edit-reminder" && (
           <ReminderForm

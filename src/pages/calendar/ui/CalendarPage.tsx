@@ -1,3 +1,8 @@
+import { usePlans } from "@/entities/calendar-plan"
+import { PlanForm } from "@/features/plan-form"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
+import { useTasks } from "@/entities/task"
+import { PlanShelf } from "@/widgets/calendar-timeline"
 import { useEffect, useRef } from "react"
 import { format, isSameDay, isSameMonth, isSameWeek, type Locale } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -56,6 +61,7 @@ function formatPeriodTitle(view: CalendarView, anchorDate: Date, locale: Locale)
 }
 
 function CalendarPageContent() {
+  const { tasks: canonicalTasks } = useTasks()
   const {
     view,
     setView,
@@ -81,6 +87,16 @@ function CalendarPageContent() {
   } = useCalendarContext()
   const { language, t } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { plans } = usePlans()
+  const focusedPlan = plans.find(plan => plan.id === searchParams.get("plan"))
+  const closePlan = () =>
+    setSearchParams(
+      previous => {
+        previous.delete("plan")
+        return previous
+      },
+      { replace: true },
+    )
   const hasConsumedInitialParams = useRef(false)
   const isMobile = useIsMobile()
 
@@ -202,6 +218,26 @@ function CalendarPageContent() {
         </div>
       </div>
 
+      <Dialog open={!!focusedPlan} onOpenChange={open => !open && closePlan()}>
+        <DialogContent className="max-h-[85vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>{t("plans.title")}</DialogTitle>
+          </DialogHeader>
+          {focusedPlan && <PlanForm key={focusedPlan.id} plan={focusedPlan} embedded onDone={closePlan} />}
+        </DialogContent>
+      </Dialog>
+      <PlanShelf
+        anchorDate={formatDateKey(anchorDate)}
+        days={
+          view === "day"
+            ? [formatDateKey(anchorDate)]
+            : view === "week"
+              ? buildWeekRange(anchorDate).map(formatDateKey)
+              : []
+        }
+        onReschedule={rescheduleTaskTime}
+      />
+
       {view === "month" && (
         <CalendarMonthView
           anchorDate={anchorDate}
@@ -252,7 +288,7 @@ function CalendarPageContent() {
       {view === "year" && (
         <CalendarYear
           year={anchorDate}
-          tasks={allTasks}
+          tasks={canonicalTasks.filter(task => !task.legacyPending)}
           goals={allGoals}
           habits={allHabits}
           onSelectDay={day => {

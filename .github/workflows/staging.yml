@@ -1,0 +1,29 @@
+name: Build staging preview
+on:
+  push:
+    branches: [feat/product-logic-redesign]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+concurrency:
+  group: staging-preview
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: VITE_APP_ENV=staging
+          tags: ghcr.io/elf1movv/tasktracker:staging-${{ github.sha }}
+# Deployment is a separate explicit step after tests and staging DNS/TLS
+# preparation. This workflow cannot touch production's latest image or VPS.

@@ -12,9 +12,9 @@
 
 ## Что это за приложение
 
-Личный трекер задач, целей (с вложенными milestones) и привычек. Одна
-страница "Today" (сегодняшние задачи + прогресс), отдельные разделы Tasks /
-Goals / Habits / Calendar.
+Личный трекер заметок, задач, целей, привычек и планов дня. В ветке
+product-logic-redesign главная показывает заметки, календарь — отдельные
+планы, цель объединяет обычные задачи. Выпуск в main ещё не согласован.
 
 ## Стек
 
@@ -389,6 +389,13 @@ express парсит тело до проверки `requireAuth`.
 
 ```mermaid
 erDiagram
+    User ||--o{ Note : owns
+    User ||--o{ CalendarPlan : owns
+    User ||--o{ LegacyTransition : owns
+    Goal |o--o{ Task : groups
+    Task |o--o{ CalendarPlan : schedules
+    CalendarPlan |o--o{ Reminder : reminds
+    Task |o--o{ Reminder : reminds
     User ||--o{ Task : owns
     User ||--o{ Goal : owns
     User ||--o{ Habit : owns
@@ -404,6 +411,9 @@ erDiagram
         string category
         date dueDate
         datetime completedAt
+        string goalId FK
+        boolean legacyPending
+        datetime retiredAt
         int order
         string userId FK
     }
@@ -415,7 +425,35 @@ erDiagram
         string targetDate
         string color
         json milestones
+        datetime achievedAt
         int order
+        string userId FK
+    }
+    Note {
+        string id PK
+        string title
+        string description
+        date showFrom
+        datetime archivedAt
+        int order
+        string userId FK
+    }
+    CalendarPlan {
+        string id PK
+        date date
+        string time
+        string endTime
+        int durationMinutes
+        boolean onHold
+        string taskId FK
+        string userId FK
+    }
+    LegacyTransition {
+        string id PK
+        string sourceKey
+        string choice
+        json snapshot
+        string resultId
         string userId FK
     }
     Habit {
@@ -448,12 +486,11 @@ erDiagram
     }
 ```
 
-`Task`/`Goal`/`Habit`/`Category` — **без внешних ключей друг на друга**,
-это не случайность: сущности приложения сейчас никак не связаны между
-собой (задача не привязана к цели, привычка не привязана ни к чему).
-Если появится, например, "привязать задачу к цели" — тогда в `Task`
-понадобится `goalId` со внешним ключом на `Goal.id`, и эту диаграмму
-нужно будет обновить. Все четыре модели **связаны с `User`**
+В product-logic-redesign Task связан с Goal через nullable goalId,
+CalendarPlan — с Task, Reminder — с Task или CalendarPlan. Проверка
+владельца ссылки обязательна на сервере. Habit остаётся независимым;
+Task.category — строковое имя категории, без FK.
+Все четыре модели **связаны с `User`**
 (добавлено 2026-09-18 вместе с авторизацией, см. `docs/requirements/
 09. Authentication/`) — `userId` был зарезервирован заранее (nullable,
 раньше нигде не использовался), теперь реально используется каждым
@@ -492,8 +529,9 @@ Better Auth (`@@map` на нижний регистр — `user`/`session`/`acco
 всё ещё фильтрует уже загруженный список на клиенте, а не запрашивает
 диапазон дат у сервера, но задел под это уже есть.
 
-`Goal.milestones` хранится JSON-колонкой, а не отдельной таблицей — чтобы
-не усложнять сверх уровня, который уже был у `Task`. Можно
+`Goal.milestones` — историческая JSON-колонка для одноразового перехода.
+Новые цели используют связанные Task; исходные подцели сохраняются в
+снимках LegacyTransition перед удалением из JSON. Исторически можно
 нормализовать в отдельную таблицу позже, если понадобится сложная
 работа с milestones напрямую через SQL.
 
@@ -558,3 +596,34 @@ fallback и возвращал HTML-страницу приложения с к�
 - Один большой JS-бандл на фронтенде (626 KB), Vite предупреждает про
   code-splitting — не критично при текущем размере приложения, но
   стоит учитывать при значительном росте функциональности
+
+
+## Разделение сущностей, ветка product-logic-redesign (2026-10-02)
+
+Note — текст, описание, showFrom, archivedAt и порядок. CalendarPlan —
+отдельный интервал, необязательный taskId, дата/время, длительность и On hold.
+Task.goalId с SetNull; Goal.achievedAt отдельно от процента задач.
+Reminder имеет взаимоисключающие taskId/planId, offsetMinutes и suspended.
+Полные правила: `PRODUCT_LOGIC_DECISIONS.md`, новые требования Notes/Calendar.
+
+Перенос расписания никогда не PATCH-ит Task.dueDate. CalendarEntry — адаптер
+для прежней геометрии сетки: его dueDate означает день плана, не срок Task.
+Связанные отображения используют канонические задачи через разрешённые
+FSD @x-интерфейсы. Статистика считает исходные задачи один раз.
+
+Сложные записи/удаления выполняются через ownerTransaction с PostgreSQL
+advisory lock по владельцу. SELECT возвращает поддерживаемый Prisma int,
+не PostgreSQL void — это проверено реальными API/DB-тестами.
+
+LegacyTransition сохраняет снимки исходных данных и уникальный sourceKey
+на пользователя. Миграция помечает только прежние Task как legacyPending;
+новые создаются без метки. Преобразованные в Note/Plan исходные задачи
+сохраняются с retiredAt, исключаются из API задач. Старые milestones
+снимаются после создания/привязки задачи; оригиналы остаются в снимке.
+Повторная отправка того же решения возвращает прежний результат.
+
+После удаления/переноса сервер может менять соседние коллекции. REST-слой
+отправляет адресное событие collection-invalidated для их обновления.
+Источник своей оптимистичной записи не перезагружается этим событием.
+
+Тестовый Compose и образ изолированы от production: см. `STAGING.md`.

@@ -1,9 +1,14 @@
+import { useState } from "react"
+import { useTasks } from "@/entities/task"
+import { TaskForm } from "@/features/task-form"
+import { TaskToggleCheckbox } from "@/features/toggle-task"
+import { TaskPlanning } from "@/features/plan-form"
+import { Button } from "@/shared/ui/button"
+import { ConfirmAction } from "@/shared/ui/confirm-action"
 import { CalendarDays } from "lucide-react"
 import styled from "@emotion/styled"
-import { AddMilestoneForm } from "@/features/add-milestone"
 import { DeleteGoalButton } from "@/features/delete-goal"
 import { EditGoalButton } from "@/features/edit-goal"
-import { MilestoneRow } from "@/features/milestone-row"
 import { ProgressRing, useGoals } from "@/entities/goal"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { useLanguage } from "@/shared/lib/i18n"
@@ -24,14 +29,18 @@ const StyledAccordionItem = styled(AccordionItem)<{ color: string }>`
 `
 
 export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit: () => void }) {
-  const { reorderGoals } = useGoals()
+  const { reorderGoals, updateGoal } = useGoals()
   const { t } = useLanguage()
   const { ref, isDragging } = useDragReorder<HTMLDivElement>({
     type: "goal",
     id: goal.id,
     onHoverMove: reorderGoals,
   })
-  const completedCount = goal.milestones.filter(m => m.completed).length
+  const { tasks } = useTasks()
+  const [adding, setAdding] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const linked = tasks.filter(task => task.goalId === goal.id && !task.legacyPending)
+  const completedCount = linked.filter(task => task.completed).length
 
   return (
     // `AccordionItem` (shared/ui, vendored shadcn output) is a plain function
@@ -65,9 +74,9 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2">
                     <span className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground whitespace-nowrap">
                       <span className="size-2 rounded-full shrink-0" style={{ background: goal.color }} />
-                      {t("goals.milestonesCount", {
-                        completed: completedCount,
-                        total: goal.milestones.length,
+                      {t("goals.taskProgress", {
+                        done: completedCount,
+                        total: linked.length,
                       })}
                     </span>
                     <span className="flex items-center gap-1.5 text-[13px] font-semibold text-tertiary whitespace-nowrap">
@@ -85,25 +94,50 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
           </div>
         </div>
         <AccordionContent className="px-5 pb-5">
-          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1">
-            <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary px-1 pb-2">
-              {t("goals.milestones")}
-            </span>
-            <div className="flex flex-col gap-1">
-              {goal.milestones.map((milestone, idx) => (
-                <MilestoneRow
-                  key={milestone.id}
-                  goalId={goal.id}
-                  milestone={milestone}
-                  color={goal.color}
-                  index={idx}
-                />
-              ))}
-              {goal.milestones.length === 0 && (
-                <p className="text-sm text-tertiary px-1 pb-1">{t("goals.noMilestonesYet")}</p>
+          <div className="bg-sunken rounded-xl p-4 space-y-3">
+            <h4 className="text-xs font-bold text-muted-foreground">{t("tasks.title")}</h4>
+            {linked.map(task =>
+              editingId === task.id ? (
+                <TaskForm key={task.id} task={task} embedded onDone={() => setEditingId(null)} />
+              ) : (
+                <div key={task.id} className="rounded-lg bg-card p-3">
+                  <div className="flex gap-2 items-start">
+                    <TaskToggleCheckbox taskId={task.id} completed={task.completed} />
+                    <button
+                      className={`flex-1 text-left text-sm [overflow-wrap:anywhere] ${task.completed ? "line-through text-muted-foreground" : ""}`}
+                      onClick={() => setEditingId(task.id)}
+                    >
+                      {task.title}
+                    </button>
+                  </div>
+                  <TaskPlanning task={task} />
+                </div>
+              ),
+            )}
+            {!linked.length && <p className="text-sm text-muted-foreground">{t("goals.noLinkedTasks")}</p>}
+            {adding ? (
+              <TaskForm defaultGoalId={goal.id} embedded onDone={() => setAdding(false)} />
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
+                {t("tasks.addTask")}
+              </Button>
+            )}
+            <div className="pt-3 border-t border-border">
+              {goal.achievedAt ? (
+                <Button size="sm" variant="outline" onClick={() => updateGoal(goal.id, { achievedAt: null })}>
+                  {t("goals.reactivate")}
+                </Button>
+              ) : (
+                <ConfirmAction
+                  confirmLabel={t("goals.achieve")}
+                  title={t("goals.achieve")}
+                  description={t("goals.achieveBody")}
+                  onConfirm={() => updateGoal(goal.id, { achievedAt: new Date().toISOString() })}
+                >
+                  <Button size="sm">{t("goals.achieve")}</Button>
+                </ConfirmAction>
               )}
             </div>
-            <AddMilestoneForm goalId={goal.id} />
           </div>
         </AccordionContent>
       </StyledAccordionItem>

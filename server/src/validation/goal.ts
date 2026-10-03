@@ -14,6 +14,12 @@ const goalFields = z.object({
   targetDate: z.string().nullable(),
   color: z.string().min(1),
   milestones: z.array(milestoneSchema),
+  achievedAt: z
+    .string()
+    .datetime()
+    .transform(s => new Date(s))
+    .nullable()
+    .optional(),
 })
 
 export const createGoalSchema = goalFields

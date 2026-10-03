@@ -11,9 +11,11 @@ import { WeeklyActivityChart, type WeeklyActivityPoint } from "@/shared/ui/weekl
 import { NAV_ITEMS } from "../model/navItems"
 
 export function SidebarNav() {
-  const { tasks } = useTasks()
+  const { tasks: allTasks } = useTasks()
+  const tasks = allTasks.filter(task => !task.legacyPending)
   const { habits } = useHabits()
-  const { goals } = useGoals()
+  const { goals: allGoals } = useGoals()
+  const goals = allGoals.filter(goal => !goal.achievedAt)
   const { language, t } = useLanguage()
 
   const today = getTodayKey()

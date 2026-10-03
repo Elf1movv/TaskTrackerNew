@@ -13,14 +13,16 @@ vi.mock("@/entities/category", () => ({
   useCategories: () => ({ categories: [{ id: "work", name: "Work", color: "#123456" }] }),
 }))
 
-describe("Task creation date", () => {
+vi.mock("@/entities/goal", () => ({ useGoals: () => ({ goals: [] }) }))
+
+describe("Task deadline", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.setItem("mytracker-language", "en")
   })
   afterEach(cleanup)
 
-  it("uses the selected calendar date without an extra date-selection step", () => {
+  it("uses the provided deadline without an extra date-selection step", () => {
     render(<TaskForm defaultDueDate="2026-10-05" onDone={() => {}} />, { wrapper: LanguageProvider })
     fireEvent.change(screen.getByPlaceholderText("What needs to be done?"), { target: { value: "Doctor" } })
     fireEvent.click(screen.getByRole("button", { name: "Add task" }))
@@ -36,7 +38,7 @@ describe("Task creation date", () => {
     expect(addTask).toHaveBeenCalledWith(expect.objectContaining({ dueDate: null }))
   })
 
-  it("preserves the draft when the selected calendar day changes", () => {
+  it("preserves the draft when the default deadline changes", () => {
     const { rerender } = render(<TaskForm defaultDueDate="2026-10-05" onDone={() => {}} />, {
       wrapper: LanguageProvider,
     })
@@ -51,11 +53,8 @@ describe("Task creation date", () => {
     )
   })
 
-  it("clears dependent times when the calendar date is explicitly removed", () => {
-    render(
-      <TaskForm defaultDueDate="2026-10-05" defaultTime="09:00" defaultEndTime="10:00" onDone={() => {}} />,
-      { wrapper: LanguageProvider },
-    )
+  it("can remove a deadline without creating a schedule", () => {
+    render(<TaskForm defaultDueDate="2026-10-05" onDone={() => {}} />, { wrapper: LanguageProvider })
     fireEvent.change(screen.getByPlaceholderText("What needs to be done?"), { target: { value: "Undated" } })
     fireEvent.click(screen.getByRole("button", { name: "Clear" }))
     fireEvent.click(screen.getByRole("button", { name: "Add task" }))

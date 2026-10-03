@@ -2,7 +2,7 @@ import { createContext, useContext } from "react"
 import type { Goal } from "@/entities/goal"
 import type { Habit } from "@/entities/habit"
 import type { Reminder } from "@/entities/reminder"
-import type { Task } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 
 export type CalendarView = "agenda" | "day" | "week" | "month" | "year"
 

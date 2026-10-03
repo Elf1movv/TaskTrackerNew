@@ -7,50 +7,32 @@ export const tasksRouter = Router()
 
 tasksRouter.use(requireAuth)
 
-// Shape the frontend's Task type expects — `order`/`userId` are DB-only and
-// never leave the server. `updatedAt`/`createdAt` DO leave the server:
-// `updatedAt` so the client can detect "this record changed elsewhere"
-// before overwriting it (see PATCH /:id below); `createdAt` so
-// selectTodayTasks.ts can tell "this undated task was made today" from
-// "this undated task is from a previous day" — a bare `dueDate == null`
-// check used to include every undated task forever (see LEARNING.md,
-// 2026-09-21).
-//
-// `dueDate` is stored as a real SQL `date` (see schema.prisma) but the
-// wire format stays the same "YYYY-MM-DD" string the client always used —
-// this mapper is the only place that knows the DB column is now a Date.
-function toClientTask(task: {
-  id: string
-  title: string
-  completed: boolean
-  priority: string
-  category: string
-  dueDate: Date | null
-  time: string | null
-  endTime: string | null
-  description: string | null
-  completedAt: Date | null
-  updatedAt: Date
-  createdAt: Date
-}) {
+import type { Task } from "@prisma/client"
+import { checkGoal, fail, isFuture, localClock, ownerTransaction, removeTask } from "../lib/productLogic.js"
+export function toClientTask(task: Task) {
   return {
     id: task.id,
     title: task.title,
     completed: task.completed,
     priority: task.priority,
     category: task.category,
-    dueDate: task.dueDate ? task.dueDate.toISOString().slice(0, 10) : null,
+    dueDate: task.dueDate?.toISOString().slice(0, 10) ?? null,
     time: task.time,
     endTime: task.endTime,
     description: task.description,
-    completedAt: task.completedAt ? task.completedAt.toISOString() : null,
-    updatedAt: task.updatedAt,
+    completedAt: task.completedAt,
     createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+    goalId: task.goalId,
+    legacyPending: task.legacyPending,
   }
 }
 
 tasksRouter.get("/", async (req, res) => {
-  const tasks = await db.task.findMany({ where: { userId: req.userId }, orderBy: { order: "asc" } })
+  const tasks = await db.task.findMany({
+    where: { userId: req.userId, retiredAt: null },
+    orderBy: { order: "asc" },
+  })
   res.json(tasks.map(toClientTask))
 })
 
@@ -64,9 +46,10 @@ tasksRouter.post("/", async (req, res) => {
   // New tasks are appended on the client (added tasks show up last), so
   // they need an order larger than everything currently stored — scoped
   // to this user's own tasks, not the whole table.
-  const { _max } = await db.task.aggregate({ where: { userId: req.userId }, _max: { order: true } })
-  const created = await db.task.create({
-    data: { ...parsed.data, userId: req.userId, order: (_max.order ?? -1) + 1 },
+  const created = await ownerTransaction(req.userId, async tx => {
+    await checkGoal(tx, req.userId, parsed.data.goalId)
+    const { _max } = await tx.task.aggregate({ where: { userId: req.userId }, _max: { order: true } })
+    return tx.task.create({ data: { ...parsed.data, userId: req.userId, order: (_max.order ?? -1) + 1 } })
   })
   res.status(201).json(toClientTask(created))
 })
@@ -115,39 +98,64 @@ tasksRouter.patch("/:id", async (req, res) => {
   }
   const { patch, expectedUpdatedAt } = parsed.data
 
-  // Atomic conditional update — the WHERE clause itself enforces the
-  // concurrency check, so there's no read-then-write race window between
-  // "check updatedAt" and "apply the patch". userId is in the same WHERE,
-  // not a separate check — a mismatch reads exactly like "not found",
-  // never revealing that a task with this id exists but belongs to
-  // someone else.
-  const result = await db.task.updateMany({
-    where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },
-    data: patch,
+  const result = await ownerTransaction(req.userId, async tx => {
+    await checkGoal(tx, req.userId, patch.goalId)
+    const current = await tx.task.findFirst({
+      where: { id: req.params.id, userId: req.userId, retiredAt: null },
+    })
+    if (!current) fail(404, "Task not found")
+    if (current.updatedAt.toISOString() !== expectedUpdatedAt) return { conflict: true, task: current }
+    const data = { ...patch }
+    if (patch.completed !== undefined && patch.completed !== current.completed)
+      data.completedAt = patch.completed ? (patch.completedAt ?? new Date()) : null
+    const task = await tx.task.update({ where: { id: current.id }, data })
+    return { conflict: false, task }
   })
-
-  if (result.count === 0) {
-    // count === 0 means either the row doesn't exist (or isn't this
-    // user's), or it exists but updatedAt didn't match — look it up once
-    // more, still scoped to this user, to tell those apart.
-    const current = await db.task.findFirst({ where: { id: req.params.id, userId: req.userId } })
-    if (!current) {
-      res.status(404).json({ error: "Task not found" })
-      return
-    }
-    res.status(409).json({ error: "Task was changed elsewhere", current: toClientTask(current) })
+  if (result.conflict) {
+    res.status(409).json({ error: "Task changed elsewhere", current: toClientTask(result.task) })
     return
   }
-
-  const updated = await db.task.findUniqueOrThrow({ where: { id: req.params.id } })
-  res.json(toClientTask(updated))
+  res.json(toClientTask(result.task))
 })
 
-tasksRouter.delete("/:id", async (req, res) => {
-  const result = await db.task.deleteMany({ where: { id: req.params.id, userId: req.userId } })
-  if (result.count === 0) {
+tasksRouter.get("/:id/deletion-preview", async (req, res) => {
+  const task = await db.task.findFirst({ where: { id: req.params.id, userId: req.userId, retiredAt: null } })
+  if (!task) {
     res.status(404).json({ error: "Task not found" })
     return
   }
+  const clock = localClock(req)
+  const plans = await db.calendarPlan.findMany({ where: { taskId: task.id, userId: req.userId } })
+  res.json({ futurePlans: plans.filter(p => isFuture(p.date, p.time, clock)).length })
+})
+
+tasksRouter.post("/:id/clear-future-plans", async (req, res) => {
+  const clock = localClock(req)
+  await ownerTransaction(req.userId, async tx => {
+    const task = await tx.task.findFirst({
+      where: { id: req.params.id, userId: req.userId, retiredAt: null },
+    })
+    if (!task) fail(404, "Task not found")
+    if (!task.completed) fail(400, "Task is not completed")
+    const plans = await tx.calendarPlan.findMany({ where: { taskId: task.id, userId: req.userId } })
+    await tx.calendarPlan.deleteMany({
+      where: {
+        id: { in: plans.filter(p => isFuture(p.date, p.time, clock)).map(p => p.id) },
+        userId: req.userId,
+      },
+    })
+  })
+  res.status(204).end()
+})
+
+tasksRouter.delete("/:id", async (req, res) => {
+  const clock = localClock(req)
+  await ownerTransaction(req.userId, async tx => {
+    const task = await tx.task.findFirst({
+      where: { id: req.params.id, userId: req.userId, retiredAt: null },
+    })
+    if (!task) fail(404, "Task not found")
+    await removeTask(tx, task, clock)
+  })
   res.status(204).end()
 })

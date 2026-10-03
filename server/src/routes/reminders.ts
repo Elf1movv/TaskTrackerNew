@@ -3,40 +3,28 @@ import { db } from "../db.js"
 import { requireAuth } from "../middleware/requireAuth.js"
 import { createReminderSchema, updateReminderSchema } from "../validation/reminder.js"
 
+import type { Reminder } from "@prisma/client"
+import { checkTask, fail, ownerTransaction, refreshPlanReminders } from "../lib/productLogic.js"
+
 export const remindersRouter = Router()
 
 remindersRouter.use(requireAuth)
 
-interface ClientReminder {
-  id: string
-  title: string
-  date: string
-  time: string | null
-  priority: string
-  completed: boolean
-  updatedAt: Date
+function toClientReminder({ userId: _user, ...reminder }: Reminder) {
+  return { ...reminder, date: reminder.date.toISOString().slice(0, 10) }
 }
-
-// `date` is stored as a real SQL `date` (see schema.prisma) but the wire
-// format stays "YYYY-MM-DD" — same mapping as toClientTask's dueDate.
-function toClientReminder(reminder: {
-  id: string
-  title: string
-  date: Date
-  time: string | null
-  priority: string
-  completed: boolean
-  updatedAt: Date
-}): ClientReminder {
-  return {
-    id: reminder.id,
-    title: reminder.title,
-    date: reminder.date.toISOString().slice(0, 10),
-    time: reminder.time,
-    priority: reminder.priority,
-    completed: reminder.completed,
-    updatedAt: reminder.updatedAt,
-  }
+async function checkLinks(
+  tx: import("@prisma/client").Prisma.TransactionClient,
+  userId: string,
+  data: { taskId?: string | null; planId?: string | null; offsetMinutes?: number | null },
+) {
+  if (data.taskId && data.planId) fail(400, "Choose one reminder target")
+  await checkTask(tx, userId, data.taskId)
+  if (data.offsetMinutes != null && !data.planId) fail(400, "Relative reminder needs a plan")
+  if (!data.planId) return null
+  const plan = await tx.calendarPlan.findFirst({ where: { id: data.planId, userId } })
+  if (!plan) fail(404, "Plan not found")
+  return plan
 }
 
 remindersRouter.get("/", async (req, res) => {
@@ -54,7 +42,12 @@ remindersRouter.post("/", async (req, res) => {
     return
   }
 
-  const created = await db.reminder.create({ data: { ...parsed.data, userId: req.userId } })
+  const created = await ownerTransaction(req.userId, async tx => {
+    const plan = await checkLinks(tx, req.userId, parsed.data)
+    const reminder = await tx.reminder.create({ data: { ...parsed.data, userId: req.userId } })
+    if (plan) await refreshPlanReminders(tx, plan)
+    return tx.reminder.findUniqueOrThrow({ where: { id: reminder.id } })
+  })
   res.status(201).json(toClientReminder(created))
 })
 
@@ -66,23 +59,20 @@ remindersRouter.patch("/:id", async (req, res) => {
   }
   const { patch, expectedUpdatedAt } = parsed.data
 
-  const result = await db.reminder.updateMany({
-    where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },
-    data: patch,
+  const result = await ownerTransaction(req.userId, async tx => {
+    const current = await tx.reminder.findFirst({ where: { id: req.params.id, userId: req.userId } })
+    if (!current) fail(404, "Reminder not found")
+    if (current.updatedAt.toISOString() !== expectedUpdatedAt) return { conflict: true, reminder: current }
+    const plan = await checkLinks(tx, req.userId, { ...current, ...patch })
+    await tx.reminder.update({ where: { id: current.id }, data: { ...patch, suspended: false } })
+    if (plan) await refreshPlanReminders(tx, plan)
+    return { conflict: false, reminder: await tx.reminder.findUniqueOrThrow({ where: { id: current.id } }) }
   })
-
-  if (result.count === 0) {
-    const current = await db.reminder.findFirst({ where: { id: req.params.id, userId: req.userId } })
-    if (!current) {
-      res.status(404).json({ error: "Reminder not found" })
-      return
-    }
-    res.status(409).json({ error: "Reminder was changed elsewhere", current: toClientReminder(current) })
+  if (result.conflict) {
+    res.status(409).json({ error: "Reminder changed elsewhere", current: toClientReminder(result.reminder) })
     return
   }
-
-  const updated = await db.reminder.findUniqueOrThrow({ where: { id: req.params.id } })
-  res.json(toClientReminder(updated))
+  res.json(toClientReminder(result.reminder))
 })
 
 remindersRouter.delete("/:id", async (req, res) => {

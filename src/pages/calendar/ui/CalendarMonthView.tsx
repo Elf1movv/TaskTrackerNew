@@ -6,7 +6,7 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 import type { Goal } from "@/entities/goal"
 import type { Habit } from "@/entities/habit"
 import type { Reminder } from "@/entities/reminder"
-import type { Task } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { buildMonthGrid } from "@/shared/lib/calendarGrid"
 
 // The original (and, until this feature, only) calendar view — extracted

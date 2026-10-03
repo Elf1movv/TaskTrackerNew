@@ -17,6 +17,7 @@ interface SendEmailInput {
 // the auth flow (email verification, password reset) stays fully testable
 // without any email infrastructure locally.
 export async function sendEmail({ to, subject, html, attachments }: SendEmailInput): Promise<void> {
+  if (process.env.EMAIL_DELIVERY === "disabled") return
   if (!resend) {
     console.log(
       `[email] (dev, not sent) to=${to} subject="${subject}" attachments=${attachments?.length ?? 0}\n${html}`,

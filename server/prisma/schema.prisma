@@ -38,6 +38,12 @@ model Task {
   order       Int
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  goalId      String?
+  goal        Goal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  legacyPending Boolean @default(false)
+  retiredAt   DateTime?
+  plans       CalendarPlan[]
+  reminders   Reminder[]
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -66,6 +72,8 @@ model Goal {
   updatedAt   DateTime @updatedAt
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievedAt  DateTime?
+  tasks       Task[]
 
   @@index([order])
   @@index([userId])
@@ -183,6 +191,12 @@ model Reminder {
   updatedAt DateTime @updatedAt
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId    String?
+  task      Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  planId    String?
+  plan      CalendarPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+  offsetMinutes Int?
+  suspended Boolean @default(false)
 
   @@index([userId, date])
 }
@@ -240,6 +254,9 @@ model User {
   categories        Category[]
   reminders         Reminder[]
   feedbacks         Feedback[]
+  notes             Note[]
+  calendarPlans     CalendarPlan[]
+  transitions       LegacyTransition[]
 
   @@unique([email])
   @@map("user")
@@ -291,4 +308,57 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+// Independent notes: showFrom is a visibility date, never a deadline.
+model Note {
+  id String @id @default(uuid())
+  title String
+  description String?
+  showFrom DateTime? @db.Date
+  archivedAt DateTime?
+  order Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, order])
+}
+
+// An interval optionally pointing at one canonical task. Text is also
+// snapshotted when a task is deleted, preserving past calendar history.
+model CalendarPlan {
+  id String @id @default(uuid())
+  title String
+  description String?
+  date DateTime? @db.Date
+  time String?
+  endTime String?
+  durationMinutes Int @default(60)
+  onHold Boolean @default(false)
+  completed Boolean @default(false)
+  priority String @default("medium")
+  category String @default("")
+  taskId String?
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  reminders Reminder[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, date])
+  @@index([taskId])
+}
+
+// Immutable originals and unique source keys make migration retries safe.
+model LegacyTransition {
+  id String @id @default(uuid())
+  sourceKey String
+  choice String
+  snapshot Json
+  resultId String
+  createdAt DateTime @default(now())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, sourceKey])
 }

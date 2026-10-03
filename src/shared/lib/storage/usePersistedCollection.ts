@@ -5,6 +5,8 @@ import { ConflictError, type Repository } from "./repository"
 
 const ENTITY_TRANSLATION_KEYS: Record<string, TranslationKey> = {
   task: "toast.entityTask",
+  note: "notes.title",
+  plan: "plans.title",
   goal: "toast.entityGoal",
   habit: "toast.entityHabit",
   habitGroup: "toast.entityHabitGroup",
@@ -50,16 +52,26 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
     setItems(list)
   }, [repository])
 
+  useEffect(() => {
+    const handler = (event: Event) => {
+      if ((event as CustomEvent<string[]>).detail.includes(entityLabel)) void refresh().catch(console.error)
+    }
+    window.addEventListener("collection-invalidated", handler)
+    return () => window.removeEventListener("collection-invalidated", handler)
+  }, [entityLabel, refresh])
+
   const create = useCallback(
     async (item: T) => {
       setItems(prev => [...prev, item])
       try {
         const saved = await repository.create(item)
         setItems(prev => prev.map(i => (i.id === item.id ? saved : i)))
+        return true
       } catch (err) {
         setItems(prev => prev.filter(i => i.id !== item.id))
         toast.error(t("toast.createFailed", { entity }))
         console.error(err)
+        return false
       }
     },
     [repository, t, entity],

@@ -24,7 +24,7 @@ const taskFields = z.object({
   title: z.string().min(1),
   completed: z.boolean(),
   priority: z.enum(["low", "medium", "high"]),
-  category: z.string().min(1),
+  category: z.string(),
   dueDate: dueDateField,
   // "HH:mm", nullable — same convention as Reminder.time, see the
   // comment on Task.time in schema.prisma.
@@ -40,6 +40,7 @@ const taskFields = z.object({
     .nullable(),
   description: z.string().nullable(),
   completedAt: completedAtField,
+  goalId: z.string().uuid().nullable().optional(),
 })
 
 export const createTaskSchema = taskFields

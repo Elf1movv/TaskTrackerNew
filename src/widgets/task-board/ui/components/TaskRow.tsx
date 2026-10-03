@@ -1,3 +1,4 @@
+import { TaskPlanning } from "@/features/plan-form"
 import { motion } from "motion/react"
 import { resolveCategoryColor, useCategories } from "@/entities/category"
 import { DeleteTaskButton } from "@/features/delete-task"
@@ -24,7 +25,7 @@ export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolea
       animate={{ opacity: isDragging ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, x: 20, transition: { duration: 0.12 } }}
       transition={{ duration: 0.15 }}
-      className={`group flex items-center gap-3 min-h-16 px-5 hover:bg-sunken transition-colors cursor-grab active:cursor-grabbing select-none ${
+      className={`group flex items-center gap-3 min-h-16 px-5 py-3 hover:bg-sunken transition-colors cursor-grab active:cursor-grabbing select-none ${
         divider ? "border-t border-border" : ""
       }`}
     >
@@ -39,8 +40,9 @@ export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolea
         </div>
         {task.description && <div className="text-xs text-tertiary truncate">{task.description}</div>}
         <TaskScheduleLink task={task} />
+        <TaskPlanning task={task} />
       </div>
-      <span className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      <span className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         <EditTaskButton onClick={onEdit} />
         <DeleteTaskButton taskId={task.id} />
       </span>

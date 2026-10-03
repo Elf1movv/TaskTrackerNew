@@ -33,17 +33,17 @@ describe("getGoalMonthCompletionStats", () => {
     expect(getGoalMonthCompletionStats(goals, SEPTEMBER)).toEqual({ done: 0, total: 0 })
   })
 
-  it("only counts progress === 100 as done, not a partial like 80", () => {
+  it("counts explicit achievement, not task progress", () => {
     const goals = [
-      makeGoal({ id: "a", targetDate: "2026-09-10", progress: 100 }),
-      makeGoal({ id: "b", targetDate: "2026-09-15", progress: 80 }),
+      makeGoal({ id: "a", targetDate: "2026-09-10", progress: 80, achievedAt: "2026-09-10T00:00:00.000Z" }),
+      makeGoal({ id: "b", targetDate: "2026-09-15", progress: 100 }),
     ]
     expect(getGoalMonthCompletionStats(goals, SEPTEMBER)).toEqual({ done: 1, total: 2 })
   })
 
   it("counts month boundary dates (first and last day)", () => {
     const goals = [
-      makeGoal({ id: "a", targetDate: "2026-09-01", progress: 100 }),
+      makeGoal({ id: "a", targetDate: "2026-09-01", progress: 100, achievedAt: "2026-09-01T00:00:00.000Z" }),
       makeGoal({ id: "b", targetDate: "2026-09-30", progress: 0 }),
     ]
     expect(getGoalMonthCompletionStats(goals, SEPTEMBER)).toEqual({ done: 1, total: 2 })

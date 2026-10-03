@@ -57,6 +57,8 @@ export function ReminderForm({
   const [title, setTitle] = useState(reminder?.title ?? "")
   const [date, setDate] = useState(reminder?.date ?? lockedDate ?? getTodayKey())
   const [time, setTime] = useState<string | null>(reminder?.time ?? defaultTime ?? null)
+  const [offsetMinutes, setOffsetMinutes] = useState(reminder?.offsetMinutes ?? 30)
+  const relative = reminder?.offsetMinutes != null
   const [priority, setPriority] = useState<ReminderPriority>(reminder?.priority ?? "normal")
   // `lockedDate` only streamlines quick-add from a specific day's panel —
   // it shouldn't also make an existing reminder's date permanently
@@ -65,8 +67,12 @@ export function ReminderForm({
   const showDatePicker = !lockedDate || !!reminder
 
   function handleSubmit() {
-    if (!title.trim()) return
-    const patch = { title: title.trim(), date, time, priority }
+    if (
+      !title.trim() ||
+      (relative && (!Number.isInteger(offsetMinutes) || offsetMinutes < 0 || offsetMinutes > 10080))
+    )
+      return
+    const patch = { title: title.trim(), date, time, priority, ...(relative ? { offsetMinutes } : {}) }
     if (reminder) {
       updateReminder(reminder.id, { ...patch, completed: reminder.completed })
     } else {
@@ -99,7 +105,18 @@ export function ReminderForm({
           </PriorityToggle>
         </div>
 
-        {showDatePicker ? (
+        {relative ? (
+          <label className="text-xs">
+            {t("reminder.relative")}
+            <Input
+              type="number"
+              min={0}
+              max={10080}
+              value={offsetMinutes}
+              onChange={e => setOffsetMinutes(Number(e.target.value))}
+            />
+          </label>
+        ) : showDatePicker ? (
           <DateTimeField
             date={date}
             onDateChange={d => d && setDate(d)}

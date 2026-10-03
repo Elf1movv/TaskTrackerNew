@@ -2,10 +2,10 @@ import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
 import { useSearchParams } from "react-router"
-import { TaskForm } from "@/features/task-form"
+import { NoteForm } from "@/features/note-form"
 import { WelcomeBackGreeting, WelcomeModal } from "@/widgets/onboarding"
 import { HabitTrackerGrid } from "@/widgets/habit-tracker-grid"
-import { TodayTasksCard } from "@/widgets/today-tasks-card"
+import { NotesCard } from "@/widgets/notes-card"
 import { useLanguage } from "@/shared/lib/i18n"
 import { displayFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
@@ -14,7 +14,7 @@ import { formatHeroDate } from "../lib/formatHeroDate"
 import { GoalReminderSwapCard } from "./components"
 
 function TodayPageContent() {
-  const { todayTasks, goals, habits, reminders, remindersLoaded } = useTodayContext()
+  const { goals, habits, reminders, remindersLoaded } = useTodayContext()
   const { language, t } = useLanguage()
   const { weekday, day, monthYear } = formatHeroDate(new Date(), language)
   const [isAdding, setIsAdding] = useState(false)
@@ -51,7 +51,7 @@ function TodayPageContent() {
           className="h-11 px-5 gap-2 rounded-[10px] shadow-raised text-[15px]"
         >
           <Plus size={18} />
-          {t("tasks.addTask")}
+          {t("notes.add")}
         </Button>
       </div>
 
@@ -64,13 +64,13 @@ function TodayPageContent() {
             transition={{ duration: 0.18 }}
             className="overflow-hidden mb-5"
           >
-            <TaskForm onDone={() => setIsAdding(false)} />
+            <NoteForm onDone={() => setIsAdding(false)} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
-        <TodayTasksCard tasks={todayTasks} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 items-start gap-5 mb-5">
+        <NotesCard />
         <GoalReminderSwapCard goals={goals} reminders={reminders} remindersLoaded={remindersLoaded} />
       </div>
 

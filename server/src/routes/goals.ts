@@ -4,6 +4,8 @@ import { db } from "../db.js"
 import { requireAuth } from "../middleware/requireAuth.js"
 import { createGoalSchema, reorderSchema, updateGoalSchema } from "../validation/goal.js"
 
+import { ownerTransaction } from "../lib/productLogic.js"
+
 export const goalsRouter = Router()
 
 goalsRouter.use(requireAuth)
@@ -22,10 +24,11 @@ interface ClientGoal {
   targetDate: string | null
   color: string
   milestones: ClientMilestone[]
+  achievedAt: Date | null
   updatedAt: Date
 }
 
-function toClientGoal(goal: {
+async function toClientGoal(goal: {
   id: string
   title: string
   description: string
@@ -33,13 +36,21 @@ function toClientGoal(goal: {
   targetDate: string | null
   color: string
   milestones: unknown
+  achievedAt: Date | null
   updatedAt: Date
-}): ClientGoal {
+}): Promise<ClientGoal> {
+  const linked = await db.task.findMany({
+    where: { goalId: goal.id, retiredAt: null, legacyPending: false },
+    select: { completed: true },
+  })
   return {
     id: goal.id,
     title: goal.title,
     description: goal.description,
-    progress: goal.progress,
+    progress: linked.length
+      ? Math.round((linked.filter(task => task.completed).length / linked.length) * 100)
+      : 0,
+    achievedAt: goal.achievedAt,
     targetDate: goal.targetDate,
     color: goal.color,
     milestones: goal.milestones as ClientMilestone[],
@@ -49,7 +60,7 @@ function toClientGoal(goal: {
 
 goalsRouter.get("/", async (req, res) => {
   const goals = await db.goal.findMany({ where: { userId: req.userId }, orderBy: { order: "asc" } })
-  res.json(goals.map(toClientGoal))
+  res.json(await Promise.all(goals.map(toClientGoal)))
 })
 
 goalsRouter.post("/", async (req, res) => {
@@ -70,7 +81,7 @@ goalsRouter.post("/", async (req, res) => {
       order: (_max.order ?? -1) + 1,
     },
   })
-  res.status(201).json(toClientGoal(created))
+  res.status(201).json(await toClientGoal(created))
 })
 
 goalsRouter.patch("/reorder", async (req, res) => {
@@ -107,14 +118,16 @@ goalsRouter.patch("/:id", async (req, res) => {
   }
   const { patch, expectedUpdatedAt } = parsed.data
 
-  const result = await db.goal.updateMany({
-    where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },
-    data: {
-      ...patch,
-      milestones:
-        patch.milestones !== undefined ? (patch.milestones as unknown as Prisma.InputJsonValue) : undefined,
-    },
-  })
+  const result = await ownerTransaction(req.userId, tx =>
+    tx.goal.updateMany({
+      where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },
+      data: {
+        ...patch,
+        milestones:
+          patch.milestones !== undefined ? (patch.milestones as unknown as Prisma.InputJsonValue) : undefined,
+      },
+    }),
+  )
 
   if (result.count === 0) {
     const current = await db.goal.findFirst({ where: { id: req.params.id, userId: req.userId } })
@@ -122,16 +135,21 @@ goalsRouter.patch("/:id", async (req, res) => {
       res.status(404).json({ error: "Goal not found" })
       return
     }
-    res.status(409).json({ error: "Goal was changed elsewhere", current: toClientGoal(current) })
+    res.status(409).json({ error: "Goal was changed elsewhere", current: await toClientGoal(current) })
     return
   }
 
   const updated = await db.goal.findUniqueOrThrow({ where: { id: req.params.id } })
-  res.json(toClientGoal(updated))
+  res.json(await toClientGoal(updated))
 })
 
 goalsRouter.delete("/:id", async (req, res) => {
-  const result = await db.goal.deleteMany({ where: { id: req.params.id, userId: req.userId } })
+  const result = await ownerTransaction(req.userId, async tx => {
+    const goal = await tx.goal.findFirst({ where: { id: req.params.id, userId: req.userId } })
+    if (!goal) return { count: 0 }
+    await tx.task.updateMany({ where: { goalId: goal.id, userId: req.userId }, data: { goalId: null } })
+    return tx.goal.deleteMany({ where: { id: goal.id, userId: req.userId } })
+  })
   if (result.count === 0) {
     res.status(404).json({ error: "Goal not found" })
     return

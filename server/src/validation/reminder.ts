@@ -18,6 +18,9 @@ const reminderFields = z.object({
     .nullable(),
   priority: z.enum(["normal", "critical"]),
   completed: z.boolean(),
+  taskId: z.string().uuid().nullable().optional(),
+  planId: z.string().uuid().nullable().optional(),
+  offsetMinutes: z.number().int().min(0).max(10080).nullable().optional(),
 })
 
 export const createReminderSchema = reminderFields

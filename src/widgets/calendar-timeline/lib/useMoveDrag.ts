@@ -97,6 +97,18 @@ export function useMoveDrag({
       setIsDragging(false)
       onPreviewChange(null)
       if (draggedRef.current) {
+        const target = document.elementFromPoint(clientX, clientY) as HTMLElement | null
+        if (target?.closest("[data-plan-hold]")) {
+          window.dispatchEvent(new CustomEvent("calendar-plan-drop", { detail: { id: taskId } }))
+          return
+        }
+        const dayTarget = target?.closest<HTMLElement>("[data-plan-day]")
+        if (dayTarget?.dataset.planDay) {
+          window.dispatchEvent(
+            new CustomEvent("calendar-plan-drop", { detail: { id: taskId, day: dayTarget.dataset.planDay } }),
+          )
+          return
+        }
         const result = computeAt(clientX, clientY)
         if (result) onRescheduleTask(taskId, parseISO(result.day), result.startTime)
       }
