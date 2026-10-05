@@ -4,6 +4,43 @@
 Стенд использует отдельные аккаунты, секреты, сеть и PostgreSQL-том.
 Production-данные не копируются. Письма/feedback тестерам не отправляются.
 
+## Состояние на 2026-10-05
+
+- Ветка опубликована; приложение стенда — коммит `266a5dc`, образ
+  `ghcr.io/elf1movv/tasktracker:staging-266a5dcde9f59583c98e966abe6de531f365fd30`.
+- [Сборка GitHub Actions](https://github.com/Elf1movv/TaskTrackerNew/actions/runs/37110369468)
+  завершилась успешно. Main остаётся `eaf417d`.
+- `/var/www/tasktracker-staging`: отдельный checkout, `.env.staging` с
+  правами 600, собственные секреты. Compose-проект `mytracker-staging`,
+  БД `tasktracker_stage`, том `mytracker-staging_staging-db`.
+- Все 20 миграций применены, повторный запуск не меняет схему.
+  App слушает только `127.0.0.1:3002`, health возвращает `{"ok":true}`.
+- Nginx: отдельный файл `/etc/nginx/sites-available/tasktracker-staging`
+  и ссылка в sites-enabled, HTTP server_name `test.mytracker.space`.
+  Конфигурация проверена; запрос с этим Host маршрутизируется на стенд.
+- Проверены на развёрнутом образе: регистрация/подтверждение/вход,
+  отдельные Secure/HttpOnly cookies, Note, Task→Goal, Plan→Task,
+  точная длительность, On hold, относительные сигналы, удаление цели
+  с сохранением задач/планов и явная очистка будущих интервалов.
+  Временный QA-аккаунт и его данные удалены после проверки.
+- Рабочий сайт и его `/api/health` отвечают; production не обновлялся.
+- **Ожидается DNS:** на резолвере VPS у `test.mytracker.space` пока нет
+  записи. Нужна A-запись `test` → `185.65.202.121` в зоне mytracker.space.
+  HTTPS ещё не настроен; стенд пока не готов для пользовательского входа
+  через публичный адрес.
+
+После появления DNS:
+
+```sh
+sudo certbot --nginx --non-interactive --redirect -d test.mytracker.space
+sudo nginx -t
+curl -fsS https://test.mytracker.space/api/health
+```
+
+Затем проверить публичный HTTPS и авторизацию в браузере; зарегистрировать
+и подтвердить отдельный тестовый аккаунт владельца командой ниже.
+Не использовать основной пароль. Тестовая почта не отправляется.
+
 ## Подготовка
 
 1. DNS: A-запись `test.mytracker.space` → `185.65.202.121`.
@@ -19,7 +56,7 @@ Production-данные не копируются. Письма/feedback тес�
 docker compose --env-file .env.staging -p mytracker-staging -f docker-compose.staging.yml config --quiet
 docker compose --env-file .env.staging -p mytracker-staging -f docker-compose.staging.yml pull
 docker compose --env-file .env.staging -p mytracker-staging -f docker-compose.staging.yml up -d db
-docker compose --env-file .env.staging -p mytracker-staging -f docker-compose.staging.yml run --rm app node scripts/deploy-staging-schema.mjs
+docker compose --env-file .env.staging -p mytracker-staging -f docker-compose.staging.yml run --rm -T app node scripts/deploy-staging-schema.mjs < /dev/null
 docker compose --env-file .env.staging -p mytracker-staging -f docker-compose.staging.yml up -d app
 ```
 
