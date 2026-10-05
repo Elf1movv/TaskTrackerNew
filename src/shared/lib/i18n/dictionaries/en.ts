@@ -1,5 +1,8 @@
 export const en = {
   "app.staging": "Test site · separate accounts and data",
+  "auth.register.stagingTitle": "Test account created",
+  "auth.register.stagingBody":
+    "Test accounts are activated manually. Share this email with the site owner to get access: {email}. No verification email will be sent.",
   "notes.title": "Notes",
   "notes.edit": "Edit note",
   "notes.add": "Add note",

@@ -2,6 +2,9 @@ import type { en } from "./en"
 
 export const ru: Record<keyof typeof en, string> = {
   "app.staging": "Тестовый сайт · отдельные аккаунты и данные",
+  "auth.register.stagingTitle": "Тестовый аккаунт создан",
+  "auth.register.stagingBody":
+    "Тестовые аккаунты активируются вручную. Сообщите владельцу сайта этот email для получения доступа: {email}. Письмо с подтверждением не отправляется.",
   "notes.title": "Заметки",
   "notes.edit": "Редактировать заметку",
   "notes.add": "Добавить заметку",

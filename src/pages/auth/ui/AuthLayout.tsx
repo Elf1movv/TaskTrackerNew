@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { useLanguage } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { BrandMark } from "@/shared/ui/brand-mark"
 
@@ -18,9 +19,15 @@ export function AuthLayout({
   icon?: ReactNode
   children: ReactNode
 }) {
+  const { t } = useLanguage()
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-6">
       <div className="w-full max-w-sm">
+        {import.meta.env.VITE_APP_ENV === "staging" && (
+          <p className="mb-5 rounded-lg bg-primary-soft text-primary px-4 py-2 text-sm text-center">
+            {t("app.staging")}
+          </p>
+        )}
         <div className="flex flex-col items-center gap-4 mb-7">
           {icon ?? <BrandMark size={64} iconSize={34} radius={18} />}
           <div className="text-center flex flex-col gap-1">
