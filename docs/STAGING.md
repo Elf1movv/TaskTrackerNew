@@ -4,11 +4,11 @@
 Стенд использует отдельные аккаунты, секреты, сеть и PostgreSQL-том.
 Production-данные не копируются. Письма/feedback тестерам не отправляются.
 
-## Состояние на 2026-10-05
+## Состояние на 2026-10-06
 
-- Ветка опубликована; приложение стенда — коммит `266a5dc`, образ
-  `ghcr.io/elf1movv/tasktracker:staging-266a5dcde9f59583c98e966abe6de531f365fd30`.
-- [Сборка GitHub Actions](https://github.com/Elf1movv/TaskTrackerNew/actions/runs/37110369468)
+- Ветка опубликована; приложение стенда — коммит `a69c0c1`, образ
+  `ghcr.io/elf1movv/tasktracker:staging-a69c0c16f7a92aa7473b6609dadf2c5d4926fe17`.
+- [Сборка GitHub Actions](https://github.com/Elf1movv/TaskTrackerNew/actions/runs/37337042921)
   завершилась успешно. Main остаётся `eaf417d`.
 - `/var/www/tasktracker-staging`: отдельный checkout, `.env.staging` с
   правами 600, собственные секреты. Compose-проект `mytracker-staging`,
@@ -16,7 +16,7 @@ Production-данные не копируются. Письма/feedback тес�
 - Все 20 миграций применены, повторный запуск не меняет схему.
   App слушает только `127.0.0.1:3002`, health возвращает `{"ok":true}`.
 - Nginx: отдельный файл `/etc/nginx/sites-available/tasktracker-staging`
-  и ссылка в sites-enabled, HTTP server_name `test.mytracker.space`.
+  и ссылка в sites-enabled, server_name `test.mytracker.space`.
   Конфигурация проверена; запрос с этим Host маршрутизируется на стенд.
 - Проверены на развёрнутом образе: регистрация/подтверждение/вход,
   отдельные Secure/HttpOnly cookies, Note, Task→Goal, Plan→Task,
@@ -30,7 +30,15 @@ Production-данные не копируются. Письма/feedback тес�
 - Тестовый вход и регистрация явно подписаны как отдельный сайт.
   После регистрации показывается инструкция ручной активации вместо
   обещания письма: доставка почты на стенде отключена.
-- Проверка входа через публичный HTTPS в настоящем браузере — следующий шаг.
+- В настоящем Chrome через публичный HTTPS проверены регистрация с
+  инструкцией активации, вход, метка стенда, создание заметки и сохранение
+  после перезагрузки. Заметка не создаёт Task/Plan. При ширине 390 px
+  блок заметок не вызывает горизонтального переполнения; ошибок JS нет.
+  Cookie сессии Secure/HttpOnly принадлежит только test.mytracker.space
+  и не отправляется на mytracker.space. Временный браузерный QA-аккаунт
+  удалён после проверки.
+- Стенд готов к проверке владельцем: https://test.mytracker.space.
+  Его аккаунт активируется после регистрации и сообщения email.
 
 ## Подготовка
 
