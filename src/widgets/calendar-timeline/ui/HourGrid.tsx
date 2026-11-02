@@ -1,4 +1,3 @@
-import { useLanguage } from "@/shared/lib/i18n"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
 import { resolveCategoryColor, useCategories, type Category } from "@/entities/category"
@@ -325,7 +324,6 @@ function TimedTaskBlock({
   onRescheduleTask: (taskId: string, day: Date, time: string) => void
   onMovePreviewChange: (preview: MoveDragPreview | null) => void
 }) {
-  const { t } = useLanguage()
   const {
     onPointerDown: onMovePointerDown,
     isDragging,
@@ -400,7 +398,7 @@ function TimedTaskBlock({
       // JS gets the whole gesture. Direct user feedback, 2026-09-28 (twice
       // — once for the selection, once for this).
       className="absolute flex items-center gap-1 rounded-md px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden select-none touch-none [-webkit-touch-callout:none]"
-      title={`${task.time} · ${task.title}${task.completed && task.taskId ? ` · ${t("plans.completed")}` : ""}`}
+      title={`${task.time} · ${task.title}`}
     >
       <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
         <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={14} />
@@ -415,7 +413,6 @@ function TimedTaskBlock({
       </span>
       <span className={`truncate font-semibold ${task.completed ? "text-tertiary" : ""}`}>
         <span className={task.completed ? "line-through" : ""}>{task.title}</span>
-        {task.completed && task.taskId && <span className="ml-1 text-[10px]">· {t("plans.completed")}</span>}
       </span>
       {onResizeTask && (
         <div

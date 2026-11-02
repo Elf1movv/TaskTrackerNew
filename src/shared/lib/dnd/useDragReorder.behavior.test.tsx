@@ -9,7 +9,7 @@ import { useDragReorder } from "./useDragReorder"
 // (`if (item.id !== id)`), which is what decides whether a row reorders
 // against itself or against a genuinely different row.
 vi.mock("react-dnd", () => ({
-  useDrag: vi.fn(() => [{ isDragging: false }, vi.fn()]),
+  useDrag: vi.fn(() => [{ isDragging: false }, vi.fn(), vi.fn()]),
   useDrop: vi.fn(() => [{}, vi.fn()]),
 }))
 
@@ -38,5 +38,20 @@ describe("useDragReorder: hover behavior", () => {
     lastHoverSpec().hover({ id: "a" })
 
     expect(onHoverMove).not.toHaveBeenCalled()
+  })
+  it("deduplicates hover ticks but allows another drag and a return from another target", () => {
+    const onHoverMove = vi.fn()
+    renderHook(() => useDragReorder({ type: "note", id: "b", onHoverMove }))
+    const targetB = lastHoverSpec()
+    renderHook(() => useDragReorder({ type: "note", id: "c", onHoverMove }))
+    const targetC = lastHoverSpec()
+    const gesture = { id: "a" }
+    targetB.hover(gesture)
+    targetB.hover(gesture)
+    expect(onHoverMove).toHaveBeenCalledTimes(1)
+    targetC.hover(gesture)
+    targetB.hover(gesture)
+    targetB.hover({ id: "a" })
+    expect(onHoverMove).toHaveBeenCalledTimes(4)
   })
 })

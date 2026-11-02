@@ -42,7 +42,6 @@ describe("Calendar creation", () => {
           description: "Bring documents",
           date: "2026-10-07",
           time: null,
-          taskId: null,
         }),
       ),
     )

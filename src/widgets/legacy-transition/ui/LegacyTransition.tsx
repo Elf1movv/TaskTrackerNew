@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
-import { useTasks, type Task } from "@/entities/task"
-import type { Goal } from "@/entities/goal"
+import { type Task } from "@/entities/task"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 interface LegacyData {
   tasks: Task[]
-  goals: Pick<Goal, "id" | "title" | "milestones" | "updatedAt">[]
 }
 export function LegacyTransition() {
   const { t } = useLanguage()
-  const [data, setData] = useState<LegacyData>({ tasks: [], goals: [] })
+  const [data, setData] = useState<LegacyData>({ tasks: [] })
   const [open, setOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(10)
   const refresh = useCallback(async () => {
@@ -50,7 +47,7 @@ export function LegacyTransition() {
       new CustomEvent("collection-invalidated", { detail: ["task", "goal", "plan", "note", "reminder"] }),
     )
   }
-  const count = data.tasks.length + data.goals.reduce((n, goal) => n + goal.milestones.length, 0)
+  const count = data.tasks.length
   if (!count) return null
   return (
     <section className="mx-4 mt-4 p-4 rounded-xl bg-card border border-primary/25">
@@ -63,18 +60,6 @@ export function LegacyTransition() {
           {data.tasks.slice(0, visibleCount).map(task => (
             <LegacyTask key={task.id} task={task} submit={submit} />
           ))}
-          {data.goals
-            .flatMap(goal =>
-              goal.milestones.map(milestone => (
-                <LegacyMilestone
-                  key={`${goal.id}:${milestone.id}`}
-                  goal={goal}
-                  milestone={milestone}
-                  submit={submit}
-                />
-              )),
-            )
-            .slice(0, visibleCount)}
           {count > visibleCount && (
             <Button variant="outline" size="sm" onClick={() => setVisibleCount(n => n + 10)}>
               {t("notes.more")}
@@ -120,74 +105,6 @@ function LegacyTask({ task, submit }: { task: Task; submit: (path: string, body:
           setBusy(true)
           try {
             await submit("task", { sourceId: task.id, choice, expectedUpdatedAt: task.updatedAt })
-          } catch {
-            toast.error(t("transition.error"))
-          } finally {
-            setBusy(false)
-          }
-        }}
-      >
-        {t("transition.confirm")}
-      </Button>
-    </article>
-  )
-}
-function LegacyMilestone({
-  goal,
-  milestone,
-  submit,
-}: {
-  goal: LegacyData["goals"][number]
-  milestone: Goal["milestones"][number]
-  submit: (path: string, body: object) => Promise<void>
-}) {
-  const { tasks } = useTasks()
-  const { t } = useLanguage()
-  const [taskId, setTaskId] = useState("new")
-  const [busy, setBusy] = useState(false)
-  const task = tasks.find(item => item.id === taskId)
-  return (
-    <article className="p-4 rounded-lg border border-border space-y-3">
-      <p className="text-xs text-muted-foreground">
-        {goal.title} · {t("transition.milestone")}
-      </p>
-      <h3 className="font-semibold">{milestone.title}</h3>
-      <p className="text-sm">{milestone.completed ? t("tasks.status.done") : t("tasks.status.active")}</p>
-      <Select value={taskId} onValueChange={setTaskId}>
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="new">{t("transition.newTask")}</SelectItem>
-          {tasks
-            .filter(item => !item.legacyPending && (!item.goalId || item.goalId === goal.id))
-            .map(item => (
-              <SelectItem value={item.id} key={item.id}>
-                {item.title}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
-      {task && (
-        <p className="text-sm text-muted-foreground">
-          {t("transition.keepStatus", {
-            status: task.completed ? t("tasks.status.done") : t("tasks.status.active"),
-          })}
-        </p>
-      )}
-      <Button
-        size="sm"
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true)
-          try {
-            await submit("milestone", {
-              goalId: goal.id,
-              milestoneId: milestone.id,
-              expectedUpdatedAt: goal.updatedAt,
-              existingTaskId: task?.id ?? null,
-              expectedTaskUpdatedAt: task?.updatedAt,
-            })
           } catch {
             toast.error(t("transition.error"))
           } finally {

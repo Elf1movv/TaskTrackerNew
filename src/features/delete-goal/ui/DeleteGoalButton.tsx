@@ -14,7 +14,10 @@ import {
 } from "@/shared/ui/alert-dialog"
 import { buttonVariants } from "@/shared/ui/button"
 
-// Deleting a goal detaches its tasks and preserves their calendar plans.
+// A goal deletion takes every one of its milestones with it — the same
+// destructive-confirmation convention this project already uses for
+// deleting a category with tasks in it (see TaskBoard.tsx), not a bare
+// click-to-delete.
 export function DeleteGoalButton({ goalId, goalTitle }: { goalId: string; goalTitle: string }) {
   const { deleteGoal } = useGoals()
   const { t } = useLanguage()
@@ -35,7 +38,7 @@ export function DeleteGoalButton({ goalId, goalTitle }: { goalId: string; goalTi
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("goals.deleteTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>{`${goalTitle}. ${t("goals.deletePreserve")}`}</AlertDialogDescription>
+          <AlertDialogDescription>{t("goals.deleteBody", { title: goalTitle })}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>

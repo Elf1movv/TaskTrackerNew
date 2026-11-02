@@ -11,7 +11,7 @@ export function TodayProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      goals: goals.filter(goal => !goal.achievedAt),
+      goals: goals.filter(goal => goal.progress < 100),
       habits: selectTodayHabits(habits),
       reminders: selectUpcomingReminders(reminders),
       remindersLoaded,

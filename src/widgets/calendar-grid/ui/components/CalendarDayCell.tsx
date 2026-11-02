@@ -1,4 +1,3 @@
-import { useLanguage } from "@/shared/lib/i18n"
 import { formatDateKey } from "@/shared/lib/date"
 import { useCallback } from "react"
 import { format } from "date-fns"
@@ -46,7 +45,6 @@ export function CalendarDayCell({
   onEditTask: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
 }) {
-  const { t } = useLanguage()
   // Composed here (not passed down as a ready-made per-day closure from the
   // parent's .map()) so it stays referentially stable across renders where
   // `day` and `onMoveTaskToDay` don't change — useDropTarget's ref callback
@@ -197,9 +195,6 @@ export function CalendarDayCell({
                 className={`truncate font-semibold ${task.completed ? "line-through text-tertiary" : ""}`}
               >
                 {task.title}
-                {task.completed && task.taskId && (
-                  <span className="block text-[9px]">{t("plans.completed")}</span>
-                )}
               </span>
             </div>
           ))}

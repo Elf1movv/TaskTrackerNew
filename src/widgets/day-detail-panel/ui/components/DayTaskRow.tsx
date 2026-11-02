@@ -1,4 +1,3 @@
-import { useLanguage } from "@/shared/lib/i18n"
 import { EditTaskButton } from "@/features/edit-task"
 import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { PriorityDot } from "@/entities/task"
@@ -18,7 +17,6 @@ export function DayTaskRow({
   onEdit: () => void
   draggable?: boolean
 }) {
-  const { t } = useLanguage()
   const { ref, isDragging } = useDragItem<HTMLDivElement>({
     type: "calendar-task-move",
     id: task.id,
@@ -40,7 +38,6 @@ export function DayTaskRow({
         }`}
       >
         {task.title}
-        {task.completed && task.taskId && <span className="block text-xs">{t("plans.completed")}</span>}
       </span>
       <PriorityDot priority={task.priority} />
       <EditTaskButton onClick={onEdit} />

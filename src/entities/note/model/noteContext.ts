@@ -5,6 +5,8 @@ export interface NoteContextValue {
   isLoaded: boolean
   addNote: (note: Omit<Note, "id" | "createdAt" | "updatedAt">) => Promise<boolean>
   updateNote: (id: string, patch: Partial<Note>) => void
+  deleteNote: (id: string) => void
+  reorderNotes: (draggedId: string, targetId: string) => void
   refreshNotes: () => Promise<void>
 }
 export const NoteContext = createContext<NoteContextValue | null>(null)

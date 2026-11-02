@@ -40,7 +40,7 @@ const taskFields = z.object({
     .nullable(),
   description: z.string().nullable(),
   completedAt: completedAtField,
-  goalId: z.string().uuid().nullable().optional(),
+  goalId: z.null().optional(),
 })
 
 export const createTaskSchema = taskFields

@@ -5,7 +5,6 @@ export interface Milestone {
 }
 
 export interface Goal {
-  achievedAt?: string | null
   id: string
   title: string
   description: string

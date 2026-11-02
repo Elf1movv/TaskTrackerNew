@@ -1,7 +1,6 @@
 export type Priority = "low" | "medium" | "high"
 
 export interface Task {
-  goalId?: string | null
   legacyPending?: boolean
   id: string
   title: string

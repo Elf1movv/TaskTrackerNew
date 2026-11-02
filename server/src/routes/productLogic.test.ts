@@ -69,30 +69,72 @@ describe("independent product entities", () => {
     expect((await agent.get("/api/tasks")).body).toHaveLength(0)
     expect((await agent.get("/api/notes")).body).toHaveLength(1)
   })
-  it("keeps deadlines and multiple intervals independent, shares task title/completion", async () => {
+  it("keeps tasks, plans and goal milestones independent through edits and deletion", async () => {
     const task = await createTask(agent)
     expect((await agent.get("/api/plans")).body).toHaveLength(0)
-    const first = await createPlan(agent, { taskId: task.id })
-    const second = await createPlan(agent, { taskId: task.id, date: "2030-01-11" })
-    expect(
-      (
-        await agent
-          .patch(`/api/plans/${first.id}`)
-          .send({ patch: { date: "2030-01-12" }, expectedUpdatedAt: first.updatedAt })
-      ).status,
-    ).toBe(200)
-    expect((await agent.get("/api/tasks")).body[0].dueDate).toBe("2030-01-15")
-    expect((await agent.get("/api/plans")).body.find((p: { id: string }) => p.id === second.id).date).toBe(
-      "2030-01-11",
-    )
+    const first = await createPlan(agent)
+    const second = await createPlan(agent, { date: "2030-01-11" })
+    const goal = await agent.post("/api/goals").send({
+      ...goalData,
+      id: crypto.randomUUID(),
+      milestones: [{ id: "own", title: "Own milestone", completed: false }],
+    })
+    expect(goal.status).toBe(201)
+    await agent
+      .patch(`/api/plans/${first.id}`)
+      .send({ patch: { completed: true, date: "2030-01-12" }, expectedUpdatedAt: first.updatedAt })
+    expect((await agent.get("/api/tasks")).body[0]).toMatchObject({ completed: false, dueDate: "2030-01-15" })
     await agent
       .patch(`/api/tasks/${task.id}`)
       .send({ patch: { title: "Renamed", completed: true }, expectedUpdatedAt: task.updatedAt })
-    const completed = (await agent.get("/api/plans")).body
-    expect(completed).toHaveLength(2)
+    const plans = (await agent.get("/api/plans")).body
+    expect(plans.find((p: { id: string }) => p.id === second.id)).toMatchObject({
+      title: "Meeting",
+      completed: false,
+      date: "2030-01-11",
+    })
+    expect((await agent.get("/api/goals")).body[0]).toMatchObject({
+      progress: 0,
+      milestones: [{ id: "own", completed: false, title: "Own milestone" }],
+    })
+    await agent.patch(`/api/goals/${goal.body.id}`).send({
+      patch: { milestones: [{ id: "own", title: "Own milestone", completed: true }], progress: 100 },
+      expectedUpdatedAt: goal.body.updatedAt,
+    })
+    expect((await agent.get("/api/tasks")).body).toHaveLength(1)
+    expect((await agent.get("/api/plans")).body).toHaveLength(2)
+    await agent.delete(`/api/tasks/${task.id}`)
+    expect((await agent.get("/api/plans")).body).toHaveLength(2)
+    await agent.delete(`/api/goals/${goal.body.id}`)
+    expect((await agent.get("/api/plans")).body).toHaveLength(2)
+  })
+  it("rejects experimental relationships from stale clients", async () => {
+    const task = await createTask(agent)
+    const goal = await agent.post("/api/goals").send({ ...goalData, id: crypto.randomUUID() })
     expect(
-      completed.every((p: { title: string; completed: boolean }) => p.title === "Renamed" && p.completed),
-    ).toBe(true)
+      (await agent.post("/api/plans").send({ ...planData, id: crypto.randomUUID(), taskId: task.id })).status,
+    ).toBe(400)
+    expect(
+      (
+        await agent
+          .patch(`/api/tasks/${task.id}`)
+          .send({ patch: { goalId: goal.body.id }, expectedUpdatedAt: task.updatedAt })
+      ).status,
+    ).toBe(400)
+    expect(
+      (
+        await agent.post("/api/reminders").send({
+          id: crypto.randomUUID(),
+          title: "Obsolete link",
+          date: "2030-01-01",
+          time: null,
+          completed: false,
+          priority: "normal",
+          taskId: task.id,
+        })
+      ).status,
+    ).toBe(400)
+    expect((await agent.get("/api/plans")).body).toHaveLength(0)
   })
   it("rejects foreign links and version conflicts", async () => {
     const other = await createAuthenticatedAgent(app)
@@ -100,7 +142,7 @@ describe("independent product entities", () => {
     expect(
       (await agent.post("/api/plans").send({ ...planData, id: crypto.randomUUID(), taskId: foreign.id }))
         .status,
-    ).toBe(404)
+    ).toBe(400)
     const plan = await createPlan(agent)
     expect((await other.get("/api/plans")).body).toHaveLength(0)
     expect(
@@ -119,67 +161,38 @@ describe("independent product entities", () => {
     expect(conflict.status).toBe(409)
     expect(conflict.body.current.title).toBe("Changed")
   })
-  it("suspends relative reminders on hold and resumes at the new time", async () => {
+  it("holds and reschedules a plan without affecting ordinary reminders or tasks", async () => {
     const plan = await createPlan(agent)
+    const task = await createTask(agent)
     const reminder = await agent.post("/api/reminders").send({
       id: crypto.randomUUID(),
-      title: "Meeting",
+      title: "Independent signal",
       date: "2030-01-10",
-      time: null,
+      time: "09:30",
       completed: false,
       priority: "normal",
-      planId: plan.id,
-      offsetMinutes: 30,
     })
     expect(reminder.status).toBe(201)
-    expect(reminder.body.time).toBe("09:30")
     const held = await agent.patch(`/api/plans/${plan.id}`).send({
       patch: { onHold: true, date: null, time: null, endTime: null },
       expectedUpdatedAt: plan.updatedAt,
     })
     expect(held.status).toBe(200)
-    expect((await agent.get("/api/reminders")).body[0].suspended).toBe(true)
-    await agent.patch(`/api/plans/${plan.id}`).send({
-      patch: { onHold: false, date: "2030-01-12", time: "00:15", endTime: "01:15" },
+    expect(held.body.durationMinutes).toBe(60)
+    const resumed = await agent.patch(`/api/plans/${plan.id}`).send({
+      patch: { onHold: false, date: "2030-01-12", time: "14:00", endTime: "15:00" },
       expectedUpdatedAt: held.body.updatedAt,
     })
+    expect(resumed.status).toBe(200)
     expect((await agent.get("/api/reminders")).body[0]).toMatchObject({
-      date: "2030-01-11",
-      time: "23:45",
-      suspended: false,
+      date: "2030-01-10",
+      time: "09:30",
+      completed: false,
     })
-  })
-  it("deleting a task removes future work but preserves past text", async () => {
-    const task = await createTask(agent)
-    const past = await createPlan(agent, { taskId: task.id, date: "2000-01-01" })
-    await createPlan(agent, { taskId: task.id, date: "2099-01-01" })
-    await createPlan(agent, { taskId: task.id, onHold: true, date: null, time: null, endTime: null })
-    expect((await agent.get(`/api/tasks/${task.id}/deletion-preview`)).body.futurePlans).toBe(2)
-    expect((await agent.delete(`/api/tasks/${task.id}`)).status).toBe(204)
-    const plans = (await agent.get("/api/plans")).body
-    expect(plans).toHaveLength(1)
-    expect(plans[0]).toMatchObject({
-      id: past.id,
-      taskId: null,
-      title: task.title,
-      description: task.description,
-    })
-  })
-  it("deleting a goal preserves tasks and plans; completion does not achieve a goal", async () => {
-    const goal = await agent.post("/api/goals").send({ ...goalData, id: crypto.randomUUID() })
-    const task = await createTask(agent)
-    expect(
-      (
-        await agent
-          .patch(`/api/tasks/${task.id}`)
-          .send({ patch: { goalId: goal.body.id, completed: true }, expectedUpdatedAt: task.updatedAt })
-      ).status,
-    ).toBe(200)
-    expect((await agent.get("/api/goals")).body[0].achievedAt).toBeNull()
-    await createPlan(agent, { taskId: task.id })
-    await agent.delete(`/api/goals/${goal.body.id}`)
-    expect((await agent.get("/api/tasks")).body[0].goalId).toBeNull()
-    expect((await agent.get("/api/plans")).body).toHaveLength(1)
+    expect((await agent.get("/api/tasks")).body[0]).toEqual(task)
+    await agent.delete(`/api/plans/${plan.id}`)
+    expect((await agent.get("/api/reminders")).body).toHaveLength(1)
+    expect((await agent.get("/api/tasks")).body).toHaveLength(1)
   })
   it("rejects impossible dates and reversed intervals", async () => {
     for (const patch of [
@@ -217,40 +230,33 @@ describe("independent product entities", () => {
     expect((await agent.get("/api/transition")).body.tasks).toHaveLength(0)
     expect((await agent.get("/api/tasks")).body).toHaveLength(choice === "task" ? 1 : 0)
     expect((await agent.get("/api/notes")).body).toHaveLength(choice === "note" ? 1 : 0)
-    expect((await agent.get("/api/plans")).body).toHaveLength(choice === "note" ? 0 : 1)
+    expect((await agent.get("/api/plans")).body).toHaveLength(choice === "plan" ? 1 : 0)
     expect(await db.legacyTransition.count({ where: { sourceKey: `task:${task.id}` } })).toBe(1)
     expect((await db.task.findUniqueOrThrow({ where: { id: task.id } })).description).toBe("Original detail")
   })
-  it("migrates milestones and can link an existing task without changing its status", async () => {
+  it("keeps goal milestones in goals and removes the obsolete conversion endpoint", async () => {
     const goal = await agent.post("/api/goals").send({
       ...goalData,
       id: crypto.randomUUID(),
-      milestones: [
-        { id: "one", title: "Milestone", completed: true },
-        { id: "two", title: "Other", completed: false },
-      ],
+      milestones: [{ id: "one", title: "Milestone", completed: true }],
+      progress: 100,
     })
-    const first = await agent.post("/api/transition/milestone").send({
-      goalId: goal.body.id,
-      milestoneId: "one",
-      existingTaskId: null,
-      expectedUpdatedAt: goal.body.updatedAt,
+    expect((await agent.get("/api/transition")).body).toEqual({ tasks: [] })
+    expect(
+      (
+        await agent.post("/api/transition/milestone").send({
+          goalId: goal.body.id,
+          milestoneId: "one",
+          existingTaskId: null,
+          expectedUpdatedAt: goal.body.updatedAt,
+        })
+      ).status,
+    ).toBe(404)
+    expect((await agent.get("/api/goals")).body[0]).toMatchObject({
+      progress: 100,
+      milestones: [{ id: "one", title: "Milestone", completed: true }],
     })
-    expect(first.status).toBe(200)
-    const task = (await agent.get("/api/tasks")).body[0]
-    expect(task.completed).toBe(true)
-    const updatedGoal = (await agent.get("/api/goals")).body[0]
-    const second = await agent.post("/api/transition/milestone").send({
-      goalId: goal.body.id,
-      milestoneId: "two",
-      existingTaskId: task.id,
-      expectedTaskUpdatedAt: task.updatedAt,
-      expectedUpdatedAt: updatedGoal.updatedAt,
-    })
-    expect(second.status).toBe(200)
-    expect((await agent.get("/api/tasks")).body).toHaveLength(1)
-    expect((await agent.get("/api/tasks")).body[0].completed).toBe(true)
-    expect((await agent.get("/api/goals")).body[0].milestones).toEqual([])
+    expect((await agent.get("/api/tasks")).body).toHaveLength(0)
   })
   it("serializes simultaneous migration retries without duplicates", async () => {
     const task = await createTask(agent)

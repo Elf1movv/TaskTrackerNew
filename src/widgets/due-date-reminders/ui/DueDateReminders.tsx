@@ -66,7 +66,7 @@ export function DueDateReminders({ userId }: { userId: string }) {
       markShownToday(userId, { tasks: true })
     }
 
-    const dueGoals = goals.filter(goal => !goal.achievedAt && isDueSoonOrOverdue(goal.targetDate))
+    const dueGoals = goals.filter(goal => goal.progress < 100 && isDueSoonOrOverdue(goal.targetDate))
     if (dueGoals.length > 0 && !shown.goals) {
       toast(t("reminders.goalsDueSoon", { count: dueGoals.length }), {
         action: { label: t("reminders.viewAction"), onClick: () => navigate("/goals") },

@@ -14,8 +14,7 @@ export function SidebarNav() {
   const { tasks: allTasks } = useTasks()
   const tasks = allTasks.filter(task => !task.legacyPending)
   const { habits } = useHabits()
-  const { goals: allGoals } = useGoals()
-  const goals = allGoals.filter(goal => !goal.achievedAt)
+  const { goals } = useGoals()
   const { language, t } = useLanguage()
 
   const today = getTodayKey()
@@ -37,7 +36,7 @@ export function SidebarNav() {
       labelKey: "sidebar.statHabits",
       value: `${habits.filter(h => h.completedDates.includes(today)).length} / ${habits.length}`,
     },
-    { labelKey: "sidebar.statActiveGoals", value: String(goals.length) },
+    { labelKey: "sidebar.statActiveGoals", value: String(goals.filter(goal => goal.progress < 100).length) },
   ]
 
   const last7Days = getLastNDays(7, new Date())

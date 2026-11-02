@@ -1,4 +1,3 @@
-import { useGoals } from "@/entities/goal"
 import { useState } from "react"
 import styled from "@emotion/styled"
 import { useCategories } from "@/entities/category"
@@ -39,18 +38,16 @@ const PriorityToggle = styled.button<{ color: string }>`
 // used when adding a task from a specific category tab (e.g. Health) so it
 // lands back in that same tab. Editing always shows the full picker.
 //
-// A task date is a deadline. Scheduling happens separately in PlanForm.
+// A task date is a deadline; calendar plans are independent records.
 export function TaskForm({
   task,
   lockedCategory,
-  defaultGoalId,
   defaultDueDate,
   embedded,
   onDelete,
   onDone,
 }: {
   task?: Task
-  defaultGoalId?: string
   lockedCategory?: string
   defaultDueDate?: string
   embedded?: boolean
@@ -60,8 +57,6 @@ export function TaskForm({
   const { addTask, updateTask } = useTasks()
   const { categories } = useCategories()
   const { t } = useLanguage()
-  const { goals } = useGoals()
-  const [goalId, setGoalId] = useState(task?.goalId ?? defaultGoalId ?? "none")
   const [title, setTitle] = useState(task?.title ?? "")
   const [description, setDescription] = useState(task?.description ?? "")
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
@@ -90,9 +85,8 @@ export function TaskForm({
       category,
       dueDate: hasDueDate ? dueDate : null,
       // Old scheduling fields are retained for transition only. New tasks
-      // keep their work intervals in CalendarPlan.
+      // never create calendar intervals.
       time: null,
-      goalId: goalId === "none" ? null : goalId,
       endTime: null,
     }
     if (task) {
@@ -173,21 +167,6 @@ export function TaskForm({
         />
       </div>
 
-      <Select value={goalId} onValueChange={setGoalId}>
-        <SelectTrigger aria-label={t("tasks.goal")}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="none">{t("tasks.noGoal")}</SelectItem>
-          {goals
-            .filter(goal => !goal.achievedAt || goal.id === goalId)
-            .map(goal => (
-              <SelectItem key={goal.id} value={goal.id}>
-                {goal.title}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
       <div className="flex gap-2 justify-between pt-1">
         {onDelete && (
           <Button variant="ghost" size="sm" onClick={onDelete} className="text-xs text-destructive">

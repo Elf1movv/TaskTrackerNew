@@ -1,4 +1,3 @@
-import { TaskPlanning } from "@/features/plan-form"
 import { motion } from "motion/react"
 import { resolveCategoryColor, useCategories } from "@/entities/category"
 import { DeleteTaskButton } from "@/features/delete-task"
@@ -40,7 +39,6 @@ export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolea
         </div>
         {task.description && <div className="text-xs text-tertiary truncate">{task.description}</div>}
         <TaskScheduleLink task={task} />
-        <TaskPlanning task={task} />
       </div>
       <span className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         <EditTaskButton onClick={onEdit} />

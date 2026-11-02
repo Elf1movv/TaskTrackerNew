@@ -7,7 +7,6 @@ export interface CalendarPlan {
   endTime: string | null
   durationMinutes: number
   onHold: boolean
-  taskId: string | null
   completed: boolean
   priority: "low" | "medium" | "high"
   category: string

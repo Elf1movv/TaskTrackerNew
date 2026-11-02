@@ -15,8 +15,7 @@ import { Textarea } from "@/shared/ui/textarea"
 // toggle is turned on, same as TaskForm's `defaultDueDate`; merely
 // suggesting a value shouldn't flip the toggle itself, so a goal added
 // from elsewhere still defaults to "no deadline" like it always has.
-// Milestones are managed separately (see features/add-milestone and
-// features/milestone-row), not part of this form.
+// Milestones are managed inside widgets/goal-list, not part of this form.
 export function GoalForm({
   goal,
   defaultTargetDate,

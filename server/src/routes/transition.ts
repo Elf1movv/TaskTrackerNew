@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client"
 import { z } from "zod"
 import { db } from "../db.js"
 import { requireAuth } from "../middleware/requireAuth.js"
-import { checkTask, fail, ownerTransaction } from "../lib/productLogic.js"
+import { fail, ownerTransaction } from "../lib/productLogic.js"
 import { toClientTask } from "./tasks.js"
 
 export const transitionRouter = Router()
@@ -13,14 +13,7 @@ transitionRouter.get("/", async (req, res) => {
     where: { userId: req.userId, legacyPending: true, retiredAt: null },
     orderBy: { order: "asc" },
   })
-  const goals = await db.goal.findMany({
-    where: { userId: req.userId },
-    select: { id: true, title: true, milestones: true, updatedAt: true },
-  })
-  res.json({
-    tasks: tasks.map(toClientTask),
-    goals: goals.filter(g => Array.isArray(g.milestones) && g.milestones.length),
-  })
+  res.json({ tasks: tasks.map(toClientTask) })
 })
 const choiceSchema = z.object({
   sourceId: z.string().uuid(),
@@ -57,12 +50,13 @@ transitionRouter.post("/task", async (req, res) => {
           title: task.title,
           description: task.description,
           showFrom: task.dueDate,
-          archivedAt: task.completed ? (task.completedAt ?? new Date()) : null,
+          archivedAt: null,
+          completed: task.completed,
           order: (_max.order ?? -1) + 1,
         },
       })
       resultId = note.id
-    } else if (choice === "plan" || task.dueDate) {
+    } else if (choice === "plan") {
       // Legacy forms could store incomplete/out-of-range times. Preserve
       // their exact original in the snapshot, and normalize the new plan.
       const time = task.time && /^([01]\d|2[0-3]):[0-5]\d$/.test(task.time) && task.dueDate ? task.time : null
@@ -84,7 +78,6 @@ transitionRouter.post("/task", async (req, res) => {
           completed: task.completed,
           priority: task.priority,
           category: task.category,
-          taskId: choice === "task" ? task.id : null,
         },
       })
       if (choice === "plan") resultId = plan.id
@@ -100,84 +93,14 @@ transitionRouter.post("/task", async (req, res) => {
     })
     await tx.task.update({
       where: { id: task.id },
-      data: { legacyPending: false, retiredAt: choice === "task" ? null : new Date() },
-    })
-    return { resultId, choice }
-  })
-  res.json(result)
-})
-const milestoneChoice = z.object({
-  goalId: z.string().uuid(),
-  milestoneId: z.string(),
-  expectedUpdatedAt: z.string().datetime(),
-  existingTaskId: z.string().uuid().nullable(),
-  expectedTaskUpdatedAt: z.string().datetime().optional(),
-})
-transitionRouter.post("/milestone", async (req, res) => {
-  const parsed = milestoneChoice.safeParse(req.body)
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid milestone transition" })
-    return
-  }
-  const result = await ownerTransaction(req.userId, async tx => {
-    const data = parsed.data
-    const sourceKey = `milestone:${data.goalId}:${data.milestoneId}`
-    const previous = await tx.legacyTransition.findUnique({
-      where: { userId_sourceKey: { userId: req.userId, sourceKey } },
-    })
-    if (previous) {
-      if (
-        previous.choice !== (data.existingTaskId ? "link" : "create") ||
-        (data.existingTaskId && previous.resultId !== data.existingTaskId)
-      )
-        fail(409, "Already classified differently")
-      return { resultId: previous.resultId }
-    }
-    const goal = await tx.goal.findFirst({ where: { id: data.goalId, userId: req.userId } })
-    if (!goal) fail(404, "Goal not found")
-    if (goal.updatedAt.toISOString() !== data.expectedUpdatedAt) fail(409, "Source changed; review again")
-    const milestones = z
-      .array(z.object({ id: z.string(), title: z.string(), completed: z.boolean() }))
-      .parse(goal.milestones)
-    const milestone = milestones.find(m => m.id === data.milestoneId)
-    if (!milestone) fail(404, "Milestone not found")
-    let task = await checkTask(tx, req.userId, data.existingTaskId)
-    const originalTask = task
-    if (task) {
-      if (task.updatedAt.toISOString() !== data.expectedTaskUpdatedAt) fail(409, "Task changed; review again")
-      if (task.goalId && task.goalId !== goal.id) fail(409, "Task belongs to another goal")
-      task = await tx.task.update({ where: { id: task.id }, data: { goalId: goal.id } })
-    } else {
-      const { _max } = await tx.task.aggregate({ where: { userId: req.userId }, _max: { order: true } })
-      task = await tx.task.create({
-        data: {
-          userId: req.userId,
-          title: milestone.title,
-          completed: milestone.completed,
-          completedAt: milestone.completed ? goal.updatedAt : null,
-          priority: "medium",
-          category: "",
-          goalId: goal.id,
-          order: (_max.order ?? -1) + 1,
-        },
-      })
-    }
-    await tx.legacyTransition.create({
       data: {
-        userId: req.userId,
-        sourceKey,
-        choice: data.existingTaskId ? "link" : "create",
-        resultId: task.id,
-        snapshot: JSON.parse(
-          JSON.stringify({ goal, milestone, linkedTask: originalTask }),
-        ) as Prisma.InputJsonValue,
+        legacyPending: false,
+        retiredAt: choice === "task" ? null : new Date(),
+        time: choice === "task" ? null : task.time,
+        endTime: choice === "task" ? null : task.endTime,
       },
     })
-    await tx.goal.update({
-      where: { id: goal.id },
-      data: { milestones: milestones.filter(m => m.id !== milestone.id) },
-    })
-    return { resultId: task.id }
+    return { resultId, choice }
   })
   res.json(result)
 })

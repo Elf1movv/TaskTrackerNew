@@ -1,16 +1,6 @@
-// A mutation may change related collections server-side. Refresh just
-// those collections after success, never overwrite the optimistic source.
+// Deleting a category also deletes its ordinary tasks. Other product
+// entities are independent and do not invalidate each other's collections.
 export function invalidateRelated(baseUrl: string, deleted = false) {
-  const resource = baseUrl.split("/").slice(-1)[0]
-  const affected =
-    resource === "plans"
-      ? ["reminder"]
-      : resource === "tasks" && deleted
-        ? ["plan", "reminder", "goal"]
-        : resource === "goals" && deleted
-          ? ["task"]
-          : resource === "categories" && deleted
-            ? ["task", "plan", "reminder", "goal"]
-            : []
-  if (affected.length) window.dispatchEvent(new CustomEvent("collection-invalidated", { detail: affected }))
+  if (deleted && baseUrl.split("/").slice(-1)[0] === "categories")
+    window.dispatchEvent(new CustomEvent("collection-invalidated", { detail: ["task"] }))
 }

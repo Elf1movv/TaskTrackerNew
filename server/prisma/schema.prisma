@@ -312,6 +312,7 @@ model Verification {
 
 // Independent notes: showFrom is a visibility date, never a deadline.
 model Note {
+  completed   Boolean  @default(false)
   id String @id @default(uuid())
   title String
   description String?
@@ -325,8 +326,8 @@ model Note {
   @@index([userId, order])
 }
 
-// An interval optionally pointing at one canonical task. Text is also
-// snapshotted when a task is deleted, preserving past calendar history.
+// Independent calendar interval. taskId is retained only for old schema
+// compatibility; the independence migration clears and constrains it to NULL.
 model CalendarPlan {
   id String @id @default(uuid())
   title String

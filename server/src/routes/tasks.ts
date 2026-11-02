@@ -8,7 +8,7 @@ export const tasksRouter = Router()
 tasksRouter.use(requireAuth)
 
 import type { Task } from "@prisma/client"
-import { checkGoal, fail, isFuture, localClock, ownerTransaction, removeTask } from "../lib/productLogic.js"
+import { fail, ownerTransaction, removeTask } from "../lib/productLogic.js"
 export function toClientTask(task: Task) {
   return {
     id: task.id,
@@ -23,7 +23,6 @@ export function toClientTask(task: Task) {
     completedAt: task.completedAt,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
-    goalId: task.goalId,
     legacyPending: task.legacyPending,
   }
 }
@@ -47,7 +46,6 @@ tasksRouter.post("/", async (req, res) => {
   // they need an order larger than everything currently stored — scoped
   // to this user's own tasks, not the whole table.
   const created = await ownerTransaction(req.userId, async tx => {
-    await checkGoal(tx, req.userId, parsed.data.goalId)
     const { _max } = await tx.task.aggregate({ where: { userId: req.userId }, _max: { order: true } })
     return tx.task.create({ data: { ...parsed.data, userId: req.userId, order: (_max.order ?? -1) + 1 } })
   })
@@ -99,7 +97,6 @@ tasksRouter.patch("/:id", async (req, res) => {
   const { patch, expectedUpdatedAt } = parsed.data
 
   const result = await ownerTransaction(req.userId, async tx => {
-    await checkGoal(tx, req.userId, patch.goalId)
     const current = await tx.task.findFirst({
       where: { id: req.params.id, userId: req.userId, retiredAt: null },
     })
@@ -118,44 +115,13 @@ tasksRouter.patch("/:id", async (req, res) => {
   res.json(toClientTask(result.task))
 })
 
-tasksRouter.get("/:id/deletion-preview", async (req, res) => {
-  const task = await db.task.findFirst({ where: { id: req.params.id, userId: req.userId, retiredAt: null } })
-  if (!task) {
-    res.status(404).json({ error: "Task not found" })
-    return
-  }
-  const clock = localClock(req)
-  const plans = await db.calendarPlan.findMany({ where: { taskId: task.id, userId: req.userId } })
-  res.json({ futurePlans: plans.filter(p => isFuture(p.date, p.time, clock)).length })
-})
-
-tasksRouter.post("/:id/clear-future-plans", async (req, res) => {
-  const clock = localClock(req)
-  await ownerTransaction(req.userId, async tx => {
-    const task = await tx.task.findFirst({
-      where: { id: req.params.id, userId: req.userId, retiredAt: null },
-    })
-    if (!task) fail(404, "Task not found")
-    if (!task.completed) fail(400, "Task is not completed")
-    const plans = await tx.calendarPlan.findMany({ where: { taskId: task.id, userId: req.userId } })
-    await tx.calendarPlan.deleteMany({
-      where: {
-        id: { in: plans.filter(p => isFuture(p.date, p.time, clock)).map(p => p.id) },
-        userId: req.userId,
-      },
-    })
-  })
-  res.status(204).end()
-})
-
 tasksRouter.delete("/:id", async (req, res) => {
-  const clock = localClock(req)
   await ownerTransaction(req.userId, async tx => {
     const task = await tx.task.findFirst({
       where: { id: req.params.id, userId: req.userId, retiredAt: null },
     })
     if (!task) fail(404, "Task not found")
-    await removeTask(tx, task, clock)
+    await removeTask(tx, task)
   })
   res.status(204).end()
 })

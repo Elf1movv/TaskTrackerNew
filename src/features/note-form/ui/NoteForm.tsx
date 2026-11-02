@@ -19,7 +19,7 @@ export function NoteForm({ note, onDone }: { note?: Note; onDone: () => void }) 
     setSaving(true)
     const fields = { title: title.trim(), description: description.trim() || null, showFrom }
     if (note) updateNote(note.id, fields)
-    else if (!(await addNote({ ...fields, archivedAt: null }))) {
+    else if (!(await addNote({ ...fields, archivedAt: null, completed: false }))) {
       setSaving(false)
       return
     }

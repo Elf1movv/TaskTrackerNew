@@ -14,6 +14,7 @@ export const instantField = z
   .transform(s => new Date(s))
 export const noteFields = z.object({
   id: z.string().uuid(),
+  completed: z.boolean().optional(),
   title: z.string().trim().min(1).max(500),
   description: z.string().max(50000).nullable(),
   showFrom: dateField.nullable(),
@@ -31,7 +32,7 @@ export const planFields = z.object({
   completed: z.boolean(),
   priority: z.enum(["low", "medium", "high"]),
   category: z.string().max(500),
-  taskId: z.string().uuid().nullable(),
+  taskId: z.null().optional(),
 })
 export function validPlan(plan: Pick<z.infer<typeof planFields>, "onHold" | "date" | "time" | "endTime">) {
   return plan.onHold
