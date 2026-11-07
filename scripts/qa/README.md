@@ -11,7 +11,7 @@ The app must be built and running before registration. No mail is sent when
 2. Verify that exact QA email in the isolated database:
    `node --env-file=/private/tmp/mytracker-redesign-browser.env scripts/qa-browser-user.mjs verify <email>`
    from `server/`; on staging run `scripts/qa-browser-user.mjs` inside the staging app.
-3. `node scripts/qa/independent-browser.mjs suite` — 18 UI/API checks. This resets
+3. `node scripts/qa/independent-browser.mjs suite` — 19 UI/API checks. This resets
    only records belonging to the matching disposable QA session. Never provide
    owner credentials; both the email pattern and session identity are checked.
 4. `node scripts/qa/calendar-gestures.mjs` — six additional mouse/touch checks,
@@ -23,6 +23,16 @@ For staging set `QA_ORIGIN=https://test.mytracker.space` and a separate
 `QA_CREDENTIALS=/private/tmp/mytracker-staging-qa-login.json` for both commands.
 Screenshots and JSON results go to `/private/tmp/mytracker-qa-*` and
 `/private/tmp/mytracker-*-results.json`, never into Git.
+
+Paths above are the macOS defaults. On other systems (the owner's Windows PC)
+the scripts use the OS temp folder instead; set `QA_TMP` to choose a folder
+explicitly (credentials, screenshots and results all go there). Windows recipe
+used 2026-11-08: Chrome with `--headless=new --remote-debugging-port=9222
+--user-data-dir=<temp folder>`, and the server from `server/` via
+`npx tsx --env-file=<env> src/index.ts` with `PORT=3002`,
+`BETTER_AUTH_URL=http://localhost:3002`, `EMAIL_DELIVERY=disabled` and
+`DATABASE_URL=.../tasktracker_test?schema=redesign_browser` (create that schema
+first with `node scripts/deploy-staging-schema.mjs`), after `npm run build`.
 
 Coverage includes description collapse, completion/reopen, note reorder and
 persistence, mouse/touch/repeated gestures, long text, archive/restore,

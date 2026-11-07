@@ -11,7 +11,7 @@ import { displayFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { TodayProvider, useTodayContext } from "../connectors"
 import { formatHeroDate } from "../lib/formatHeroDate"
-import { GoalReminderSwapCard } from "./components"
+import { GoalReminderSwapCard, TodayPlansStrip } from "./components"
 
 function TodayPageContent() {
   const { goals, habits, reminders, remindersLoaded } = useTodayContext()
@@ -68,6 +68,8 @@ function TodayPageContent() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <TodayPlansStrip />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 items-start gap-5 mb-5">
         <NotesCard />

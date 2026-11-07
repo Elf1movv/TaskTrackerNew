@@ -39,26 +39,37 @@ const PriorityToggle = styled.button<{ color: string }>`
 // lands back in that same tab. Editing always shows the full picker.
 //
 // A task date is a deadline; calendar plans are independent records.
+//
+// `draft` pre-fills a NEW task (e.g. from a note being moved to tasks), and
+// `onCreate` replaces the default addTask call for that case — the caller
+// saves the task its own way and returns false to keep the form open on
+// failure. Editing an existing task ignores both.
+export type TaskDraftFields = Omit<Task, "id" | "updatedAt" | "completedAt" | "createdAt">
 export function TaskForm({
   task,
+  draft,
   lockedCategory,
   defaultDueDate,
   embedded,
+  onCreate,
   onDelete,
   onDone,
 }: {
   task?: Task
+  draft?: { title: string; description: string | null }
   lockedCategory?: string
   defaultDueDate?: string
   embedded?: boolean
+  onCreate?: (fields: TaskDraftFields) => Promise<boolean>
   onDelete?: () => void
   onDone: () => void
 }) {
   const { addTask, updateTask } = useTasks()
   const { categories } = useCategories()
   const { t } = useLanguage()
-  const [title, setTitle] = useState(task?.title ?? "")
-  const [description, setDescription] = useState(task?.description ?? "")
+  const [title, setTitle] = useState(task?.title ?? draft?.title ?? "")
+  const [description, setDescription] = useState(task?.description ?? draft?.description ?? "")
+  const [saving, setSaving] = useState(false)
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
   const [hasDueDate, setHasDueDate] = useState(task ? !!task.dueDate : !!defaultDueDate)
@@ -76,8 +87,8 @@ export function TaskForm({
     }
   }
 
-  function handleSubmit() {
-    if (!title.trim()) return
+  async function handleSubmit() {
+    if (!title.trim() || saving) return
     const patch = {
       title: title.trim(),
       description: description.trim() || null,
@@ -91,6 +102,11 @@ export function TaskForm({
     }
     if (task) {
       updateTask(task.id, { ...patch, completed: task.completed })
+    } else if (onCreate) {
+      setSaving(true)
+      const saved = await onCreate({ ...patch, completed: false })
+      setSaving(false)
+      if (!saved) return
     } else {
       addTask({ ...patch, completed: false })
     }
@@ -103,7 +119,7 @@ export function TaskForm({
         autoFocus
         value={title}
         onChange={e => setTitle(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && handleSubmit()}
+        onKeyDown={e => e.key === "Enter" && void handleSubmit()}
         placeholder={t("taskForm.placeholder")}
         className="border-0 border-b border-border rounded-none bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary"
       />
@@ -177,7 +193,7 @@ export function TaskForm({
           <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
             {t("common.cancel")}
           </Button>
-          <Button size="sm" onClick={handleSubmit} className="text-xs">
+          <Button size="sm" disabled={saving} onClick={() => void handleSubmit()} className="text-xs">
             {task ? t("common.save") : t("tasks.addTask")}
           </Button>
         </div>

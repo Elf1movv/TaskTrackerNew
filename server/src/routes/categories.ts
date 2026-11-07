@@ -168,6 +168,12 @@ categoriesRouter.delete("/:id", async (req, res) => {
       orderBy: { id: "asc" },
     })
     for (const task of tasks) await removeTask(tx, task)
+    // Goals are long-lived records with their own milestones — unlike the
+    // category's tasks they are kept and only lose the category label.
+    await tx.goal.updateMany({
+      where: { userId: req.userId, category: category.name },
+      data: { category: null },
+    })
     await tx.category.deleteMany({ where: { id: category.id, userId: req.userId } })
   })
   res.status(204).end()

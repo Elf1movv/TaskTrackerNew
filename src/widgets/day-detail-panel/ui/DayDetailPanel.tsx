@@ -6,6 +6,7 @@ import { PlanForm } from "@/features/plan-form"
 import { ReminderForm } from "@/features/reminder-form"
 import { GoalForm } from "@/features/goal-form"
 import { type Goal } from "@/entities/goal"
+import type { Task as DeadlineTask } from "@/entities/task"
 import { type Habit } from "@/entities/habit"
 import { type Reminder } from "@/entities/reminder"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
@@ -13,11 +14,12 @@ import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { displayFont, monoFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
-import { DayGoalRow, DayHabitRow, DayReminderRow, DayTaskRow } from "./components"
+import { DayDeadlineRow, DayGoalRow, DayHabitRow, DayReminderRow, DayTaskRow } from "./components"
 
 export function DayDetailPanel({
   day,
   tasks,
+  deadlines = [],
   reminders,
   goals,
   habits,
@@ -25,6 +27,9 @@ export function DayDetailPanel({
 }: {
   day: Date
   tasks: Task[]
+  // Real tasks whose deadline is this day — shown read-only under the
+  // plans, and only when there are any, to keep the panel short.
+  deadlines?: DeadlineTask[]
   reminders: Reminder[]
   goals: Goal[]
   habits: Habit[]
@@ -120,6 +125,21 @@ export function DayDetailPanel({
             {t("calendar.noTasksScheduled")}
           </div>
         )
+      )}
+
+      {deadlines.length > 0 && (
+        <>
+          <div className="mb-2.5">
+            <span css={monoFont} className="text-[10px] uppercase tracking-[0.18em] text-tertiary font-bold">
+              {t("calendar.deadlines")}
+            </span>
+          </div>
+          <div className="space-y-3 mb-6">
+            {deadlines.map(task => (
+              <DayDeadlineRow key={task.id} task={task} />
+            ))}
+          </div>
+        </>
       )}
 
       <div className="flex items-center justify-between mb-2.5">

@@ -1,5 +1,12 @@
 import fs from "node:fs/promises"
+import os from "node:os"
+import path from "node:path"
 import assert from "node:assert/strict"
+// Scratch folder for credentials, screenshots and results — never inside
+// Git. Keeps the original Mac location; other systems (the owner's Windows
+// PC) use the OS temp folder. QA_TMP overrides both.
+export const qaTmp = process.env.QA_TMP ?? (process.platform === "darwin" ? "/private/tmp" : os.tmpdir())
+export const qaFile = name => path.join(qaTmp, name)
 export const origin = process.env.QA_ORIGIN ?? "http://localhost:3002"
 assert(["http://localhost:3002", "https://test.mytracker.space"].includes(origin), "QA origin only")
 const pages = await (await fetch("http://127.0.0.1:9222/json/list")).json()
@@ -86,7 +93,7 @@ export async function saved(test) {
 }
 export async function screenshot(name) {
   const r = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false })
-  await fs.writeFile(`/private/tmp/mytracker-qa-${name}.png`, Buffer.from(r.data, "base64"))
+  await fs.writeFile(qaFile(`mytracker-qa-${name}.png`), Buffer.from(r.data, "base64"))
 }
 export function close() {
   ws.close()

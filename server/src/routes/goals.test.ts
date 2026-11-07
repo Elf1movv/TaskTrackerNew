@@ -79,6 +79,23 @@ describe("goals router", () => {
     expect(withFreshTimestamp.status).toBe(200)
   })
 
+  it("stores an optional category, defaulting to none for older clients", async () => {
+    const plain = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID() })
+    expect(plain.status).toBe(201)
+    expect(plain.body.category).toBeNull()
+
+    const patched = await agent
+      .patch(`/api/goals/${plain.body.id}`)
+      .send({ patch: { category: "Work" }, expectedUpdatedAt: plain.body.updatedAt })
+    expect(patched.status).toBe(200)
+    expect(patched.body.category).toBe("Work")
+
+    const cleared = await agent
+      .patch(`/api/goals/${plain.body.id}`)
+      .send({ patch: { category: null }, expectedUpdatedAt: patched.body.updatedAt })
+    expect(cleared.body.category).toBeNull()
+  })
+
   it("deletes a goal", async () => {
     const created = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID() })
     expect((await agent.delete(`/api/goals/${created.body.id}`)).status).toBe(204)

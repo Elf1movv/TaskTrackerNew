@@ -1,13 +1,13 @@
 import { Router } from "express"
 import type { Note } from "@prisma/client"
+import { z } from "zod"
 import { db } from "../db.js"
+import { fail, ownerTransaction } from "../lib/productLogic.js"
 import { requireAuth } from "../middleware/requireAuth.js"
 import { noteFields, patchNote } from "../validation/productLogic.js"
-import { reorderSchema } from "../validation/task.js"
-const client = ({ userId: _user, ...note }: Note) => ({
-  ...note,
-  showFrom: note.showFrom?.toISOString().slice(0, 10) ?? null,
-})
+import { createTaskSchema, reorderSchema } from "../validation/task.js"
+import { toClientTask } from "./tasks.js"
+const client = ({ userId: _user, ...note }: Note) => note
 export const notesRouter = Router()
 notesRouter.use(requireAuth)
 notesRouter.get("/", async (req, res) =>
@@ -69,6 +69,33 @@ notesRouter.patch("/:id", async (req, res) => {
     return
   }
   res.json(client(current))
+})
+// A note that grew into real work moves to Tasks in one step: the task is
+// created and the note deleted inside one locked transaction, so a failure
+// can never leave both (a duplicate) or neither (lost content). The client
+// sends the full task from the prefilled TaskForm; the note version guards
+// against moving a note that was just edited in another tab.
+const moveToTaskSchema = z.object({ expectedUpdatedAt: z.string().datetime(), task: createTaskSchema })
+notesRouter.post("/:id/to-task", async (req, res) => {
+  const parsed = moveToTaskSchema.safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid move to task" })
+    return
+  }
+  const { expectedUpdatedAt, task } = parsed.data
+  const created = await ownerTransaction(req.userId, async tx => {
+    const note = await tx.note.findFirst({ where: { id: req.params.id, userId: req.userId } })
+    if (!note) fail(404, "Note not found")
+    if (note.updatedAt.getTime() !== new Date(expectedUpdatedAt).getTime())
+      fail(409, "Note changed elsewhere")
+    const { _max } = await tx.task.aggregate({ where: { userId: req.userId }, _max: { order: true } })
+    const result = await tx.task.create({
+      data: { ...task, userId: req.userId, order: (_max.order ?? -1) + 1 },
+    })
+    await tx.note.delete({ where: { id: note.id } })
+    return result
+  })
+  res.status(201).json(toClientTask(created))
 })
 notesRouter.delete("/:id", async (req, res) => {
   await db.note.deleteMany({ where: { id: req.params.id, userId: req.userId } })

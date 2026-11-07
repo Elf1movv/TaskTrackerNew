@@ -7,6 +7,7 @@ import type { Goal } from "@/entities/goal"
 import type { Habit } from "@/entities/habit"
 import type { Reminder } from "@/entities/reminder"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import type { Task as DeadlineTask } from "@/entities/task"
 import { buildMonthGrid } from "@/shared/lib/calendarGrid"
 
 // The original (and, until this feature, only) calendar view — extracted
@@ -32,6 +33,8 @@ export function CalendarMonthView({
   selectedGoals,
   selectedHabits,
   allTasks,
+  allDeadlines,
+  selectedDeadlines,
   allReminders,
   allGoals,
   onSelectDay,
@@ -46,6 +49,8 @@ export function CalendarMonthView({
   selectedGoals: Goal[]
   selectedHabits: Habit[]
   allTasks: Task[]
+  allDeadlines: DeadlineTask[]
+  selectedDeadlines: DeadlineTask[]
   allReminders: Reminder[]
   allGoals: Goal[]
   onSelectDay: (day: Date, isCurrentMonth: boolean) => void
@@ -96,6 +101,7 @@ export function CalendarMonthView({
           <CalendarGrid
             days={monthGrid}
             tasks={allTasks}
+            deadlines={allDeadlines}
             reminders={allReminders}
             goals={allGoals}
             selectedDay={selectedDay}
@@ -121,6 +127,7 @@ export function CalendarMonthView({
               <DayDetailPanel
                 day={selectedDay}
                 tasks={selectedTasks}
+                deadlines={selectedDeadlines}
                 reminders={selectedReminders}
                 goals={selectedGoals}
                 habits={selectedHabits}

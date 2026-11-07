@@ -1,9 +1,20 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import type { TestAgent } from "supertest"
+import request, { type TestAgent } from "supertest"
 import { createApp } from "../app.js"
 import { createAuthenticatedAgent } from "../test-utils/auth.js"
 const app = createApp()
-const fields = { title: "Existing note", description: "A line", showFrom: null, archivedAt: null }
+const fields = { title: "Existing note", description: "A line", archivedAt: null }
+const taskFromNote = {
+  title: "Call the client",
+  completed: false,
+  priority: "high",
+  category: "Work",
+  dueDate: "2030-01-15",
+  time: null,
+  endTime: null,
+  completedAt: null,
+  description: "A line",
+}
 describe("note lifecycle", () => {
   let agent: TestAgent
   beforeEach(async () => {
@@ -33,12 +44,8 @@ describe("note lifecycle", () => {
     expect((await agent.get("/api/notes")).body).toHaveLength(0)
   })
   it("persists manual order, returns fresh versions, and rejects stale edits", async () => {
-    const first = (
-      await agent.post("/api/notes").send({ ...fields, id: crypto.randomUUID(), showFrom: "2099-01-01" })
-    ).body
-    const second = (
-      await agent.post("/api/notes").send({ ...fields, id: crypto.randomUUID(), showFrom: "2099-02-01" })
-    ).body
+    const first = (await agent.post("/api/notes").send({ ...fields, id: crypto.randomUUID() })).body
+    const second = (await agent.post("/api/notes").send({ ...fields, id: crypto.randomUUID() })).body
     const order = await agent.patch("/api/notes/reorder").send([
       { id: second.id, order: 0 },
       { id: first.id, order: 1 },
@@ -70,5 +77,75 @@ describe("note lifecycle", () => {
     await other.delete(`/api/notes/${note.id}`)
     expect((await other.get("/api/notes")).body).toEqual([])
     expect((await agent.get("/api/notes")).body[0]).toEqual(note)
+  })
+  it("ignores a date sent by an older client, since notes are undated", async () => {
+    const note = await agent
+      .post("/api/notes")
+      .send({ ...fields, id: crypto.randomUUID(), showFrom: "2099-01-01" })
+    expect(note.status).toBe(201)
+    expect(note.body).not.toHaveProperty("showFrom")
+  })
+})
+
+describe("moving a note to tasks", () => {
+  let agent: TestAgent
+  beforeEach(async () => {
+    agent = await createAuthenticatedAgent(app)
+  })
+  const move = (a: TestAgent, noteId: string, expectedUpdatedAt: string) =>
+    a
+      .post(`/api/notes/${noteId}/to-task`)
+      .send({ expectedUpdatedAt, task: { ...taskFromNote, id: crypto.randomUUID() } })
+
+  it("creates the task and removes the note in one step", async () => {
+    const note = (await agent.post("/api/notes").send({ ...fields, id: crypto.randomUUID() })).body
+    const moved = await move(agent, note.id, note.updatedAt)
+    expect(moved.status).toBe(201)
+    expect(moved.body).toMatchObject({
+      title: "Call the client",
+      priority: "high",
+      category: "Work",
+      dueDate: "2030-01-15",
+      description: "A line",
+      completed: false,
+    })
+    expect((await agent.get("/api/notes")).body).toEqual([])
+    const tasks = (await agent.get("/api/tasks")).body
+    expect(tasks.map((t: { id: string }) => t.id)).toEqual([moved.body.id])
+  })
+  it("refuses a stale note version and keeps both sides unchanged", async () => {
+    const note = (await agent.post("/api/notes").send({ ...fields, id: crypto.randomUUID() })).body
+    await agent
+      .patch(`/api/notes/${note.id}`)
+      .send({ patch: { title: "Edited elsewhere" }, expectedUpdatedAt: note.updatedAt })
+    const moved = await move(agent, note.id, note.updatedAt)
+    expect(moved.status).toBe(409)
+    expect((await agent.get("/api/notes")).body).toHaveLength(1)
+    expect((await agent.get("/api/tasks")).body).toEqual([])
+  })
+  it("does not let another owner move a note", async () => {
+    const note = (await agent.post("/api/notes").send({ ...fields, id: crypto.randomUUID() })).body
+    const other = await createAuthenticatedAgent(app)
+    expect((await move(other, note.id, note.updatedAt)).status).toBe(404)
+    expect((await other.get("/api/tasks")).body).toEqual([])
+    expect((await agent.get("/api/notes")).body).toHaveLength(1)
+  })
+  it("rejects an invalid task without touching the note", async () => {
+    const note = (await agent.post("/api/notes").send({ ...fields, id: crypto.randomUUID() })).body
+    const bad = await agent
+      .post(`/api/notes/${note.id}/to-task`)
+      .send({
+        expectedUpdatedAt: note.updatedAt,
+        task: { ...taskFromNote, id: crypto.randomUUID(), title: "" },
+      })
+    expect(bad.status).toBe(400)
+    expect((await agent.get("/api/notes")).body).toHaveLength(1)
+  })
+  it("requires a session", async () => {
+    const note = (await agent.post("/api/notes").send({ ...fields, id: crypto.randomUUID() })).body
+    const anonymous = await request(app)
+      .post(`/api/notes/${note.id}/to-task`)
+      .send({ expectedUpdatedAt: note.updatedAt, task: { ...taskFromNote, id: crypto.randomUUID() } })
+    expect(anonymous.status).toBe(401)
   })
 })

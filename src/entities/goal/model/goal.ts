@@ -14,5 +14,8 @@ export interface Goal {
   targetDate: string | null
   milestones: Milestone[]
   color: string
+  // Optional life area shared with tasks: a Category name, same plain-string
+  // convention as Task.category. null = no category.
+  category: string | null
   updatedAt: string
 }

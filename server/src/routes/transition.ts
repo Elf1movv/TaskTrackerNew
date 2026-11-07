@@ -48,8 +48,13 @@ transitionRouter.post("/task", async (req, res) => {
         data: {
           userId: req.userId,
           title: task.title,
-          description: task.description,
-          showFrom: task.dueDate,
+          // Notes have no dates since iteration 3 — keep the old due date
+          // visible as text instead of silently dropping it.
+          description: task.dueDate
+            ? [`Срок: ${task.dueDate.toISOString().slice(0, 10)}`, task.description]
+                .filter(Boolean)
+                .join("\n")
+            : task.description,
           archivedAt: null,
           completed: task.completed,
           order: (_max.order ?? -1) + 1,

@@ -134,6 +134,31 @@ describe("categories router", () => {
     expect(remainingIds).toContain(elsewhere.body.id)
   })
 
+  it("deleting a category keeps its goals and only clears their category", async () => {
+    const category = await agent
+      .post("/api/categories")
+      .send({ id: crypto.randomUUID(), name: "Errands", color: "#c97b3a" })
+    const goal = (category: string | null) =>
+      agent.post("/api/goals").send({
+        id: crypto.randomUUID(),
+        title: `Goal ${category}`,
+        description: "",
+        progress: 0,
+        targetDate: null,
+        color: "#5b7fc7",
+        category,
+        milestones: [],
+      })
+    const inCategory = (await goal("Errands")).body
+    const elsewhere = (await goal("Work")).body
+
+    expect((await agent.delete(`/api/categories/${category.body.id}`)).status).toBe(204)
+
+    const goals = (await agent.get("/api/goals")).body as { id: string; category: string | null }[]
+    expect(goals.find(g => g.id === inCategory.id)?.category).toBeNull()
+    expect(goals.find(g => g.id === elsewhere.id)?.category).toBe("Work")
+  })
+
   it("deleting the last category does not resurrect the defaults on the next fetch", async () => {
     await agent.get("/api/categories") // triggers the seed
     const all = await agent.get("/api/categories")

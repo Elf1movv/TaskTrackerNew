@@ -1,40 +1,32 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { toast } from "sonner"
 import {
   Archive,
   Check,
   ChevronDown,
   GripVertical,
+  ListPlus,
   Pencil,
   RotateCcw,
   StickyNote,
   Trash2,
 } from "lucide-react"
-import { useNotes, type Note } from "@/entities/note"
+import { moveNoteToTask, useNotes, type Note } from "@/entities/note"
+import { useTasks } from "@/entities/task"
 import { NoteForm } from "@/features/note-form"
-import { formatDateKey } from "@/shared/lib/date"
+import { TaskForm, type TaskDraftFields } from "@/features/task-form"
 import { useLanguage } from "@/shared/lib/i18n"
+import { generateId } from "@/shared/lib/id"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { ConfirmAction } from "@/shared/ui/confirm-action"
 import { Button } from "@/shared/ui/button"
+// Notes are undated (iteration 3): only "current" and "archive" tabs.
 export function NotesCard() {
   const { notes, isLoaded } = useNotes()
   const { t } = useLanguage()
-  const [tab, setTab] = useState<"current" | "upcoming" | "archive">("current")
+  const [tab, setTab] = useState<"current" | "archive">("current")
   const [limit, setLimit] = useState(10)
-  useEffect(() => {
-    const show = () => setTab("upcoming")
-    window.addEventListener("show-upcoming-notes", show)
-    return () => window.removeEventListener("show-upcoming-notes", show)
-  }, [])
-  const today = formatDateKey(new Date())
-  const filtered = notes.filter(note =>
-    tab === "archive"
-      ? !!note.archivedAt
-      : !note.archivedAt &&
-        (tab === "upcoming"
-          ? !!note.showFrom && note.showFrom > today
-          : !note.showFrom || note.showFrom <= today),
-  )
+  const filtered = notes.filter(note => (tab === "archive" ? !!note.archivedAt : !note.archivedAt))
   return (
     <section className="lg:col-span-2 min-w-0 self-start bg-card border border-card-border rounded-xl shadow-card overflow-hidden">
       <div className="p-5 border-b border-border space-y-3">
@@ -43,7 +35,7 @@ export function NotesCard() {
           {t("notes.title")}
         </h2>
         <div className="flex gap-2 flex-wrap">
-          {(["current", "upcoming", "archive"] as const).map(value => (
+          {(["current", "archive"] as const).map(value => (
             <Button
               key={value}
               variant={tab === value ? "default" : "outline"}
@@ -87,7 +79,8 @@ export function NotesCard() {
 }
 function NoteRow({ note, previousId, nextId }: { note: Note; previousId?: string; nextId?: string }) {
   const { t } = useLanguage()
-  const { updateNote, deleteNote, reorderNotes } = useNotes()
+  const { updateNote, deleteNote, reorderNotes, refreshNotes } = useNotes()
+  const { refreshTasks } = useTasks()
   const { dropRef, handleRef, isDragging } = useDragReorder<HTMLElement>({
     type: "note",
     id: note.id,
@@ -95,10 +88,34 @@ function NoteRow({ note, previousId, nextId }: { note: Note; previousId?: string
   })
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [movingToTask, setMovingToTask] = useState(false)
+  // Saving the prefilled task form creates the task and deletes this note
+  // in one server transaction; Cancel leaves the note untouched.
+  async function moveToTask(fields: TaskDraftFields) {
+    const moved = await moveNoteToTask(note, { ...fields, id: generateId(), completedAt: null })
+    if (!moved) {
+      toast.error(t("notes.moveFailed"))
+      await refreshNotes()
+      return false
+    }
+    await Promise.all([refreshNotes(), refreshTasks()])
+    toast.success(t("notes.movedToTask"))
+    return true
+  }
   if (editing)
     return (
       <div className="p-3">
         <NoteForm note={note} onDone={() => setEditing(false)} />
+      </div>
+    )
+  if (movingToTask)
+    return (
+      <div className="p-3">
+        <TaskForm
+          draft={{ title: note.title, description: note.description }}
+          onCreate={moveToTask}
+          onDone={() => setMovingToTask(false)}
+        />
       </div>
     )
   return (
@@ -169,6 +186,16 @@ function NoteRow({ note, previousId, nextId }: { note: Note; previousId?: string
           variant="ghost"
           size="icon"
           className="size-8 shrink-0"
+          aria-label={t("notes.toTask")}
+          title={t("notes.toTask")}
+          onClick={() => setMovingToTask(true)}
+        >
+          <ListPlus size={14} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 shrink-0"
           aria-label={t(note.archivedAt ? "notes.restore" : "notes.archiveAction")}
           onClick={() =>
             updateNote(note.id, { archivedAt: note.archivedAt ? null : new Date().toISOString() })
@@ -192,11 +219,6 @@ function NoteRow({ note, previousId, nextId }: { note: Note; previousId?: string
           </Button>
         </ConfirmAction>
       </div>
-      {note.showFrom && (
-        <p className="text-xs text-muted-foreground mt-1">
-          {t("notes.showFrom")} {note.showFrom}
-        </p>
-      )}
       {note.description && expanded && (
         <p
           id={`note-description-${note.id}`}

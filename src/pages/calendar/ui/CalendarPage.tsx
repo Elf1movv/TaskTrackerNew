@@ -72,6 +72,8 @@ function CalendarPageContent() {
     selectedGoals,
     selectedHabits,
     allTasks,
+    allDeadlines,
+    selectedDeadlines,
     allReminders,
     allGoals,
     allHabits,
@@ -247,6 +249,8 @@ function CalendarPageContent() {
           selectedGoals={selectedGoals}
           selectedHabits={selectedHabits}
           allTasks={allTasks}
+          allDeadlines={allDeadlines}
+          selectedDeadlines={selectedDeadlines}
           allReminders={allReminders}
           allGoals={allGoals}
           onSelectDay={handleSelectDay}
@@ -260,6 +264,7 @@ function CalendarPageContent() {
         <CalendarAgendaView
           anchorDate={anchorDate}
           allTasks={allTasks}
+          allDeadlines={allDeadlines}
           allReminders={allReminders}
           allGoals={allGoals}
         />

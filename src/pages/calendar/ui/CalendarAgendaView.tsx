@@ -3,10 +3,10 @@ import { format, isToday } from "date-fns"
 import { PlanForm } from "@/features/plan-form"
 import { ReminderForm } from "@/features/reminder-form"
 import { GoalForm } from "@/features/goal-form"
-import { DayGoalRow, DayReminderRow, DayTaskRow } from "@/widgets/day-detail-panel"
+import { DayDeadlineRow, DayGoalRow, DayReminderRow, DayTaskRow } from "@/widgets/day-detail-panel"
 import { isGoalDueOnDay, type Goal } from "@/entities/goal"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
-import { isTaskOnDay } from "@/entities/task"
+import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { buildAgendaRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
@@ -40,11 +40,13 @@ const LOAD_MORE_INCREMENT_DAYS = 6
 export function CalendarAgendaView({
   anchorDate,
   allTasks,
+  allDeadlines = [],
   allReminders,
   allGoals,
 }: {
   anchorDate: Date
   allTasks: Task[]
+  allDeadlines?: DeadlineTask[]
   allReminders: Reminder[]
   allGoals: Goal[]
 }) {
@@ -74,12 +76,13 @@ export function CalendarAgendaView({
         return {
           day,
           tasks: allTasks.filter(t => isTaskOnDay(t, dayKey)),
+          deadlines: allDeadlines.filter(t => isTaskOnDay(t, dayKey)),
           reminders: selectRemindersOnDay(allReminders, dayKey),
           goals: allGoals.filter(g => isGoalDueOnDay(g, dayKey)),
         }
       })
-      .filter(g => g.tasks.length + g.reminders.length + g.goals.length > 0)
-  }, [days, allTasks, allReminders, allGoals])
+      .filter(g => g.tasks.length + g.deadlines.length + g.reminders.length + g.goals.length > 0)
+  }, [days, allTasks, allDeadlines, allReminders, allGoals])
 
   if (groups.length === 0) {
     return <div className="text-center py-16 text-muted-foreground text-sm">{t("calendar.agendaEmpty")}</div>
@@ -121,6 +124,9 @@ export function CalendarAgendaView({
                   />
                 ),
               )}
+              {group.deadlines.map(task => (
+                <DayDeadlineRow key={task.id} task={task} />
+              ))}
               {group.reminders.map(reminder =>
                 editing?.kind === "reminder" && editing.id === reminder.id ? (
                   <ReminderForm

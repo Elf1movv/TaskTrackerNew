@@ -17,7 +17,6 @@ export const noteFields = z.object({
   completed: z.boolean().optional(),
   title: z.string().trim().min(1).max(500),
   description: z.string().max(50000).nullable(),
-  showFrom: dateField.nullable(),
   archivedAt: instantField.nullable(),
 })
 export const planFields = z.object({

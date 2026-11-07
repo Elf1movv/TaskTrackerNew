@@ -1,9 +1,10 @@
 import { formatDateKey } from "@/shared/lib/date"
 import { useCallback } from "react"
 import { format } from "date-fns"
-import { Target } from "lucide-react"
+import { Flag, Target } from "lucide-react"
 import { resolveCategoryColor, type Category } from "@/entities/category"
 import { type Goal } from "@/entities/goal"
+import type { Task as DeadlineTask } from "@/entities/task"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
@@ -22,6 +23,7 @@ export function CalendarDayCell({
   dayTasks,
   dayReminders,
   dayGoals,
+  dayDeadlines = [],
   categories,
   isSelected,
   isCurrent,
@@ -36,6 +38,7 @@ export function CalendarDayCell({
   dayTasks: Task[]
   dayReminders: Reminder[]
   dayGoals: Goal[]
+  dayDeadlines?: DeadlineTask[]
   categories: Category[]
   isSelected: boolean
   isCurrent: boolean
@@ -209,6 +212,30 @@ export function CalendarDayCell({
           inline-edit popover, a goal chip just falls through to the
           cell's onSelect and opens the day panel, where DayGoalRow
           already has full edit/delete (no need to build a second one). */}
+      {/* A task's deadline (iteration 3) — the same marker shape as a goal
+          deadline (left bar + icon, plain background) but a Flag in the
+          task's category color, so it reads as "due", not as a scheduled
+          block. Like goal markers it has no click of its own: it falls
+          through to the day panel, which lists it under "Task deadlines". */}
+      {dayDeadlines.length > 0 && (
+        <div className="w-full flex flex-col gap-0.5">
+          {dayDeadlines.map(task => {
+            const color = resolveCategoryColor(task.category, categories)
+            return (
+              <div
+                key={task.id}
+                data-deadline-id={task.id}
+                className="w-full flex items-center gap-1 rounded-md pl-1.5 pr-1 py-0.5 text-[9px] leading-tight bg-card overflow-hidden"
+                style={{ borderLeft: `2px solid ${color}` }}
+              >
+                <Flag size={8} strokeWidth={2.5} style={{ color }} className="shrink-0" />
+                <span className="truncate font-semibold">{task.title}</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {dayGoals.length > 0 && (
         <div className="w-full flex flex-col gap-0.5">
           {dayGoals.map(goal => (

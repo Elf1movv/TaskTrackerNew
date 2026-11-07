@@ -13,6 +13,8 @@ const goalFields = z.object({
   progress: z.number().int().min(0).max(100),
   targetDate: z.string().nullable(),
   color: z.string().min(1),
+  // Optional so older clients that never send it keep working.
+  category: z.string().min(1).nullable().optional(),
   milestones: z.array(milestoneSchema),
 })
 

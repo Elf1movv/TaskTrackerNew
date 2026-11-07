@@ -62,6 +62,10 @@ model Goal {
   // GoalForm defaults new goals to off, matching Task.dueDate's pattern.
   targetDate  String?
   color       String
+  // Optional life area shared with tasks — the same plain-string
+  // convention as Task.category (a Category name, no FK). Deleting that
+  // category clears this to null; the goal itself is kept.
+  category    String?
   // Kept as an embedded JSON array (matching the frontend's Milestone[]
   // shape exactly) rather than a separate related table — same
   // "start simple" choice already made for Task. Milestone order is just
@@ -310,13 +314,14 @@ model Verification {
   @@map("verification")
 }
 
-// Independent notes: showFrom is a visibility date, never a deadline.
+// Independent notes: quick, undated records on Today. Anything tied to a
+// date belongs in a Reminder; a note that grows into real work moves to
+// Tasks via POST /api/notes/:id/to-task (iteration 3, 2026-11-08).
 model Note {
   completed   Boolean  @default(false)
   id String @id @default(uuid())
   title String
   description String?
-  showFrom DateTime? @db.Date
   archivedAt DateTime?
   order Int @default(0)
   createdAt DateTime @default(now())

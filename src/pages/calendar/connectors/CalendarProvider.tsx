@@ -3,7 +3,7 @@ import { addDays, addMonths, addWeeks, addYears, subDays, subMonths, subWeeks, s
 import { isGoalDueOnDay, useGoals } from "@/entities/goal"
 import { selectHabitsOnDay, useHabits } from "@/entities/habit"
 import { selectRemindersOnDay, useReminders } from "@/entities/reminder"
-import { isTaskOnDay } from "@/entities/task"
+import { isTaskOnDay, useTasks } from "@/entities/task"
 import { usePlans } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { minutesFromMidnight } from "@/shared/lib/timeOffset"
@@ -11,6 +11,9 @@ import { CalendarContext, type CalendarView } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const { plans: tasks, updatePlan: updateTask } = usePlans()
+  const { tasks: realTasks } = useTasks()
+  // Not-yet-sorted legacy records stay hidden everywhere, like on Tasks.
+  const deadlines = useMemo(() => realTasks.filter(task => task.dueDate && !task.legacyPending), [realTasks])
   const { reminders } = useReminders()
   const { goals, updateGoal } = useGoals()
   const { habits } = useHabits()
@@ -72,6 +75,12 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     const selectedKey = formatDateKey(selectedDay)
     return tasks.filter(t => isTaskOnDay(t, selectedKey))
   }, [tasks, selectedDay])
+
+  const selectedDeadlines = useMemo(() => {
+    if (!selectedDay) return []
+    const selectedKey = formatDateKey(selectedDay)
+    return deadlines.filter(t => isTaskOnDay(t, selectedKey))
+  }, [deadlines, selectedDay])
 
   const selectedReminders = useMemo(() => {
     if (!selectedDay) return []
@@ -166,6 +175,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       selectedDay,
       selectDay,
       allTasks: tasks,
+      allDeadlines: deadlines,
+      selectedDeadlines,
       allReminders: reminders,
       allGoals: goals,
       allHabits: habits,
@@ -188,6 +199,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       selectedDay,
       selectDay,
       tasks,
+      deadlines,
+      selectedDeadlines,
       reminders,
       goals,
       habits,

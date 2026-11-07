@@ -16,8 +16,9 @@ import {
   saved,
   drag,
   origin,
+  qaFile,
 } from "./cdp.mjs"
-const credentials = process.env.QA_CREDENTIALS ?? "/private/tmp/mytracker-independent-login.json"
+const credentials = process.env.QA_CREDENTIALS ?? qaFile("mytracker-independent-login.json")
 const mode = process.argv[2] ?? "suite"
 const passed = []
 const ok = message => {
@@ -85,7 +86,6 @@ try {
       id: crypto.randomUUID(),
       title: "Вторая заметка",
       description: null,
-      showFrom: null,
       archivedAt: null,
     })
     await navigate("/today", row(second.id))
@@ -143,12 +143,12 @@ try {
     await click(button("Актуальные"))
     await wait(row(first.id))
     ok("Archive and restore")
-    for (const tab of ["Актуальные", "Предстоящие", "Архив"]) {
+    assert(!(await evaluate("document.body.innerText.includes('Предстоящие')")), "Notes are undated")
+    for (const tab of ["Актуальные", "Архив"]) {
       const n = await api("notes", "POST", {
         id: crypto.randomUUID(),
         title: "Удаление " + tab,
         description: null,
-        showFrom: tab === "Предстоящие" ? "2099-01-01" : null,
         archivedAt: tab === "Архив" ? new Date().toISOString() : null,
       })
       await navigate("/today", "document.body.innerText.includes('Заметки')")
@@ -161,6 +161,22 @@ try {
       await saved(async () => !(await api("notes")).some(x => x.id === n.id))
       ok("Delete from " + tab)
     }
+    const toMove = await api("notes", "POST", {
+      id: crypto.randomUUID(),
+      title: "Заметка в задачу",
+      description: "Описание переедет",
+      archivedAt: null,
+    })
+    await navigate("/today", row(toMove.id))
+    await click(rowButton(toMove.id, "Перенести в задачи"))
+    await wait("document.querySelector('input[placeholder=\"Что нужно сделать?\"]')?.value==='Заметка в задачу'")
+    await click(button("Добавить задачу"))
+    await saved(async () => (await api("tasks")).some(t => t.title === "Заметка в задачу"))
+    const movedTask = (await api("tasks")).find(t => t.title === "Заметка в задачу")
+    assert.equal(movedTask.description, "Описание переедет")
+    assert(!(await api("notes")).some(n => n.id === toMove.id), "Moved note is gone")
+    await api(`tasks/${movedTask.id}`, "DELETE")
+    ok("Note moves to tasks in one step")
     await navigate("/tasks", "document.body.innerText.includes('Добавить задачу')")
     await click(button("Добавить задачу"))
     await fill('input[placeholder="Что нужно сделать?"]', "Общее дело")
@@ -266,11 +282,29 @@ try {
         "document.body.innerText.includes('План выбранного дня') || document.body.innerText.includes('План 20 минут') || document.body.innerText.includes('Общее дело')",
       )),
     )
-    ok("Today contains notes, not weekly schedule")
+    ok("Today shows notes, not other days' schedule")
+    const todayKey = new Date().toLocaleDateString("sv-SE")
+    const todayPlan = await api("plans", "POST", {
+      id: crypto.randomUUID(),
+      title: "План на сегодня",
+      description: null,
+      date: todayKey,
+      time: "09:00",
+      endTime: "10:00",
+      durationMinutes: 60,
+      onHold: false,
+      completed: false,
+      category: "",
+      priority: "medium",
+    })
+    await navigate("/today", `document.querySelector('[data-today-plan="${todayPlan.id}"]')`)
+    assert(await evaluate("document.body.innerText.includes('09:00–10:00')"))
+    await api(`plans/${todayPlan.id}`, "DELETE")
+    ok("Today's plan strip lists today's plans")
     await screenshot("today-desktop")
     assert.equal(errors.length, 0, JSON.stringify(errors))
     await fs.writeFile(
-      "/private/tmp/mytracker-independent-browser-results.json",
+      qaFile("mytracker-independent-browser-results.json"),
       JSON.stringify({ origin, passed, errors }, null, 2),
     )
     console.log(JSON.stringify({ passed: passed.length, errors: errors.length }))

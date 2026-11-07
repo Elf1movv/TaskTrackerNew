@@ -22,10 +22,6 @@ export const REMINDER_BORDER_COLORS: Record<ReminderPriority, string> = {
 }
 
 export interface Reminder {
-  taskId?: string | null
-  planId?: string | null
-  offsetMinutes?: number | null
-  suspended?: boolean
   id: string
   title: string
   date: string

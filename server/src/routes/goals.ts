@@ -21,6 +21,7 @@ interface ClientGoal {
   progress: number
   targetDate: string | null
   color: string
+  category: string | null
   milestones: ClientMilestone[]
   updatedAt: Date
 }
@@ -32,6 +33,7 @@ function toClientGoal(goal: {
   progress: number
   targetDate: string | null
   color: string
+  category: string | null
   milestones: unknown
   updatedAt: Date
 }): ClientGoal {
@@ -42,6 +44,7 @@ function toClientGoal(goal: {
     progress: goal.progress,
     targetDate: goal.targetDate,
     color: goal.color,
+    category: goal.category,
     milestones: goal.milestones as ClientMilestone[],
     updatedAt: goal.updatedAt,
   }

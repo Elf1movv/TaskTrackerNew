@@ -13,6 +13,7 @@ import {
   drag,
   screenshot,
   origin,
+  qaFile,
 } from "./cdp.mjs"
 const passed = []
 const ok = message => {
@@ -92,7 +93,7 @@ try {
   ok("Calendar gestures leave tasks and notes unchanged; mobile width fits")
   assert.equal(errors.length, 0)
   await fs.writeFile(
-    "/private/tmp/mytracker-calendar-gestures-results.json",
+    qaFile("mytracker-calendar-gestures-results.json"),
     JSON.stringify({ origin, passed, errors }, null, 2),
   )
   console.log(JSON.stringify({ passed: passed.length, errors: errors.length }))

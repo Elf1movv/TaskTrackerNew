@@ -60,11 +60,10 @@ describe("independent product entities", () => {
       id: crypto.randomUUID(),
       title: "Remember",
       description: "Long\ntext",
-      showFrom: "2030-01-01",
       archivedAt: null,
     })
     expect(note.status).toBe(201)
-    expect(note.body.showFrom).toBe("2030-01-01")
+    expect(note.body.description).toBe("Long\ntext")
     await createPlan(agent)
     expect((await agent.get("/api/tasks")).body).toHaveLength(0)
     expect((await agent.get("/api/notes")).body).toHaveLength(1)
@@ -229,7 +228,10 @@ describe("independent product entities", () => {
     expect(repeated.body).toEqual(first.body)
     expect((await agent.get("/api/transition")).body.tasks).toHaveLength(0)
     expect((await agent.get("/api/tasks")).body).toHaveLength(choice === "task" ? 1 : 0)
-    expect((await agent.get("/api/notes")).body).toHaveLength(choice === "note" ? 1 : 0)
+    const notes = (await agent.get("/api/notes")).body
+    expect(notes).toHaveLength(choice === "note" ? 1 : 0)
+    // Notes are undated: the old due date survives as text, not as a field.
+    if (choice === "note") expect(notes[0].description).toBe("Срок: 2030-01-15\nOriginal detail")
     expect((await agent.get("/api/plans")).body).toHaveLength(choice === "plan" ? 1 : 0)
     expect(await db.legacyTransition.count({ where: { sourceKey: `task:${task.id}` } })).toBe(1)
     expect((await db.task.findUniqueOrThrow({ where: { id: task.id } })).description).toBe("Original detail")

@@ -1,4 +1,5 @@
-import { CalendarDays } from "lucide-react"
+import { CalendarDays, Tag } from "lucide-react"
+import { resolveCategoryColor, useCategories } from "@/entities/category"
 import styled from "@emotion/styled"
 import { AddMilestoneForm } from "./AddMilestoneForm"
 import { DeleteGoalButton } from "@/features/delete-goal"
@@ -25,6 +26,7 @@ const StyledAccordionItem = styled(AccordionItem)<{ color: string }>`
 
 export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit: () => void }) {
   const { reorderGoals } = useGoals()
+  const { categories } = useCategories()
   const { t } = useLanguage()
   const { ref, isDragging } = useDragReorder<HTMLDivElement>({
     type: "goal",
@@ -74,6 +76,16 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
                       <CalendarDays size={14} strokeWidth={1.75} />
                       {goal.dueLabel ? t("goals.due", { date: goal.dueLabel }) : t("goalForm.noTargetDate")}
                     </span>
+                    {goal.category && (
+                      <span className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground whitespace-nowrap">
+                        <Tag
+                          size={13}
+                          strokeWidth={2}
+                          style={{ color: resolveCategoryColor(goal.category, categories) }}
+                        />
+                        {goal.category}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

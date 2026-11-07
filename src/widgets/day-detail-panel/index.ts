@@ -3,4 +3,4 @@ export { DayDetailPanel } from "./ui/DayDetailPanel"
 // the Agenda view (pages/calendar) reuses these same rows for its flat
 // day-grouped list instead of inventing a second rendering for the same
 // four entity types.
-export { DayTaskRow, DayReminderRow, DayGoalRow, DayHabitRow } from "./ui/components"
+export { DayTaskRow, DayReminderRow, DayGoalRow, DayHabitRow, DayDeadlineRow } from "./ui/components"
