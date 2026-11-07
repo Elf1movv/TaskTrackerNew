@@ -26,13 +26,13 @@
 ## Доступ
 
 - Вход по SSH-ключу; root-логин отключён (`PermitRootLogin no`).
-  **Уточнение 2026-11-07:** вход по паролю фактически **включён**.
-  В `/etc/ssh/sshd_config` стоит `no`, но файл
-  `/etc/ssh/sshd_config.d/50-cloud-init.conf` (его создал `cloud-init`
-  хостинга) задаёт `PasswordAuthentication yes` и читается раньше —
-  в SSH побеждает первое значение. Пароль есть только у root, а root по
-  SSH закрыт, поэтому войти по паролю сейчас нельзя. Решение о
-  выключении — в BACKLOG. Реальное значение: `sudo sshd -T | grep passwordauth`
+  Вход по паролю **выключен** (с 2026-11-08) своим файлом
+  `/etc/ssh/sshd_config.d/00-mytracker.conf` (`PasswordAuthentication no`,
+  `KbdInteractiveAuthentication no`). Почему отдельный файл: до этого вход по
+  паролю был фактически включён — `50-cloud-init.conf` (создан `cloud-init`
+  хостинга) задавал `yes` и читался раньше основного `sshd_config`, а в SSH
+  побеждает первое значение. `00-…` читается первым и перекроет файл
+  хостинга, даже если тот перепишут. Реальные значения: `sudo sshd -T`.
 - Ключи с правом входа — `/home/deploy/.ssh/authorized_keys`: Mac
   владельца, CI-ключ GitHub Actions, Windows-ПК владельца (с 2026-11-07).
   Запасной вход без SSH — веб-консоль в панели HipHosting (вкладка
