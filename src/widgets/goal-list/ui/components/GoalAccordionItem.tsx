@@ -100,39 +100,32 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
           </div>
         </div>
         <AccordionContent className="px-5 pb-5 flex flex-col gap-3">
-          {/* Two-level tree (iteration 3.1): subgoals with their own steps
-              first, then the goal's own steps. */}
-          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1.5" data-subgoals>
-            <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary px-1 pb-1">
-              {t("goals.subgoals")}
-            </span>
-            {goal.subgoals.map(subgoal => (
-              <SubgoalItem key={subgoal.id} goalId={goal.id} subgoal={subgoal} color={goal.color} />
+          {/* One headerless list (owner, 2026-11-08 — same idea as the
+              headerless "without a block" habits): the goal's own steps
+              first, then subgoals as folders of steps. Only two things to
+              tell apart: a step (checkbox) and a subgoal (folder). */}
+          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1" data-goal-tree>
+            {goal.milestones.map((milestone, idx) => (
+              <MilestoneRow
+                key={milestone.id}
+                goalId={goal.id}
+                milestone={milestone}
+                color={goal.color}
+                index={idx}
+              />
             ))}
-            {goal.subgoals.length === 0 && (
-              <p className="text-sm text-tertiary px-1 pb-1">{t("goals.noSubgoalsYet")}</p>
+            {goal.milestones.length === 0 && goal.subgoals.length === 0 && (
+              <p className="text-sm text-tertiary px-1 pb-1">{t("goals.emptyTree")}</p>
+            )}
+            <AddMilestoneForm goalId={goal.id} />
+            {goal.subgoals.length > 0 && (
+              <div className="flex flex-col gap-1.5 pt-2 mt-1 border-t border-border">
+                {goal.subgoals.map(subgoal => (
+                  <SubgoalItem key={subgoal.id} goalId={goal.id} subgoal={subgoal} color={goal.color} />
+                ))}
+              </div>
             )}
             <AddMilestoneForm goalId={goal.id} kind="subgoal" />
-          </div>
-          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1">
-            <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary px-1 pb-2">
-              {t("goals.ownSteps")}
-            </span>
-            <div className="flex flex-col gap-1">
-              {goal.milestones.map((milestone, idx) => (
-                <MilestoneRow
-                  key={milestone.id}
-                  goalId={goal.id}
-                  milestone={milestone}
-                  color={goal.color}
-                  index={idx}
-                />
-              ))}
-              {goal.milestones.length === 0 && (
-                <p className="text-sm text-tertiary px-1 pb-1">{t("goals.noMilestonesYet")}</p>
-              )}
-            </div>
-            <AddMilestoneForm goalId={goal.id} />
           </div>
         </AccordionContent>
       </StyledAccordionItem>
