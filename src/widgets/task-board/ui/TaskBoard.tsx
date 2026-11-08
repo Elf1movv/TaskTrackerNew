@@ -19,8 +19,7 @@ import {
 import { Button, buttonVariants } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import { Pager } from "@/shared/ui/pager"
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
-import { TaskRow } from "./components"
+import { CategorySettingsPopover, TaskRow } from "./components"
 
 // One filter only — the category chips (owner decision 2026-11-08: status
 // and deadline filters were too many to be useful). Active tasks come first,
@@ -116,8 +115,8 @@ export function TaskBoard({
     <>
       <div className="flex items-end justify-between mb-6">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em]">{t("tasks.title")}</h1>
-          <p className="text-[15px] text-muted-foreground">
+          <h1>{t("tasks.title")}</h1>
+          <p className="text-body text-muted-foreground">
             {t("tasks.remainingDone", {
               remaining: allTasks.filter(t => !t.completed).length,
               // Also scoped to today, not all-time — otherwise this count
@@ -131,7 +130,7 @@ export function TaskBoard({
             setEditingTaskId(null)
             setIsAdding(v => !v)
           }}
-          className="h-11 px-5 gap-2 rounded-[10px] shadow-raised text-[15px]"
+          className="h-11 px-5 gap-2 rounded-md shadow-raised text-body"
         >
           <Plus size={18} />
           {t("tasks.addTask")}
@@ -158,7 +157,7 @@ export function TaskBoard({
       <div className="flex gap-2 mb-6 flex-wrap items-center">
         <button
           onClick={() => onCategoryFilterChange("all")}
-          className={`h-[34px] px-3.5 rounded-full text-[13px] font-semibold transition-all ${
+          className={`h-8 px-3.5 rounded-full text-meta font-semibold transition ${
             categoryFilter === "all"
               ? "bg-primary text-primary-foreground border border-primary"
               : "border border-border bg-card text-foreground"
@@ -169,47 +168,26 @@ export function TaskBoard({
         {categories.map(c => (
           <div
             key={c.id}
-            className={`relative group flex items-center gap-2 h-[34px] pl-3.5 pr-7 rounded-full text-[13px] font-semibold transition-all ${
+            className={`relative group flex items-center gap-2 h-8 pl-3.5 pr-7 rounded-full text-meta font-semibold transition ${
               categoryFilter === c.name
                 ? "bg-primary text-primary-foreground border border-primary"
                 : "border border-border bg-card text-foreground"
             }`}
           >
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  onClick={e => e.stopPropagation()}
-                  aria-label={`${t("common.color")}: ${c.name}`}
-                  className="size-2 rounded-full shrink-0 transition-transform hover:scale-125 ring-2 ring-white/55"
-                  style={{ backgroundColor: c.color }}
-                />
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2" align="start">
-                <div className="flex gap-1.5 flex-wrap max-w-40">
-                  {PALETTE_COLORS.map(color => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => updateCategory(c.id, { color })}
-                      aria-label={`Color ${color}`}
-                      aria-pressed={c.color === color}
-                      className="w-5 h-5 rounded-full transition-transform"
-                      style={{
-                        backgroundColor: color,
-                        outline: c.color === color ? "2px solid var(--foreground)" : "none",
-                        outlineOffset: 2,
-                      }}
-                    />
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+            <CategorySettingsPopover
+              category={c}
+              categories={categories}
+              onColor={color => updateCategory(c.id, { color })}
+              onRename={name => {
+                updateCategory(c.id, { name })
+                if (categoryFilter === c.name) onCategoryFilterChange(name)
+              }}
+            />
             <button onClick={() => onCategoryFilterChange(c.name)}>{c.name}</button>
             <button
               onClick={() => setCategoryPendingDelete(c)}
               aria-label={`Delete category ${c.name}`}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 size-5 rounded-full border border-border bg-card shadow-card flex items-center justify-center opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 size-5 rounded-full border border-border bg-card shadow-card flex items-center justify-center opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition"
             >
               <X size={9} strokeWidth={3.5} />
             </button>
@@ -226,7 +204,7 @@ export function TaskBoard({
                 if (e.key === "Escape") setIsAddingCategory(false)
               }}
               placeholder={t("taskForm.newCategoryPlaceholder")}
-              className="border-0 shadow-none focus-visible:ring-0 text-sm h-[30px] w-32 px-2"
+              className="border-0 shadow-none focus-visible:ring-0 text-sm h-8 w-32 px-2"
             />
             <div className="flex gap-1 flex-wrap max-w-32">
               {PALETTE_COLORS.map(color => (
@@ -247,7 +225,7 @@ export function TaskBoard({
             </div>
             <Button
               type="button"
-              className="text-[13px] font-bold h-[30px] px-3 rounded-full"
+              className="text-meta font-bold h-8 px-3 rounded-full"
               onClick={handleCreateCategory}
             >
               {t("common.add")}
@@ -255,7 +233,7 @@ export function TaskBoard({
             <Button
               type="button"
               variant="ghost"
-              className="text-[13px] font-semibold h-[30px] px-2.5 rounded-full"
+              className="text-meta font-semibold h-8 px-2.5 rounded-full"
               onClick={() => setIsAddingCategory(false)}
             >
               {t("common.cancel")}
@@ -264,7 +242,7 @@ export function TaskBoard({
         ) : (
           <button
             onClick={() => setIsAddingCategory(true)}
-            className="h-[34px] px-3 rounded-full border border-dashed border-border-strong text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5"
+            className="h-8 px-3 rounded-full border border-dashed border-border-strong text-meta font-semibold text-muted-foreground hover:text-foreground transition flex items-center gap-1.5"
           >
             <Plus size={14} />
             {t("tasks.addCategory")}
@@ -310,10 +288,10 @@ export function TaskBoard({
         renderTasks(activeTasks)
       ) : (
         <div className="bg-card border border-dashed border-border-strong rounded-xl px-6 py-14 flex flex-col items-center gap-3 text-center">
-          <span className="size-[52px] rounded-[14px] bg-primary-soft text-primary flex items-center justify-center">
+          <span className="size-[52px] rounded-lg bg-primary-soft text-primary flex items-center justify-center">
             <CheckSquare2 size={24} strokeWidth={1.75} />
           </span>
-          <span className="text-[17px] font-bold">
+          <span className="text-title font-bold">
             {t("tasks.noActiveTasks")}
             {categoryFilter !== "all" ? t("tasks.noTasksIn", { category: categoryFilter }) : ""}
           </span>
@@ -326,7 +304,7 @@ export function TaskBoard({
             type="button"
             aria-expanded={showCompleted}
             onClick={() => setShowCompleted(v => !v)}
-            className="flex items-center gap-2 mb-3 text-[15px] font-bold text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-2 mb-3 text-body font-bold text-muted-foreground hover:text-foreground"
           >
             <ChevronDown
               size={16}

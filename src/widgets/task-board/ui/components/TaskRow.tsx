@@ -37,7 +37,7 @@ export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolea
       <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={22} />
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div
-          className={`text-[15px] font-semibold leading-snug ${
+          className={`text-body font-semibold leading-snug ${
             task.completed ? "line-through text-tertiary" : ""
           }`}
         >
@@ -58,7 +58,7 @@ export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolea
           width keeps the block's total size constant, so the icon lands
           in the same column on every row regardless of category name
           length. */}
-      <span className="hidden sm:inline-flex items-center gap-1.5 w-24 h-[26px] px-2.5 rounded-md bg-fill text-xs font-semibold text-muted-foreground shrink-0 overflow-hidden">
+      <span className="hidden sm:inline-flex items-center gap-1.5 w-24 h-7 px-2.5 rounded-md bg-fill text-xs font-semibold text-muted-foreground shrink-0 overflow-hidden">
         <span className="size-1.5 rounded-full shrink-0" style={{ background: categoryColor }} />
         <span className="truncate">{task.category}</span>
       </span>
