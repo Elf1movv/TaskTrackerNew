@@ -140,7 +140,7 @@ export function TaskForm({
             type="button"
             color={PRIORITY_COLORS[priority]}
             onClick={() => setPriority(nextPriority(priority))}
-            className="px-2.5 py-1 rounded-lg text-xs capitalize transition-all border"
+            className="px-2.5 py-1 rounded-lg text-xs capitalize transition border"
           >
             {t(PRIORITY_LABEL_KEYS[priority])}
           </PriorityToggle>

@@ -8,15 +8,11 @@ export function AppearanceSection() {
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary">
-          {t("settings.appearance.language")}
-        </span>
+        <span className="text-meta font-semibold text-tertiary">{t("settings.appearance.language")}</span>
         <LanguageToggle />
       </div>
       <div className="space-y-2">
-        <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary">
-          {t("settings.appearance.theme")}
-        </span>
+        <span className="text-meta font-semibold text-tertiary">{t("settings.appearance.theme")}</span>
         <ThemeToggle />
       </div>
     </div>

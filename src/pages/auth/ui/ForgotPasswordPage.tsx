@@ -42,7 +42,7 @@ export function ForgotPasswordPage() {
         <p className="text-sm text-muted-foreground">
           {t("auth.forgotPassword.checkEmailBody", { email: email.trim() })}
         </p>
-        <Button asChild className="w-full h-12 rounded-[10px] text-base font-bold shadow-card">
+        <Button asChild className="w-full h-12 rounded-md text-base font-bold shadow-card">
           <Link to="/login">{t("auth.register.backToLogin")}</Link>
         </Button>
       </AuthLayout>
@@ -60,11 +60,11 @@ export function ForgotPasswordPage() {
           value={email}
           onChange={e => setEmail(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
-          className="h-12 rounded-[10px] bg-sunken"
+          className="h-12 rounded-md bg-sunken"
         />
       </div>
       <Button
-        className="w-full h-12 rounded-[10px] text-base font-bold shadow-card"
+        className="w-full h-12 rounded-md text-base font-bold shadow-card"
         onClick={handleSubmit}
         disabled={isSubmitting}
       >

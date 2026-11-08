@@ -129,4 +129,4 @@ export function DateTimeField({
 // nested inside it for the clear "×" (see PopoverTrigger below), which
 // would be invalid HTML inside a <button> itself.
 const buttonRowClass =
-  "inline-flex items-center gap-1.5 h-8 px-3 rounded-md border bg-muted text-xs font-normal transition-all outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] text-foreground hover:bg-accent hover:text-accent-foreground dark:border-input dark:hover:bg-input/50 cursor-pointer"
+  "inline-flex items-center gap-1.5 h-8 px-3 rounded-md border bg-muted text-xs font-normal transition outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] text-foreground hover:bg-accent hover:text-accent-foreground dark:border-input dark:hover:bg-input/50 cursor-pointer"

@@ -6,7 +6,7 @@ import { PriorityDot } from "@/entities/task"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { formatDateKey } from "@/shared/lib/date"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 import {
   DEFAULT_BLOCK_MINUTES,
   HOUR_HEIGHT_PX,
@@ -119,8 +119,8 @@ export function HourGrid({
         {HOURS.map(hour => (
           <div key={hour} className="relative" style={{ height: HOUR_HEIGHT_PX }}>
             <span
-              css={monoFont}
-              className="absolute -top-[7px] right-1.5 text-[10px] font-bold text-tertiary bg-card px-0.5"
+              css={numericFont}
+              className="absolute -top-[7px] right-1.5 text-caption font-bold text-tertiary bg-card px-0.5"
             >
               {String(hour).padStart(2, "0")}:00
             </span>
@@ -397,7 +397,7 @@ function TimedTaskBlock({
       // the browser this element has no native touch behavior of its own;
       // JS gets the whole gesture. Direct user feedback, 2026-09-28 (twice
       // — once for the selection, once for this).
-      className="absolute flex items-center gap-1 rounded-md px-1.5 text-left text-[11px] shadow-sm cursor-grab active:cursor-grabbing overflow-hidden select-none touch-none [-webkit-touch-callout:none]"
+      className="absolute flex items-center gap-1 rounded-md px-1.5 text-left text-caption shadow-sm cursor-grab active:cursor-grabbing overflow-hidden select-none touch-none [-webkit-touch-callout:none]"
       title={`${task.time} · ${task.title}`}
     >
       <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
@@ -408,7 +408,7 @@ function TimedTaskBlock({
         size={9}
         colorOverride={task.completed ? "var(--muted-foreground)" : undefined}
       />
-      <span css={monoFont} className="shrink-0 text-muted-foreground">
+      <span css={numericFont} className="shrink-0 text-muted-foreground">
         {task.time}
       </span>
       <span className={`truncate font-semibold ${task.completed ? "text-tertiary" : ""}`}>
@@ -458,7 +458,7 @@ function TimedReminderBlock({
       // Full border (not just a left stripe) + neutral fill — stays
       // distinguishable from a task's colored fill even when a category
       // color happens to be yellow/red-ish, per explicit user feedback.
-      className="absolute z-10 flex items-center gap-1 rounded-full border-2 bg-card px-1.5 text-left text-[11px] overflow-hidden"
+      className="absolute z-10 flex items-center gap-1 rounded-full border-2 bg-card px-1.5 text-left text-caption overflow-hidden"
       title={`${reminder.time} · ${reminder.title}`}
     >
       <ReminderPriorityIcon
@@ -466,7 +466,7 @@ function TimedReminderBlock({
         size={9}
         colorOverride={REMINDER_BORDER_COLORS[reminder.priority]}
       />
-      <span css={monoFont} className="shrink-0 text-muted-foreground font-bold">
+      <span css={numericFont} className="shrink-0 text-muted-foreground font-bold">
         {reminder.time}
       </span>
       <span className="truncate font-semibold">{reminder.title}</span>

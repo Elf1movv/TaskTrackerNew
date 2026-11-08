@@ -101,7 +101,7 @@ export function CriticalReminderAlert({ userId }: { userId: string }) {
             <span className="size-11 shrink-0 rounded-full bg-error-bg text-destructive flex items-center justify-center">
               <BellRing size={22} />
             </span>
-            <span className="h-[26px] px-2.5 rounded-full bg-error-bg text-destructive text-xs font-extrabold tracking-[0.04em] uppercase inline-flex items-center gap-1">
+            <span className="h-7 px-2.5 rounded-full bg-error-bg text-destructive text-xs font-semibold tracking-[0.04em] uppercase inline-flex items-center gap-1">
               <ChevronsUp size={12} strokeWidth={3} />
               {t("reminderForm.priorityCritical")}
             </span>

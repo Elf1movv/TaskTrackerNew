@@ -2,7 +2,7 @@ import { z } from "zod"
 
 const categoryFields = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1),
+  name: z.string().trim().min(1).max(100),
   color: z.string().min(1),
 })
 

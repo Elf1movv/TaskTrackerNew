@@ -26,7 +26,7 @@ export function DeleteHabitButton({ habitId }: { habitId: string }) {
           e.stopPropagation()
           setConfirming(true)
         }}
-        className="p-1 rounded text-muted-foreground hover:text-destructive transition-all"
+        className="p-1 rounded text-muted-foreground hover:text-destructive transition"
         aria-label="Delete habit"
       >
         <Trash2 size={12} />

@@ -33,8 +33,8 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
     <div className="bg-card border border-card-border rounded-xl shadow-card p-6 flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-3">
-          <h2 className="text-xl font-bold tracking-[-0.015em]">{t("habits.sectionLabel")}</h2>
-          <span className="text-[13px] font-semibold text-muted-foreground">
+          <h2 className="text-xl font-bold">{t("habits.sectionLabel")}</h2>
+          <span className="text-meta font-semibold text-muted-foreground">
             {t("habits.doneToday", { done: doneToday, total: habits.length })}
           </span>
         </div>
@@ -46,27 +46,19 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
             value={viewMode}
             onValueChange={v => v && setViewMode(v as "grid" | "list")}
           >
-            <ToggleGroupItem
-              value="grid"
-              aria-label={t("habits.viewGrid")}
-              className="h-[34px] px-2.5 gap-1.5"
-            >
+            <ToggleGroupItem value="grid" aria-label={t("habits.viewGrid")} className="h-8 px-2.5 gap-1.5">
               <LayoutGrid size={17} strokeWidth={1.75} />
-              <span className="text-[13px]">{t("habits.viewGrid")}</span>
+              <span className="text-meta">{t("habits.viewGrid")}</span>
             </ToggleGroupItem>
-            <ToggleGroupItem
-              value="list"
-              aria-label={t("habits.viewList")}
-              className="h-[34px] px-2.5 gap-1.5"
-            >
+            <ToggleGroupItem value="list" aria-label={t("habits.viewList")} className="h-8 px-2.5 gap-1.5">
               <List size={17} strokeWidth={1.75} />
-              <span className="text-[13px]">{t("habits.viewList")}</span>
+              <span className="text-meta">{t("habits.viewList")}</span>
             </ToggleGroupItem>
           </ToggleGroup>
           {general && (
             <Button
               variant="outline"
-              className="h-[34px] px-3 gap-1.5 rounded-[10px] border-primary/25 text-primary text-sm font-semibold"
+              className="h-8 px-3 gap-1.5 rounded-md border-primary/25 text-primary text-sm font-semibold"
               onClick={() => setIsAddingHabit(v => !v)}
             >
               <Plus size={16} />
@@ -75,7 +67,7 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
           )}
           <Button
             variant="outline"
-            className="h-[34px] px-3 gap-1.5 rounded-[10px] border-primary/25 text-primary text-sm font-semibold"
+            className="h-8 px-3 gap-1.5 rounded-md border-primary/25 text-primary text-sm font-semibold"
             onClick={() => setIsAddingGroup(v => !v)}
           >
             <Plus size={16} />
@@ -116,10 +108,10 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
         !isAddingHabit &&
         generalHabits.length === 0 && (
           <div className="border border-dashed border-border-strong rounded-xl px-6 py-10 flex flex-col items-center gap-2.5 text-center">
-            <span className="size-12 rounded-[14px] bg-primary-soft text-primary flex items-center justify-center">
+            <span className="size-12 rounded-lg bg-primary-soft text-primary flex items-center justify-center">
               <Repeat size={22} strokeWidth={1.75} />
             </span>
-            <span className="text-[17px] font-bold">{t("habits.noHabitsYet")}</span>
+            <span className="text-title font-bold">{t("habits.noHabitsYet")}</span>
           </div>
         )
       )}

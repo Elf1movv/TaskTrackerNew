@@ -32,7 +32,7 @@ function summarizeByDay(habits: Habit[], days: Date[], today: Date): HabitHistor
         doneToday++
       }
     }
-    return { label: formatDateKey(date).slice(8), value: doneToday }
+    return { label: String(date.getDate()), value: doneToday }
   })
   return { chartData, completed, total }
 }

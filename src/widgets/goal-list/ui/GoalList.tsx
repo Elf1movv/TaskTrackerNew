@@ -99,10 +99,10 @@ export function GoalList({
       ) : (
         !isAdding && (
           <div className="bg-card border border-dashed border-border-strong rounded-xl px-6 py-14 flex flex-col items-center gap-3 text-center">
-            <span className="size-[52px] rounded-[14px] bg-primary-soft text-primary flex items-center justify-center">
+            <span className="size-[52px] rounded-lg bg-primary-soft text-primary flex items-center justify-center">
               <Target size={24} strokeWidth={1.75} />
             </span>
-            <span className="text-[17px] font-bold">{t("goals.noGoalsYet")}</span>
+            <span className="text-title font-bold">{t("goals.noGoalsYet")}</span>
           </div>
         )
       )}

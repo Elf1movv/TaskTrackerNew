@@ -170,4 +170,85 @@ describe("categories router", () => {
     const list = await agent.get("/api/categories")
     expect(list.body).toEqual([])
   })
+
+  it("seeds the defaults in Russian when the client shows Russian", async () => {
+    const list = await agent.get("/api/categories").set("X-Language", "ru")
+    expect(list.body.map((c: { name: string }) => c.name)).toEqual(["Работа", "Личное", "Здоровье", "Учёба"])
+  })
+
+  describe("rename", () => {
+    const task = (category: string) =>
+      agent.post("/api/tasks").send({
+        id: crypto.randomUUID(),
+        title: `Task ${category}`,
+        completed: false,
+        priority: "low",
+        category,
+        dueDate: null,
+        time: null,
+        endTime: null,
+        completedAt: null,
+        description: null,
+      })
+    const goal = (category: string) =>
+      agent.post("/api/goals").send({
+        id: crypto.randomUUID(),
+        title: `Goal ${category}`,
+        description: "",
+        progress: 0,
+        targetDate: null,
+        color: "#5b7fc7",
+        category,
+        milestones: [],
+      })
+
+    it("carries the category's tasks and goals over to the new name", async () => {
+      const work = (
+        await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work", color: "#5b7fc7" })
+      ).body
+      await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Home", color: "#6a9c74" })
+      const moved = (await task("Work")).body
+      const kept = (await task("Home")).body
+      const movedGoal = (await goal("Work")).body
+
+      const res = await agent
+        .patch(`/api/categories/${work.id}`)
+        .send({ patch: { name: "Работа" }, expectedUpdatedAt: work.updatedAt })
+      expect(res.status).toBe(200)
+      expect(res.body.name).toBe("Работа")
+
+      const tasks = (await agent.get("/api/tasks")).body as { id: string; category: string }[]
+      expect(tasks.find(t => t.id === moved.id)?.category).toBe("Работа")
+      expect(tasks.find(t => t.id === kept.id)?.category).toBe("Home")
+      const goals = (await agent.get("/api/goals")).body as { id: string; category: string | null }[]
+      expect(goals.find(g => g.id === movedGoal.id)?.category).toBe("Работа")
+    })
+
+    it("refuses a name another category already has, and changes nothing", async () => {
+      const work = (
+        await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work", color: "#5b7fc7" })
+      ).body
+      await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Home", color: "#6a9c74" })
+      const moved = (await task("Work")).body
+
+      const res = await agent
+        .patch(`/api/categories/${work.id}`)
+        .send({ patch: { name: "Home" }, expectedUpdatedAt: work.updatedAt })
+      expect(res.status).toBe(409)
+      expect(res.body.error).toBe("Category name already exists")
+      const tasks = (await agent.get("/api/tasks")).body as { id: string; category: string }[]
+      expect(tasks.find(t => t.id === moved.id)?.category).toBe("Work")
+    })
+
+    it("still rejects a stale expectedUpdatedAt", async () => {
+      const work = (
+        await agent.post("/api/categories").send({ id: crypto.randomUUID(), name: "Work", color: "#5b7fc7" })
+      ).body
+      const res = await agent
+        .patch(`/api/categories/${work.id}`)
+        .send({ patch: { name: "Job" }, expectedUpdatedAt: new Date(0).toISOString() })
+      expect(res.status).toBe(409)
+      expect(res.body.current.name).toBe("Work")
+    })
+  })
 })

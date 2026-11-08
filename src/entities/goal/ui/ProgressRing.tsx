@@ -8,7 +8,7 @@ export function ProgressRing({ progress, color }: { progress: number; color: str
         color={color}
         strokeWidth={5}
         trackColor={`color-mix(in srgb, ${color} 16%, transparent)`}
-        labelClassName="text-[13px] font-extrabold"
+        labelClassName="text-meta font-semibold"
       />
     </div>
   )

@@ -46,7 +46,7 @@ export function LoginPage() {
           value={email}
           onChange={e => setEmail(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
-          className="h-12 rounded-[10px] bg-sunken"
+          className="h-12 rounded-md bg-sunken"
         />
       </div>
       <div className="space-y-2">
@@ -62,12 +62,12 @@ export function LoginPage() {
           value={password}
           onChange={e => setPassword(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
-          className="h-12 rounded-[10px] bg-sunken"
+          className="h-12 rounded-md bg-sunken"
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button
-        className="w-full h-12 rounded-[10px] text-base font-bold shadow-card mt-1"
+        className="w-full h-12 rounded-md text-base font-bold shadow-card mt-1"
         onClick={handleSubmit}
         disabled={isSubmitting}
       >

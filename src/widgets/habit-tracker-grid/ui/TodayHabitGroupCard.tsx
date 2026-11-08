@@ -119,12 +119,12 @@ export function TodayHabitGroupCard({
                     HabitCard), just applied to the block's icon instead of
                     spreading the solid color across the whole header. */}
                 <span
-                  className="size-9 shrink-0 rounded-[10px] flex items-center justify-center text-white"
+                  className="size-9 shrink-0 rounded-md flex items-center justify-center text-white"
                   style={{ background: group.color }}
                 >
                   <HabitIcon emoji={getHabitGroupIcon(group)} size={17} />
                 </span>
-                <span className="text-[15px] font-bold truncate min-w-0">{getHabitGroupTitle(group, t)}</span>
+                <span className="text-body font-bold truncate min-w-0">{getHabitGroupTitle(group, t)}</span>
                 <span className="text-xs font-semibold text-tertiary shrink-0">
                   {doneCount}/{habits.length}
                 </span>
@@ -147,7 +147,7 @@ export function TodayHabitGroupCard({
             <div className="flex justify-end">
               <Button
                 variant="ghost"
-                className="h-[30px] px-2.5 gap-1 text-[13px] font-bold"
+                className="h-8 px-2.5 gap-1 text-meta font-bold"
                 onClick={() => {
                   setEditingHabit(null)
                   setIsAdding(v => !v)

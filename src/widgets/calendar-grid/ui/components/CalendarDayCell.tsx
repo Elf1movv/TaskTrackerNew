@@ -9,7 +9,7 @@ import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/e
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { useDropTarget } from "@/shared/lib/dnd"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 
 // Shown inline on the cell without a tap — up to this many, the rest is
 // summarized as "+N". Reminders keep this cap (their own redesign wasn't
@@ -101,7 +101,7 @@ export function CalendarDayCell({
       // still grow past this floor with content (stacked task rows
       // below), matching the "week row is as tall as its busiest day"
       // look the TickTick reference has.
-      className={`min-h-[84px] rounded-[10px] border flex flex-col items-stretch gap-1 pt-2 pb-1.5 px-1 text-sm transition-all cursor-pointer ${
+      className={`min-h-[84px] rounded-md border flex flex-col items-stretch gap-1 pt-2 pb-1.5 px-1 text-sm transition cursor-pointer ${
         isSelected
           ? "border-2 border-primary bg-primary-soft"
           : isCurrent
@@ -112,8 +112,8 @@ export function CalendarDayCell({
       } ${isOver ? "ring-2 ring-primary" : ""}`}
     >
       <span
-        css={monoFont}
-        className={`self-center w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
+        css={numericFont}
+        className={`self-center w-[26px] h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
           isCurrent ? "bg-primary text-primary-foreground" : ""
         }`}
       >
@@ -136,7 +136,7 @@ export function CalendarDayCell({
                 e.stopPropagation()
                 onEditReminder(reminder.id, e.currentTarget.getBoundingClientRect())
               }}
-              className="w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-[9px] leading-tight border bg-card overflow-hidden cursor-pointer"
+              className="w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-caption leading-tight border bg-card overflow-hidden cursor-pointer"
               style={{ borderColor: REMINDER_BORDER_COLORS[reminder.priority] }}
             >
               <ReminderPriorityIcon
@@ -145,7 +145,7 @@ export function CalendarDayCell({
                 colorOverride={REMINDER_BORDER_COLORS[reminder.priority]}
               />
               {reminder.time && (
-                <span css={monoFont} className="shrink-0 text-muted-foreground font-bold">
+                <span css={numericFont} className="shrink-0 text-muted-foreground font-bold">
                   {reminder.time}
                 </span>
               )}
@@ -156,7 +156,9 @@ export function CalendarDayCell({
               </span>
             </div>
           ))}
-          {overflowCount > 0 && <div className="text-[9px] px-1 text-muted-foreground">+{overflowCount}</div>}
+          {overflowCount > 0 && (
+            <div className="text-caption px-1 text-muted-foreground">+{overflowCount}</div>
+          )}
         </div>
       )}
 
@@ -179,7 +181,7 @@ export function CalendarDayCell({
                 e.stopPropagation()
                 onEditTask(task.id, e.currentTarget.getBoundingClientRect())
               }}
-              className="w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-[9px] leading-tight overflow-hidden cursor-pointer"
+              className="w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-caption leading-tight overflow-hidden cursor-pointer"
               style={{
                 backgroundColor: task.completed
                   ? "var(--fill)"
@@ -190,7 +192,7 @@ export function CalendarDayCell({
                 <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={11} />
               </div>
               {task.time && (
-                <span css={monoFont} className="shrink-0 text-muted-foreground font-bold">
+                <span css={numericFont} className="shrink-0 text-muted-foreground font-bold">
                   {task.time}
                 </span>
               )}
@@ -225,7 +227,7 @@ export function CalendarDayCell({
               <div
                 key={task.id}
                 data-deadline-id={task.id}
-                className="w-full flex items-center gap-1 rounded-md pl-1.5 pr-1 py-0.5 text-[9px] leading-tight bg-card overflow-hidden"
+                className="w-full flex items-center gap-1 rounded-md pl-1.5 pr-1 py-0.5 text-caption leading-tight bg-card overflow-hidden"
                 style={{ borderLeft: `2px solid ${color}` }}
               >
                 <Flag size={8} strokeWidth={2.5} style={{ color }} className="shrink-0" />
@@ -241,7 +243,7 @@ export function CalendarDayCell({
           {dayGoals.map(goal => (
             <div
               key={goal.id}
-              className="w-full flex items-center gap-1 rounded-md pl-1.5 pr-1 py-0.5 text-[9px] leading-tight bg-card overflow-hidden"
+              className="w-full flex items-center gap-1 rounded-md pl-1.5 pr-1 py-0.5 text-caption leading-tight bg-card overflow-hidden"
               style={{ borderLeft: `2px solid ${goal.color}` }}
             >
               <Target size={8} strokeWidth={2.5} style={{ color: goal.color }} className="shrink-0" />

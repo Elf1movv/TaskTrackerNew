@@ -42,7 +42,7 @@ export function ReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdit: 
       </div>
       <div className="min-w-0">
         <div
-          className={`text-[15px] leading-snug ${
+          className={`text-body leading-snug ${
             reminder.completed ? "font-medium line-through text-tertiary" : "font-semibold"
           }`}
         >
@@ -55,7 +55,7 @@ export function ReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdit: 
       <span onClick={e => e.stopPropagation()} className="flex items-center gap-0.5 pt-0.5">
         <button
           onClick={onEdit}
-          className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-foreground transition-all"
+          className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-foreground transition"
           aria-label="Edit reminder"
         >
           <Pencil size={13} />

@@ -6,7 +6,7 @@ import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import type { MonthGridDay } from "@/shared/lib/calendarGrid"
 import { getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 import { CalendarDayCell } from "./components"
 
 export function CalendarGrid({
@@ -45,8 +45,8 @@ export function CalendarGrid({
         {getWeekdayLabels(language).map(d => (
           <div
             key={d}
-            css={monoFont}
-            className="text-center text-[10px] text-tertiary py-2 uppercase tracking-wider font-bold"
+            css={numericFont}
+            className="text-center text-caption text-tertiary py-2 uppercase tracking-wider font-bold"
           >
             {d}
           </div>

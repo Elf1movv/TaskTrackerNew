@@ -30,7 +30,7 @@ export function DeleteGoalButton({ goalId, goalTitle }: { goalId: string; goalTi
           e.stopPropagation()
           setConfirmOpen(true)
         }}
-        className="p-2 rounded-[10px] text-tertiary hover:text-foreground hover:bg-fill transition-all"
+        className="p-2 rounded-md text-tertiary hover:text-foreground hover:bg-fill transition"
         aria-label="Delete goal"
       >
         <Trash2 size={16} strokeWidth={1.75} />

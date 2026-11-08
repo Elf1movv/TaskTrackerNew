@@ -89,6 +89,9 @@ export const ru: Record<keyof typeof en, string> = {
   "tasks.addTask": "Добавить задачу",
   "tasks.status.active": "Активные",
   "tasks.status.done": "Готово",
+  "tasks.categorySettings": "Название и цвет категории «{name}»",
+  "tasks.categoryName": "Название",
+  "tasks.categoryNameTaken": "Такая категория уже есть",
   "tasks.categoryAll": "Все",
   "tasks.date.label": "Срок",
   "tasks.viewInCalendar": "Открыть в календаре: {date}",
@@ -98,7 +101,7 @@ export const ru: Record<keyof typeof en, string> = {
     "Категория «{name}» будет удалена. Цели из неё сохранятся, просто останутся без категории.",
   "tasks.deleteCategoryTitleWithTasks": "Удалить категорию вместе с задачами?",
   "tasks.deleteCategoryBodyWithTasks":
-    "В категории «{name}» {count} задач(и). При удалении категории они тоже будут удалены. Цели сохранятся без категории. Это действие нельзя отменить.",
+    "В категории «{name}» {count} задача. При удалении категории она тоже будет удалена. Цели сохранятся без категории. Это действие нельзя отменить.|В категории «{name}» {count} задачи. При удалении категории они тоже будут удалены. Цели сохранятся без категории. Это действие нельзя отменить.|В категории «{name}» {count} задач. При удалении категории они тоже будут удалены. Цели сохранятся без категории. Это действие нельзя отменить.",
   "tasks.noActiveTasks": "Нет активных задач",
   "tasks.completedSection": "Выполненные ({count})",
   "tasks.noTasksIn": " в категории {category}",
@@ -176,7 +179,7 @@ export const ru: Record<keyof typeof en, string> = {
   "habits.group.deleteTitle": "Удалить блок?",
   "habits.group.deleteBody":
     "Блок «{title}» будет удалён, но привычки в нём никуда не денутся — переедут в «Общие».",
-  "habits.group.habitCount": "{count} привычек",
+  "habits.group.habitCount": "{count} привычка|{count} привычки|{count} привычек",
 
   "goals.title": "Цели",
   "goals.subtitle": "Большие результаты и шаги к ним",
@@ -217,7 +220,7 @@ export const ru: Record<keyof typeof en, string> = {
   "calendar.agendaEmpty": "Ничего не запланировано",
   "calendar.agendaHint":
     "Повестка — список ближайших дней, в которые что-то есть: планы, сроки задач и целей, напоминания. Пустые дни пропускаются, «Показать ещё» добавляет {count} дней. Отмечать и править можно прямо здесь.",
-  "calendar.agendaLoadMore": "Показать ещё {count} дней",
+  "calendar.agendaLoadMore": "Показать ещё {count} день|Показать ещё {count} дня|Показать ещё {count} дней",
   "calendar.yearMonthSummary": "{done} из {total} выполнено",
   "calendar.backToToday": "К сегодня",
   "calendar.view.agenda": "Повестка",
@@ -240,8 +243,10 @@ export const ru: Record<keyof typeof en, string> = {
   "toast.deleteFailed": "Не удалось удалить. Попробуйте ещё раз.",
   "toast.reorderFailed": "Не удалось сохранить новый порядок. Попробуйте ещё раз.",
 
-  "reminders.tasksDueSoon": "У вас {count} задач(и) с приближающимся сроком",
-  "reminders.goalsDueSoon": "У вас {count} цел(и) с приближающимся сроком",
+  "reminders.tasksDueSoon":
+    "{count} задача со сроком в ближайшие дни|{count} задачи со сроком в ближайшие дни|{count} задач со сроком в ближайшие дни",
+  "reminders.goalsDueSoon":
+    "{count} цель со сроком в ближайшие дни|{count} цели со сроком в ближайшие дни|{count} целей со сроком в ближайшие дни",
   "reminders.viewAction": "Перейти",
 
   "auth.email": "Почта",

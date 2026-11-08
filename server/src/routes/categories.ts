@@ -23,12 +23,23 @@ function toClientCategory(category: { id: string; name: string; color: string; u
 // (src/shared/lib/colors.ts) — duplicated here rather than shared across
 // the workspace boundary, same as every other small color constant in this
 // codebase (see HabitGroup's seeded default color).
-const DEFAULT_CATEGORIES = [
-  { name: "Work", color: "#5b7fc7" },
-  { name: "Personal", color: "#6a9c74" },
-  { name: "Health", color: "#c75b8f" },
-  { name: "Learning", color: "#c9a63a" },
-]
+// Seeded in the language the client is showing (X-Language header, sent by
+// createRestRepository) — a Russian-speaking user used to get English
+// "Work/Personal/Health/Learning" and had no way to rename them (2026-11-08).
+const DEFAULT_CATEGORIES = {
+  en: [
+    { name: "Work", color: "#5b7fc7" },
+    { name: "Personal", color: "#6a9c74" },
+    { name: "Health", color: "#c75b8f" },
+    { name: "Learning", color: "#c9a63a" },
+  ],
+  ru: [
+    { name: "Работа", color: "#5b7fc7" },
+    { name: "Личное", color: "#6a9c74" },
+    { name: "Здоровье", color: "#c75b8f" },
+    { name: "Учёба", color: "#c9a63a" },
+  ],
+}
 
 categoriesRouter.get("/", async (req, res) => {
   // categoriesSeeded (not "does the user have zero categories right now")
@@ -48,12 +59,14 @@ categoriesRouter.get("/", async (req, res) => {
       // default name that collides with one the user already made would
       // throw and crash this request instead of just skipping that name.
       db.category.createMany({
-        data: DEFAULT_CATEGORIES.map(({ name, color }, order) => ({
-          name,
-          color,
-          order,
-          userId: req.userId,
-        })),
+        data: DEFAULT_CATEGORIES[req.get("X-Language") === "ru" ? "ru" : "en"].map(
+          ({ name, color }, order) => ({
+            name,
+            color,
+            order,
+            userId: req.userId,
+          }),
+        ),
         skipDuplicates: true,
       }),
       db.user.update({ where: { id: req.userId }, data: { categoriesSeeded: true } }),
@@ -130,23 +143,45 @@ categoriesRouter.patch("/:id", async (req, res) => {
   }
   const { patch, expectedUpdatedAt } = parsed.data
 
-  const result = await db.category.updateMany({
-    where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },
-    data: patch,
+  // Task.category and Goal.category hold the category's NAME (no foreign
+  // key), so a rename has to carry them along in the same transaction —
+  // otherwise the tasks silently drop out of the category's filter.
+  const result = await ownerTransaction(req.userId, async tx => {
+    const current = await tx.category.findFirst({ where: { id: req.params.id, userId: req.userId } })
+    if (!current) return { status: 404 as const }
+    if (current.updatedAt.getTime() !== new Date(expectedUpdatedAt).getTime())
+      return { status: 409 as const, current }
+    if (patch.name !== undefined && patch.name !== current.name) {
+      const taken = await tx.category.findFirst({ where: { userId: req.userId, name: patch.name } })
+      if (taken) return { status: 409 as const, nameTaken: true }
+      await tx.task.updateMany({
+        where: { userId: req.userId, category: current.name },
+        data: { category: patch.name },
+      })
+      await tx.goal.updateMany({
+        where: { userId: req.userId, category: current.name },
+        data: { category: patch.name },
+      })
+    }
+    return {
+      status: 200 as const,
+      updated: await tx.category.update({ where: { id: current.id }, data: patch }),
+    }
   })
 
-  if (result.count === 0) {
-    const current = await db.category.findFirst({ where: { id: req.params.id, userId: req.userId } })
-    if (!current) {
-      res.status(404).json({ error: "Category not found" })
-      return
-    }
-    res.status(409).json({ error: "Category was changed elsewhere", current: toClientCategory(current) })
+  if (result.status === 404) {
+    res.status(404).json({ error: "Category not found" })
     return
   }
-
-  const updated = await db.category.findUniqueOrThrow({ where: { id: req.params.id } })
-  res.json(toClientCategory(updated))
+  if (result.status === 409) {
+    if ("nameTaken" in result) res.status(409).json({ error: "Category name already exists" })
+    else
+      res
+        .status(409)
+        .json({ error: "Category was changed elsewhere", current: toClientCategory(result.current) })
+    return
+  }
+  res.json(toClientCategory(result.updated))
 })
 
 categoriesRouter.delete("/:id", async (req, res) => {

@@ -11,7 +11,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { monoFont } from "@/shared/lib/typography"
+import { chartAnimation } from "@/shared/ui/chart-animation"
+import { numericFont } from "@/shared/lib/typography"
 import type { ChartPoint } from "../lib/habitHistorySummary"
 
 // Three styles the user asked to try side by side, switched via
@@ -42,11 +43,11 @@ const tooltipContentStyle = {
 // without hitting that limitation.
 function chartAxes() {
   return [
-    <CartesianGrid key="grid" vertical={false} stroke="var(--border)" strokeDasharray="4 4" />,
+    <CartesianGrid key="grid" vertical={false} stroke="var(--border)" strokeOpacity={0.7} />,
     <XAxis
       key="x"
       dataKey="label"
-      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+      tick={{ fontSize: 11, fill: "var(--text-tertiary)" }}
       axisLine={false}
       tickLine={false}
       tickMargin={8}
@@ -55,7 +56,7 @@ function chartAxes() {
       key="y"
       allowDecimals={false}
       domain={[0, "dataMax"]}
-      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+      tick={{ fontSize: 11, fill: "var(--text-tertiary)" }}
       axisLine={false}
       tickLine={false}
       width={24}
@@ -87,11 +88,17 @@ export function HabitHistoryChart({
 }) {
   if (style === "bar") {
     return (
-      <div css={monoFont} className="h-36 -ml-2">
+      <div css={numericFont} className="h-36 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
             {chartAxes()}
-            <Bar dataKey="value" name={seriesName} fill="var(--primary)" radius={[4, 4, 0, 0]} />
+            <Bar
+              dataKey="value"
+              name={seriesName}
+              fill="var(--primary)"
+              radius={[4, 4, 0, 0]}
+              {...chartAnimation()}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -100,13 +107,14 @@ export function HabitHistoryChart({
 
   if (style === "step") {
     return (
-      <div css={monoFont} className="h-36 -ml-2">
+      <div css={numericFont} className="h-36 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
             {chartAxes()}
             <Line
               type="stepAfter"
               dataKey="value"
+              {...chartAnimation()}
               name={seriesName}
               stroke="var(--primary)"
               strokeWidth={2.5}
@@ -120,15 +128,9 @@ export function HabitHistoryChart({
   }
 
   return (
-    <div css={monoFont} className="h-36 -ml-2">
+    <div css={numericFont} className="h-36 -ml-2">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id="habitHistoryFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
           {chartAxes()}
           <Area
             type="monotone"
@@ -138,7 +140,9 @@ export function HabitHistoryChart({
             strokeWidth={2.5}
             strokeLinecap="round"
             strokeLinejoin="round"
-            fill="url(#habitHistoryFill)"
+            fill="var(--primary)"
+            fillOpacity={0.08}
+            {...chartAnimation()}
             dot={{ r: 2.5, fill: "var(--card)", stroke: "var(--primary)", strokeWidth: 2 }}
             activeDot={{ r: 4.5, fill: "var(--primary)", stroke: "var(--card)", strokeWidth: 2 }}
           />
