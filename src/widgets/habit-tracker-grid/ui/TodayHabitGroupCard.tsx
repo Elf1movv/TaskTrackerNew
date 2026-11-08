@@ -106,9 +106,12 @@ export function TodayHabitGroupCard({
               item with no stretch unless it's the SOLE child of a
               block-level parent), so `flex-1` on it here would NOT push a
               flex sibling to the row's right edge (same gotcha this file
-              already worked around for the old pill layout). */}
+              already worked around for the old pill layout). The real flex
+              item is Radix's <h3> wrapper around the trigger, so that h3
+              gets flex-1/min-w-0 too — without it a long block title
+              never truncates and runs under the edit/delete buttons. */}
           <div
-            className="relative flex items-center gap-2.5 pl-4 pr-20 py-3 cursor-grab active:cursor-grabbing"
+            className="relative flex items-center gap-2.5 pl-4 pr-20 py-3 cursor-grab active:cursor-grabbing [&>h3]:flex-1 [&>h3]:min-w-0"
             style={{ backgroundColor: `color-mix(in srgb, ${group.color} 14%, var(--card))` }}
           >
             <AccordionTrigger className="hover:no-underline !py-0 flex-1 justify-start gap-2.5 min-w-0 [&>svg]:hidden">

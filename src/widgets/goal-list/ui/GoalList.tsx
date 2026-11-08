@@ -31,7 +31,7 @@ export function GoalList({
   isAdding: boolean
   onCloseAdding: () => void
 }) {
-  const { reorderGoals } = useGoals()
+  const { reorderGoals, isLoaded } = useGoals()
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const { t } = useLanguage()
 
@@ -41,6 +41,19 @@ export function GoalList({
   // `goals` actually finishes loading — no data needs to already be
   // present at construction time for it to end up correct.
   const [openGoalId, setOpenGoalId] = useState(() => initialGoalId ?? goals[0]?.id ?? "")
+
+  // …except the default "first goal open" does need data: on a plain reload
+  // of /goals the list is still loading at mount, so the initializer above
+  // gets "" and every goal stayed collapsed. Open the first goal once, when
+  // loading finishes — keyed on isLoaded, not on goals appearing, so
+  // creating the very first goal on an empty page doesn't auto-open it.
+  // Adjusted during render (React's "storing information from previous
+  // renders" pattern), not in an effect — no extra render pass.
+  const [hasDefaultOpen, setHasDefaultOpen] = useState(isLoaded || Boolean(initialGoalId))
+  if (!hasDefaultOpen && isLoaded) {
+    setHasDefaultOpen(true)
+    if (goals.length > 0 && !openGoalId) setOpenGoalId(goals[0].id)
+  }
 
   // Moves the deep-linked goal to the top of the list, once, as soon as
   // `goals` actually contains it — separate from `openGoalId` above

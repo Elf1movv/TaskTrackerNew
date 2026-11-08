@@ -12,6 +12,18 @@ import { resetPasswordEmailHtml, verificationEmailHtml } from "./lib/emailTempla
 // set a letter/digit-free password through that specific flow.
 const PASSWORD_SETTING_PATHS = new Set(["/sign-up/email", "/change-password", "/reset-password"])
 
+// The link re-sent on a sign-in attempt before verification (sendOnSignIn)
+// carries callbackURL="/": LoginPage can't pass its own, because better-auth's
+// client would then also redirect there after every successful sign-in. Send
+// it to the same landing as the sign-up link, so LoginPage still recognises
+// the first login (welcome dialog). Relative is fine: frontend and API share
+// one origin on prod and staging.
+export function withFirstLoginCallback(url: string): string {
+  const link = new URL(url)
+  if (link.searchParams.get("callbackURL") === "/") link.searchParams.set("callbackURL", "/login?verified=1")
+  return link.toString()
+}
+
 export const auth = betterAuth({
   database: prismaAdapter(db, { provider: "postgresql" }),
   baseURL: process.env.BETTER_AUTH_URL,
@@ -57,7 +69,7 @@ export const auth = betterAuth({
       void sendEmail({
         to: user.email,
         subject: "Добро пожаловать в MyTracker — подтвердите почту",
-        html: verificationEmailHtml(url),
+        html: verificationEmailHtml(withFirstLoginCallback(url)),
       })
     },
     // Without this, someone who tries to log in before verifying just gets

@@ -41,7 +41,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <DndProvider backend={MultiBackend} options={dndOptions}>
           <TooltipProvider>
             <Global styles={globalStyles} />
-            <Toaster richColors position="top-right" />
+            {/* Bottom-right, not top-right: the top-right corner holds the
+                fixed settings gear / reminder bell and each page's "Add"
+                button, and a toast there covered them. mobileOffset keeps
+                toasts above MobileNav on phones. */}
+            <Toaster richColors position="bottom-right" mobileOffset={{ bottom: 80 }} />
             {children}
           </TooltipProvider>
         </DndProvider>
