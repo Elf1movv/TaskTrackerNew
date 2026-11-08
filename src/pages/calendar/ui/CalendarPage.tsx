@@ -4,13 +4,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/di
 import { useTasks } from "@/entities/task"
 import { PlanShelf } from "@/widgets/calendar-timeline"
 import { useEffect, useRef } from "react"
-import { format, isSameDay, isSameMonth, isSameWeek, type Locale } from "date-fns"
+import { format, isSameDay, isSameMonth, isSameWeek } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useSearchParams } from "react-router"
 import { buildWeekRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
-import { getDateLocale, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
-import { displayFont, monoFont } from "@/shared/lib/typography"
+import {
+  capitalizeFirst,
+  formatDay,
+  formatDayRange,
+  getDateLocale,
+  useLanguage,
+  type Language,
+  type TranslationKey,
+} from "@/shared/lib/i18n"
+import { numericFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { useIsMobile } from "@/shared/ui/use-mobile"
 import { CalendarYear } from "@/widgets/calendar-year"
@@ -38,25 +46,25 @@ function isViewingCurrentPeriod(view: CalendarView, anchorDate: Date): boolean {
   return true
 }
 
-function formatPeriodTitle(view: CalendarView, anchorDate: Date, locale: Locale): string {
+function formatPeriodTitle(view: CalendarView, anchorDate: Date, language: Language): string {
+  const locale = getDateLocale(language)
   switch (view) {
     case "month":
-      return format(anchorDate, "MMMM yyyy", { locale })
+      return capitalizeFirst(format(anchorDate, "LLLL yyyy", { locale }))
     case "year":
       return format(anchorDate, "yyyy", { locale })
     case "day":
-      return format(anchorDate, "EEEE, d MMMM yyyy", { locale })
+      return `${capitalizeFirst(format(anchorDate, "EEEE", { locale }))}, ${formatDay(anchorDate, language)}`
     // Agenda's own visible window is dynamic now (starts at 6 days, grows
     // via its own "show more" state) — no fixed end date to show here
     // (see CalendarAgendaView.tsx), so this just shows the starting date,
     // same as the "day"/default case below.
     case "week": {
       const range = buildWeekRange(anchorDate)
-      const last = range[range.length - 1]
-      return `${format(range[0], "d MMM", { locale })} – ${format(last, "d MMM yyyy", { locale })}`
+      return formatDayRange(range[0], range[range.length - 1], language)
     }
     default:
-      return format(anchorDate, "d MMMM yyyy", { locale })
+      return formatDay(anchorDate, language)
   }
 }
 
@@ -168,12 +176,12 @@ function CalendarPageContent() {
           which tab sits UNDER those buttons, never actually revealing
           "Год" from behind them. At md and up the sidebar already keeps
           this row well clear of that corner, so no margin is needed. */}
-      <div className="flex gap-0.5 bg-fill rounded-[10px] p-0.5 w-fit mb-5 overflow-x-auto mr-24 md:mr-0">
+      <div className="flex gap-0.5 bg-fill rounded-md p-0.5 w-fit mb-5 overflow-x-auto mr-24 md:mr-0">
         {BUILT_VIEWS.map(v => (
           <button
             key={v}
             onClick={() => setView(v === "week" && isMobile ? "day" : v)}
-            className={`h-8 px-3 rounded-lg text-xs transition-all shrink-0 ${
+            className={`h-8 px-3 rounded-lg text-xs transition shrink-0 ${
               view === v
                 ? "bg-seg text-foreground font-bold shadow-card"
                 : "text-muted-foreground font-medium hover:text-foreground"
@@ -185,18 +193,13 @@ function CalendarPageContent() {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
-        <h1
-          css={displayFont}
-          className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em] capitalize"
-        >
-          {formatPeriodTitle(view, anchorDate, getDateLocale(language))}
-        </h1>
+        <h1>{formatPeriodTitle(view, anchorDate, language)}</h1>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
             onClick={goToPrev}
-            className="rounded-[10px] text-muted-foreground hover:text-foreground"
+            className="rounded-md text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft size={16} />
           </Button>
@@ -204,8 +207,8 @@ function CalendarPageContent() {
             variant="ghost"
             size="sm"
             onClick={goToToday}
-            css={monoFont}
-            className="rounded-[10px] h-9 px-4 text-xs font-semibold shadow-card bg-card text-foreground hover:bg-card"
+            css={numericFont}
+            className="rounded-md h-9 px-4 text-xs font-semibold shadow-card bg-card text-foreground hover:bg-card"
           >
             {isViewingCurrentPeriod(view, anchorDate) ? t("common.today") : t("calendar.backToToday")}
           </Button>
@@ -213,7 +216,7 @@ function CalendarPageContent() {
             variant="ghost"
             size="icon"
             onClick={goToNext}
-            className="rounded-[10px] text-muted-foreground hover:text-foreground"
+            className="rounded-md text-muted-foreground hover:text-foreground"
           >
             <ChevronRight size={16} />
           </Button>

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { en } from "./dictionaries/en"
 import { ru } from "./dictionaries/ru"
 import { LanguageContext, type Language, type TranslationKey } from "./languageContext"
+import { translate } from "./translate"
 
 const DICTIONARIES: Record<Language, Record<string, string>> = { en, ru }
 const STORAGE_KEY = "mytracker-language"
@@ -29,14 +30,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const t = useCallback(
-    (key: TranslationKey, vars?: Record<string, string | number>) => {
-      const template = DICTIONARIES[language][key] ?? key
-      if (!vars) return template
-      return Object.entries(vars).reduce(
-        (result, [name, value]) => result.split(`{${name}}`).join(String(value)),
-        template,
-      )
-    },
+    (key: TranslationKey, vars?: Record<string, string | number>) =>
+      translate(DICTIONARIES[language][key] ?? key, language, vars),
     [language],
   )
 

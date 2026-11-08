@@ -1,4 +1,4 @@
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 
 const VIEWBOX = 52
 const RADIUS = 20
@@ -14,7 +14,7 @@ export function ProgressRing({
   strokeWidth = 3,
   showLabel = true,
   trackColor = "var(--muted)",
-  labelClassName = "text-[10px]",
+  labelClassName = "text-caption",
   labelColor = color,
 }: {
   progress: number
@@ -62,7 +62,7 @@ export function ProgressRing({
       </svg>
       {showLabel && (
         <span
-          css={monoFont}
+          css={numericFont}
           className={`absolute inset-0 flex items-center justify-center ${labelClassName}`}
           style={{ color: labelColor }}
         >

@@ -1,5 +1,6 @@
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts"
-import { monoFont } from "@/shared/lib/typography"
+import { chartAnimation } from "@/shared/ui/chart-animation"
+import { numericFont } from "@/shared/lib/typography"
 
 export interface WeeklyActivityPoint {
   label: string
@@ -17,7 +18,7 @@ const tooltipContentStyle = {
 // A compact sparkline for tight spaces (the sidebar's ~220px column) — no
 // Y-axis (there's no room for its label lane, and the point is the shape
 // of the trend, not reading exact values off an axis), tooltip carries the
-// exact number instead. Same "area" gradient look as
+// exact number instead. Same flat-fill area look as
 // widgets/habit-history/ui/HabitHistoryChart.tsx for visual consistency
 // across the app, but this one lives in shared/ui since it's used by the
 // navigation widget too, and widgets can't import each other directly
@@ -34,18 +35,12 @@ export function WeeklyActivityChart({
   seriesName: string
 }) {
   return (
-    <div css={monoFont} className="h-16">
+    <div css={numericFont} className="h-16">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-          <defs>
-            <linearGradient id="weeklyActivityFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
+        <AreaChart data={data} margin={{ top: 4, right: 10, bottom: 0, left: 10 }}>
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+            tick={{ fontSize: 11, fill: "var(--text-tertiary)" }}
             axisLine={false}
             tickLine={false}
             tickMargin={4}
@@ -64,7 +59,9 @@ export function WeeklyActivityChart({
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
-            fill="url(#weeklyActivityFill)"
+            fill="var(--primary)"
+            fillOpacity={0.08}
+            {...chartAnimation()}
             dot={{ r: 2, fill: "var(--card)", stroke: "var(--primary)", strokeWidth: 1.5 }}
             activeDot={{ r: 3.5, fill: "var(--primary)", stroke: "var(--card)", strokeWidth: 1.5 }}
           />

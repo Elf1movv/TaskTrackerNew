@@ -7,7 +7,6 @@ import { WelcomeBackGreeting, WelcomeModal } from "@/widgets/onboarding"
 import { HabitTrackerGrid } from "@/widgets/habit-tracker-grid"
 import { NotesCard } from "@/widgets/notes-card"
 import { useLanguage } from "@/shared/lib/i18n"
-import { displayFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { TodayProvider, useTodayContext } from "../connectors"
 import { formatHeroDate } from "../lib/formatHeroDate"
@@ -16,7 +15,7 @@ import { GoalReminderSwapCard } from "./components"
 function TodayPageContent() {
   const { goals, habits, reminders, remindersLoaded } = useTodayContext()
   const { language, t } = useLanguage()
-  const { weekday, day, monthYear } = formatHeroDate(new Date(), language)
+  const heroDate = formatHeroDate(new Date(), language)
   const [isAdding, setIsAdding] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const isFirstLogin = searchParams.get("firstLogin") === "1"
@@ -36,19 +35,11 @@ function TodayPageContent() {
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto">
-      <div className="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <div className="text-xs font-bold tracking-[0.14em] uppercase text-primary mb-1">{weekday}</div>
-          <div className="flex items-baseline gap-4">
-            <span css={displayFont} className="text-[104px] font-extrabold leading-none tracking-[-0.055em]">
-              {day}
-            </span>
-            <span className="text-[28px] font-semibold tracking-[-0.015em] text-tertiary">{monthYear}</span>
-          </div>
-        </div>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1>{heroDate}</h1>
         <Button
           onClick={() => setIsAdding(v => !v)}
-          className="h-11 px-5 gap-2 rounded-[10px] shadow-raised text-[15px]"
+          className="h-11 px-5 gap-2 rounded-md shadow-raised text-body"
         >
           <Plus size={18} />
           {t("notes.add")}

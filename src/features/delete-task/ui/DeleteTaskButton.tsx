@@ -7,7 +7,7 @@ export function DeleteTaskButton({ taskId }: { taskId: string }) {
   return (
     <button
       onClick={() => deleteTask(taskId)}
-      className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-destructive transition-all"
+      className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-destructive transition"
       aria-label="Delete task"
     >
       <Trash2 size={13} />

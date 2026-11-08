@@ -42,7 +42,7 @@ export function ResetPasswordPage() {
     return (
       <AuthLayout title={t("auth.resetPassword.invalidTitle")} icon={RESET_ICON}>
         <p className="text-sm text-destructive">{t("auth.resetPassword.invalidLink")}</p>
-        <Button asChild className="w-full h-12 rounded-[10px] text-base font-bold shadow-card">
+        <Button asChild className="w-full h-12 rounded-md text-base font-bold shadow-card">
           <Link to="/forgot-password">{t("auth.resetPassword.requestNewLink")}</Link>
         </Button>
       </AuthLayout>
@@ -60,12 +60,12 @@ export function ResetPasswordPage() {
           value={newPassword}
           onChange={e => setNewPassword(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
-          className="h-12 rounded-[10px] bg-sunken"
+          className="h-12 rounded-md bg-sunken"
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button
-        className="w-full h-12 rounded-[10px] text-base font-bold shadow-card"
+        className="w-full h-12 rounded-md text-base font-bold shadow-card"
         onClick={handleSubmit}
         disabled={isSubmitting}
       >

@@ -7,7 +7,7 @@ export function EditHabitButton({ onClick }: { onClick: () => void }) {
         e.stopPropagation()
         onClick()
       }}
-      className="p-1 rounded text-muted-foreground hover:text-foreground transition-all"
+      className="p-1 rounded text-muted-foreground hover:text-foreground transition"
       aria-label="Edit habit"
     >
       <Pencil size={12} />

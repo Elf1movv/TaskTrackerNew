@@ -87,6 +87,9 @@ export const en = {
   "tasks.addTask": "Add task",
   "tasks.status.active": "Active",
   "tasks.status.done": "Done",
+  "tasks.categorySettings": 'Name and color of "{name}"',
+  "tasks.categoryName": "Name",
+  "tasks.categoryNameTaken": "A category with this name already exists",
   "tasks.categoryAll": "All",
   "tasks.date.label": "Deadline",
   "tasks.viewInCalendar": "Open in calendar: {date}",
@@ -96,7 +99,7 @@ export const en = {
     'The category "{name}" will be deleted. Its goals are kept, just without a category.',
   "tasks.deleteCategoryTitleWithTasks": "Delete category and its tasks?",
   "tasks.deleteCategoryBodyWithTasks":
-    '"{name}" has {count} task(s). Deleting the category will also delete them. Goals are kept without a category. This can\'t be undone.',
+    '"{name}" has {count} task. Deleting the category will also delete it. Goals are kept without a category. This can\'t be undone.|"{name}" has {count} tasks. Deleting the category will also delete them. Goals are kept without a category. This can\'t be undone.',
   "tasks.noActiveTasks": "No active tasks",
   "tasks.completedSection": "Completed ({count})",
   "tasks.noTasksIn": " in {category}",
@@ -174,7 +177,7 @@ export const en = {
   "habits.group.deleteTitle": "Delete block?",
   "habits.group.deleteBody":
     'The "{title}" block will be deleted, but its habits aren\'t — they\'ll move to "General".',
-  "habits.group.habitCount": "{count} habits",
+  "habits.group.habitCount": "{count} habit|{count} habits",
 
   "goals.title": "Goals",
   "goals.subtitle": "Big outcomes and the steps toward them",
@@ -215,7 +218,7 @@ export const en = {
   "calendar.agendaEmpty": "Nothing scheduled",
   "calendar.agendaHint":
     'Agenda lists the coming days that have something in them: plans, task and goal deadlines, reminders. Empty days are skipped; "Show more" adds {count} days. You can check off and edit right here.',
-  "calendar.agendaLoadMore": "Show {count} more days",
+  "calendar.agendaLoadMore": "Show {count} more day|Show {count} more days",
   "calendar.yearMonthSummary": "{done} of {total} done",
   "calendar.backToToday": "Back to today",
   "calendar.view.agenda": "Agenda",
@@ -238,8 +241,8 @@ export const en = {
   "toast.deleteFailed": "Couldn't delete this {entity}. Please try again.",
   "toast.reorderFailed": "Couldn't save the new order. Please try again.",
 
-  "reminders.tasksDueSoon": "You have {count} task(s) due soon",
-  "reminders.goalsDueSoon": "You have {count} goal(s) due soon",
+  "reminders.tasksDueSoon": "{count} task due in the next few days|{count} tasks due in the next few days",
+  "reminders.goalsDueSoon": "{count} goal due in the next few days|{count} goals due in the next few days",
   "reminders.viewAction": "View",
 
   "auth.email": "Email",

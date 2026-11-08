@@ -11,7 +11,7 @@ import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildAgendaRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 
 type EditingItem = { kind: "task" | "reminder" | "goal"; id: string } | null
@@ -108,16 +108,14 @@ export function CalendarAgendaView({
           <div key={dayKey} className="bg-card border border-card-border rounded-xl shadow-card p-5">
             <div className="flex items-baseline gap-2 mb-4">
               <span
-                css={monoFont}
-                className={`text-xs uppercase tracking-wider font-bold ${isToday(group.day) ? "text-primary" : "text-tertiary"}`}
+                css={numericFont}
+                className={`text-meta font-semibold capitalize ${isToday(group.day) ? "text-primary" : "text-tertiary"}`}
               >
                 {format(group.day, "EEEE", { locale })}
               </span>
-              <span className="text-lg font-bold tracking-[-0.015em]">
-                {format(group.day, "d MMMM", { locale })}
-              </span>
+              <span className="text-lg font-semibold">{format(group.day, "d MMMM", { locale })}</span>
               {isToday(group.day) && (
-                <span className="h-[22px] px-2 rounded-md bg-primary-soft text-primary text-xs font-bold inline-flex items-center">
+                <span className="h-6 px-2 rounded-md bg-primary-soft text-primary text-xs font-bold inline-flex items-center">
                   {t("common.today")}
                 </span>
               )}
@@ -177,7 +175,7 @@ export function CalendarAgendaView({
           variant="outline"
           size="sm"
           onClick={() => setVisibleDays(v => v + LOAD_MORE_INCREMENT_DAYS)}
-          className="h-10 px-4 rounded-[10px] shadow-card text-sm font-semibold"
+          className="h-10 px-4 rounded-md shadow-card text-sm font-semibold"
         >
           {t("calendar.agendaLoadMore", { count: LOAD_MORE_INCREMENT_DAYS })}
         </Button>

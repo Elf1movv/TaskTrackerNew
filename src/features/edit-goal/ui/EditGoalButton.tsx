@@ -7,7 +7,7 @@ export function EditGoalButton({ onClick }: { onClick: () => void }) {
         e.stopPropagation()
         onClick()
       }}
-      className="p-2 rounded-[10px] text-tertiary hover:text-foreground hover:bg-fill transition-all"
+      className="p-2 rounded-md text-tertiary hover:text-foreground hover:bg-fill transition"
       aria-label="Edit goal"
     >
       <Pencil size={16} strokeWidth={1.75} />

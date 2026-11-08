@@ -123,7 +123,7 @@ export function HabitForm({
               type="button"
               onClick={() => toggleDay(day)}
               aria-pressed={activeDays.includes(day)}
-              className={`size-8 rounded-full text-xs transition-all ${
+              className={`size-8 rounded-full text-xs transition ${
                 activeDays.includes(day)
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent"

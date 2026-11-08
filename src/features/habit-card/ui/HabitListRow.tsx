@@ -3,7 +3,7 @@ import styled from "@emotion/styled"
 import { getStreak, HabitIcon, useHabits, type Habit } from "@/entities/habit"
 import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 
 const Row = styled.button<{ active: boolean; color: string }>`
   border-color: ${p => (p.active ? `color-mix(in srgb, ${p.color} 50%, transparent)` : "var(--border)")};
@@ -33,13 +33,13 @@ export function HabitListRow({ habit }: { habit: Habit }) {
       active={doneToday}
       color={habit.color}
       onClick={() => toggleHabit(habit.id, today)}
-      className="w-full min-h-14 px-3 py-2 rounded-[10px] border text-left transition-all flex items-center gap-3"
+      className="w-full min-h-14 px-3 py-2 rounded-md border text-left transition flex items-center gap-3"
       aria-pressed={doneToday}
     >
       <IconTile
         active={doneToday}
         color={habit.color}
-        className="size-9 shrink-0 rounded-[10px] flex items-center justify-center"
+        className="size-9 shrink-0 rounded-md flex items-center justify-center"
       >
         <HabitIcon emoji={habit.icon} size={17} />
       </IconTile>
@@ -52,10 +52,10 @@ export function HabitListRow({ habit }: { habit: Habit }) {
         color={
           streak > 0 ? `color-mix(in srgb, ${habit.color} 80%, var(--foreground))` : "var(--text-tertiary)"
         }
-        className={`flex items-center gap-1 text-xs shrink-0 pr-14 ${streak > 0 ? "font-extrabold" : "font-semibold"}`}
+        className={`flex items-center gap-1 text-xs shrink-0 pr-14 ${streak > 0 ? "font-semibold" : "font-semibold"}`}
       >
         <Flame size={13} fill={streak > 0 ? "currentColor" : "none"} />
-        <span css={monoFont}>{streak}</span>
+        <span css={numericFont}>{streak}</span>
         <span className="font-semibold text-muted-foreground">{t("habitCard.days")}</span>
       </StreakLabel>
     </Row>

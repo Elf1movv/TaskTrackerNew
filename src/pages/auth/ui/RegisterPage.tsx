@@ -53,7 +53,7 @@ export function RegisterPage() {
             email: submittedEmail,
           })}
         </p>
-        <Button asChild className="w-full h-12 rounded-[10px] text-base font-bold shadow-card">
+        <Button asChild className="w-full h-12 rounded-md text-base font-bold shadow-card">
           <Link to="/login">{t("auth.register.backToLogin")}</Link>
         </Button>
       </AuthLayout>
@@ -70,7 +70,7 @@ export function RegisterPage() {
           value={name}
           onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
-          className="h-12 rounded-[10px] bg-sunken"
+          className="h-12 rounded-md bg-sunken"
         />
       </div>
       <div className="space-y-2">
@@ -81,7 +81,7 @@ export function RegisterPage() {
           value={email}
           onChange={e => setEmail(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
-          className="h-12 rounded-[10px] bg-sunken"
+          className="h-12 rounded-md bg-sunken"
         />
       </div>
       <div className="space-y-2">
@@ -93,13 +93,13 @@ export function RegisterPage() {
           value={password}
           onChange={e => setPassword(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
-          className="h-12 rounded-[10px] bg-sunken"
+          className="h-12 rounded-md bg-sunken"
         />
         <PasswordRequirementsHint password={password} />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button
-        className="w-full h-12 rounded-[10px] text-base font-bold shadow-card mt-1"
+        className="w-full h-12 rounded-md text-base font-bold shadow-card mt-1"
         onClick={handleSubmit}
         disabled={isSubmitting || !meetsPasswordRequirements(password)}
       >

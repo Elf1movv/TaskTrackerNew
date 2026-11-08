@@ -68,7 +68,7 @@ export function GoalReminderSwapCard({
           >
             {showReminders ? <Target size={16} strokeWidth={1.75} /> : <Bell size={16} strokeWidth={1.75} />}
             {!showReminders && total > 0 && (
-              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-white text-[10px] font-medium leading-none">
+              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-5 px-1 rounded-full bg-destructive text-white text-caption font-medium leading-none">
                 {total}
               </span>
             )}

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 import { useLanguage } from "@/shared/lib/i18n"
-import { displayFont, monoFont } from "@/shared/lib/typography"
 import { BrandMark } from "@/shared/ui/brand-mark"
 
 // Shared shell for every unauthenticated screen (login, register, forgot/
@@ -31,15 +30,8 @@ export function AuthLayout({
         <div className="flex flex-col items-center gap-4 mb-7">
           {icon ?? <BrandMark size={64} iconSize={34} radius={18} />}
           <div className="text-center flex flex-col gap-1">
-            <div
-              css={monoFont}
-              className="text-xs font-bold tracking-[0.16em] uppercase text-muted-foreground"
-            >
-              MyTracker
-            </div>
-            <h1 css={displayFont} className="text-[34px] font-extrabold tracking-[-0.025em]">
-              {title}
-            </h1>
+            <div className="text-meta font-semibold text-muted-foreground">MyTracker</div>
+            <h1>{title}</h1>
           </div>
         </div>
         <div className="bg-card border border-card-border rounded-[20px] shadow-raised p-7 space-y-[18px]">

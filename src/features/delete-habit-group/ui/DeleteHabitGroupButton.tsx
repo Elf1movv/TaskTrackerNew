@@ -39,7 +39,7 @@ export function DeleteHabitGroupButton({ group }: { group: HabitGroup }) {
           e.stopPropagation()
           setConfirming(true)
         }}
-        className="p-1 rounded text-muted-foreground hover:text-destructive transition-all"
+        className="p-1 rounded text-muted-foreground hover:text-destructive transition"
         aria-label="Delete habit block"
       >
         <Trash2 size={13} />

@@ -45,12 +45,12 @@ function GoalsPageContent() {
     <div className="p-6 md:p-10 max-w-3xl mx-auto">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-[40px] leading-[1.1] font-extrabold tracking-[-0.03em]">{t("goals.title")}</h1>
-          <p className="text-[15px] text-muted-foreground">{t("goals.subtitle")}</p>
+          <h1>{t("goals.title")}</h1>
+          <p className="text-body text-muted-foreground">{t("goals.subtitle")}</p>
         </div>
         <Button
           onClick={() => setIsAdding(v => !v)}
-          className="h-11 px-5 gap-2 rounded-[10px] shadow-raised text-[15px]"
+          className="h-11 px-5 gap-2 rounded-md shadow-raised text-body"
         >
           <Plus size={18} />
           {t("goals.addGoal")}
@@ -65,7 +65,7 @@ function GoalsPageContent() {
               type="button"
               aria-pressed={categoryFilter === chip.value}
               onClick={() => setCategoryFilter(chip.value)}
-              className={`flex items-center gap-2 h-[34px] px-3.5 rounded-full text-[13px] font-semibold transition-all ${
+              className={`flex items-center gap-2 h-8 px-3.5 rounded-full text-meta font-semibold transition ${
                 categoryFilter === chip.value
                   ? "bg-primary text-primary-foreground border border-primary"
                   : "border border-border bg-card text-foreground"

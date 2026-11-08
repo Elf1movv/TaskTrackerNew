@@ -93,7 +93,7 @@ export function ReminderForm({
             type="button"
             color={REMINDER_PRIORITY_COLORS[priority]}
             onClick={() => setPriority(nextPriority(priority))}
-            className="px-2.5 py-1 rounded-lg text-xs transition-all border"
+            className="px-2.5 py-1 rounded-lg text-xs transition border"
           >
             {t(PRIORITY_LABEL_KEYS[priority])}
           </PriorityToggle>
