@@ -6,6 +6,8 @@ Requires Node and an isolated Chrome with remote debugging on `127.0.0.1:9222`.
 The app must be built and running before registration. No mail is sent when
 `EMAIL_DELIVERY=disabled`.
 
+**Windows, одной командой:** `scripts/qa/run-local.sh` (`--full`, `--keep`, `--stop`) — делает шаги ниже сам.
+
 1. `node scripts/qa/independent-browser.mjs register` writes a disposable login
    to `/private/tmp/mytracker-independent-login.json` (mode 600), prints email only.
 2. Verify that exact QA email in the isolated database:
