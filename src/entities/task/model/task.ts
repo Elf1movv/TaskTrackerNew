@@ -28,6 +28,3 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
   medium: "var(--warning)",
   high: "var(--destructive)",
 }
-
-export type StatusFilter = "all" | "active" | "done"
-export type TaskDateFilter = "all" | "undated" | "dated"

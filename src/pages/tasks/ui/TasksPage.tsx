@@ -21,11 +21,9 @@ function TasksPageContent() {
     )
   const {
     allTasks,
-    filteredTasks,
-    statusFilter,
-    setStatusFilter,
-    dateFilter,
-    setDateFilter,
+    activeTasks,
+    completedPage,
+    completedCount,
     categoryFilter,
     setCategoryFilter,
     page,
@@ -45,11 +43,9 @@ function TasksPageContent() {
       </Dialog>
       <TaskBoard
         allTasks={allTasks}
-        filteredTasks={filteredTasks}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
+        activeTasks={activeTasks}
+        completedPage={completedPage}
+        completedCount={completedCount}
         categoryFilter={categoryFilter}
         onCategoryFilterChange={setCategoryFilter}
         page={page}

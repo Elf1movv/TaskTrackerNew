@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useState } from "react"
-import { format } from "date-fns"
-import { Activity, BarChart3, Flame, Lock, Plus, TrendingUp } from "lucide-react"
+import { endOfWeek, format, startOfWeek } from "date-fns"
+import { Activity, BarChart3, ChevronLeft, ChevronRight, Flame, Plus, TrendingUp } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { EditHabitButton } from "@/features/edit-habit"
 import { DeleteHabitButton } from "@/features/delete-habit"
@@ -23,7 +23,13 @@ import { Button } from "@/shared/ui/button"
 import { useIsMobile } from "@/shared/ui/use-mobile"
 import { getDayCellState } from "../lib/habitCellState"
 import { getHabitHistorySummary } from "../lib/habitHistorySummary"
-import { getPeriodDays, getYearMonths, type HabitHistoryPeriod } from "../lib/periodColumns"
+import {
+  getPeriodDays,
+  getYearMonths,
+  isCurrentOrFuturePeriod,
+  shiftPeriodAnchor,
+  type HabitHistoryPeriod,
+} from "../lib/periodColumns"
 import { HabitHistoryChart, type HabitChartStyle } from "./HabitHistoryChart"
 import { MonthCell } from "./MonthCell"
 
@@ -42,6 +48,14 @@ const CHART_STYLES: { style: HabitChartStyle; Icon: typeof TrendingUp }[] = [
 // full, just scoped to one group's habits instead of every habit the user
 // has — see docs/requirements for why each block got its own state
 // instead of one shared page-level period.
+//
+// The built-in General group (habits without a block) renders the same card
+// without its header — no title, lock badge or block edit/delete (owner
+// decision 2026-11-08) — and is always open.
+//
+// ← → browse past weeks/months/years (owner feedback 2026-11-08). The
+// shown period comes from `anchor`; `today` is always the real date, so
+// past days stay clickable and days after today stay disabled.
 export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; habits: Habit[] }) {
   const { habits: allHabits, toggleHabit, reorderHabitsInGroup, moveHabitToGroup } = useHabits()
   const { reorderHabitGroups } = useHabitGroups()
@@ -51,6 +65,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   const isMobile = useIsMobile()
 
   const [period, setPeriod] = useState<HabitHistoryPeriod>("week")
+  const [anchor, setAnchor] = useState(() => new Date())
   const [chartStyle, setChartStyle] = useState<HabitChartStyle>("area")
   const [isOpen, setIsOpen] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
@@ -64,9 +79,12 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   // ref — see that component's comment for why (AccordionItem has no
   // forwardRef).
   const { ref: dragGroupRef, isDragging } = useDragReorder<HTMLDivElement>({
-    type: "habit-group",
+    // General ("without a block") is always shown first and has no header,
+    // so it can't be dragged and other blocks don't reorder onto it.
+    type: group.isGeneral ? "habit-group-general" : "habit-group",
     id: group.id,
     onHoverMove: reorderHabitGroups,
+    canDrag: !group.isGeneral,
   })
   // Accepts a habit dragged from any block's grid (including this one,
   // dropped broadly rather than on a specific row) — appends it here.
@@ -96,8 +114,15 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
     }
   }
 
-  const days = period !== "year" ? getPeriodDays(period, today) : null
-  const months = period === "year" ? getYearMonths(today) : null
+  const days = period !== "year" ? getPeriodDays(period, anchor) : null
+  const months = period === "year" ? getYearMonths(anchor) : null
+  const atCurrentPeriod = isCurrentOrFuturePeriod(period, anchor, today)
+  const periodLabel =
+    period === "week"
+      ? `${format(startOfWeek(anchor, { weekStartsOn: 1 }), "d MMM", { locale })} – ${format(endOfWeek(anchor, { weekStartsOn: 1 }), "d MMM yyyy", { locale })}`
+      : period === "month"
+        ? format(anchor, "LLLL yyyy", { locale })
+        : format(anchor, "yyyy")
   const columnCount = (days ?? months ?? []).length
   // minmax(0, 1fr) columns let the day/month track collapse to nothing on a
   // narrow screen — the weekday-label text doesn't wrap or clip there, it
@@ -127,7 +152,8 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   // legible columns; on desktop it's unnecessary and was forcing the same
   // unwanted scrollbar the day/habit grid got.
   const chartGridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(${dayColumnMin}, 1fr))`
-  const summary = getHabitHistorySummary(habits, period, today)
+  const summary = getHabitHistorySummary(habits, period, anchor, today)
+  const isGeneral = group.isGeneral
   const percent = summary.total === 0 ? 0 : Math.round((summary.completed / summary.total) * 100)
 
   return (
@@ -135,15 +161,19 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
       <Accordion
         type="single"
         collapsible
-        value={isOpen ? group.id : ""}
+        value={isOpen || isGeneral ? group.id : ""}
         onValueChange={v => setIsOpen(v === group.id)}
       >
         <AccordionItem
           value={group.id}
+          data-general-habits={isGeneral ? "" : undefined}
           className="!border-b-0 bg-card border border-card-border rounded-xl shadow-card overflow-hidden"
         >
-          <div className="flex items-start gap-1 px-[22px] pt-[18px] cursor-grab active:cursor-grabbing">
-            {/* flex-1 belongs on this wrapper, not the Trigger itself —
+          {isGeneral ? (
+            <div className="pt-[18px]" />
+          ) : (
+            <div className="flex items-start gap-1 px-[22px] pt-[18px] cursor-grab active:cursor-grabbing">
+              {/* flex-1 belongs on this wrapper, not the Trigger itself —
                 Radix wraps every AccordionTrigger in its own
                 <h3 class="flex"> (shared/ui/accordion.tsx), a plain flex
                 item with no grow of its own. flex-1 on the Trigger alone
@@ -153,42 +183,68 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                 — same root cause as GoalAccordionItem's identical bug).
                 This wrapper is what actually sits in the outer flex row,
                 so it's the one that needs flex-1. */}
-            <div className="flex-1 min-w-0">
-              <AccordionTrigger className="hover:no-underline pb-4 [&>svg]:mt-1.5">
-                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                  <span className="size-9 shrink-0 rounded-[10px] bg-primary-soft text-primary flex items-center justify-center">
-                    <HabitIcon emoji={getHabitGroupIcon(group)} size={18} />
-                  </span>
-                  <span className="text-xl font-bold tracking-[-0.015em] truncate min-w-0">
-                    {getHabitGroupTitle(group, t)}
-                  </span>
-                  {group.isGeneral && (
-                    <span className="h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1 shrink-0">
-                      <Lock size={11} strokeWidth={2.25} />
-                      {t("habits.group.general")}
+              <div className="flex-1 min-w-0">
+                <AccordionTrigger className="hover:no-underline pb-4 [&>svg]:mt-1.5">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <span className="size-9 shrink-0 rounded-[10px] bg-primary-soft text-primary flex items-center justify-center">
+                      <HabitIcon emoji={getHabitGroupIcon(group)} size={18} />
                     </span>
-                  )}
-                  <span className="text-[13px] font-semibold text-tertiary shrink-0">
-                    {t("habits.group.habitCount", { count: habits.length })}
-                  </span>
-                </div>
-              </AccordionTrigger>
+                    <span className="text-xl font-bold tracking-[-0.015em] truncate min-w-0">
+                      {getHabitGroupTitle(group, t)}
+                    </span>
+                    <span className="text-[13px] font-semibold text-tertiary shrink-0">
+                      {t("habits.group.habitCount", { count: habits.length })}
+                    </span>
+                  </div>
+                </AccordionTrigger>
+              </div>
+              <div className="flex items-center gap-0.5 pt-3.5 shrink-0">
+                <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
+                <DeleteHabitGroupButton group={group} />
+              </div>
             </div>
-            <div className="flex items-center gap-0.5 pt-3.5 shrink-0">
-              <EditHabitGroupButton onClick={() => setIsEditingGroup(true)} />
-              {!group.isGeneral && <DeleteHabitGroupButton group={group} />}
-            </div>
-          </div>
+          )}
 
           <AccordionContent className="px-[22px] pb-5 space-y-3.5">
             {isEditingGroup && <HabitGroupForm group={group} onDone={() => setIsEditingGroup(false)} />}
 
             <div className="flex items-center justify-end flex-wrap gap-3">
+              {isGeneral && <span className="mr-auto text-[15px] font-bold">{t("habits.withoutBlock")}</span>}
+              <div className="flex items-center gap-1" role="group" aria-label={t("habits.periodNav")}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  aria-label={t("habits.periodPrev")}
+                  onClick={() => setAnchor(a => shiftPeriodAnchor(period, a, -1))}
+                >
+                  <ChevronLeft size={16} />
+                </Button>
+                <span
+                  className="text-[13px] font-semibold min-w-[120px] text-center capitalize"
+                  data-period-label
+                >
+                  {periodLabel}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  aria-label={t("habits.periodNext")}
+                  disabled={atCurrentPeriod}
+                  onClick={() => setAnchor(a => shiftPeriodAnchor(period, a, 1))}
+                >
+                  <ChevronRight size={16} />
+                </Button>
+              </div>
               <div className="grid grid-cols-3 w-[252px] p-0.5 rounded-[9px] bg-fill">
                 {PERIODS.map(p => (
                   <button
                     key={p}
-                    onClick={() => setPeriod(p)}
+                    onClick={() => {
+                      setPeriod(p)
+                      setAnchor(new Date())
+                    }}
                     className={`h-[30px] rounded-lg text-[13px] transition-all ${
                       period === p
                         ? "bg-seg text-foreground font-bold shadow-card"
@@ -226,7 +282,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
             {habits.length === 0 ? (
               !isAdding && (
                 <div className="text-center py-12 text-muted-foreground text-sm">
-                  {t("habits.noHabitsYet")}
+                  {t(isGeneral ? "habits.withoutBlockEmpty" : "habits.noHabitsYet")}
                 </div>
               )
             ) : (

@@ -423,6 +423,7 @@ erDiagram
         string color
         string category
         json milestones
+        json subgoals
         int order
         string userId FK
     }
@@ -664,6 +665,19 @@ Task и журнале. Транзакция по владельцу и уник
   CalendarPlan (кроме «Отложено»), галочка выполнения и переход в календарь.
 - **Gotcha:** innerText учитывает CSS text-transform — заголовки секций
   панели дня (uppercase) в браузерных проверках сравнивать без учёта регистра.
+- **Итерация 3.1 (2026-11-08).** Goal.subgoals — JSON
+  `[{id,title,milestones}]` рядом с milestones (миграция 20261108150000),
+  два уровня дерева. **Прогресс цели считает сервер**
+  (`server/src/lib/goalProgress.ts`) при POST и при любом PATCH с
+  milestones/subgoals — клиентская копия формулы
+  (`entities/goal/lib/computeGoalProgress.ts`) только для мгновенного
+  отображения; старая вкладка браузера не может записать неверный процент.
+  Задачи: только активные без срока перетаскиваются (`useDragReorder`
+  получил `canDrag`; у прочих свой тип перетаскивания), т.к. датированные
+  стоят по сроку. Общий `shared/ui/pager.tsx` (+ `paginate`) для заметок,
+  напоминаний и выполненных задач. Привычки на /habits: колонки строятся от
+  `anchor`, а `today` всегда настоящая дата — иначе дни после выбранного
+  периода считались бы «будущими».
 - **Отложено до выпуска в main:** удалить мёртвые колонки схемы
   (Task.goalId/time/endTime, CalendarPlan.taskId/priority/category,
   Reminder.taskId/planId/offsetMinutes/suspended, Goal.achievedAt) и

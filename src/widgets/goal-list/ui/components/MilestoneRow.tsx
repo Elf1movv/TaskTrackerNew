@@ -15,13 +15,18 @@ const Circle = styled.div<{ completed: boolean; color: string }>`
   background-color: ${p => (p.completed ? p.color : "transparent")};
 `
 
+// One step — either the goal's own (no `subgoalId`) or a subgoal's. Drag
+// reordering is scoped to that one list, so a step can't be dragged into a
+// different goal or subgoal.
 export function MilestoneRow({
   goalId,
+  subgoalId,
   milestone,
   color,
   index,
 }: {
   goalId: string
+  subgoalId?: string
   milestone: Milestone
   color: string
   index: number
@@ -31,18 +36,18 @@ export function MilestoneRow({
   const [draftTitle, setDraftTitle] = useState(milestone.title)
 
   const onHoverMove = useCallback(
-    (draggedId: string, targetId: string) => reorderMilestones(goalId, draggedId, targetId),
-    [reorderMilestones, goalId],
+    (draggedId: string, targetId: string) => reorderMilestones(goalId, draggedId, targetId, subgoalId),
+    [reorderMilestones, goalId, subgoalId],
   )
   const { ref, isDragging } = useDragReorder<HTMLDivElement>({
-    type: `milestone-${goalId}`,
+    type: `milestone-${goalId}-${subgoalId ?? "own"}`,
     id: milestone.id,
     onHoverMove,
   })
 
   function commitEdit() {
     const title = draftTitle.trim()
-    if (title) updateMilestone(goalId, milestone.id, title)
+    if (title) updateMilestone(goalId, milestone.id, title, subgoalId)
     else setDraftTitle(milestone.title)
     setIsEditing(false)
   }
@@ -54,7 +59,7 @@ export function MilestoneRow({
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <button
-        onClick={() => toggleMilestone(goalId, milestone.id)}
+        onClick={() => toggleMilestone(goalId, milestone.id, subgoalId)}
         className="shrink-0"
         aria-label={milestone.completed ? "Mark milestone as not done" : "Mark milestone as done"}
         aria-pressed={milestone.completed}
@@ -99,7 +104,7 @@ export function MilestoneRow({
       </span>
 
       <button
-        onClick={() => deleteMilestone(goalId, milestone.id)}
+        onClick={() => deleteMilestone(goalId, milestone.id, subgoalId)}
         className="shrink-0 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-destructive transition-all"
         aria-label="Delete milestone"
       >

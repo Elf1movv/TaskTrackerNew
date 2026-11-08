@@ -96,6 +96,58 @@ describe("goals router", () => {
     expect(cleared.body.category).toBeNull()
   })
 
+  it("stores subgoals with their own steps and derives progress on the server", async () => {
+    const created = await agent.post("/api/goals").send({
+      ...baseGoal,
+      id: crypto.randomUUID(),
+      progress: 99, // ignored — the server computes it
+      milestones: [{ id: "s1", title: "Own step", completed: true }],
+      subgoals: [
+        {
+          id: "g1",
+          title: "Backend",
+          milestones: [
+            { id: "a", title: "A", completed: true },
+            { id: "b", title: "B", completed: false },
+          ],
+        },
+      ],
+    })
+    expect(created.status).toBe(201)
+    // (1 own step done + 0.5 of the subgoal) / 2 parts = 75%
+    expect(created.body.progress).toBe(75)
+    expect(created.body.subgoals[0].milestones).toHaveLength(2)
+
+    // A client sending only `milestones` with a wrong progress must not
+    // erase the subgoals or store its wrong percentage.
+    const ownOnly = await agent.patch(`/api/goals/${created.body.id}`).send({
+      patch: { milestones: [{ id: "s1", title: "Own step", completed: false }], progress: 100 },
+      expectedUpdatedAt: created.body.updatedAt,
+    })
+    expect(ownOnly.status).toBe(200)
+    expect(ownOnly.body.subgoals).toHaveLength(1)
+    expect(ownOnly.body.progress).toBe(25)
+
+    const stale = await agent.patch(`/api/goals/${created.body.id}`).send({
+      patch: { subgoals: [] },
+      expectedUpdatedAt: created.body.updatedAt,
+    })
+    expect(stale.status).toBe(409)
+
+    // Even a bare `progress` from the client is replaced by the derived value.
+    const bare = await agent.patch(`/api/goals/${created.body.id}`).send({
+      patch: { progress: 90 },
+      expectedUpdatedAt: ownOnly.body.updatedAt,
+    })
+    expect(bare.body.progress).toBe(25)
+  })
+
+  it("returns an empty subgoal list for goals created by older clients", async () => {
+    const created = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID() })
+    expect(created.body.subgoals).toEqual([])
+    expect(created.body.progress).toBe(0)
+  })
+
   it("deletes a goal", async () => {
     const created = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID() })
     expect((await agent.delete(`/api/goals/${created.body.id}`)).status).toBe(204)

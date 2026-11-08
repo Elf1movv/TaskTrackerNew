@@ -20,13 +20,19 @@ import { generateId } from "@/shared/lib/id"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { ConfirmAction } from "@/shared/ui/confirm-action"
 import { Button } from "@/shared/ui/button"
+import { paginate, Pager } from "@/shared/ui/pager"
+const NOTES_PAGE_SIZE = 10
 // Notes are undated (iteration 3): only "current" and "archive" tabs.
 export function NotesCard() {
   const { notes, isLoaded } = useNotes()
   const { t } = useLanguage()
   const [tab, setTab] = useState<"current" | "archive">("current")
-  const [limit, setLimit] = useState(10)
+  const [requestedPage, setPage] = useState(1)
   const filtered = notes.filter(note => (tab === "archive" ? !!note.archivedAt : !note.archivedAt))
+  // 10 per page so a long list never stretches Today down (owner feedback,
+  // 2026-11-08). Keyboard reorder neighbours come from the FULL list, so the
+  // arrow keys still work for the first/last row of a page.
+  const { page, pageCount, start, items: pageNotes } = paginate(filtered, requestedPage, NOTES_PAGE_SIZE)
   return (
     <section className="lg:col-span-2 min-w-0 self-start bg-card border border-card-border rounded-xl shadow-card overflow-hidden">
       <div className="p-5 border-b border-border space-y-3">
@@ -43,7 +49,7 @@ export function NotesCard() {
               aria-pressed={tab === value}
               onClick={() => {
                 setTab(value)
-                setLimit(10)
+                setPage(1)
               }}
             >
               {t(`notes.${value}`)}
@@ -54,26 +60,24 @@ export function NotesCard() {
       {!isLoaded ? (
         <p className="p-6 text-muted-foreground">{t("notes.loading")}</p>
       ) : filtered.length ? (
-        filtered
-          .slice(0, limit)
-          .map((note, index) => (
-            <NoteRow
-              key={note.id}
-              note={note}
-              previousId={filtered[index - 1]?.id}
-              nextId={filtered[index + 1]?.id}
-            />
-          ))
+        pageNotes.map((note, index) => (
+          <NoteRow
+            key={note.id}
+            note={note}
+            previousId={filtered[start + index - 1]?.id}
+            nextId={filtered[start + index + 1]?.id}
+          />
+        ))
       ) : (
         <p className="p-6 text-sm text-muted-foreground">{t("notes.empty")}</p>
       )}
-      {filtered.length > limit && (
-        <div className="p-3 text-center">
-          <Button variant="outline" size="sm" onClick={() => setLimit(n => n + 10)}>
-            {t("notes.more")}
-          </Button>
-        </div>
-      )}
+      <Pager
+        page={page}
+        pageCount={pageCount}
+        onPageChange={setPage}
+        label={t("notes.title")}
+        className="p-3 border-t border-border"
+      />
     </section>
   )
 }

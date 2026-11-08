@@ -71,6 +71,10 @@ model Goal {
   // "start simple" choice already made for Task. Milestone order is just
   // its position in this array, no separate order column needed for it.
   milestones  Json
+  // Two-level goal tree (iteration 3.1): [{ id, title, milestones: [...] }]
+  // — each subgoal with its own steps, embedded like `milestones`. Progress
+  // is recomputed by the server from both (src/lib/goalProgress.ts).
+  subgoals    Json     @default("[]")
   order       Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import { ChevronDown, Lock, Plus } from "lucide-react"
+import { ChevronDown, Plus } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { EditHabitGroupButton } from "@/features/edit-habit-group"
 import { DeleteHabitGroupButton } from "@/features/delete-habit-group"
@@ -18,6 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/shared/ui/button"
 import { HabitGridItem } from "./components"
 import type { HabitViewMode } from "../lib/habitViewMode"
+import { useTodayGroupOpen } from "../lib/todayGroupOpen"
 
 // One block's card on the Today page — a plain header (icon badge tinted
 // in the block's own custom color, bold name, count) and its habits
@@ -42,7 +43,8 @@ export function TodayHabitGroupCard({
   const { reorderHabitGroups } = useHabitGroups()
   const { t } = useLanguage()
 
-  const [isOpen, setIsOpen] = useState(true)
+  // Collapsed by default; the choice is remembered for this browser session.
+  const [isOpen, setIsOpen] = useTodayGroupOpen(group.id)
   const [isAdding, setIsAdding] = useState(false)
   const [isEditingGroup, setIsEditingGroup] = useState(false)
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
@@ -123,12 +125,6 @@ export function TodayHabitGroupCard({
                   <HabitIcon emoji={getHabitGroupIcon(group)} size={17} />
                 </span>
                 <span className="text-[15px] font-bold truncate min-w-0">{getHabitGroupTitle(group, t)}</span>
-                {group.isGeneral && (
-                  <span className="h-[22px] px-2 rounded-md bg-fill text-tertiary text-[11px] font-bold inline-flex items-center gap-1 shrink-0">
-                    <Lock size={11} strokeWidth={2.25} />
-                    {t("habits.group.general")}
-                  </span>
-                )}
                 <span className="text-xs font-semibold text-tertiary shrink-0">
                   {doneCount}/{habits.length}
                 </span>

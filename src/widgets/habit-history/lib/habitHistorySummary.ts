@@ -1,4 +1,4 @@
-import { isAfter } from "date-fns"
+import { startOfMonth } from "date-fns"
 import type { Habit } from "@/entities/habit"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDayCellState } from "./habitCellState"
@@ -43,7 +43,9 @@ function summarizeByMonth(habits: Habit[], months: Date[], today: Date): HabitHi
   let completed = 0
   let total = 0
   const chartData = months.map(month => {
-    if (isAfter(month, today) && month.getMonth() !== today.getMonth()) {
+    // Whole month still ahead of today (compares year too, not just the
+    // month number — a later year's same month is also in the future).
+    if (startOfMonth(month) > today) {
       return { label: String(month.getMonth() + 1), value: 0 }
     }
     const year = month.getFullYear()
@@ -69,11 +71,14 @@ function summarizeByMonth(habits: Habit[], months: Date[], today: Date): HabitHi
   return { chartData, completed, total }
 }
 
+// `anchor` picks which week/month/year is summarized; `today` stays the real
+// current date so nothing after it is counted.
 export function getHabitHistorySummary(
   habits: Habit[],
   period: HabitHistoryPeriod,
+  anchor: Date,
   today: Date,
 ): HabitHistorySummary {
-  if (period === "year") return summarizeByMonth(habits, getYearMonths(today), today)
-  return summarizeByDay(habits, getPeriodDays(period, today), today)
+  if (period === "year") return summarizeByMonth(habits, getYearMonths(anchor), today)
+  return summarizeByDay(habits, getPeriodDays(period, anchor), today)
 }

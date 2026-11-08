@@ -85,11 +85,23 @@ export function CalendarAgendaView({
   }, [days, allTasks, allDeadlines, allReminders, allGoals])
 
   if (groups.length === 0) {
-    return <div className="text-center py-16 text-muted-foreground text-sm">{t("calendar.agendaEmpty")}</div>
+    return (
+      <div className="max-w-2xl mx-auto">
+        <p className="text-sm text-muted-foreground mb-4" data-agenda-hint>
+          {t("calendar.agendaHint", { count: LOAD_MORE_INCREMENT_DAYS })}
+        </p>
+        <div className="text-center py-16 text-muted-foreground text-sm">{t("calendar.agendaEmpty")}</div>
+      </div>
+    )
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* What this view is (owner asked, 2026-11-08) — shown in the UI so
+          nobody has to remember how Agenda works. */}
+      <p className="text-sm text-muted-foreground" data-agenda-hint>
+        {t("calendar.agendaHint", { count: LOAD_MORE_INCREMENT_DAYS })}
+      </p>
       {groups.map(group => {
         const dayKey = formatDateKey(group.day)
         return (

@@ -5,6 +5,7 @@ import { AddMilestoneForm } from "./AddMilestoneForm"
 import { DeleteGoalButton } from "@/features/delete-goal"
 import { EditGoalButton } from "@/features/edit-goal"
 import { MilestoneRow } from "./MilestoneRow"
+import { SubgoalItem } from "./SubgoalItem"
 import { ProgressRing, useGoals } from "@/entities/goal"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { useLanguage } from "@/shared/lib/i18n"
@@ -71,6 +72,8 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
                         completed: completedCount,
                         total: goal.milestones.length,
                       })}
+                      {goal.subgoals.length > 0 &&
+                        ` · ${t("goals.subgoalsCount", { count: goal.subgoals.length })}`}
                     </span>
                     <span className="flex items-center gap-1.5 text-[13px] font-semibold text-tertiary whitespace-nowrap">
                       <CalendarDays size={14} strokeWidth={1.75} />
@@ -96,10 +99,24 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
             <DeleteGoalButton goalId={goal.id} goalTitle={goal.title} />
           </div>
         </div>
-        <AccordionContent className="px-5 pb-5">
+        <AccordionContent className="px-5 pb-5 flex flex-col gap-3">
+          {/* Two-level tree (iteration 3.1): subgoals with their own steps
+              first, then the goal's own steps. */}
+          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1.5" data-subgoals>
+            <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary px-1 pb-1">
+              {t("goals.subgoals")}
+            </span>
+            {goal.subgoals.map(subgoal => (
+              <SubgoalItem key={subgoal.id} goalId={goal.id} subgoal={subgoal} color={goal.color} />
+            ))}
+            {goal.subgoals.length === 0 && (
+              <p className="text-sm text-tertiary px-1 pb-1">{t("goals.noSubgoalsYet")}</p>
+            )}
+            <AddMilestoneForm goalId={goal.id} kind="subgoal" />
+          </div>
           <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1">
             <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary px-1 pb-2">
-              {t("goals.milestones")}
+              {t("goals.ownSteps")}
             </span>
             <div className="flex flex-col gap-1">
               {goal.milestones.map((milestone, idx) => (

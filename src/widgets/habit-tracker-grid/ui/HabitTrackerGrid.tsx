@@ -7,18 +7,22 @@ import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group"
+import { GeneralHabitsList } from "./GeneralHabitsList"
 import { TodayHabitGroupCard } from "./TodayHabitGroupCard"
 import { useHabitViewMode } from "../lib/habitViewMode"
 
-// Today's habit widget — a list of block cards (TodayHabitGroupCard), one
-// per HabitGroup, including empty groups. Creating a group must give an
-// immediate visible result and a place to add its first habit on Today.
-// Adding a habit always happens via a specific block's own "+", same
-// convention /habits already uses — this widget's own "+" only creates a
-// new block.
+// Today's habit widget. Habits without a block (the built-in General group)
+// come first as a plain headerless list (GeneralHabitsList), then one
+// collapsible card per named block (TodayHabitGroupCard), collapsed by
+// default (owner decision 2026-11-08). "Add habit" here adds a habit
+// without a block; a named block's own "+" adds into that block.
 export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
   const { habitGroups } = useHabitGroups()
   const [isAddingGroup, setIsAddingGroup] = useState(false)
+  const [isAddingHabit, setIsAddingHabit] = useState(false)
+  const general = habitGroups.find(group => group.isGeneral)
+  const blocks = habitGroups.filter(group => !group.isGeneral)
+  const generalHabits = general ? habits.filter(h => h.groupId === general.id) : []
   const [viewMode, setViewMode] = useHabitViewMode()
   const { t } = useLanguage()
 
@@ -59,6 +63,16 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
               <span className="text-[13px]">{t("habits.viewList")}</span>
             </ToggleGroupItem>
           </ToggleGroup>
+          {general && (
+            <Button
+              variant="outline"
+              className="h-[34px] px-3 gap-1.5 rounded-[10px] border-primary/25 text-primary text-sm font-semibold"
+              onClick={() => setIsAddingHabit(v => !v)}
+            >
+              <Plus size={16} />
+              {t("habits.addHabit")}
+            </Button>
+          )}
           <Button
             variant="outline"
             className="h-[34px] px-3 gap-1.5 rounded-[10px] border-primary/25 text-primary text-sm font-semibold"
@@ -76,9 +90,19 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
         </div>
       )}
 
-      {habitGroups.length > 0 ? (
+      {general && (
+        <GeneralHabitsList
+          group={general}
+          habits={generalHabits}
+          viewMode={viewMode}
+          isAdding={isAddingHabit}
+          onCloseAdding={() => setIsAddingHabit(false)}
+        />
+      )}
+
+      {blocks.length > 0 ? (
         <div className="space-y-5 pt-2.5">
-          {habitGroups.map(group => (
+          {blocks.map(group => (
             <TodayHabitGroupCard
               key={group.id}
               group={group}
@@ -88,7 +112,9 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
           ))}
         </div>
       ) : (
-        !isAddingGroup && (
+        !isAddingGroup &&
+        !isAddingHabit &&
+        generalHabits.length === 0 && (
           <div className="border border-dashed border-border-strong rounded-xl px-6 py-10 flex flex-col items-center gap-2.5 text-center">
             <span className="size-12 rounded-[14px] bg-primary-soft text-primary flex items-center justify-center">
               <Repeat size={22} strokeWidth={1.75} />

@@ -210,6 +210,23 @@ try {
     assert.equal((await api("tasks"))[0].completed, false)
     assert.equal((await api("plans")).length, 0)
     ok("Own goal milestones and progress persist independently")
+    // The reload above leaves the goal collapsed — open it again first.
+    await click(
+      "[...document.querySelectorAll('button')].find(e=>e.textContent.includes('Моя цель')&&e.getAttribute('aria-expanded')==='false')",
+    )
+    await fill('input[placeholder="Добавить подцель…"]', "Бэкенд")
+    await click("document.querySelector('[aria-label=\"Add subgoal\"]')")
+    await saved(async () => (await api("goals"))[0].subgoals.length === 1)
+    // 1 own step done + an empty subgoal → (1 + 0) / 2 = 50%
+    assert.equal((await api("goals"))[0].progress, 50)
+    const subgoalId = (await api("goals"))[0].subgoals[0].id
+    await click(`document.querySelector('[data-subgoal-id="${subgoalId}"] [aria-expanded]')`)
+    await fill(`[data-subgoal-id="${subgoalId}"] input[placeholder="Добавить этап…"]`, "Регистрация")
+    await click(`document.querySelector('[data-subgoal-id="${subgoalId}"] [aria-label="Add milestone"]')`)
+    await saved(async () => (await api("goals"))[0].subgoals[0].milestones.length === 1)
+    await click(`document.querySelector('[data-subgoal-id="${subgoalId}"] [aria-label="Mark milestone as done"]')`)
+    await saved(async () => (await api("goals"))[0].progress === 100)
+    ok("Subgoal with its own step counts toward goal progress")
     await screenshot("goals-desktop")
     await navigate(
       "/calendar?view=month&date=2030-01-15",
@@ -283,24 +300,8 @@ try {
       )),
     )
     ok("Today shows notes, not other days' schedule")
-    const todayKey = new Date().toLocaleDateString("sv-SE")
-    const todayPlan = await api("plans", "POST", {
-      id: crypto.randomUUID(),
-      title: "План на сегодня",
-      description: null,
-      date: todayKey,
-      time: "09:00",
-      endTime: "10:00",
-      durationMinutes: 60,
-      onHold: false,
-      completed: false,
-      category: "",
-      priority: "medium",
-    })
-    await navigate("/today", `document.querySelector('[data-today-plan="${todayPlan.id}"]')`)
-    assert(await evaluate("document.body.innerText.includes('09:00–10:00')"))
-    await api(`plans/${todayPlan.id}`, "DELETE")
-    ok("Today's plan strip lists today's plans")
+    assert(!(await evaluate("Boolean(document.querySelector('[data-today-plan]'))")), "No plan strip on Today")
+    ok("Today has no schedule strip (calendar owns the day plan)")
     await screenshot("today-desktop")
     assert.equal(errors.length, 0, JSON.stringify(errors))
     await fs.writeFile(

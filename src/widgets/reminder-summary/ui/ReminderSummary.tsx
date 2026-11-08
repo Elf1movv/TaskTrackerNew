@@ -4,28 +4,36 @@ import { BellRing, Plus } from "lucide-react"
 import { ReminderForm } from "@/features/reminder-form"
 import { type Reminder } from "@/entities/reminder"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
+import { paginate, Pager } from "@/shared/ui/pager"
 import { ReminderRow } from "./components/ReminderRow"
 
 // The "reduced" reminders view on the Today page — see GoalReminderSwapCard,
 // which swaps this in for GoalProgressSummary. Shows upcoming reminders
 // (caller passes an already-filtered/sorted list, see
-// selectUpcomingReminders) plus a quick-add form; not paginated or capped
-// here — the calendar (this feature's home page) is where the full picture
-// lives, this card is deliberately just a glance.
+// selectUpcomingReminders, nearest first) plus a quick-add form. Shows the 5
+// nearest per page with a pager (owner feedback 2026-11-08: Today must not
+// stretch down) — the calendar is where the full picture lives.
 const PRIORITY_FILTERS = ["all", "critical"] as const
 type PriorityFilter = (typeof PRIORITY_FILTERS)[number]
 const PRIORITY_FILTER_LABEL_KEYS: Record<PriorityFilter, TranslationKey> = {
   all: "reminders.filterAll",
   critical: "reminders.filterCritical",
 }
+const REMINDERS_PAGE_SIZE = 5
 
 export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
   const [isAdding, setIsAdding] = useState(false)
   const [editingReminderId, setEditingReminderId] = useState<string | null>(null)
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all")
   const { t } = useLanguage()
+  const [requestedPage, setPage] = useState(1)
   const visibleReminders =
     priorityFilter === "critical" ? reminders.filter(r => r.priority === "critical") : reminders
+  const {
+    page,
+    pageCount,
+    items: pageReminders,
+  } = paginate(visibleReminders, requestedPage, REMINDERS_PAGE_SIZE)
 
   return (
     <div className="lg:min-h-[300px] bg-card border border-border rounded-2xl shadow-raised px-5 py-5 pr-9 flex flex-col gap-4">
@@ -64,7 +72,10 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
           {PRIORITY_FILTERS.map(f => (
             <button
               key={f}
-              onClick={() => setPriorityFilter(f)}
+              onClick={() => {
+                setPriorityFilter(f)
+                setPage(1)
+              }}
               className={`h-[30px] rounded-lg text-[13px] transition-all ${
                 priorityFilter === f
                   ? "bg-seg text-foreground font-bold shadow-card"
@@ -79,7 +90,7 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
 
       {visibleReminders.length > 0 ? (
         <div className="flex flex-col">
-          {visibleReminders.map((reminder, i) => (
+          {pageReminders.map((reminder, i) => (
             <div key={reminder.id} className={i ? "pt-3 mt-3 border-t border-border" : ""}>
               {editingReminderId === reminder.id ? (
                 <ReminderForm reminder={reminder} onDone={() => setEditingReminderId(null)} />
@@ -94,6 +105,13 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
               )}
             </div>
           ))}
+          <Pager
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+            label={t("reminderSummary.title")}
+            className="mt-4"
+          />
         </div>
       ) : (
         !isAdding && (

@@ -37,9 +37,9 @@ export function PlanShelf({
   return (
     <div className="space-y-3 mb-4">
       <div className="flex justify-end">
-        <Button size="sm" onClick={() => setEditing("new")}>
+        <Button size="sm" onClick={() => setEditing("new")} title={t("plans.newHint")}>
           <Plus size={15} />
-          {t("plans.add")}
+          {t("plans.new")}
         </Button>
       </div>
       <div

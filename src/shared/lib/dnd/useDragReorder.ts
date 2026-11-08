@@ -24,18 +24,24 @@ export function useDragReorder<T extends HTMLElement>({
   type,
   id,
   onHoverMove,
+  canDrag = true,
 }: {
   type: string
   id: string
   onHoverMove: (draggedId: string, targetId: string) => void
+  // false = the row can't be picked up (e.g. a task whose position is set
+  // by its deadline, not by hand). Callers also give such rows their own
+  // drag type so nothing else reorders onto them.
+  canDrag?: boolean
 }) {
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
       type,
       item: (): DragItem => ({ id }),
+      canDrag: () => canDrag,
       collect: monitor => ({ isDragging: monitor.isDragging() }),
     }),
-    [type, id],
+    [type, id, canDrag],
   )
 
   // Keep the last target on this drag's item, not on the mounted row:

@@ -6,6 +6,12 @@ const milestoneSchema = z.object({
   completed: z.boolean(),
 })
 
+const subgoalSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1),
+  milestones: z.array(milestoneSchema),
+})
+
 const goalFields = z.object({
   id: z.string().uuid(),
   title: z.string().min(1),
@@ -16,6 +22,9 @@ const goalFields = z.object({
   // Optional so older clients that never send it keep working.
   category: z.string().min(1).nullable().optional(),
   milestones: z.array(milestoneSchema),
+  // Optional so older clients that never send it keep working (and a PATCH
+  // without it leaves the stored subgoals untouched).
+  subgoals: z.array(subgoalSchema).optional(),
 })
 
 export const createGoalSchema = goalFields

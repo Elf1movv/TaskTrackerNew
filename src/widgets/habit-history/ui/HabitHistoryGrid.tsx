@@ -6,16 +6,16 @@ import { HabitGroupAccordionItem } from "./HabitGroupAccordionItem"
 // each its own HabitGroupAccordionItem with its own period/chart state.
 // The page-level "+ Add block" action lives in HabitsPage's header now
 // (matches Tasks/Goals — see redesign step 5/6), this just renders the
-// blocks themselves. Groups are always sorted by the server (order asc),
-// including the auto-seeded General one — it's a real row like any
-// other, so it just renders wherever its order places it, no
-// special-casing needed here.
+// blocks themselves. Named blocks follow the server order (order asc); the
+// auto-seeded General group (habits without a block) is always shown first
+// and without a header — see HabitGroupAccordionItem.
 export function HabitHistoryGrid({ habits }: { habits: Habit[] }) {
   const { habitGroups } = useHabitGroups()
 
   return (
     <div className="space-y-5">
-      {habitGroups.map(group => (
+      {/* Habits without a block (General) first, like on Today. */}
+      {[...habitGroups.filter(g => g.isGeneral), ...habitGroups.filter(g => !g.isGeneral)].map(group => (
         <HabitGroupAccordionItem
           key={group.id}
           group={group}

@@ -1,24 +1,20 @@
 import { useMemo, useState, type ReactNode } from "react"
-import { useTasks, type StatusFilter, type TaskDateFilter } from "@/entities/task"
-import { filterTasks } from "../lib/filterTasks"
+import { useTasks } from "@/entities/task"
+import { filterTasks, sortActiveTasks } from "../lib/filterTasks"
 import { TasksContext } from "./tasksContext"
 const PAGE_SIZE = 10
 export function TasksProvider({ children }: { children: ReactNode }) {
   const { tasks } = useTasks()
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [dateFilter, setDateFilter] = useState<TaskDateFilter>("all")
   const [page, setPage] = useState(1)
-  const filterKey = `${statusFilter}:${categoryFilter}:${dateFilter}`
-  const [previous, setPrevious] = useState(filterKey)
-  if (previous !== filterKey) {
-    setPrevious(filterKey)
+  const [previous, setPrevious] = useState(categoryFilter)
+  if (previous !== categoryFilter) {
+    setPrevious(categoryFilter)
     setPage(1)
   }
   const value = useMemo(() => {
     const visible = tasks.filter(task => !task.legacyPending)
-    const filtered = filterTasks(visible, statusFilter, categoryFilter, dateFilter)
-    const pending = filtered.filter(task => !task.completed)
+    const filtered = filterTasks(visible, categoryFilter)
     const completed = filtered
       .filter(task => task.completed)
       .sort(
@@ -30,18 +26,16 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     const currentPage = Math.min(page, pageCount)
     return {
       allTasks: visible,
-      filteredTasks: [...pending, ...completed.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)],
-      statusFilter,
-      setStatusFilter,
+      activeTasks: sortActiveTasks(filtered.filter(task => !task.completed)),
+      completedPage: completed.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+      completedCount: completed.length,
       categoryFilter,
       setCategoryFilter,
-      dateFilter,
-      setDateFilter,
       page: currentPage,
       pageCount,
       setPage,
     }
-  }, [tasks, statusFilter, categoryFilter, dateFilter, page])
+  }, [tasks, categoryFilter, page])
   if (page !== value.page) setPage(value.page)
   return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>
 }

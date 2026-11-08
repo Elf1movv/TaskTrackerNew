@@ -1,4 +1,4 @@
-export type { Task, Priority, StatusFilter, TaskDateFilter } from "./model/task"
+export type { Task, Priority } from "./model/task"
 export { PRIORITY_COLORS } from "./model/task"
 export { TaskProvider } from "./model/TaskProvider"
 export { useTasks } from "./model/taskContext"

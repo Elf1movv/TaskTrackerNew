@@ -1,18 +1,23 @@
-import { type StatusFilter, type Task, type TaskDateFilter } from "@/entities/task"
+import { type Task } from "@/entities/task"
 
-export function filterTasks(
-  tasks: Task[],
-  statusFilter: StatusFilter,
-  categoryFilter: string,
-  dateFilter: TaskDateFilter = "all",
-): Task[] {
-  return tasks.filter(task => {
-    if (dateFilter === "undated" && task.dueDate !== null) return false
-    if (dateFilter === "dated" && task.dueDate === null) return false
-    if (task.legacyPending) return false
-    if (statusFilter === "active" && task.completed) return false
-    if (statusFilter === "done" && !task.completed) return false
-    if (categoryFilter !== "all" && task.category !== categoryFilter) return false
-    return true
+// The Tasks page has one filter left — the category chips (owner decision
+// 2026-11-08: status and deadline filters were too many). Not-yet-sorted
+// legacy records stay hidden.
+export function filterTasks(tasks: Task[], categoryFilter: string): Task[] {
+  return tasks.filter(
+    task => !task.legacyPending && (categoryFilter === "all" || task.category === categoryFilter),
+  )
+}
+
+// Active tasks: dated ones first by deadline (manual order breaks ties),
+// then undated ones in manual order. `tasks` arrives in manual order (the
+// server's `order`), and Array.prototype.sort is stable, so equal keys keep
+// that order.
+export function sortActiveTasks(tasks: Task[]): Task[] {
+  return [...tasks].sort((a, b) => {
+    if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate)
+    if (a.dueDate) return -1
+    if (b.dueDate) return 1
+    return 0
   })
 }

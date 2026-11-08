@@ -100,6 +100,20 @@ describe("Note actions", () => {
     expect(state.reorderNotes).toHaveBeenCalledWith("second", "first")
   })
 })
+describe("Paging", () => {
+  it("shows 10 notes per page and keeps arrow-key neighbours across the page edge", () => {
+    state.notes = Array.from({ length: 12 }, (_, i) => note({ id: "n" + i, title: "Note " + i }))
+    render(<NotesCard />, { wrapper })
+    expect(screen.getAllByRole("article")).toHaveLength(10)
+    const last = screen.getAllByRole("article")[9]
+    fireEvent.keyDown(within(last).getByRole("button", { name: "Move note (up/down arrows)" }), {
+      key: "ArrowDown",
+    })
+    expect(state.reorderNotes).toHaveBeenCalledWith("n9", "n10")
+    fireEvent.click(screen.getByRole("button", { name: "Next" }))
+    expect(screen.getAllByRole("article").map(a => a.dataset.noteId)).toEqual(["n10", "n11"])
+  })
+})
 describe("Move to tasks", () => {
   it("opens a task form prefilled from the note and moves it on save", async () => {
     render(<NotesCard />, { wrapper })

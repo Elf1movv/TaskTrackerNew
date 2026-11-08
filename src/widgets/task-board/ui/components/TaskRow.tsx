@@ -6,14 +6,20 @@ import { TaskToggleCheckbox } from "@/features/toggle-task"
 import { PriorityDot, TaskScheduleLink, useTasks, type Task } from "@/entities/task"
 import { useDragReorder } from "@/shared/lib/dnd"
 
+// Only active tasks WITHOUT a deadline are hand-ordered; a dated task's
+// position comes from its date and a completed one's from when it was done,
+// so those rows can't be picked up and use their own drag type (nothing
+// else reorders onto them).
 export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolean; onEdit: () => void }) {
   const { reorderTasks } = useTasks()
   const { categories } = useCategories()
   const categoryColor = resolveCategoryColor(task.category, categories)
+  const reorderable = !task.completed && !task.dueDate
   const { ref, isDragging } = useDragReorder<HTMLDivElement>({
-    type: "task",
+    type: reorderable ? "task" : "task-fixed",
     id: task.id,
     onHoverMove: reorderTasks,
+    canDrag: reorderable,
   })
 
   return (
@@ -24,7 +30,7 @@ export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolea
       animate={{ opacity: isDragging ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, x: 20, transition: { duration: 0.12 } }}
       transition={{ duration: 0.15 }}
-      className={`group flex items-center gap-3 min-h-16 px-5 py-3 hover:bg-sunken transition-colors cursor-grab active:cursor-grabbing select-none ${
+      className={`group flex items-center gap-3 min-h-16 px-5 py-3 hover:bg-sunken transition-colors select-none ${reorderable ? "cursor-grab active:cursor-grabbing" : ""} ${
         divider ? "border-t border-border" : ""
       }`}
     >
