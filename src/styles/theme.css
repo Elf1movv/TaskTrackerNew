@@ -207,6 +207,8 @@
   --text-title: 17px;
   --text-page: 32px;
   --text-page--line-height: 1.15;
+  --text-page-sm: 26px;
+  --text-page-sm--line-height: 1.2;
 }
 
 @layer base {
@@ -222,11 +224,14 @@
     -webkit-font-smoothing: antialiased;
     font-feature-settings: "tnum" 1; /* tabular digits for counters, dates, grids */
   }
-  /* Typography scale (unslop pass 2026-11-08): hierarchy from size, not
-     weight — headings 600, no negative tracking, labels in sentence case.
-     page 32 · section 20 · title 17 · body 15 · secondary 14 · meta 13 · caption 11 */
-  h1 { font-size: 32px; line-height: 1.15; font-weight: 600; }
-  @media (max-width: 639px) { h1 { font-size: 26px; } }
+  /* Typography scale (unslop pass 2026-11-08): section headings 600, no
+     negative tracking, labels in sentence case. Page titles stay bold and
+     large on purpose — owner decision 2026-11-08: "Задачи/Цели/Привычки"
+     read best as they were. Date titles (Today, Calendar) use the same bold
+     style one step smaller: text-page-sm sm:text-page.
+     page title 40 · date title 32 (26 on phones) · section 20 · title 17 ·
+     body 15 · secondary 14 · meta 13 · caption 11 */
+  h1 { font-size: 40px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em; }
   h2 { font-size: 20px; line-height: 1.3; font-weight: 600; }
   h3 { font-size: 17px; line-height: 1.35; font-weight: 600; }
   h4 { font-size: 15px; line-height: 1.4; font-weight: 600; }

@@ -7,7 +7,7 @@ import { extendTailwindMerge } from "tailwind-merge"
 // — dark text on the dark primary button (caught on the unslop screenshots,
 // 2026-11-08).
 const twMerge = extendTailwindMerge({
-  extend: { theme: { text: ["caption", "meta", "body", "title", "page"] } },
+  extend: { theme: { text: ["caption", "meta", "body", "title", "page", "page-sm"] } },
 })
 
 export function cn(...inputs: ClassValue[]) {

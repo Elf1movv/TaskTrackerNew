@@ -36,7 +36,7 @@ function TodayPageContent() {
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto">
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1>{heroDate}</h1>
+        <h1 className="text-page-sm sm:text-page">{heroDate}</h1>
         <Button
           onClick={() => setIsAdding(v => !v)}
           className="h-11 px-5 gap-2 rounded-md shadow-raised text-body"

@@ -193,7 +193,7 @@ function CalendarPageContent() {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
-        <h1>{formatPeriodTitle(view, anchorDate, language)}</h1>
+        <h1 className="text-page-sm sm:text-page">{formatPeriodTitle(view, anchorDate, language)}</h1>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"

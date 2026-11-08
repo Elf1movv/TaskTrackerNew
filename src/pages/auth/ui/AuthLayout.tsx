@@ -31,7 +31,7 @@ export function AuthLayout({
           {icon ?? <BrandMark size={64} iconSize={34} radius={18} />}
           <div className="text-center flex flex-col gap-1">
             <div className="text-meta font-semibold text-muted-foreground">MyTracker</div>
-            <h1>{title}</h1>
+            <h1 className="text-page">{title}</h1>
           </div>
         </div>
         <div className="bg-card border border-card-border rounded-[20px] shadow-raised p-7 space-y-[18px]">
