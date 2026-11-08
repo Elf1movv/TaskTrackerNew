@@ -42,3 +42,15 @@ confirmed/cancelled deletion across tabs, independent goals/tasks/plans,
 selected date, On hold, exact 20-minute moves, resize, mobile width, JS errors.
 API/DB unit tests run separately against `tasktracker_test.public`; never run
 those cleanup-based tests against the shared staging database.
+
+**Вход, регистрация, письма — `auth-flows.mjs`** (после обновления better-auth
+или правок входа). `local`: сервер на :3002 запускается **без**
+`EMAIL_DELIVERY=disabled` и без `RESEND_API_KEY`, тогда ссылки из писем
+пишутся в лог сервера (`QA_SERVER_LOG`) — проверяются регистрация,
+подтверждение почты, вход/выход, сброс пароля, повтор ссылки, cookie.
+`staging`: на стенде писем нет, поэтому пользователь регистрируется через
+`independent-browser.mjs register`, подтверждается
+`docker exec mytracker-staging-app-1 node scripts/qa-browser-user.mjs verify <email>`,
+затем `QA_ORIGIN=https://test.mytracker.space node scripts/qa/auth-flows.mjs staging`
+(вход, Secure-cookie, навигация, выход, лимит попыток 429); после —
+`cleanup <email>` тем же способом.
