@@ -45,6 +45,22 @@ describe("habit groups router", () => {
     expect(list.body.map((g: { title: string }) => g.title)).toEqual(["General", "Morning"])
   })
 
+  it("lets General be reordered after a block like any other group", async () => {
+    const general = (await agent.get("/api/habit-groups")).body[0]
+    const block = (
+      await agent
+        .post("/api/habit-groups")
+        .send({ id: crypto.randomUUID(), title: "Morning", icon: "🌅", color: "#c97b3a" })
+    ).body
+    const res = await agent.patch("/api/habit-groups/reorder").send([
+      { id: block.id, order: 0 },
+      { id: general.id, order: 1 },
+    ])
+    expect(res.status).toBe(200)
+    const list = await agent.get("/api/habit-groups")
+    expect(list.body.map((g: { title: string }) => g.title)).toEqual(["Morning", "General"])
+  })
+
   it("allows renaming/re-icon/re-coloring the General group, only deleting stays blocked", async () => {
     const list = await agent.get("/api/habit-groups")
     const general = list.body[0]
