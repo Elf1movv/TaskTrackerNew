@@ -42,9 +42,10 @@ function toClientHabitGroup(group: {
 const GENERAL_GROUP_TITLE = "General"
 const GENERAL_GROUP_ICON = "📋"
 const GENERAL_GROUP_COLOR = "#c97b3a"
-// Sorts last by default among a user's blocks, without hardcoding "last
-// index" — still freely draggable earlier like any other group.
-const GENERAL_GROUP_ORDER = 999999
+// First among a user's groups — blocks are appended after it with max+1.
+// Freely draggable among the blocks like any other group (owner request
+// 2026-11-08; the UI used to pin General first regardless of this value).
+const GENERAL_GROUP_ORDER = -1
 
 habitGroupsRouter.get("/", async (req, res) => {
   // habitGroupsSeeded (not "does this user have zero groups right now")

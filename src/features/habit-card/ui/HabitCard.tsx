@@ -41,7 +41,17 @@ export function HabitCard({ habit }: { habit: Habit }) {
       >
         <HabitIcon emoji={habit.icon} size={18} />
       </IconTile>
-      <div className="text-sm font-semibold leading-snug flex-1 line-clamp-2">{habit.title}</div>
+      {/* flex-1 on a wrapper, line-clamp on the text: with both on one
+          element the box grew to the card's free height, so the clipped
+          third line showed under the "…" (owner screenshot, 2026-11-08). */}
+      <div className="flex-1 w-full min-w-0">
+        <div
+          className="text-sm font-semibold leading-snug line-clamp-2 [overflow-wrap:anywhere]"
+          title={habit.title}
+        >
+          {habit.title}
+        </div>
+      </div>
       <StreakLabel
         color={
           streak > 0 ? `color-mix(in srgb, ${habit.color} 80%, var(--foreground))` : "var(--text-tertiary)"

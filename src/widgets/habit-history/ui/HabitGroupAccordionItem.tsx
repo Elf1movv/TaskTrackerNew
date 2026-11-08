@@ -85,12 +85,11 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   // ref — see that component's comment for why (AccordionItem has no
   // forwardRef).
   const { ref: dragGroupRef, isDragging } = useDragReorder<HTMLDivElement>({
-    // General ("without a block") is always shown first and has no header,
-    // so it can't be dragged and other blocks don't reorder onto it.
-    type: group.isGeneral ? "habit-group-general" : "habit-group",
+    // General ("without a block") takes part like any block since
+    // 2026-11-08 (owner request) — it sits wherever the shared order puts it.
+    type: "habit-group",
     id: group.id,
     onHoverMove: reorderHabitGroups,
-    canDrag: !group.isGeneral,
   })
   // Accepts a habit dragged from any block's grid (including this one,
   // dropped broadly rather than on a specific row) — appends it here.
@@ -221,7 +220,9 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
             <div className="flex items-center justify-end flex-wrap gap-3">
               {isGeneral && (
                 <span className="mr-auto flex items-baseline gap-2 sm:gap-3 min-w-0">
-                  <span className="text-title font-semibold truncate">{t("habits.withoutBlock")}</span>
+                  <span className="text-title font-semibold truncate cursor-grab active:cursor-grabbing">
+                    {t("habits.withoutBlock")}
+                  </span>
                   <span className="text-meta text-tertiary shrink-0">
                     {t("habits.group.habitCount", { count: habits.length })}
                   </span>

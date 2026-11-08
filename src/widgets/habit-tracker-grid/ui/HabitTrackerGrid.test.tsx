@@ -106,4 +106,15 @@ describe("Today habit groups", () => {
     expect(screen.queryByText("General")).toBeNull()
     expect(screen.queryByText("Default")).toBeNull()
   })
+
+  it("places habits without a block wherever the shared group order puts them", () => {
+    const general = { ...state.groups[0], id: "general", title: "General", icon: "📋", isGeneral: true }
+    state.groups = [...state.groups, general] // General ordered after the Morning block
+    const water = habit({ id: "water", title: "Water", groupId: "general" })
+    state.habits = [water]
+    renderGrid([water])
+    const morning = screen.getByText("Morning")
+    const list = document.querySelector("[data-general-habits]")!
+    expect(morning.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })

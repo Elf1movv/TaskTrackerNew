@@ -11,10 +11,12 @@ import { GeneralHabitsList } from "./GeneralHabitsList"
 import { TodayHabitGroupCard } from "./TodayHabitGroupCard"
 import { useHabitViewMode } from "../lib/habitViewMode"
 
-// Today's habit widget. Habits without a block (the built-in General group)
-// come first as a plain headerless list (GeneralHabitsList), then one
-// collapsible card per named block (TodayHabitGroupCard), collapsed by
-// default (owner decision 2026-11-08). "Add habit" here adds a habit
+// Today's habit widget. Groups render in their shared server order: the
+// built-in General group (habits without a block) as a plain headerless list
+// (GeneralHabitsList), each named block as a collapsible card
+// (TodayHabitGroupCard), collapsed by default. General can sit anywhere among
+// the blocks — drag a block across it, or drag the list by its empty space
+// (owner request 2026-11-08: no extra handle). "Add habit" here adds a habit
 // without a block; a named block's own "+" adds into that block.
 export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
   const { habitGroups } = useHabitGroups()
@@ -31,14 +33,14 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
 
   return (
     <div className="bg-card border border-card-border rounded-xl shadow-card p-6 flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-baseline gap-3">
           <h2 className="text-xl font-bold">{t("habits.sectionLabel")}</h2>
           <span className="text-meta font-semibold text-muted-foreground">
             {t("habits.doneToday", { done: doneToday, total: habits.length })}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <ToggleGroup
             type="single"
             variant="outline"
@@ -82,26 +84,27 @@ export function HabitTrackerGrid({ habits }: { habits: Habit[] }) {
         </div>
       )}
 
-      {general && (
-        <GeneralHabitsList
-          group={general}
-          habits={generalHabits}
-          viewMode={viewMode}
-          isAdding={isAddingHabit}
-          onCloseAdding={() => setIsAddingHabit(false)}
-        />
-      )}
-
-      {blocks.length > 0 ? (
-        <div className="space-y-5 pt-2.5">
-          {blocks.map(group => (
-            <TodayHabitGroupCard
-              key={group.id}
-              group={group}
-              habits={habits.filter(h => h.groupId === group.id)}
-              viewMode={viewMode}
-            />
-          ))}
+      {generalHabits.length > 0 || blocks.length > 0 || isAddingHabit ? (
+        <div className="flex flex-col gap-5">
+          {habitGroups.map(group =>
+            group.isGeneral ? (
+              <GeneralHabitsList
+                key={group.id}
+                group={group}
+                habits={generalHabits}
+                viewMode={viewMode}
+                isAdding={isAddingHabit}
+                onCloseAdding={() => setIsAddingHabit(false)}
+              />
+            ) : (
+              <TodayHabitGroupCard
+                key={group.id}
+                group={group}
+                habits={habits.filter(h => h.groupId === group.id)}
+                viewMode={viewMode}
+              />
+            ),
+          )}
         </div>
       ) : (
         !isAddingGroup &&

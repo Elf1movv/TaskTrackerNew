@@ -1,8 +1,8 @@
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { HabitForm } from "@/features/habit-form"
 import { useHabits, type Habit } from "@/entities/habit"
-import type { HabitGroup } from "@/entities/habit-group"
-import { useDropTarget, useIsDragging } from "@/shared/lib/dnd"
+import { useHabitGroups, type HabitGroup } from "@/entities/habit-group"
+import { useDragReorder, useDropTarget, useIsDragging } from "@/shared/lib/dnd"
 import { useLanguage } from "@/shared/lib/i18n"
 import { HabitGridItem } from "./components"
 import type { HabitViewMode } from "../lib/habitViewMode"
@@ -12,6 +12,10 @@ import type { HabitViewMode } from "../lib/habitViewMode"
 // decision 2026-11-08). Data is unchanged: these are still General's habits.
 // The whole list is a drop target so a habit can be dragged out of a block
 // back here; when the list is empty the target only appears during a drag.
+// It also takes part in block reordering ("habit-group"): a block dragged
+// across it swaps places with it, and pressing on the list's empty space
+// drags the whole list among the blocks — a habit card pressed directly is
+// its own, inner drag source, so it still drags just that habit.
 export function GeneralHabitsList({
   group,
   habits,
@@ -29,10 +33,23 @@ export function GeneralHabitsList({
   const { t } = useLanguage()
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
   const isDraggingHabit = useIsDragging("habit-move-today")
+  const { reorderHabitGroups } = useHabitGroups()
   const { ref: dropRef, isOver } = useDropTarget<HTMLDivElement>({
     type: "habit-move-today",
     onDrop: habitId => moveHabitToGroupToday(habitId, group.id),
   })
+  const { ref: dragGroupRef, isDragging } = useDragReorder<HTMLDivElement>({
+    type: "habit-group",
+    id: group.id,
+    onHoverMove: reorderHabitGroups,
+  })
+  const listRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      dragGroupRef(node)
+      dropRef(node)
+    },
+    [dragGroupRef, dropRef],
+  )
 
   function handleHabitDrop(draggedId: string, targetHabitId: string) {
     const dragged = allHabits.find(h => h.id === draggedId)
@@ -45,7 +62,12 @@ export function GeneralHabitsList({
   if (habits.length === 0 && !showForm && !isDraggingHabit) return null
 
   return (
-    <div data-general-habits ref={dropRef} className="space-y-3">
+    <div
+      data-general-habits
+      ref={listRef}
+      className="space-y-3 select-none"
+      style={{ opacity: isDragging ? 0.4 : 1 }}
+    >
       {showForm && (
         <HabitForm
           habit={editingHabit ?? undefined}
