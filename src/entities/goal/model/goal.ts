@@ -2,6 +2,9 @@ export interface Milestone {
   id: string
   title: string
   completed: boolean
+  // Position among the goal's top-level items (own steps + subgoals); see
+  // lib/goalItems.ts. Unused for steps inside a subgoal.
+  order?: number
 }
 
 // A subgoal of a goal (two-level tree, iteration 3.1) with its own steps.
@@ -9,6 +12,8 @@ export interface Subgoal {
   id: string
   title: string
   milestones: Milestone[]
+  // Position among the goal's top-level items — see lib/goalItems.ts.
+  order?: number
 }
 
 export interface Goal {

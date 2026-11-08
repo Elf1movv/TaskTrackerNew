@@ -6,7 +6,7 @@ import { DeleteGoalButton } from "@/features/delete-goal"
 import { EditGoalButton } from "@/features/edit-goal"
 import { MilestoneRow } from "./MilestoneRow"
 import { SubgoalItem } from "./SubgoalItem"
-import { ProgressRing, useGoals } from "@/entities/goal"
+import { getGoalItems, ProgressRing, useGoals } from "@/entities/goal"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { useLanguage } from "@/shared/lib/i18n"
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
@@ -35,6 +35,11 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
     onHoverMove: reorderGoals,
   })
   const completedCount = goal.milestones.filter(m => m.completed).length
+  const items = getGoalItems(goal)
+  // "#N" counts only the goal's own steps, in the order they're shown.
+  const stepNumbers = new Map(
+    items.filter(entry => entry.kind === "step").map((entry, index) => [entry.item.id, index]),
+  )
 
   return (
     // `AccordionItem` (shared/ui, vendored shadcn output) is a plain function
@@ -101,30 +106,25 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
         </div>
         <AccordionContent className="px-5 pb-5 flex flex-col gap-3">
           {/* One headerless list (owner, 2026-11-08 — same idea as the
-              headerless "without a block" habits): the goal's own steps
-              first, then subgoals as folders of steps. Only two things to
-              tell apart: a step (checkbox) and a subgoal (folder). */}
-          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1" data-goal-tree>
-            {goal.milestones.map((milestone, idx) => (
-              <MilestoneRow
-                key={milestone.id}
-                goalId={goal.id}
-                milestone={milestone}
-                color={goal.color}
-                index={idx}
-              />
-            ))}
-            {goal.milestones.length === 0 && goal.subgoals.length === 0 && (
-              <p className="text-sm text-tertiary px-1 pb-1">{t("goals.emptyTree")}</p>
+              headerless "without a block" habits): the goal's own steps and
+              subgoals (folders of steps) in one shared order the owner sets
+              by dragging — a step can sit before a subgoal or after it. */}
+          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1.5" data-goal-tree>
+            {items.map(entry =>
+              entry.kind === "step" ? (
+                <MilestoneRow
+                  key={entry.item.id}
+                  goalId={goal.id}
+                  milestone={entry.item}
+                  color={goal.color}
+                  index={stepNumbers.get(entry.item.id) ?? 0}
+                />
+              ) : (
+                <SubgoalItem key={entry.item.id} goalId={goal.id} subgoal={entry.item} color={goal.color} />
+              ),
             )}
+            {items.length === 0 && <p className="text-sm text-tertiary px-1 pb-1">{t("goals.emptyTree")}</p>}
             <AddMilestoneForm goalId={goal.id} />
-            {goal.subgoals.length > 0 && (
-              <div className="flex flex-col gap-1.5 pt-2 mt-1 border-t border-border">
-                {goal.subgoals.map(subgoal => (
-                  <SubgoalItem key={subgoal.id} goalId={goal.id} subgoal={subgoal} color={goal.color} />
-                ))}
-              </div>
-            )}
             <AddMilestoneForm goalId={goal.id} kind="subgoal" />
           </div>
         </AccordionContent>

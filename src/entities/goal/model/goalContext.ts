@@ -18,7 +18,8 @@ export interface GoalContextValue {
   addSubgoal: (goalId: string, title: string) => void
   renameSubgoal: (goalId: string, subgoalId: string, title: string) => void
   deleteSubgoal: (goalId: string, subgoalId: string) => void
-  reorderSubgoals: (goalId: string, draggedId: string, targetId: string) => void
+  // Reorders the goal's top-level items — own steps and subgoals together.
+  reorderGoalItems: (goalId: string, draggedId: string, targetId: string) => void
 }
 
 export const GoalContext = createContext<GoalContextValue | null>(null)

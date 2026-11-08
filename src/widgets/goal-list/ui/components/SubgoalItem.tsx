@@ -10,9 +10,10 @@ import { MilestoneRow } from "./MilestoneRow"
 
 // One subgoal inside an open goal (two-level tree, iteration 3.1): its own
 // progress bar, a collapsible list of its own steps, inline rename and a
-// confirmed delete. Reordered by the grip handle within its goal only.
+// confirmed delete. Reordered by the grip handle among the goal's own steps
+// and other subgoals (shared top-level drag type), within its goal only.
 export function SubgoalItem({ goalId, subgoal, color }: { goalId: string; subgoal: Subgoal; color: string }) {
-  const { renameSubgoal, deleteSubgoal, reorderSubgoals } = useGoals()
+  const { renameSubgoal, deleteSubgoal, reorderGoalItems } = useGoals()
   const { t } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -21,11 +22,11 @@ export function SubgoalItem({ goalId, subgoal, color }: { goalId: string; subgoa
   const done = subgoal.milestones.filter(m => m.completed).length
 
   const onHoverMove = useCallback(
-    (draggedId: string, targetId: string) => reorderSubgoals(goalId, draggedId, targetId),
-    [reorderSubgoals, goalId],
+    (draggedId: string, targetId: string) => reorderGoalItems(goalId, draggedId, targetId),
+    [reorderGoalItems, goalId],
   )
   const { dropRef, handleRef, isDragging } = useDragReorder<HTMLDivElement>({
-    type: `subgoal-${goalId}`,
+    type: `goal-item-${goalId}`,
     id: subgoal.id,
     onHoverMove,
   })

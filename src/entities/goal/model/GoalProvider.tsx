@@ -4,6 +4,7 @@ import { reorderById } from "@/shared/lib/reorder"
 import { usePersistedCollection } from "@/shared/lib/storage"
 import { goalRepository } from "../api/goalRepository"
 import { computeGoalProgress } from "../lib/computeGoalProgress"
+import { nextGoalItemOrder, reorderGoalItems as reorderItems } from "../lib/goalItems"
 import { GoalContext } from "./goalContext"
 import type { Goal, Milestone, Subgoal } from "./goal"
 
@@ -73,10 +74,15 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     [goals, saveTree],
   )
 
+  // A new top-level step goes after everything else (steps and subgoals);
+  // a step inside a subgoal just goes last in that subgoal.
   const addMilestone = useCallback(
-    (goalId: string, title: string, subgoalId?: string) =>
-      editSteps(goalId, subgoalId, steps => [...steps, { id: generateId(), title, completed: false }]),
-    [editSteps],
+    (goalId: string, title: string, subgoalId?: string) => {
+      const goal = goals.find(g => g.id === goalId)
+      const order = !subgoalId && goal ? nextGoalItemOrder(goal) : undefined
+      editSteps(goalId, subgoalId, steps => [...steps, { id: generateId(), title, completed: false, order }])
+    },
+    [goals, editSteps],
   )
 
   const updateMilestone = useCallback(
@@ -114,9 +120,12 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   )
 
   const addSubgoal = useCallback(
-    (goalId: string, title: string) =>
-      editSubgoals(goalId, subgoals => [...subgoals, { id: generateId(), title, milestones: [] }]),
-    [editSubgoals],
+    (goalId: string, title: string) => {
+      const goal = goals.find(g => g.id === goalId)
+      const order = goal ? nextGoalItemOrder(goal) : undefined
+      editSubgoals(goalId, subgoals => [...subgoals, { id: generateId(), title, milestones: [], order }])
+    },
+    [goals, editSubgoals],
   )
 
   const renameSubgoal = useCallback(
@@ -131,10 +140,14 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     [editSubgoals],
   )
 
-  const reorderSubgoals = useCallback(
-    (goalId: string, draggedId: string, targetId: string) =>
-      editSubgoals(goalId, subgoals => reorderById(subgoals, draggedId, targetId)),
-    [editSubgoals],
+  const reorderGoalItems = useCallback(
+    (goalId: string, draggedId: string, targetId: string) => {
+      const goal = goals.find(g => g.id === goalId)
+      if (!goal) return
+      const { milestones, subgoals } = reorderItems(goal, draggedId, targetId)
+      saveTree(goal, milestones, subgoals)
+    },
+    [goals, saveTree],
   )
 
   const value = useMemo(
@@ -153,7 +166,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       addSubgoal,
       renameSubgoal,
       deleteSubgoal,
-      reorderSubgoals,
+      reorderGoalItems,
     }),
     [
       goals,
@@ -170,7 +183,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       addSubgoal,
       renameSubgoal,
       deleteSubgoal,
-      reorderSubgoals,
+      reorderGoalItems,
     ],
   )
 

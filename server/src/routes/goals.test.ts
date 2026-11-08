@@ -142,6 +142,31 @@ describe("goals router", () => {
     expect(bare.body.progress).toBe(25)
   })
 
+  it("keeps the shared order of the goal's own steps and subgoals", async () => {
+    const created = await agent.post("/api/goals").send({
+      ...baseGoal,
+      id: crypto.randomUUID(),
+      milestones: [{ id: "s1", title: "First", completed: false, order: 0 }],
+      subgoals: [{ id: "g1", title: "Middle", milestones: [], order: 1 }],
+    })
+    expect(created.status).toBe(201)
+    expect(created.body.milestones[0].order).toBe(0)
+    expect(created.body.subgoals[0].order).toBe(1)
+
+    // Subgoal moved above the step.
+    const patched = await agent.patch(`/api/goals/${created.body.id}`).send({
+      patch: {
+        milestones: [{ id: "s1", title: "First", completed: false, order: 1 }],
+        subgoals: [{ id: "g1", title: "Middle", milestones: [], order: 0 }],
+      },
+      expectedUpdatedAt: created.body.updatedAt,
+    })
+    expect(patched.status).toBe(200)
+    const [stored] = (await agent.get("/api/goals")).body
+    expect(stored.milestones[0].order).toBe(1)
+    expect(stored.subgoals[0].order).toBe(0)
+  })
+
   it("returns an empty subgoal list for goals created by older clients", async () => {
     const created = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID() })
     expect(created.body.subgoals).toEqual([])

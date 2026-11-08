@@ -1,5 +1,6 @@
 export type { Goal, Milestone, Subgoal } from "./model/goal"
 export { computeGoalProgress, subgoalFraction } from "./lib/computeGoalProgress"
+export { getGoalItems, type GoalItem } from "./lib/goalItems"
 export { GoalProvider } from "./model/GoalProvider"
 export { useGoals } from "./model/goalContext"
 export { isGoalDueOnDay } from "./lib/isGoalDueOnDay"

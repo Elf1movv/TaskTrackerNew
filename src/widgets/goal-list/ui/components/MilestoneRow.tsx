@@ -15,9 +15,11 @@ const Circle = styled.div<{ completed: boolean; color: string }>`
   background-color: ${p => (p.completed ? p.color : "transparent")};
 `
 
-// One step — either the goal's own (no `subgoalId`) or a subgoal's. Drag
-// reordering is scoped to that one list, so a step can't be dragged into a
-// different goal or subgoal.
+// One step — either the goal's own (no `subgoalId`) or a subgoal's. The
+// goal's own steps share one drag type with its subgoals, so they reorder
+// among each other (top-level order, entities/goal/lib/goalItems.ts); a
+// subgoal's steps reorder only inside that subgoal. A step can't move into
+// a different goal or subgoal.
 export function MilestoneRow({
   goalId,
   subgoalId,
@@ -31,16 +33,20 @@ export function MilestoneRow({
   color: string
   index: number
 }) {
-  const { toggleMilestone, updateMilestone, deleteMilestone, reorderMilestones } = useGoals()
+  const { toggleMilestone, updateMilestone, deleteMilestone, reorderMilestones, reorderGoalItems } =
+    useGoals()
   const [isEditing, setIsEditing] = useState(false)
   const [draftTitle, setDraftTitle] = useState(milestone.title)
 
   const onHoverMove = useCallback(
-    (draggedId: string, targetId: string) => reorderMilestones(goalId, draggedId, targetId, subgoalId),
-    [reorderMilestones, goalId, subgoalId],
+    (draggedId: string, targetId: string) =>
+      subgoalId
+        ? reorderMilestones(goalId, draggedId, targetId, subgoalId)
+        : reorderGoalItems(goalId, draggedId, targetId),
+    [reorderMilestones, reorderGoalItems, goalId, subgoalId],
   )
   const { ref, isDragging } = useDragReorder<HTMLDivElement>({
-    type: `milestone-${goalId}-${subgoalId ?? "own"}`,
+    type: subgoalId ? `milestone-${goalId}-${subgoalId}` : `goal-item-${goalId}`,
     id: milestone.id,
     onHoverMove,
   })

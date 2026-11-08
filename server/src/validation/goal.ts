@@ -4,12 +4,17 @@ const milestoneSchema = z.object({
   id: z.string(),
   title: z.string().min(1),
   completed: z.boolean(),
+  // Position among the goal's top-level items (own steps + subgoals share
+  // one order). Optional: goals saved before it simply don't have it. Must
+  // be declared — zod strips unknown keys, so it would silently be lost.
+  order: z.number().int().optional(),
 })
 
 const subgoalSchema = z.object({
   id: z.string(),
   title: z.string().min(1),
   milestones: z.array(milestoneSchema),
+  order: z.number().int().optional(),
 })
 
 const goalFields = z.object({
