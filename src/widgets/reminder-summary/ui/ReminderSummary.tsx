@@ -38,7 +38,7 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
   return (
     <div className="lg:min-h-[300px] bg-card border border-border rounded-2xl shadow-raised px-5 py-5 pr-9 flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <h2 className="flex-1 text-xl font-bold tracking-[-0.015em]">{t("reminderSummary.title")}</h2>
+        <h2 className="flex-1 text-xl font-bold">{t("reminderSummary.title")}</h2>
         <button
           type="button"
           onClick={() => {
@@ -68,7 +68,7 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
       </AnimatePresence>
 
       {reminders.length > 0 && (
-        <div className="grid grid-cols-2 gap-0.5 p-0.5 rounded-[9px] bg-fill">
+        <div className="grid grid-cols-2 gap-0.5 p-0.5 rounded-md bg-fill">
           {PRIORITY_FILTERS.map(f => (
             <button
               key={f}
@@ -76,7 +76,7 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
                 setPriorityFilter(f)
                 setPage(1)
               }}
-              className={`h-[30px] rounded-lg text-[13px] transition-all ${
+              className={`h-8 rounded-lg text-meta transition ${
                 priorityFilter === f
                   ? "bg-seg text-foreground font-bold shadow-card"
                   : "text-muted-foreground font-medium"
@@ -116,11 +116,11 @@ export function ReminderSummary({ reminders }: { reminders: Reminder[] }) {
       ) : (
         !isAdding && (
           <div className="flex-1 py-7 px-2 flex flex-col items-center gap-2 text-center">
-            <span className="size-11 rounded-[13px] bg-primary-soft text-primary flex items-center justify-center">
+            <span className="size-11 rounded-lg bg-primary-soft text-primary flex items-center justify-center">
               <BellRing size={20} strokeWidth={1.75} />
             </span>
-            <span className="text-[15px] font-bold">{t("reminders.noRemindersYet")}</span>
-            <span className="text-[13px] text-muted-foreground">{t("reminders.addHint")}</span>
+            <span className="text-body font-bold">{t("reminders.noRemindersYet")}</span>
+            <span className="text-meta text-muted-foreground">{t("reminders.addHint")}</span>
           </div>
         )
       )}

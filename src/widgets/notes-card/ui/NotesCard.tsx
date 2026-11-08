@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { css } from "@emotion/react"
 import { toast } from "sonner"
 import {
   Archive,
@@ -22,6 +23,20 @@ import { ConfirmAction } from "@/shared/ui/confirm-action"
 import { Button } from "@/shared/ui/button"
 import { paginate, Pager } from "@/shared/ui/pager"
 const NOTES_PAGE_SIZE = 5
+
+// Row actions sit on the title line and show on hover or keyboard focus —
+// only where a mouse can hover. Phones and tablets keep them visible on a
+// second line (no room beside the title at 390px). Unslop pass 2026-11-08.
+const revealOnHover = css`
+  @media (min-width: 768px) and (hover: hover) {
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+    [data-note-id]:hover &,
+    &:focus-within {
+      opacity: 1;
+    }
+  }
+`
 // Notes are undated (iteration 3): only "current" and "archive" tabs.
 export function NotesCard() {
   const { notes, isLoaded } = useNotes()
@@ -126,9 +141,9 @@ function NoteRow({ note, previousId, nextId }: { note: Note; previousId?: string
     <article
       ref={dropRef}
       data-note-id={note.id}
-      className={`p-4 border-b border-border last:border-0 min-w-0 ${isDragging ? "opacity-40" : ""}`}
+      className={`px-4 py-3 border-b border-border last:border-0 min-w-0 ${isDragging ? "opacity-40" : ""}`}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex flex-wrap md:flex-nowrap items-start gap-x-2 gap-y-1">
         <Button
           ref={handleRef}
           variant="ghost"
@@ -175,53 +190,53 @@ function NoteRow({ note, previousId, nextId }: { note: Note; previousId?: string
             />
           )}
         </button>
-      </div>
-      <div className="flex items-center justify-end gap-1 mt-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 shrink-0"
-          aria-label={t("notes.edit")}
-          onClick={() => setEditing(true)}
-        >
-          <Pencil size={14} />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 shrink-0"
-          aria-label={t("notes.toTask")}
-          title={t("notes.toTask")}
-          onClick={() => setMovingToTask(true)}
-        >
-          <ListPlus size={14} />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 shrink-0"
-          aria-label={t(note.archivedAt ? "notes.restore" : "notes.archiveAction")}
-          onClick={() =>
-            updateNote(note.id, { archivedAt: note.archivedAt ? null : new Date().toISOString() })
-          }
-        >
-          {note.archivedAt ? <RotateCcw size={14} /> : <Archive size={14} />}
-        </Button>
-        <ConfirmAction
-          title={t("notes.deleteTitle")}
-          description={t("notes.deleteBody")}
-          confirmLabel={t("common.delete")}
-          onConfirm={() => deleteNote(note.id)}
-        >
+        <div css={revealOnHover} className="flex items-center justify-end gap-1 w-full md:w-auto md:-my-1">
           <Button
             variant="ghost"
             size="icon"
-            className="size-8 shrink-0 text-destructive"
-            aria-label={t("notes.delete")}
+            className="size-8 shrink-0"
+            aria-label={t("notes.edit")}
+            onClick={() => setEditing(true)}
           >
-            <Trash2 size={14} />
+            <Pencil size={14} />
           </Button>
-        </ConfirmAction>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            aria-label={t("notes.toTask")}
+            title={t("notes.toTask")}
+            onClick={() => setMovingToTask(true)}
+          >
+            <ListPlus size={14} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            aria-label={t(note.archivedAt ? "notes.restore" : "notes.archiveAction")}
+            onClick={() =>
+              updateNote(note.id, { archivedAt: note.archivedAt ? null : new Date().toISOString() })
+            }
+          >
+            {note.archivedAt ? <RotateCcw size={14} /> : <Archive size={14} />}
+          </Button>
+          <ConfirmAction
+            title={t("notes.deleteTitle")}
+            description={t("notes.deleteBody")}
+            confirmLabel={t("common.delete")}
+            onConfirm={() => deleteNote(note.id)}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
+              aria-label={t("notes.delete")}
+            >
+              <Trash2 size={14} />
+            </Button>
+          </ConfirmAction>
+        </div>
       </div>
       {note.description && expanded && (
         <p

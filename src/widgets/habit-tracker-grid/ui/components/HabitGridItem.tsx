@@ -41,7 +41,7 @@ export function HabitGridItem({
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       {viewMode === "grid" ? <HabitCard habit={habit} /> : <HabitListRow habit={habit} />}
-      <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+      <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
         <EditHabitButton onClick={onEdit} />
         <DeleteHabitButton habitId={habit.id} />
       </div>

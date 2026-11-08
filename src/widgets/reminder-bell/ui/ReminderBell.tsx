@@ -11,7 +11,7 @@ import {
 import { ReminderToggleCheckbox } from "@/features/toggle-reminder"
 import { getTodayKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
 
@@ -45,7 +45,7 @@ export function ReminderBell() {
             >
               <Bell size={18} strokeWidth={1.75} />
               {total > 0 && (
-                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-white text-[10px] font-medium leading-none">
+                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-5 px-1 rounded-full bg-destructive text-white text-caption font-medium leading-none">
                   {total}
                 </span>
               )}
@@ -56,7 +56,7 @@ export function ReminderBell() {
       </Tooltip>
 
       <PopoverContent align="end" className="w-72">
-        <div css={monoFont} className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground mb-3">
+        <div css={numericFont} className="text-meta font-semibold text-muted-foreground mb-3">
           {t("reminderSummary.title")}
         </div>
         {upcoming.length > 0 ? (
@@ -89,7 +89,7 @@ export function ReminderBell() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs leading-snug">{reminder.title}</div>
-                    <div css={monoFont} className="text-[10px] text-muted-foreground mt-0.5">
+                    <div css={numericFont} className="text-caption text-muted-foreground mt-0.5">
                       {reminder.time ? `${dateLabel}, ${reminder.time}` : dateLabel}
                     </div>
                   </div>

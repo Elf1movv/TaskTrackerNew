@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useState } from "react"
 import { endOfWeek, format, startOfWeek } from "date-fns"
-import { Activity, BarChart3, ChevronLeft, ChevronRight, Flame, Plus, TrendingUp } from "lucide-react"
+import { Activity, BarChart3, Check, ChevronLeft, ChevronRight, Flame, Plus, TrendingUp } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { EditHabitButton } from "@/features/edit-habit"
 import { DeleteHabitButton } from "@/features/delete-habit"
@@ -16,8 +16,14 @@ import {
 } from "@/entities/habit-group"
 import { useDragItem, useDragReorder, useDropTarget } from "@/shared/lib/dnd"
 import { formatDateKey } from "@/shared/lib/date"
-import { getDateLocale, getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
+import {
+  capitalizeFirst,
+  formatDayRange,
+  getDateLocale,
+  getWeekdayLabels,
+  useLanguage,
+} from "@/shared/lib/i18n"
+import { numericFont } from "@/shared/lib/typography"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
 import { Button } from "@/shared/ui/button"
 import { useIsMobile } from "@/shared/ui/use-mobile"
@@ -119,9 +125,13 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   const atCurrentPeriod = isCurrentOrFuturePeriod(period, anchor, today)
   const periodLabel =
     period === "week"
-      ? `${format(startOfWeek(anchor, { weekStartsOn: 1 }), "d MMM", { locale })} – ${format(endOfWeek(anchor, { weekStartsOn: 1 }), "d MMM yyyy", { locale })}`
+      ? formatDayRange(
+          startOfWeek(anchor, { weekStartsOn: 1 }),
+          endOfWeek(anchor, { weekStartsOn: 1 }),
+          language,
+        )
       : period === "month"
-        ? format(anchor, "LLLL yyyy", { locale })
+        ? capitalizeFirst(format(anchor, "LLLL yyyy", { locale }))
         : format(anchor, "yyyy")
   const columnCount = (days ?? months ?? []).length
   // minmax(0, 1fr) columns let the day/month track collapse to nothing on a
@@ -186,13 +196,13 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
               <div className="flex-1 min-w-0">
                 <AccordionTrigger className="hover:no-underline pb-4 [&>svg]:mt-1.5">
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                    <span className="size-9 shrink-0 rounded-[10px] bg-primary-soft text-primary flex items-center justify-center">
+                    <span className="size-9 shrink-0 rounded-md bg-primary-soft text-primary flex items-center justify-center">
                       <HabitIcon emoji={getHabitGroupIcon(group)} size={18} />
                     </span>
-                    <span className="text-xl font-bold tracking-[-0.015em] truncate min-w-0">
+                    <span className="text-title font-semibold truncate min-w-0">
                       {getHabitGroupTitle(group, t)}
                     </span>
-                    <span className="text-[13px] font-semibold text-tertiary shrink-0">
+                    <span className="text-meta text-tertiary shrink-0">
                       {t("habits.group.habitCount", { count: habits.length })}
                     </span>
                   </div>
@@ -209,7 +219,14 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
             {isEditingGroup && <HabitGroupForm group={group} onDone={() => setIsEditingGroup(false)} />}
 
             <div className="flex items-center justify-end flex-wrap gap-3">
-              {isGeneral && <span className="mr-auto text-[15px] font-bold">{t("habits.withoutBlock")}</span>}
+              {isGeneral && (
+                <span className="mr-auto flex items-baseline gap-2 sm:gap-3 min-w-0">
+                  <span className="text-title font-semibold truncate">{t("habits.withoutBlock")}</span>
+                  <span className="text-meta text-tertiary shrink-0">
+                    {t("habits.group.habitCount", { count: habits.length })}
+                  </span>
+                </span>
+              )}
               <div className="flex items-center gap-1" role="group" aria-label={t("habits.periodNav")}>
                 <Button
                   variant="ghost"
@@ -220,10 +237,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                 >
                   <ChevronLeft size={16} />
                 </Button>
-                <span
-                  className="text-[13px] font-semibold min-w-[120px] text-center capitalize"
-                  data-period-label
-                >
+                <span className="text-meta font-semibold min-w-[120px] text-center" data-period-label>
                   {periodLabel}
                 </span>
                 <Button
@@ -237,7 +251,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                   <ChevronRight size={16} />
                 </Button>
               </div>
-              <div className="grid grid-cols-3 w-[252px] p-0.5 rounded-[9px] bg-fill">
+              <div className="grid grid-cols-3 w-[252px] p-0.5 rounded-md bg-fill">
                 {PERIODS.map(p => (
                   <button
                     key={p}
@@ -245,7 +259,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                       setPeriod(p)
                       setAnchor(new Date())
                     }}
-                    className={`h-[30px] rounded-lg text-[13px] transition-all ${
+                    className={`h-8 rounded-lg text-meta transition ${
                       period === p
                         ? "bg-seg text-foreground font-bold shadow-card"
                         : "text-muted-foreground font-medium"
@@ -257,7 +271,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
               </div>
               <Button
                 variant="outline"
-                className="h-[34px] px-3 gap-1.5 rounded-[10px] border-primary/25 text-primary text-sm font-semibold"
+                className="h-8 px-3 gap-1.5 rounded-md border-primary/25 text-primary text-sm font-semibold"
                 onClick={() => {
                   setEditingHabit(null)
                   setIsAdding(v => !v)
@@ -297,21 +311,21 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                         className={`flex flex-col items-center gap-1 self-end pb-1 ${isToday ? "text-primary" : "text-muted-foreground"}`}
                       >
                         {period === "month" && (
-                          <div css={monoFont} className="text-[9px] font-bold opacity-70 leading-tight">
+                          <div css={numericFont} className="text-caption font-bold opacity-70 leading-tight">
                             {weekdayLabels[(date.getDay() + 6) % 7]}
                           </div>
                         )}
                         {period === "week" && (
-                          <div className="text-[11px] font-bold uppercase leading-tight">
+                          <div className="text-caption font-bold uppercase leading-tight">
                             {weekdayLabels[i]}
                           </div>
                         )}
                         <div
-                          css={monoFont}
+                          css={numericFont}
                           className={`flex items-center justify-center leading-tight ${
                             period === "week"
                               ? `size-7 rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
-                              : `size-[22px] rounded-full text-[11px] font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
+                              : `size-[22px] rounded-full text-caption font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
                           }`}
                         >
                           {date.getDate()}
@@ -325,7 +339,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                     return (
                       <div
                         key={month.toISOString()}
-                        className={`text-[12px] font-bold text-center self-end pb-1 capitalize ${
+                        className={`text-xs font-bold text-center self-end pb-1 capitalize ${
                           isCurrentMonth ? "text-primary" : "text-tertiary"
                         }`}
                       >
@@ -360,13 +374,13 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                     className="grid gap-x-1 items-center"
                     style={{ gridTemplateColumns: chartGridTemplateColumns }}
                   >
-                    <div className="flex items-center gap-0.5 w-fit p-0.5 rounded-[9px] bg-fill">
+                    <div className="flex items-center gap-0.5 w-fit p-0.5 rounded-md bg-fill">
                       {CHART_STYLES.map(({ style, Icon }) => (
                         <button
                           key={style}
                           onClick={() => setChartStyle(style)}
                           aria-label={t(`habits.chartStyle.${style}`)}
-                          className={`flex items-center justify-center w-[34px] h-7 rounded-lg transition-all ${
+                          className={`flex items-center justify-center w-[34px] h-7 rounded-lg transition ${
                             chartStyle === style
                               ? "bg-seg text-foreground shadow-card"
                               : "text-muted-foreground"
@@ -386,10 +400,10 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                   </div>
                 </div>
                 <div className="mt-3 flex flex-col gap-0.5">
-                  <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary">
+                  <span className="text-meta font-semibold text-tertiary">
                     {t("habits.page.summaryLabel")}
                   </span>
-                  <span className="text-[15px] font-semibold">
+                  <span className="text-body font-semibold">
                     {t("habits.page.summary", {
                       completed: summary.completed,
                       total: summary.total,
@@ -450,7 +464,7 @@ function HabitGridRow({
         style={{ opacity: isDragging ? 0.4 : 1 }}
       >
         <span
-          className="size-8 shrink-0 rounded-[9px] flex items-center justify-center"
+          className="size-8 shrink-0 rounded-md flex items-center justify-center"
           style={{
             background: `color-mix(in srgb, ${habit.color} 16%, transparent)`,
             color: habit.color,
@@ -460,7 +474,7 @@ function HabitGridRow({
         </span>
         <span className="text-sm font-semibold truncate flex-1">{habit.title}</span>
         <span
-          css={monoFont}
+          css={numericFont}
           className="flex items-center gap-1 text-xs shrink-0"
           style={{
             color:
@@ -489,19 +503,25 @@ function HabitGridRow({
             disabled={!clickable}
             onClick={() => clickable && onToggle(dateKey)}
             aria-label={`${habit.title} ${dateKey}`}
-            className="w-full max-w-10 aspect-square mx-auto rounded-full border transition-all disabled:cursor-default"
+            className="w-full max-w-9 aspect-square mx-auto rounded-full border flex items-center justify-center transition-colors disabled:cursor-default"
             style={{
+              // Done = a soft tint of the habit's own color + a check, not a
+              // solid saturated disc (unslop pass 2026-11-08: four habits a
+              // week read as a rainbow mosaic). The habit color stays.
               backgroundColor:
                 state === "done"
-                  ? habit.color
+                  ? `color-mix(in srgb, ${habit.color} 20%, transparent)`
                   : state === "unscheduled" || state === "future"
                     ? "var(--muted)"
                     : "transparent",
               borderColor: state === "done" ? habit.color : "var(--border)",
+              color: habit.color,
               borderStyle: state === "unscheduled" || state === "future" ? "dashed" : "solid",
               opacity: state === "unscheduled" || state === "future" ? 0.6 : 1,
             }}
-          />
+          >
+            {state === "done" && <Check size={16} strokeWidth={2.5} aria-hidden />}
+          </button>
         )
       })}
       {months?.map(month => (

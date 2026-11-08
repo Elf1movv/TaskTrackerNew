@@ -51,7 +51,7 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <StyledAccordionItem value={goal.id} color={goal.color} className="!border-b-0">
-        <div className="flex items-center gap-1 pl-6 pr-5 py-5">
+        <div className="flex items-start gap-1 pl-4 pr-3 sm:pl-6 sm:pr-5 py-5">
           {/* flex-1 on this wrapper, not directly on AccordionTrigger —
               Radix wraps every trigger in its own <h3 class="flex">
               (shared/ui/accordion.tsx), a plain flex item with no grow of
@@ -65,13 +65,15 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
               way, no extra classes needed on the trigger itself. */}
           <div className="flex-1 min-w-0">
             <AccordionTrigger className="hover:no-underline [&>svg]:mt-1 !py-0">
-              <div className="flex items-start gap-[18px] flex-1">
+              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                 <ProgressRing progress={goal.progress} color={goal.color} />
                 <div className="flex-1 min-w-0 text-left">
-                  <h3 className="text-lg font-bold tracking-[-0.01em] leading-snug pr-2">{goal.title}</h3>
+                  <h3 className="text-lg font-semibold leading-snug pr-2 [overflow-wrap:anywhere]">
+                    {goal.title}
+                  </h3>
                   <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2">
-                    <span className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground whitespace-nowrap">
+                    <span className="flex items-center gap-1.5 text-meta font-medium text-muted-foreground">
                       <span className="size-2 rounded-full shrink-0" style={{ background: goal.color }} />
                       {t("goals.milestonesCount", {
                         completed: completedCount,
@@ -80,12 +82,12 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
                       {goal.subgoals.length > 0 &&
                         ` · ${t("goals.subgoalsCount", { count: goal.subgoals.length })}`}
                     </span>
-                    <span className="flex items-center gap-1.5 text-[13px] font-semibold text-tertiary whitespace-nowrap">
+                    <span className="flex items-center gap-1.5 text-meta font-medium text-tertiary whitespace-nowrap">
                       <CalendarDays size={14} strokeWidth={1.75} />
                       {goal.dueLabel ? t("goals.due", { date: goal.dueLabel }) : t("goalForm.noTargetDate")}
                     </span>
                     {goal.category && (
-                      <span className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground whitespace-nowrap">
+                      <span className="flex items-center gap-1.5 text-meta font-medium text-muted-foreground whitespace-nowrap">
                         <Tag
                           size={13}
                           strokeWidth={2}
@@ -99,7 +101,7 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
               </div>
             </AccordionTrigger>
           </div>
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0 -mt-1.5">
             <EditGoalButton onClick={onEdit} />
             <DeleteGoalButton goalId={goal.id} goalTitle={goal.title} />
           </div>

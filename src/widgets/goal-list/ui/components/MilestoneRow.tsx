@@ -3,7 +3,7 @@ import { Check, Trash2 } from "lucide-react"
 import styled from "@emotion/styled"
 import { useGoals, type Milestone } from "@/entities/goal"
 import { useDragReorder } from "@/shared/lib/dnd"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 import { Input } from "@/shared/ui/input"
 
 const Circle = styled.div<{ completed: boolean; color: string }>`
@@ -61,7 +61,7 @@ export function MilestoneRow({
   return (
     <div
       ref={ref}
-      className="w-full flex items-center gap-3 min-h-11 pl-3 pr-2 rounded-[10px] bg-card shadow-card group cursor-grab active:cursor-grabbing select-none"
+      className="w-full flex items-center gap-3 min-h-11 pl-3 pr-2 rounded-md bg-card shadow-card group cursor-grab active:cursor-grabbing select-none"
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <button
@@ -73,7 +73,7 @@ export function MilestoneRow({
         <Circle
           completed={milestone.completed}
           color={color}
-          className="w-[22px] h-[22px] flex items-center justify-center"
+          className="w-[22px] h-6 flex items-center justify-center"
         >
           {milestone.completed && <Check size={12} strokeWidth={3} className="text-white" />}
         </Circle>
@@ -105,13 +105,13 @@ export function MilestoneRow({
         </button>
       )}
 
-      <span css={monoFont} className="text-xs font-semibold text-tertiary">
+      <span css={numericFont} className="text-xs font-semibold text-tertiary">
         #{index + 1}
       </span>
 
       <button
         onClick={() => deleteMilestone(goalId, milestone.id, subgoalId)}
-        className="shrink-0 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-destructive transition-all"
+        className="shrink-0 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-destructive transition"
         aria-label="Delete milestone"
       >
         <Trash2 size={13} />

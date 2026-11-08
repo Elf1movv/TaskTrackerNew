@@ -9,7 +9,7 @@ export function DayHabitRow({ habit }: { habit: Habit }) {
   return (
     <div className="w-full flex items-center gap-2.5 text-left">
       <span
-        className="size-7 shrink-0 rounded-[9px] flex items-center justify-center"
+        className="size-7 shrink-0 rounded-md flex items-center justify-center"
         style={{ background: `color-mix(in srgb, ${habit.color} 16%, transparent)`, color: habit.color }}
       >
         <HabitIcon emoji={habit.icon} size={14} />

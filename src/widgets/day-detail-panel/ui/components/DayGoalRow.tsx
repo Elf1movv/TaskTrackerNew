@@ -2,7 +2,7 @@ import { DeleteGoalButton } from "@/features/delete-goal"
 import { EditGoalButton } from "@/features/edit-goal"
 import { type Goal } from "@/entities/goal"
 import { useDragItem } from "@/shared/lib/dnd"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 
 // Mirrors DayTaskRow exactly — drag source only, dragging onto a day cell
 // moves this goal's deadline there (see moveGoalDeadline in
@@ -33,7 +33,7 @@ export function DayGoalRow({
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <span className="text-sm font-semibold flex-1 text-left leading-snug">{goal.title}</span>
-      <span css={monoFont} className="text-xs font-bold text-muted-foreground shrink-0">
+      <span css={numericFont} className="text-xs font-bold text-muted-foreground shrink-0">
         {goal.progress}%
       </span>
       <EditGoalButton onClick={onEdit} />

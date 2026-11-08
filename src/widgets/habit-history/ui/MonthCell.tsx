@@ -1,7 +1,7 @@
 import { format } from "date-fns"
 import { getHabitMonthCompletionStats, type Habit } from "@/entities/habit"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { ProgressRing } from "@/shared/ui/progress-ring"
 
@@ -28,24 +28,20 @@ export function MonthCell({ habit, month, today }: { habit: Habit; month: Date; 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={`${habit.title} ${monthLabel}`}
-          className="size-full rounded-full transition-transform hover:scale-105"
-        >
+        <button type="button" aria-label={`${habit.title} ${monthLabel}`} className="size-full rounded-full">
           <ProgressRing
             progress={percent}
             color={habit.color}
             strokeWidth={4}
             trackColor={`color-mix(in srgb, ${habit.color} 18%, transparent)`}
-            labelClassName="text-[10px] font-extrabold"
+            labelClassName="text-caption font-semibold"
             labelColor="var(--foreground)"
           />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto px-3 py-2" side="top">
         <div className="text-xs font-medium capitalize mb-0.5">{monthLabel}</div>
-        <div css={monoFont} className="text-sm">
+        <div css={numericFont} className="text-sm">
           {t("habits.monthCellSummary", { done, scheduled })}
         </div>
       </PopoverContent>

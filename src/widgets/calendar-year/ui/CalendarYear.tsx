@@ -5,7 +5,7 @@ import { getHabitMonthCompletionStats, type Habit } from "@/entities/habit"
 import { getTaskMonthCompletionStats, type Task } from "@/entities/task"
 import { buildMonthGrid } from "@/shared/lib/calendarGrid"
 import { getDateLocale, getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { ProgressRing } from "@/shared/ui/progress-ring"
 
@@ -97,17 +97,13 @@ function YearMonthCard({
   return (
     <div className="bg-card border border-card-border rounded-xl shadow-card p-3">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <div css={monoFont} className="text-xs font-bold uppercase tracking-wider capitalize">
+        <div css={numericFont} className="text-meta font-semibold capitalize">
           {format(month, "LLLL", { locale })}
         </div>
         {total > 0 && (
           <Popover>
             <PopoverTrigger asChild>
-              <button
-                type="button"
-                aria-label={monthLabel}
-                className="size-9 shrink-0 rounded-full transition-transform hover:scale-105"
-              >
+              <button type="button" aria-label={monthLabel} className="size-9 shrink-0 rounded-full">
                 <ProgressRing
                   progress={percent}
                   color="var(--primary)"
@@ -118,7 +114,7 @@ function YearMonthCard({
             </PopoverTrigger>
             <PopoverContent className="w-auto px-3 py-2" side="top">
               <div className="text-xs font-medium capitalize mb-0.5">{monthLabel}</div>
-              <div css={monoFont} className="text-sm">
+              <div css={numericFont} className="text-sm">
                 {t("calendar.yearMonthSummary", { done, total })}
               </div>
             </PopoverContent>
@@ -127,7 +123,7 @@ function YearMonthCard({
       </div>
       <div className="grid grid-cols-7 gap-y-0.5">
         {getWeekdayLabels(language).map(label => (
-          <div key={label} className="text-center text-[8px] font-bold text-tertiary">
+          <div key={label} className="text-center text-caption font-bold text-tertiary">
             {label[0]}
           </div>
         ))}
@@ -135,7 +131,7 @@ function YearMonthCard({
           <button
             key={date.toISOString()}
             onClick={() => onSelectDay(date)}
-            className={`aspect-square rounded-md text-[10px] font-semibold flex items-center justify-center ${
+            className={`aspect-square rounded-md text-caption font-semibold flex items-center justify-center ${
               isToday(date)
                 ? "bg-primary text-primary-foreground"
                 : isCurrentMonth

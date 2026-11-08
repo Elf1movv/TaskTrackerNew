@@ -42,7 +42,7 @@ export function SubgoalItem({ goalId, subgoal, color }: { goalId: string; subgoa
     <div
       ref={dropRef}
       data-subgoal-id={subgoal.id}
-      className="rounded-[10px] bg-card shadow-card"
+      className="rounded-md bg-card shadow-card"
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       <div className="flex items-center gap-2 min-h-12 pl-1.5 pr-2 group">
@@ -101,7 +101,7 @@ export function SubgoalItem({ goalId, subgoal, color }: { goalId: string; subgoa
         >
           <button
             type="button"
-            className="shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-destructive transition-all"
+            className="shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-destructive transition"
             aria-label={t("goals.deleteSubgoalTitle")}
           >
             <Trash2 size={13} />

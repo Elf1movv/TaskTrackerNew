@@ -5,7 +5,7 @@ import { useGoals } from "@/entities/goal"
 import { getHabitCompletionsByDay, useHabits } from "@/entities/habit"
 import { getLastNDays, getTodayKey } from "@/shared/lib/date"
 import { getDateLocale, getWeekdayLabels, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
-import { monoFont } from "@/shared/lib/typography"
+import { numericFont } from "@/shared/lib/typography"
 import { BrandMark } from "@/shared/ui/brand-mark"
 import { WeeklyActivityChart, type WeeklyActivityPoint } from "@/shared/ui/weekly-activity-chart"
 import { NAV_ITEMS } from "../model/navItems"
@@ -57,7 +57,7 @@ export function SidebarNav() {
       <div className="flex items-center gap-3 px-2 pt-1 pb-7">
         <BrandMark size={36} iconSize={20} radius={10} />
         <div className="flex flex-col">
-          <span className="text-base font-bold tracking-[-0.01em]">MyTracker</span>
+          <span className="text-base font-bold">MyTracker</span>
           <span className="text-xs text-tertiary">
             {format(new Date(), "MMMM yyyy", { locale: getDateLocale(language) })}
           </span>
@@ -70,7 +70,7 @@ export function SidebarNav() {
             key={path}
             to={path}
             className={({ isActive }) =>
-              `flex h-10 items-center gap-3 rounded-[10px] px-3 text-[15px] transition-colors ${
+              `flex h-10 items-center gap-3 rounded-md px-3 text-body transition-colors ${
                 isActive ? "bg-primary-soft text-primary font-semibold" : "text-muted-foreground font-medium"
               }`
             }
@@ -86,20 +86,16 @@ export function SidebarNav() {
 
       <section className="flex flex-col gap-4 mt-7 pt-5 border-t border-border">
         <div className="bg-card border border-card-border rounded-xl shadow-card px-3.5 pt-3.5 pb-2.5 flex flex-col gap-2">
-          <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary">
-            {t("sidebar.statChartLabel")}
-          </span>
+          <span className="text-meta font-semibold text-tertiary">{t("sidebar.statChartLabel")}</span>
           <WeeklyActivityChart data={chartData} seriesName={t("sidebar.statChartValueLabel")} />
         </div>
 
         <div className="flex flex-col gap-2.5 px-1.5">
-          <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary">
-            {t("common.today")}
-          </span>
+          <span className="text-meta font-semibold text-tertiary">{t("common.today")}</span>
           {stats.map(({ labelKey, value }) => (
             <div key={labelKey} className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">{t(labelKey)}</span>
-              <span css={monoFont} className="text-sm font-semibold">
+              <span css={numericFont} className="text-sm font-semibold">
                 {value}
               </span>
             </div>
