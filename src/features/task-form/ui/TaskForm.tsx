@@ -95,8 +95,10 @@ export function TaskForm({
       priority,
       category,
       dueDate: hasDueDate ? dueDate : null,
-      // Old scheduling fields are retained for transition only. New tasks
-      // never create calendar intervals.
+      // Tasks have no hour since the redesign — schedules are calendar
+      // plans. Saving an old task clears its leftover hour; the original is
+      // kept in the LegacyTransition journal (release_cleanup migration).
+      // The columns themselves are dropped in the release after main.
       time: null,
       endTime: null,
     }
