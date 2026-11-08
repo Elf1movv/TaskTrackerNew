@@ -6,14 +6,19 @@ import { Input } from "@/shared/ui/input"
 
 // Inline "add a step" field — for the goal's own steps, a subgoal's steps
 // (`subgoalId`), or, with `kind="subgoal"`, a new subgoal of the goal.
+// `placement="header"`: the goal-level fields sit right under the goal's
+// title and counts as part of that block (owner, 2026-11-08), so they get a
+// quiet filled look instead of the dashed "add row" at the end of a list.
 export function AddMilestoneForm({
   goalId,
   subgoalId,
   kind = "step",
+  placement = "list",
 }: {
   goalId: string
   subgoalId?: string
   kind?: "step" | "subgoal"
+  placement?: "list" | "header"
 }) {
   const { addMilestone, addSubgoal } = useGoals()
   const { t } = useLanguage()
@@ -27,7 +32,11 @@ export function AddMilestoneForm({
   }
 
   return (
-    <div className="flex items-center gap-2 mt-1.5 h-11 pl-3.5 pr-1.5 rounded-[10px] border border-dashed border-border-strong">
+    <div
+      className={`flex items-center gap-2 h-11 pl-3.5 pr-1.5 rounded-[10px] ${
+        placement === "header" ? "bg-sunken" : "mt-1.5 border border-dashed border-border-strong"
+      }`}
+    >
       <Input
         value={title}
         onChange={e => setTitle(e.target.value)}

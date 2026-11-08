@@ -105,6 +105,14 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
           </div>
         </div>
         <AccordionContent className="px-5 pb-5 flex flex-col gap-3">
+          {/* Add fields first, directly under the title and counts — part of
+              the goal's header, always above the list however long it gets
+              (owner, 2026-11-08). Two columns on wide screens, stacked on
+              phones. */}
+          <div className="grid gap-2 sm:grid-cols-2 pl-1" data-goal-add>
+            <AddMilestoneForm goalId={goal.id} placement="header" />
+            <AddMilestoneForm goalId={goal.id} kind="subgoal" placement="header" />
+          </div>
           {/* One headerless list (owner, 2026-11-08 — same idea as the
               headerless "without a block" habits): the goal's own steps and
               subgoals (folders of steps) in one shared order the owner sets
@@ -123,9 +131,7 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
                 <SubgoalItem key={entry.item.id} goalId={goal.id} subgoal={entry.item} color={goal.color} />
               ),
             )}
-            {items.length === 0 && <p className="text-sm text-tertiary px-1 pb-1">{t("goals.emptyTree")}</p>}
-            <AddMilestoneForm goalId={goal.id} />
-            <AddMilestoneForm goalId={goal.id} kind="subgoal" />
+            {items.length === 0 && <p className="text-sm text-tertiary px-1">{t("goals.emptyTree")}</p>}
           </div>
         </AccordionContent>
       </StyledAccordionItem>
