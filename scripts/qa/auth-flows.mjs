@@ -10,7 +10,20 @@
 // password or token.
 import assert from "node:assert/strict"
 import fs from "node:fs/promises"
-import { button, click, close, errors, evaluate, fill, navigate, origin, pause, qaFile, send, wait } from "./cdp.mjs"
+import {
+  button,
+  click,
+  close,
+  errors,
+  evaluate,
+  fill,
+  navigate,
+  origin,
+  pause,
+  qaFile,
+  send,
+  wait,
+} from "./cdp.mjs"
 
 const mode = process.argv[2]
 assert(["local", "staging"].includes(mode), "Use local or staging")
@@ -26,13 +39,19 @@ const session = () => evaluate("fetch('/api/auth/get-session').then(r=>r.json())
 
 async function emailLink(email, subject, first = false) {
   const log = await fs.readFile(process.env.QA_SERVER_LOG, "utf8")
-  const blocks = log.split("[email] (dev, not sent)").filter(b => b.includes(`to=${email}`) && b.includes(subject))
+  const blocks = log
+    .split("[email] (dev, not sent)")
+    .filter(b => b.includes(`to=${email}`) && b.includes(subject))
   assert(blocks.length, `no "${subject}" email for QA user`)
-  return blocks.at(first ? 0 : -1).match(/href="([^"]+)"/)[1].replaceAll("&amp;", "&")
+  return blocks
+    .at(first ? 0 : -1)
+    .match(/href="([^"]+)"/)[1]
+    .replaceAll("&amp;", "&")
 }
 async function emailCount(email, subject) {
   const log = await fs.readFile(process.env.QA_SERVER_LOG, "utf8")
-  return log.split("[email] (dev, not sent)").filter(b => b.includes(`to=${email}`) && b.includes(subject)).length
+  return log.split("[email] (dev, not sent)").filter(b => b.includes(`to=${email}`) && b.includes(subject))
+    .length
 }
 async function loginUi(email, password, stay = false) {
   if (stay) await wait("document.querySelector('#login-email')")
@@ -50,14 +69,22 @@ async function logoutUi() {
 
 try {
   await send("Network.enable")
-  await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false })
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 1280,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  })
   await send("Network.clearBrowserCookies")
   await navigate("/login", "document.querySelector('#login-email')")
   await evaluate("localStorage.setItem('mytracker-language','ru')")
 
   let login
   if (mode === "local") {
-    login = { email: `independence-${crypto.randomUUID()}@example.invalid`, password: `Qa1-${crypto.randomUUID()}` }
+    login = {
+      email: `independence-${crypto.randomUUID()}@example.invalid`,
+      password: `Qa1-${crypto.randomUUID()}`,
+    }
     await fs.writeFile(credentials, JSON.stringify(login), { mode: 0o600 })
 
     await navigate("/register", "document.querySelector('#register-email')")
@@ -76,10 +103,20 @@ try {
     assert.equal(await emailCount(login.email, "подтвердите почту"), 2, "sendOnSignIn re-sends the link")
     ok("Login before verification refused, fresh link re-sent")
 
-    // The registration email (the re-sent one from sign-in has callbackURL "/" —
-    // LoginPage passes none; known, see BACKLOG).
-    const verify = await emailLink(login.email, "подтвердите почту", true)
-    assert(verify.startsWith(origin + "/api/auth/verify-email?token="), "verification link points at this site")
+    // Both links — from sign-up and the one re-sent on sign-in — must land on
+    // /login?verified=1 (server rewrites the re-sent one, auth.ts). Open the
+    // re-sent one, the path that used to lose the welcome dialog.
+    const callback = link => new URL(link).searchParams.get("callbackURL")
+    assert.equal(
+      callback(await emailLink(login.email, "подтвердите почту", true)),
+      origin + "/login?verified=1",
+    )
+    assert.equal(callback(await emailLink(login.email, "подтвердите почту")), "/login?verified=1")
+    const verify = await emailLink(login.email, "подтвердите почту")
+    assert(
+      verify.startsWith(origin + "/api/auth/verify-email?token="),
+      "verification link points at this site",
+    )
     await send("Page.navigate", { url: verify })
     await wait("location.pathname === '/login'")
     assert.equal(await path(), "/login?verified=1")
@@ -180,7 +217,9 @@ try {
     await navigate(route, check)
   }
   for (const label of ["Задачи", "Цели", "Привычки", "Календарь", "Сегодня"]) {
-    await click(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()===${JSON.stringify(label)})`)
+    await click(
+      `[...document.querySelectorAll('a')].find(a=>a.textContent.trim()===${JSON.stringify(label)})`,
+    )
     await pause(300)
   }
   assert.equal(await evaluate("location.pathname"), "/today")
@@ -199,7 +238,10 @@ try {
           `fetch('/api/auth/sign-in/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:${JSON.stringify(login.email)},password:'Wrong-password-1'})}).then(r=>r.status+':'+(r.headers.get('content-type')||''))`,
         ),
       )
-    assert(statuses.some(s => s.startsWith("429") && s.includes("json")), statuses.join(" "))
+    assert(
+      statuses.some(s => s.startsWith("429") && s.includes("json")),
+      statuses.join(" "),
+    )
     await loginUi(login.email, login.password)
     await wait("document.querySelector('[role=alert], .text-destructive')")
     assert.equal(await evaluate("location.pathname"), "/login")
@@ -208,7 +250,10 @@ try {
 
   assert.deepEqual(errors, [], "no JS errors")
   ok("No JavaScript errors")
-  await fs.writeFile(qaFile(`mytracker-auth-${mode}-results.json`), JSON.stringify({ passed: results }, null, 2))
+  await fs.writeFile(
+    qaFile(`mytracker-auth-${mode}-results.json`),
+    JSON.stringify({ passed: results }, null, 2),
+  )
   console.log(JSON.stringify({ mode, passed: results.length, errors: 0 }))
 } finally {
   close()

@@ -169,7 +169,9 @@ try {
     })
     await navigate("/today", row(toMove.id))
     await click(rowButton(toMove.id, "Перенести в задачи"))
-    await wait("document.querySelector('input[placeholder=\"Что нужно сделать?\"]')?.value==='Заметка в задачу'")
+    await wait(
+      "document.querySelector('input[placeholder=\"Что нужно сделать?\"]')?.value==='Заметка в задачу'",
+    )
     await click(button("Добавить задачу"))
     await saved(async () => (await api("tasks")).some(t => t.title === "Заметка в задачу"))
     const movedTask = (await api("tasks")).find(t => t.title === "Заметка в задачу")
@@ -210,9 +212,10 @@ try {
     assert.equal((await api("tasks"))[0].completed, false)
     assert.equal((await api("plans")).length, 0)
     ok("Own goal milestones and progress persist independently")
-    // The reload above leaves the goal collapsed — open it again first.
-    await click(
-      "[...document.querySelectorAll('button')].find(e=>e.textContent.includes('Моя цель')&&e.getAttribute('aria-expanded')==='false')",
+    // After the reload the first goal opens by itself (GoalList, fixed
+    // 2026-11-09 — it used to stay collapsed); check that, no click needed.
+    await wait(
+      "[...document.querySelectorAll('button')].find(e=>e.textContent.includes('Моя цель')&&e.getAttribute('aria-expanded')==='true')",
     )
     await fill('input[placeholder="Добавить подцель…"]', "Бэкенд")
     await click("document.querySelector('[aria-label=\"Add subgoal\"]')")
@@ -224,7 +227,9 @@ try {
     await fill(`[data-subgoal-id="${subgoalId}"] input[placeholder="Добавить этап…"]`, "Регистрация")
     await click(`document.querySelector('[data-subgoal-id="${subgoalId}"] [aria-label="Add milestone"]')`)
     await saved(async () => (await api("goals"))[0].subgoals[0].milestones.length === 1)
-    await click(`document.querySelector('[data-subgoal-id="${subgoalId}"] [aria-label="Mark milestone as done"]')`)
+    await click(
+      `document.querySelector('[data-subgoal-id="${subgoalId}"] [aria-label="Mark milestone as done"]')`,
+    )
     await saved(async () => (await api("goals"))[0].progress === 100)
     ok("Subgoal with its own step counts toward goal progress")
     await screenshot("goals-desktop")
@@ -300,7 +305,10 @@ try {
       )),
     )
     ok("Today shows notes, not other days' schedule")
-    assert(!(await evaluate("Boolean(document.querySelector('[data-today-plan]'))")), "No plan strip on Today")
+    assert(
+      !(await evaluate("Boolean(document.querySelector('[data-today-plan]'))")),
+      "No plan strip on Today",
+    )
     ok("Today has no schedule strip (calendar owns the day plan)")
     await screenshot("today-desktop")
     assert.equal(errors.length, 0, JSON.stringify(errors))

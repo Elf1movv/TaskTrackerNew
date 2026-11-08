@@ -54,7 +54,13 @@ export function RootLayout() {
                       <DueDateReminders userId={session.user.id} />
                       <CriticalReminderAlert userId={session.user.id} />
 
-                      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
+                      {/* sm:max-xl:pt-10 — the settings gear and reminder bell are
+                          fixed in the top-right corner. Between these widths each
+                          page's header (title + "Add" button) reaches that corner
+                          and the button ended up under them; from xl the centred
+                          column stays clear, and on phones the button wraps below
+                          the title. */}
+                      <main className="flex-1 overflow-y-auto pb-16 md:pb-0 sm:max-xl:pt-10">
                         {import.meta.env.VITE_APP_ENV === "staging" && (
                           <div className="m-4 rounded-lg bg-primary-soft text-primary px-4 py-2 text-sm">
                             {t("app.staging")}

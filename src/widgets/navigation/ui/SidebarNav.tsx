@@ -4,7 +4,13 @@ import { getTaskCompletionsByDay, isTaskOnDay, useTasks } from "@/entities/task"
 import { useGoals } from "@/entities/goal"
 import { getHabitCompletionsByDay, useHabits } from "@/entities/habit"
 import { getLastNDays, getTodayKey } from "@/shared/lib/date"
-import { getDateLocale, getWeekdayLabels, useLanguage, type TranslationKey } from "@/shared/lib/i18n"
+import {
+  capitalizeFirst,
+  getDateLocale,
+  getWeekdayLabels,
+  useLanguage,
+  type TranslationKey,
+} from "@/shared/lib/i18n"
 import { numericFont } from "@/shared/lib/typography"
 import { BrandMark } from "@/shared/ui/brand-mark"
 import { WeeklyActivityChart, type WeeklyActivityPoint } from "@/shared/ui/weekly-activity-chart"
@@ -59,7 +65,8 @@ export function SidebarNav() {
         <div className="flex flex-col">
           <span className="text-base font-bold">MyTracker</span>
           <span className="text-xs text-tertiary">
-            {format(new Date(), "MMMM yyyy", { locale: getDateLocale(language) })}
+            {/* LLLL = standalone month ("ноябрь"); MMMM is the "8 ноября" form */}
+            {capitalizeFirst(format(new Date(), "LLLL yyyy", { locale: getDateLocale(language) }))}
           </span>
         </div>
       </div>

@@ -11,7 +11,7 @@ import { type Habit } from "@/entities/habit"
 import { type Reminder } from "@/entities/reminder"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
-import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
+import { formatDay, getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { displayFont, numericFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { DayDeadlineRow, DayGoalRow, DayHabitRow, DayReminderRow, DayTaskRow } from "./components"
@@ -53,7 +53,7 @@ export function DayDetailPanel({
             {format(day, "EEEE", { locale })}
           </div>
           <div css={displayFont} className="text-2xl font-bold">
-            {format(day, "MMMM d", { locale })}
+            {formatDay(day, language)}
           </div>
         </div>
         <Button
