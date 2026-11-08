@@ -13,8 +13,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     setPage(1)
   }
   const value = useMemo(() => {
-    const visible = tasks.filter(task => !task.legacyPending)
-    const filtered = filterTasks(visible, categoryFilter)
+    const filtered = filterTasks(tasks, categoryFilter)
     const completed = filtered
       .filter(task => task.completed)
       .sort(
@@ -25,7 +24,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     const pageCount = Math.max(1, Math.ceil(completed.length / PAGE_SIZE))
     const currentPage = Math.min(page, pageCount)
     return {
-      allTasks: visible,
+      allTasks: tasks,
       activeTasks: sortActiveTasks(filtered.filter(task => !task.completed)),
       completedPage: completed.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
       completedCount: completed.length,

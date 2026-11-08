@@ -1,4 +1,3 @@
-import { LegacyTransition } from "@/widgets/legacy-transition"
 import { AnimatePresence, motion } from "motion/react"
 import { Navigate, useLocation, useOutlet } from "react-router"
 import { CategoryProvider } from "@/entities/category"
@@ -61,7 +60,6 @@ export function RootLayout() {
                             {t("app.staging")}
                           </div>
                         )}
-                        <LegacyTransition />
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={location.pathname}

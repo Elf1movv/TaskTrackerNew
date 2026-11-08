@@ -14,7 +14,6 @@ import { goalsRouter } from "./routes/goals.js"
 import { habitGroupsRouter } from "./routes/habitGroups.js"
 import { habitsRouter } from "./routes/habits.js"
 import { remindersRouter } from "./routes/reminders.js"
-import { transitionRouter } from "./routes/transition.js"
 import { notesRouter } from "./routes/notes.js"
 import { plansRouter } from "./routes/plans.js"
 import { tasksRouter } from "./routes/tasks.js"
@@ -61,7 +60,6 @@ export function createApp() {
   // feedback's own path) also avoids the smaller limit rejecting
   // feedback's body before the larger one ever gets a chance to run.
   const DEFAULT_JSON_LIMIT = "256kb"
-  app.use("/api/transition", express.json({ limit: DEFAULT_JSON_LIMIT }), transitionRouter)
   app.use("/api/notes", express.json({ limit: DEFAULT_JSON_LIMIT }), notesRouter)
   app.use("/api/plans", express.json({ limit: DEFAULT_JSON_LIMIT }), plansRouter)
   app.use("/api/tasks", express.json({ limit: DEFAULT_JSON_LIMIT }), tasksRouter)

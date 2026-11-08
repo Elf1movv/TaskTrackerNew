@@ -41,19 +41,6 @@ export const en = {
   "delete.taskBody":
     "{count} future or held plans will be removed. Future linked reminders will be cancelled. Past history will remain.",
   "delete.planTitle": "Delete plan?",
-  "transition.title": "Review existing records",
-  "transition.intro": "Choose what each record becomes. You can return later — your data is preserved.",
-  "transition.task": "Keep as task",
-  "transition.note": "Make a note",
-  "transition.plan": "Plan only",
-  "transition.confirm": "Confirm transition",
-  "transition.error": "The record changed or the transition failed. Review it again.",
-  "transition.taskPreview":
-    "Keep this record only in Tasks. Its date becomes a deadline; no calendar plan is created. The original time stays in the transition log.",
-  "transition.notePreview":
-    "Convert to a note. Notes are undated: the due date is kept as text in the description; completion is preserved, archiving stays a separate action.",
-  "transition.planPreview": "The record becomes a calendar plan only. Without a date it goes to On hold.",
-  "transition.oldDate": "Original date",
 
   "common.today": "Today",
   "common.cancel": "Cancel",

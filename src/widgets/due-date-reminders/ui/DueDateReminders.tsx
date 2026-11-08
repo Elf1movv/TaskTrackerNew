@@ -56,9 +56,7 @@ export function DueDateReminders({ userId }: { userId: string }) {
 
     const shown = readShownToday(userId)
 
-    const dueTasks = tasks.filter(
-      task => !task.legacyPending && !task.completed && isDueSoonOrOverdue(task.dueDate),
-    )
+    const dueTasks = tasks.filter(task => !task.completed && isDueSoonOrOverdue(task.dueDate))
     if (dueTasks.length > 0 && !shown.tasks) {
       toast(t("reminders.tasksDueSoon", { count: dueTasks.length }), {
         action: { label: t("reminders.viewAction"), onClick: () => navigate("/tasks") },

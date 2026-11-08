@@ -23,13 +23,12 @@ export function toClientTask(task: Task) {
     completedAt: task.completedAt,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
-    legacyPending: task.legacyPending,
   }
 }
 
 tasksRouter.get("/", async (req, res) => {
   const tasks = await db.task.findMany({
-    where: { userId: req.userId, retiredAt: null },
+    where: { userId: req.userId },
     orderBy: { order: "asc" },
   })
   res.json(tasks.map(toClientTask))
@@ -98,7 +97,7 @@ tasksRouter.patch("/:id", async (req, res) => {
 
   const result = await ownerTransaction(req.userId, async tx => {
     const current = await tx.task.findFirst({
-      where: { id: req.params.id, userId: req.userId, retiredAt: null },
+      where: { id: req.params.id, userId: req.userId },
     })
     if (!current) fail(404, "Task not found")
     if (current.updatedAt.toISOString() !== expectedUpdatedAt) return { conflict: true, task: current }
@@ -118,7 +117,7 @@ tasksRouter.patch("/:id", async (req, res) => {
 tasksRouter.delete("/:id", async (req, res) => {
   await ownerTransaction(req.userId, async tx => {
     const task = await tx.task.findFirst({
-      where: { id: req.params.id, userId: req.userId, retiredAt: null },
+      where: { id: req.params.id, userId: req.userId },
     })
     if (!task) fail(404, "Task not found")
     await removeTask(tx, task)

@@ -293,7 +293,7 @@ function CalendarPageContent() {
       {view === "year" && (
         <CalendarYear
           year={anchorDate}
-          tasks={canonicalTasks.filter(task => !task.legacyPending)}
+          tasks={canonicalTasks}
           goals={allGoals}
           habits={allHabits}
           onSelectDay={day => {

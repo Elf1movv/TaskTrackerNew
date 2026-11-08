@@ -31,7 +31,6 @@ export const planFields = z.object({
   completed: z.boolean(),
   priority: z.enum(["low", "medium", "high"]),
   category: z.string().max(500),
-  taskId: z.null().optional(),
 })
 export function validPlan(plan: Pick<z.infer<typeof planFields>, "onHold" | "date" | "time" | "endTime">) {
   return plan.onHold

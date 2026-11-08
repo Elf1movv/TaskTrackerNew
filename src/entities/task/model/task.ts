@@ -1,7 +1,6 @@
 export type Priority = "low" | "medium" | "high"
 
 export interface Task {
-  legacyPending?: boolean
   id: string
   title: string
   completed: boolean

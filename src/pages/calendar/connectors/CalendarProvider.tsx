@@ -12,8 +12,7 @@ import { CalendarContext, type CalendarView } from "./calendarContext"
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const { plans: tasks, updatePlan: updateTask } = usePlans()
   const { tasks: realTasks } = useTasks()
-  // Not-yet-sorted legacy records stay hidden everywhere, like on Tasks.
-  const deadlines = useMemo(() => realTasks.filter(task => task.dueDate && !task.legacyPending), [realTasks])
+  const deadlines = useMemo(() => realTasks.filter(task => task.dueDate), [realTasks])
   const { reminders } = useReminders()
   const { goals, updateGoal } = useGoals()
   const { habits } = useHabits()

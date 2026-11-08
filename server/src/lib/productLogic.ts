@@ -17,7 +17,7 @@ export async function ownerTransaction<T>(
   })
 }
 
-export function clientPlan({ userId: _owner, taskId: _legacyLink, ...plan }: CalendarPlan) {
+export function clientPlan({ userId: _owner, ...plan }: CalendarPlan) {
   return { ...plan, date: plan.date?.toISOString().slice(0, 10) ?? null }
 }
 

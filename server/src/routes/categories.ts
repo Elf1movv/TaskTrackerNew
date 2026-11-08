@@ -164,7 +164,7 @@ categoriesRouter.delete("/:id", async (req, res) => {
   // vice versa).
   await ownerTransaction(req.userId, async tx => {
     const tasks = await tx.task.findMany({
-      where: { userId: req.userId, category: category.name, retiredAt: null, legacyPending: false },
+      where: { userId: req.userId, category: category.name },
       orderBy: { id: "asc" },
     })
     for (const task of tasks) await removeTask(tx, task)

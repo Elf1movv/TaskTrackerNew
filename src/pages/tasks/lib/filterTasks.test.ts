@@ -20,12 +20,8 @@ const task = (patch: Partial<Task>): Task =>
   }) as Task
 
 describe("filterTasks", () => {
-  it("filters by category only and hides legacy records", () => {
-    const tasks = [
-      task({ id: "a" }),
-      task({ id: "b", category: "Home", completed: true }),
-      task({ id: "c", legacyPending: true }),
-    ]
+  it("filters by category only", () => {
+    const tasks = [task({ id: "a" }), task({ id: "b", category: "Home", completed: true })]
     expect(filterTasks(tasks, "all").map(t => t.id)).toEqual(["a", "b"])
     expect(filterTasks(tasks, "Home").map(t => t.id)).toEqual(["b"])
   })

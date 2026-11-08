@@ -38,12 +38,6 @@ model Task {
   order       Int
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  goalId      String?
-  goal        Goal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
-  legacyPending Boolean @default(false)
-  retiredAt   DateTime?
-  plans       CalendarPlan[]
-  reminders   Reminder[]
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -80,8 +74,6 @@ model Goal {
   updatedAt   DateTime @updatedAt
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  achievedAt  DateTime?
-  tasks       Task[]
 
   @@index([order])
   @@index([userId])
@@ -199,12 +191,6 @@ model Reminder {
   updatedAt DateTime @updatedAt
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  taskId    String?
-  task      Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
-  planId    String?
-  plan      CalendarPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
-  offsetMinutes Int?
-  suspended Boolean @default(false)
 
   @@index([userId, date])
 }
@@ -335,8 +321,7 @@ model Note {
   @@index([userId, order])
 }
 
-// Independent calendar interval. taskId is retained only for old schema
-// compatibility; the independence migration clears and constrains it to NULL.
+// Independent calendar interval, not linked to tasks.
 model CalendarPlan {
   id String @id @default(uuid())
   title String
@@ -349,18 +334,18 @@ model CalendarPlan {
   completed Boolean @default(false)
   priority String @default("medium")
   category String @default("")
-  taskId String?
-  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
-  reminders Reminder[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId String
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, date])
-  @@index([taskId])
 }
 
-// Immutable originals and unique source keys make migration retries safe.
+// Journal of originals: a full copy of every record a migration changed,
+// written before the change (independence 2026-10-10, release cleanup
+// 2026-11-08 — old tasks kept as tasks, their old hour lives only here).
+// Never read by the app; for manual recovery only. Unique source keys make
+// migration retries safe.
 model LegacyTransition {
   id String @id @default(uuid())
   sourceKey String

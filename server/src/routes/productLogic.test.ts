@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from "vitest"
 import request, { type TestAgent } from "supertest"
 import { createApp } from "../app.js"
 import { createAuthenticatedAgent } from "../test-utils/auth.js"
-import { db } from "../db.js"
 const app = createApp()
 const taskData = {
   title: "Proposal",
@@ -26,7 +25,6 @@ const planData = {
   completed: false,
   priority: "medium",
   category: "",
-  taskId: null,
 }
 const goalData = {
   title: "Launch",
@@ -52,8 +50,7 @@ describe("independent product entities", () => {
     agent = await createAuthenticatedAgent(app)
   })
   it("requires authentication", async () => {
-    for (const path of ["notes", "plans", "transition"])
-      expect((await request(app).get(`/api/${path}`)).status).toBe(401)
+    for (const path of ["notes", "plans"]) expect((await request(app).get(`/api/${path}`)).status).toBe(401)
   })
   it("keeps notes and standalone plans out of tasks", async () => {
     const note = await agent.post("/api/notes").send({
@@ -107,41 +104,37 @@ describe("independent product entities", () => {
     await agent.delete(`/api/goals/${goal.body.id}`)
     expect((await agent.get("/api/plans")).body).toHaveLength(2)
   })
-  it("rejects experimental relationships from stale clients", async () => {
+  // The link columns were dropped before release (20261108180000): a stale
+  // client's link fields are stripped by validation and stored nowhere.
+  it("ignores experimental relationship fields from stale clients", async () => {
     const task = await createTask(agent)
     const goal = await agent.post("/api/goals").send({ ...goalData, id: crypto.randomUUID() })
-    expect(
-      (await agent.post("/api/plans").send({ ...planData, id: crypto.randomUUID(), taskId: task.id })).status,
-    ).toBe(400)
-    expect(
-      (
-        await agent
-          .patch(`/api/tasks/${task.id}`)
-          .send({ patch: { goalId: goal.body.id }, expectedUpdatedAt: task.updatedAt })
-      ).status,
-    ).toBe(400)
-    expect(
-      (
-        await agent.post("/api/reminders").send({
-          id: crypto.randomUUID(),
-          title: "Obsolete link",
-          date: "2030-01-01",
-          time: null,
-          completed: false,
-          priority: "normal",
-          taskId: task.id,
-        })
-      ).status,
-    ).toBe(400)
-    expect((await agent.get("/api/plans")).body).toHaveLength(0)
+    const plan = await agent
+      .post("/api/plans")
+      .send({ ...planData, id: crypto.randomUUID(), taskId: task.id })
+    expect(plan.status).toBe(201)
+    expect(plan.body).not.toHaveProperty("taskId")
+    const patched = await agent
+      .patch(`/api/tasks/${task.id}`)
+      .send({ patch: { goalId: goal.body.id }, expectedUpdatedAt: task.updatedAt })
+    expect(patched.status).toBe(200)
+    expect(patched.body).not.toHaveProperty("goalId")
+    const reminder = await agent.post("/api/reminders").send({
+      id: crypto.randomUUID(),
+      title: "Obsolete link",
+      date: "2030-01-01",
+      time: null,
+      completed: false,
+      priority: "normal",
+      taskId: task.id,
+      planId: plan.body.id,
+      offsetMinutes: 30,
+    })
+    expect(reminder.status).toBe(201)
+    expect(reminder.body).not.toHaveProperty("taskId")
   })
   it("rejects foreign links and version conflicts", async () => {
     const other = await createAuthenticatedAgent(app)
-    const foreign = await createTask(other)
-    expect(
-      (await agent.post("/api/plans").send({ ...planData, id: crypto.randomUUID(), taskId: foreign.id }))
-        .status,
-    ).toBe(400)
     const plan = await createPlan(agent)
     expect((await other.get("/api/plans")).body).toHaveLength(0)
     expect(
@@ -215,27 +208,6 @@ describe("independent product entities", () => {
     expect(held.status).toBe(200)
     expect(held.body.durationMinutes).toBe(7)
   })
-  it.each(["note", "plan", "task"])("transitions a legacy task to %s idempotently", async choice => {
-    const task = await createTask(agent)
-    const legacy = await db.task.update({
-      where: { id: task.id },
-      data: { legacyPending: true, time: "10:00", endTime: "11:00" },
-    })
-    const body = { sourceId: task.id, choice, expectedUpdatedAt: legacy.updatedAt.toISOString() }
-    const first = await agent.post("/api/transition/task").send(body)
-    const repeated = await agent.post("/api/transition/task").send(body)
-    expect(first.status).toBe(200)
-    expect(repeated.body).toEqual(first.body)
-    expect((await agent.get("/api/transition")).body.tasks).toHaveLength(0)
-    expect((await agent.get("/api/tasks")).body).toHaveLength(choice === "task" ? 1 : 0)
-    const notes = (await agent.get("/api/notes")).body
-    expect(notes).toHaveLength(choice === "note" ? 1 : 0)
-    // Notes are undated: the old due date survives as text, not as a field.
-    if (choice === "note") expect(notes[0].description).toBe("Срок: 2030-01-15\nOriginal detail")
-    expect((await agent.get("/api/plans")).body).toHaveLength(choice === "plan" ? 1 : 0)
-    expect(await db.legacyTransition.count({ where: { sourceKey: `task:${task.id}` } })).toBe(1)
-    expect((await db.task.findUniqueOrThrow({ where: { id: task.id } })).description).toBe("Original detail")
-  })
   it("keeps goal milestones in goals and removes the obsolete conversion endpoint", async () => {
     const goal = await agent.post("/api/goals").send({
       ...goalData,
@@ -243,7 +215,8 @@ describe("independent product entities", () => {
       milestones: [{ id: "one", title: "Milestone", completed: true }],
       progress: 100,
     })
-    expect((await agent.get("/api/transition")).body).toEqual({ tasks: [] })
+    // The one-time review panel was removed before release.
+    expect((await agent.get("/api/transition")).status).toBe(404)
     expect(
       (
         await agent.post("/api/transition/milestone").send({
@@ -260,18 +233,6 @@ describe("independent product entities", () => {
     })
     expect((await agent.get("/api/tasks")).body).toHaveLength(0)
   })
-  it("serializes simultaneous migration retries without duplicates", async () => {
-    const task = await createTask(agent)
-    const source = await db.task.update({ where: { id: task.id }, data: { legacyPending: true } })
-    const payload = { sourceId: task.id, choice: "note", expectedUpdatedAt: source.updatedAt.toISOString() }
-    const results = await Promise.all([
-      agent.post("/api/transition/task").send(payload),
-      agent.post("/api/transition/task").send(payload),
-    ])
-    expect(results.map(result => result.status)).toEqual([200, 200])
-    expect(results[0].body.resultId).toBe(results[1].body.resultId)
-    expect((await agent.get("/api/notes")).body).toHaveLength(1)
-  })
   it("only one simultaneous plan edit can win the same version", async () => {
     const plan = await createPlan(agent)
     const results = await Promise.all(
@@ -280,22 +241,5 @@ describe("independent product entities", () => {
       ),
     )
     expect(results.map(result => result.status).sort()).toEqual([200, 409])
-  })
-  it("does not expose another owner's legacy records or notes", async () => {
-    const task = await createTask(agent)
-    const source = await db.task.update({ where: { id: task.id }, data: { legacyPending: true } })
-    const other = await createAuthenticatedAgent(app)
-    expect((await other.get("/api/transition")).body.tasks).toEqual([])
-    expect(
-      (
-        await other
-          .post("/api/transition/task")
-          .send({ sourceId: task.id, choice: "note", expectedUpdatedAt: source.updatedAt.toISOString() })
-      ).status,
-    ).toBe(404)
-    await agent
-      .post("/api/transition/task")
-      .send({ sourceId: task.id, choice: "note", expectedUpdatedAt: source.updatedAt.toISOString() })
-    expect((await other.get("/api/notes")).body).toEqual([])
   })
 })
