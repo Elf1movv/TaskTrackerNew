@@ -2118,6 +2118,12 @@ deepmerge-ts.
   поправлен), `auth-flows.mjs local` 15/15 (подтверждение по повторному
   письму), замеры наложений на 390–1440 px.
 
+- [x] Выпущено в прод 2026-11-09 (UTC 2026-11-08 ~23:37): `main` = `a2ca3d5`
+  (merge «Release: batch of small UX fixes»), бандл `index-BfqnxAbO.js` →
+  `index-qJbtDAaR.js`, health ok, 0 перезапусков и ошибок; записи 13/40/13,
+  25 миграций до и после. Точка отката:
+  `/home/deploy/backups/prerelease/tasktracker_prerelease_2026-11-08_23-35-04.dump`.
+
 ### Авария: сервер недоступен извне — 2026-11-08 ~22:45–23:19 UTC
 
 - [x] Прод и стенд не открывались ни с ПК, ни с телефона; SSH обрывался на
