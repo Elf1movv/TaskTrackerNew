@@ -21,7 +21,7 @@ import { useDragReorder } from "@/shared/lib/dnd"
 import { ConfirmAction } from "@/shared/ui/confirm-action"
 import { Button } from "@/shared/ui/button"
 import { paginate, Pager } from "@/shared/ui/pager"
-const NOTES_PAGE_SIZE = 10
+const NOTES_PAGE_SIZE = 5
 // Notes are undated (iteration 3): only "current" and "archive" tabs.
 export function NotesCard() {
   const { notes, isLoaded } = useNotes()
@@ -29,8 +29,8 @@ export function NotesCard() {
   const [tab, setTab] = useState<"current" | "archive">("current")
   const [requestedPage, setPage] = useState(1)
   const filtered = notes.filter(note => (tab === "archive" ? !!note.archivedAt : !note.archivedAt))
-  // 10 per page so a long list never stretches Today down (owner feedback,
-  // 2026-11-08). Keyboard reorder neighbours come from the FULL list, so the
+  // 5 per page so a long list never stretches Today down (owner feedback,
+  // 2026-11-08: 10 was still too tall). Keyboard reorder neighbours come from the FULL list, so the
   // arrow keys still work for the first/last row of a page.
   const { page, pageCount, start, items: pageNotes } = paginate(filtered, requestedPage, NOTES_PAGE_SIZE)
   return (
