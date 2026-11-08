@@ -6,7 +6,7 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 import type { Goal } from "@/entities/goal"
 import type { Habit } from "@/entities/habit"
 import type { Reminder } from "@/entities/reminder"
-import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import type { Task as DeadlineTask } from "@/entities/task"
 import { buildMonthGrid } from "@/shared/lib/calendarGrid"
 
@@ -28,11 +28,11 @@ import { buildMonthGrid } from "@/shared/lib/calendarGrid"
 export function CalendarMonthView({
   anchorDate,
   selectedDay,
-  selectedTasks,
+  selectedPlans,
   selectedReminders,
   selectedGoals,
   selectedHabits,
-  allTasks,
+  allPlans,
   allDeadlines,
   selectedDeadlines,
   allReminders,
@@ -44,11 +44,11 @@ export function CalendarMonthView({
 }: {
   anchorDate: Date
   selectedDay: Date | null
-  selectedTasks: Task[]
+  selectedPlans: Plan[]
   selectedReminders: Reminder[]
   selectedGoals: Goal[]
   selectedHabits: Habit[]
-  allTasks: Task[]
+  allPlans: Plan[]
   allDeadlines: DeadlineTask[]
   selectedDeadlines: DeadlineTask[]
   allReminders: Reminder[]
@@ -72,7 +72,7 @@ export function CalendarMonthView({
   // click to edit, matching their muscle memory, instead of forcing a
   // detour through the day panel first.
   function openEditTask(taskId: string, rect: DOMRect) {
-    const task = allTasks.find(t => t.id === taskId)
+    const task = allPlans.find(t => t.id === taskId)
     if (!task) return
     setDraft({ mode: "edit-task", task })
     setAnchorRect(rect)
@@ -100,7 +100,7 @@ export function CalendarMonthView({
         <div className="w-full min-w-0 lg:flex-1">
           <CalendarGrid
             days={monthGrid}
-            tasks={allTasks}
+            tasks={allPlans}
             deadlines={allDeadlines}
             reminders={allReminders}
             goals={allGoals}
@@ -126,7 +126,7 @@ export function CalendarMonthView({
             >
               <DayDetailPanel
                 day={selectedDay}
-                tasks={selectedTasks}
+                tasks={selectedPlans}
                 deadlines={selectedDeadlines}
                 reminders={selectedReminders}
                 goals={selectedGoals}

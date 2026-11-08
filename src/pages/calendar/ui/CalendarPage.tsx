@@ -67,11 +67,11 @@ function CalendarPageContent() {
     setView,
     anchorDate,
     selectedDay,
-    selectedTasks,
+    selectedPlans,
     selectedReminders,
     selectedGoals,
     selectedHabits,
-    allTasks,
+    allPlans,
     allDeadlines,
     selectedDeadlines,
     allReminders,
@@ -244,11 +244,11 @@ function CalendarPageContent() {
         <CalendarMonthView
           anchorDate={anchorDate}
           selectedDay={selectedDay}
-          selectedTasks={selectedTasks}
+          selectedPlans={selectedPlans}
           selectedReminders={selectedReminders}
           selectedGoals={selectedGoals}
           selectedHabits={selectedHabits}
-          allTasks={allTasks}
+          allPlans={allPlans}
           allDeadlines={allDeadlines}
           selectedDeadlines={selectedDeadlines}
           allReminders={allReminders}
@@ -263,7 +263,7 @@ function CalendarPageContent() {
       {view === "agenda" && (
         <CalendarAgendaView
           anchorDate={anchorDate}
-          allTasks={allTasks}
+          allPlans={allPlans}
           allDeadlines={allDeadlines}
           allReminders={allReminders}
           allGoals={allGoals}
@@ -273,7 +273,7 @@ function CalendarPageContent() {
       {view === "day" && (
         <CalendarDayView
           anchorDate={anchorDate}
-          allTasks={allTasks}
+          allPlans={allPlans}
           allReminders={allReminders}
           onRescheduleTaskTime={rescheduleTaskTime}
           onResizeTask={resizeTask}
@@ -283,7 +283,7 @@ function CalendarPageContent() {
       {view === "week" && (
         <CalendarWeekView
           anchorDate={anchorDate}
-          allTasks={allTasks}
+          allPlans={allPlans}
           allReminders={allReminders}
           onRescheduleTaskTime={rescheduleTaskTime}
           onResizeTask={resizeTask}

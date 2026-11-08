@@ -7,7 +7,7 @@ import { DayDeadlineRow, DayGoalRow, DayReminderRow, DayTaskRow } from "@/widget
 import { isGoalDueOnDay, type Goal } from "@/entities/goal"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
-import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildAgendaRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
@@ -39,13 +39,13 @@ const LOAD_MORE_INCREMENT_DAYS = 6
 // list has no day-cell equivalent to drop onto.
 export function CalendarAgendaView({
   anchorDate,
-  allTasks,
+  allPlans,
   allDeadlines = [],
   allReminders,
   allGoals,
 }: {
   anchorDate: Date
-  allTasks: Task[]
+  allPlans: Plan[]
   allDeadlines?: DeadlineTask[]
   allReminders: Reminder[]
   allGoals: Goal[]
@@ -75,14 +75,14 @@ export function CalendarAgendaView({
         const dayKey = formatDateKey(day)
         return {
           day,
-          tasks: allTasks.filter(t => isTaskOnDay(t, dayKey)),
+          tasks: allPlans.filter(t => isTaskOnDay(t, dayKey)),
           deadlines: allDeadlines.filter(t => isTaskOnDay(t, dayKey)),
           reminders: selectRemindersOnDay(allReminders, dayKey),
           goals: allGoals.filter(g => isGoalDueOnDay(g, dayKey)),
         }
       })
       .filter(g => g.tasks.length + g.deadlines.length + g.reminders.length + g.goals.length > 0)
-  }, [days, allTasks, allDeadlines, allReminders, allGoals])
+  }, [days, allPlans, allDeadlines, allReminders, allGoals])
 
   if (groups.length === 0) {
     return (

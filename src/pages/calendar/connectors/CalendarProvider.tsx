@@ -10,7 +10,7 @@ import { minutesFromMidnight } from "@/shared/lib/timeOffset"
 import { CalendarContext, type CalendarView } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
-  const { plans: tasks, updatePlan: updateTask } = usePlans()
+  const { plans, updatePlan } = usePlans()
   const { tasks: realTasks } = useTasks()
   const deadlines = useMemo(() => realTasks.filter(task => task.dueDate), [realTasks])
   const { reminders } = useReminders()
@@ -69,11 +69,11 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setSelectedDay(now)
   }, [])
 
-  const selectedTasks = useMemo(() => {
+  const selectedPlans = useMemo(() => {
     if (!selectedDay) return []
     const selectedKey = formatDateKey(selectedDay)
-    return tasks.filter(t => isTaskOnDay(t, selectedKey))
-  }, [tasks, selectedDay])
+    return plans.filter(t => isTaskOnDay(t, selectedKey))
+  }, [plans, selectedDay])
 
   const selectedDeadlines = useMemo(() => {
     if (!selectedDay) return []
@@ -99,11 +99,11 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const moveTaskToDay = useCallback(
     (taskId: string, day: Date) => {
-      const task = tasks.find(t => t.id === taskId)
+      const task = plans.find(t => t.id === taskId)
       if (!task) return
-      updateTask(taskId, { date: formatDateKey(day), onHold: false })
+      updatePlan(taskId, { date: formatDateKey(day), onHold: false })
     },
-    [tasks, updateTask],
+    [plans, updatePlan],
   )
 
   const moveGoalDeadline = useCallback(
@@ -124,7 +124,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   // what depends on it" rule TaskForm already applies to time itself.
   const rescheduleTaskTime = useCallback(
     (taskId: string, day: Date, time: string | null) => {
-      const task = tasks.find(t => t.id === taskId)
+      const task = plans.find(t => t.id === taskId)
       if (!task) return
       const duration =
         task.time && task.endTime
@@ -137,7 +137,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
       const start = startMinutes === null ? null : clock(Math.max(0, startMinutes))
       const endTime = startMinutes === null ? null : clock(Math.max(0, startMinutes) + duration)
-      updateTask(taskId, {
+      updatePlan(taskId, {
         date: formatDateKey(day),
         time: start,
         endTime,
@@ -145,21 +145,21 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         durationMinutes: duration,
       })
     },
-    [tasks, updateTask],
+    [plans, updatePlan],
   )
 
   // The hour-timeline's resize handle — start time is untouched, only how
   // far the block stretches changes.
   const resizeTask = useCallback(
     (taskId: string, endTime: string) => {
-      const task = tasks.find(t => t.id === taskId)
+      const task = plans.find(t => t.id === taskId)
       if (task?.time && endTime > task.time)
-        updateTask(taskId, {
+        updatePlan(taskId, {
           endTime,
           durationMinutes: minutesFromMidnight(endTime) - minutesFromMidnight(task.time),
         })
     },
-    [tasks, updateTask],
+    [plans, updatePlan],
   )
 
   const value = useMemo(
@@ -173,13 +173,13 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       goToDate,
       selectedDay,
       selectDay,
-      allTasks: tasks,
+      allPlans: plans,
       allDeadlines: deadlines,
       selectedDeadlines,
       allReminders: reminders,
       allGoals: goals,
       allHabits: habits,
-      selectedTasks,
+      selectedPlans,
       selectedReminders,
       selectedGoals,
       selectedHabits,
@@ -197,13 +197,13 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       goToDate,
       selectedDay,
       selectDay,
-      tasks,
+      plans,
       deadlines,
       selectedDeadlines,
       reminders,
       goals,
       habits,
-      selectedTasks,
+      selectedPlans,
       selectedReminders,
       selectedGoals,
       selectedHabits,

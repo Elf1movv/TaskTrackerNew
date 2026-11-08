@@ -2,7 +2,7 @@ import { useState } from "react"
 import { format, isToday } from "date-fns"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay } from "@/entities/task"
-import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildWeekRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
@@ -21,13 +21,13 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 // Goals' own page can create/edit them.
 export function CalendarWeekView({
   anchorDate,
-  allTasks,
+  allPlans,
   allReminders,
   onRescheduleTaskTime,
   onResizeTask,
 }: {
   anchorDate: Date
-  allTasks: Task[]
+  allPlans: Plan[]
   allReminders: Reminder[]
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizeTask: (taskId: string, endTime: string) => void
@@ -48,7 +48,7 @@ export function CalendarWeekView({
     const dayKey = formatDateKey(day)
     return {
       day,
-      tasks: allTasks.filter(task => isTaskOnDay(task, dayKey) && task.time),
+      tasks: allPlans.filter(task => isTaskOnDay(task, dayKey) && task.time),
       reminders: selectRemindersOnDay(allReminders, dayKey).filter(reminder => reminder.time),
     }
   })
@@ -56,7 +56,7 @@ export function CalendarWeekView({
   // Week has 7 day arrays, not Day's single one — look items up directly
   // in the full collections by id rather than a per-column array.
   function openEditTask(taskId: string, rect: DOMRect) {
-    const task = allTasks.find(t => t.id === taskId)
+    const task = allPlans.find(t => t.id === taskId)
     if (!task) return
     setDraft({ mode: "edit-task", task })
     setAnchorRect(rect)

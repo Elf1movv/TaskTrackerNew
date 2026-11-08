@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay } from "@/entities/task"
-import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { HourGrid } from "@/widgets/calendar-timeline"
 import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-item-popover"
@@ -25,13 +25,13 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 // ever shows items that have a time.
 export function CalendarDayView({
   anchorDate,
-  allTasks,
+  allPlans,
   allReminders,
   onRescheduleTaskTime,
   onResizeTask,
 }: {
   anchorDate: Date
-  allTasks: Task[]
+  allPlans: Plan[]
   allReminders: Reminder[]
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizeTask: (taskId: string, endTime: string) => void
@@ -45,7 +45,7 @@ export function CalendarDayView({
     setAnchorRect(null)
   }
 
-  const dayTasks = allTasks.filter(task => isTaskOnDay(task, dayKey))
+  const dayTasks = allPlans.filter(task => isTaskOnDay(task, dayKey))
   const dayReminders = selectRemindersOnDay(allReminders, dayKey)
 
   const timedTasks = dayTasks.filter(task => task.time)
