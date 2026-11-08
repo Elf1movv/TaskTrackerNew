@@ -1,6 +1,7 @@
 import { Router } from "express"
 import type { Prisma } from "@prisma/client"
 import { db } from "../db.js"
+import { computeGoalProgress } from "../lib/goalProgress.js"
 import { requireAuth } from "../middleware/requireAuth.js"
 import { createGoalSchema, reorderSchema, updateGoalSchema } from "../validation/goal.js"
 
@@ -14,6 +15,12 @@ interface ClientMilestone {
   completed: boolean
 }
 
+interface ClientSubgoal {
+  id: string
+  title: string
+  milestones: ClientMilestone[]
+}
+
 interface ClientGoal {
   id: string
   title: string
@@ -21,7 +28,9 @@ interface ClientGoal {
   progress: number
   targetDate: string | null
   color: string
+  category: string | null
   milestones: ClientMilestone[]
+  subgoals: ClientSubgoal[]
   updatedAt: Date
 }
 
@@ -32,7 +41,9 @@ function toClientGoal(goal: {
   progress: number
   targetDate: string | null
   color: string
+  category: string | null
   milestones: unknown
+  subgoals: unknown
   updatedAt: Date
 }): ClientGoal {
   return {
@@ -42,7 +53,9 @@ function toClientGoal(goal: {
     progress: goal.progress,
     targetDate: goal.targetDate,
     color: goal.color,
+    category: goal.category,
     milestones: goal.milestones as ClientMilestone[],
+    subgoals: (goal.subgoals ?? []) as ClientSubgoal[],
     updatedAt: goal.updatedAt,
   }
 }
@@ -62,11 +75,14 @@ goalsRouter.post("/", async (req, res) => {
   // New goals are appended on the client (added goals show up last), so
   // they need an order larger than everything currently stored.
   const { _max } = await db.goal.aggregate({ where: { userId: req.userId }, _max: { order: true } })
+  const subgoals = parsed.data.subgoals ?? []
   const created = await db.goal.create({
     data: {
       ...parsed.data,
       userId: req.userId,
       milestones: parsed.data.milestones as unknown as Prisma.InputJsonValue,
+      subgoals: subgoals as unknown as Prisma.InputJsonValue,
+      progress: computeGoalProgress(parsed.data.milestones, subgoals),
       order: (_max.order ?? -1) + 1,
     },
   })
@@ -107,12 +123,32 @@ goalsRouter.patch("/:id", async (req, res) => {
   }
   const { patch, expectedUpdatedAt } = parsed.data
 
+  // Progress is derived, never trusted from the client: whenever steps or
+  // subgoals change, recompute it from the new value plus the stored other
+  // half. The version check below still guards against a concurrent write.
+  let progress = patch.progress
+  if (patch.milestones !== undefined || patch.subgoals !== undefined || patch.progress !== undefined) {
+    const stored = await db.goal.findFirst({
+      where: { id: req.params.id, userId: req.userId },
+      select: { milestones: true, subgoals: true },
+    })
+    if (stored) {
+      progress = computeGoalProgress(
+        patch.milestones ?? (stored.milestones as unknown as ClientMilestone[]),
+        patch.subgoals ?? (stored.subgoals as unknown as ClientSubgoal[]),
+      )
+    }
+  }
+
   const result = await db.goal.updateMany({
     where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },
     data: {
       ...patch,
+      progress,
       milestones:
         patch.milestones !== undefined ? (patch.milestones as unknown as Prisma.InputJsonValue) : undefined,
+      subgoals:
+        patch.subgoals !== undefined ? (patch.subgoals as unknown as Prisma.InputJsonValue) : undefined,
     },
   })
 

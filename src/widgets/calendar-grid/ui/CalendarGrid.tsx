@@ -2,7 +2,8 @@ import { format, isSameDay, isToday } from "date-fns"
 import { useCategories } from "@/entities/category"
 import { isGoalDueOnDay, type Goal } from "@/entities/goal"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
-import { isTaskOnDay, type Task } from "@/entities/task"
+import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import type { MonthGridDay } from "@/shared/lib/calendarGrid"
 import { getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { monoFont } from "@/shared/lib/typography"
@@ -11,6 +12,7 @@ import { CalendarDayCell } from "./components"
 export function CalendarGrid({
   days,
   tasks,
+  deadlines = [],
   reminders,
   goals,
   selectedDay,
@@ -22,6 +24,9 @@ export function CalendarGrid({
 }: {
   days: MonthGridDay[]
   tasks: Task[]
+  // Real tasks with a deadline (not calendar plans) — open ones only are
+  // shown as small markers; see CalendarDayCell.
+  deadlines?: DeadlineTask[]
   reminders: Reminder[]
   goals: Goal[]
   selectedDay: Date | null
@@ -53,6 +58,7 @@ export function CalendarGrid({
           const dayTasks = tasks.filter(t => isTaskOnDay(t, dayStr))
           const dayReminders = selectRemindersOnDay(reminders, dayStr)
           const dayGoals = goals.filter(g => isGoalDueOnDay(g, dayStr))
+          const dayDeadlines = deadlines.filter(d => !d.completed && isTaskOnDay(d, dayStr))
 
           return (
             <CalendarDayCell
@@ -62,6 +68,7 @@ export function CalendarGrid({
               dayTasks={dayTasks}
               dayReminders={dayReminders}
               dayGoals={dayGoals}
+              dayDeadlines={dayDeadlines}
               categories={categories}
               isSelected={selectedDay ? isSameDay(date, selectedDay) : false}
               isCurrent={isToday(date)}

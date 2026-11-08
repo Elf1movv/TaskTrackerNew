@@ -56,11 +56,19 @@ model Goal {
   // GoalForm defaults new goals to off, matching Task.dueDate's pattern.
   targetDate  String?
   color       String
+  // Optional life area shared with tasks — the same plain-string
+  // convention as Task.category (a Category name, no FK). Deleting that
+  // category clears this to null; the goal itself is kept.
+  category    String?
   // Kept as an embedded JSON array (matching the frontend's Milestone[]
   // shape exactly) rather than a separate related table — same
   // "start simple" choice already made for Task. Milestone order is just
   // its position in this array, no separate order column needed for it.
   milestones  Json
+  // Two-level goal tree (iteration 3.1): [{ id, title, milestones: [...] }]
+  // — each subgoal with its own steps, embedded like `milestones`. Progress
+  // is recomputed by the server from both (src/lib/goalProgress.ts).
+  subgoals    Json     @default("[]")
   order       Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -240,6 +248,9 @@ model User {
   categories        Category[]
   reminders         Reminder[]
   feedbacks         Feedback[]
+  notes             Note[]
+  calendarPlans     CalendarPlan[]
+  transitions       LegacyTransition[]
 
   @@unique([email])
   @@map("user")
@@ -291,4 +302,58 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+// Independent notes: quick, undated records on Today. Anything tied to a
+// date belongs in a Reminder; a note that grows into real work moves to
+// Tasks via POST /api/notes/:id/to-task (iteration 3, 2026-11-08).
+model Note {
+  completed   Boolean  @default(false)
+  id String @id @default(uuid())
+  title String
+  description String?
+  archivedAt DateTime?
+  order Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, order])
+}
+
+// Independent calendar interval, not linked to tasks.
+model CalendarPlan {
+  id String @id @default(uuid())
+  title String
+  description String?
+  date DateTime? @db.Date
+  time String?
+  endTime String?
+  durationMinutes Int @default(60)
+  onHold Boolean @default(false)
+  completed Boolean @default(false)
+  priority String @default("medium")
+  category String @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, date])
+}
+
+// Journal of originals: a full copy of every record a migration changed,
+// written before the change (independence 2026-10-10, release cleanup
+// 2026-11-08 — old tasks kept as tasks, their old hour lives only here).
+// Never read by the app; for manual recovery only. Unique source keys make
+// migration retries safe.
+model LegacyTransition {
+  id String @id @default(uuid())
+  sourceKey String
+  choice String
+  snapshot Json
+  resultId String
+  createdAt DateTime @default(now())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, sourceKey])
 }

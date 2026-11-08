@@ -1,7 +1,7 @@
-import { DeleteTaskButton } from "@/features/delete-task"
 import { EditTaskButton } from "@/features/edit-task"
-import { TaskToggleCheckbox } from "@/features/toggle-task"
-import { PriorityDot, type Task } from "@/entities/task"
+import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
+import { PriorityDot } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { useDragItem } from "@/shared/lib/dnd"
 
 // Drag source only (see useDragItem vs useDragReorder): dragging this row
@@ -41,7 +41,6 @@ export function DayTaskRow({
       </span>
       <PriorityDot priority={task.priority} />
       <EditTaskButton onClick={onEdit} />
-      <DeleteTaskButton taskId={task.id} />
     </div>
   )
 }

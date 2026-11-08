@@ -4,6 +4,8 @@ import { db } from "../db.js"
 import { requireAuth } from "../middleware/requireAuth.js"
 import { createCategorySchema, reorderSchema, updateCategorySchema } from "../validation/category.js"
 
+import { ownerTransaction, removeTask } from "../lib/productLogic.js"
+
 export const categoriesRouter = Router()
 
 categoriesRouter.use(requireAuth)
@@ -160,9 +162,19 @@ categoriesRouter.delete("/:id", async (req, res) => {
   // (see TaskBoard.tsx), then this cascades both in one transaction so a
   // failure can't leave the category gone but its tasks still around (or
   // vice versa).
-  await db.$transaction([
-    db.task.deleteMany({ where: { userId: req.userId, category: category.name } }),
-    db.category.delete({ where: { id: category.id } }),
-  ])
+  await ownerTransaction(req.userId, async tx => {
+    const tasks = await tx.task.findMany({
+      where: { userId: req.userId, category: category.name },
+      orderBy: { id: "asc" },
+    })
+    for (const task of tasks) await removeTask(tx, task)
+    // Goals are long-lived records with their own milestones — unlike the
+    // category's tasks they are kept and only lose the category label.
+    await tx.goal.updateMany({
+      where: { userId: req.userId, category: category.name },
+      data: { category: null },
+    })
+    await tx.category.deleteMany({ where: { id: category.id, userId: req.userId } })
+  })
   res.status(204).end()
 })

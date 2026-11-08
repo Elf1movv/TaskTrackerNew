@@ -1,47 +1,40 @@
 import { useMemo, useState, type ReactNode } from "react"
-import { useTasks, type StatusFilter, type TaskDateFilter } from "@/entities/task"
-import { filterTasks } from "../lib/filterTasks"
+import { useTasks } from "@/entities/task"
+import { filterTasks, sortActiveTasks } from "../lib/filterTasks"
 import { TasksContext } from "./tasksContext"
-
-const COMPLETED_PAGE_SIZE = 10
-
+const PAGE_SIZE = 10
 export function TasksProvider({ children }: { children: ReactNode }) {
   const { tasks } = useTasks()
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [dateFilter, setDateFilter] = useState<TaskDateFilter>("all")
-  const [visibleCompletedCount, setVisibleCompletedCount] = useState(COMPLETED_PAGE_SIZE)
-
-  // Reset pagination whenever the filters change, so "load more" clicked on
-  // one filter combination doesn't carry over and confuse a different one.
-  // Adjusted during render (React's documented pattern for this) rather
-  // than in a useEffect, which would cause an extra render pass.
-  const [prevFilters, setPrevFilters] = useState([statusFilter, categoryFilter, dateFilter])
-  if (prevFilters[0] !== statusFilter || prevFilters[1] !== categoryFilter || prevFilters[2] !== dateFilter) {
-    setPrevFilters([statusFilter, categoryFilter, dateFilter])
-    setVisibleCompletedCount(COMPLETED_PAGE_SIZE)
+  const [page, setPage] = useState(1)
+  const [previous, setPrevious] = useState(categoryFilter)
+  if (previous !== categoryFilter) {
+    setPrevious(categoryFilter)
+    setPage(1)
   }
-
   const value = useMemo(() => {
-    const baseFiltered = filterTasks(tasks, statusFilter, categoryFilter, dateFilter)
-    const pending = baseFiltered.filter(t => !t.completed)
-    const completedToday = baseFiltered.filter(t => t.completed)
-    const visibleCompleted = completedToday.slice(0, visibleCompletedCount)
-
+    const filtered = filterTasks(tasks, categoryFilter)
+    const completed = filtered
+      .filter(task => task.completed)
+      .sort(
+        (a, b) =>
+          (b.completedAt ?? b.updatedAt).localeCompare(a.completedAt ?? a.updatedAt) ||
+          a.id.localeCompare(b.id),
+      )
+    const pageCount = Math.max(1, Math.ceil(completed.length / PAGE_SIZE))
+    const currentPage = Math.min(page, pageCount)
     return {
       allTasks: tasks,
-      filteredTasks: [...pending, ...visibleCompleted],
-      statusFilter,
-      setStatusFilter,
-      dateFilter,
-      setDateFilter,
+      activeTasks: sortActiveTasks(filtered.filter(task => !task.completed)),
+      completedPage: completed.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+      completedCount: completed.length,
       categoryFilter,
       setCategoryFilter,
-      hasMoreCompleted: completedToday.length > visibleCompletedCount,
-      remainingCompletedCount: completedToday.length - visibleCompletedCount,
-      onLoadMoreCompleted: () => setVisibleCompletedCount(c => c + COMPLETED_PAGE_SIZE),
+      page: currentPage,
+      pageCount,
+      setPage,
     }
-  }, [tasks, statusFilter, categoryFilter, dateFilter, visibleCompletedCount])
-
+  }, [tasks, categoryFilter, page])
+  if (page !== value.page) setPage(value.page)
   return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>
 }

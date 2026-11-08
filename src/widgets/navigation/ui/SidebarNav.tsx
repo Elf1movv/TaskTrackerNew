@@ -35,7 +35,7 @@ export function SidebarNav() {
       labelKey: "sidebar.statHabits",
       value: `${habits.filter(h => h.completedDates.includes(today)).length} / ${habits.length}`,
     },
-    { labelKey: "sidebar.statActiveGoals", value: String(goals.length) },
+    { labelKey: "sidebar.statActiveGoals", value: String(goals.filter(goal => goal.progress < 100).length) },
   ]
 
   const last7Days = getLastNDays(7, new Date())

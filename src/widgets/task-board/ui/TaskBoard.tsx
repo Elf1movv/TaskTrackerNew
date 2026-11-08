@@ -1,17 +1,11 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { CheckSquare2, Plus, X } from "lucide-react"
+import { CheckSquare2, ChevronDown, Plus, X } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
 import { useCategories, type Category } from "@/entities/category"
-import {
-  isCompletedToday,
-  type StatusFilter,
-  type Task,
-  type TaskDateFilter,
-  useTasks,
-} from "@/entities/task"
+import { isCompletedToday, type Task, useTasks } from "@/entities/task"
 import { PALETTE_COLORS } from "@/shared/lib/colors"
-import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
+import { useLanguage } from "@/shared/lib/i18n"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,45 +18,34 @@ import {
 } from "@/shared/ui/alert-dialog"
 import { Button, buttonVariants } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
+import { Pager } from "@/shared/ui/pager"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { TaskRow } from "./components"
 
-const STATUS_LABEL_KEYS: Record<StatusFilter, TranslationKey> = {
-  all: "tasks.status.all",
-  active: "tasks.status.active",
-  done: "tasks.status.done",
-}
-
-const DATE_LABEL_KEYS: Record<TaskDateFilter, TranslationKey> = {
-  all: "tasks.date.all",
-  undated: "tasks.date.undated",
-  dated: "tasks.date.dated",
-}
-
+// One filter only — the category chips (owner decision 2026-11-08: status
+// and deadline filters were too many to be useful). Active tasks come first,
+// sorted by deadline (see pages/tasks/lib/filterTasks.ts); completed ones
+// sit in a collapsed "Completed (N)" section, 10 per page.
 export function TaskBoard({
   allTasks,
-  filteredTasks,
-  statusFilter,
-  onStatusFilterChange,
-  dateFilter,
-  onDateFilterChange,
+  activeTasks,
+  completedPage,
+  completedCount,
   categoryFilter,
   onCategoryFilterChange,
-  hasMoreCompleted,
-  remainingCompletedCount,
-  onLoadMoreCompleted,
+  page,
+  pageCount,
+  onPageChange,
 }: {
   allTasks: Task[]
-  filteredTasks: Task[]
-  statusFilter: StatusFilter
-  onStatusFilterChange: (filter: StatusFilter) => void
-  dateFilter: TaskDateFilter
-  onDateFilterChange: (filter: TaskDateFilter) => void
+  activeTasks: Task[]
+  completedPage: Task[]
+  completedCount: number
   categoryFilter: string
   onCategoryFilterChange: (category: string) => void
-  hasMoreCompleted: boolean
-  remainingCompletedCount: number
-  onLoadMoreCompleted: () => void
+  page: number
+  pageCount: number
+  onPageChange: (page: number) => void
 }) {
   const { categories, addCategory, updateCategory, deleteCategory } = useCategories()
   const { refreshTasks } = useTasks()
@@ -73,6 +56,37 @@ export function TaskBoard({
   const [newCategoryName, setNewCategoryName] = useState("")
   const [newCategoryColor, setNewCategoryColor] = useState(PALETTE_COLORS[0])
   const [categoryPendingDelete, setCategoryPendingDelete] = useState<Category | null>(null)
+  const [showCompleted, setShowCompleted] = useState(false)
+
+  function renderTasks(tasks: Task[]) {
+    return (
+      <section className="bg-card border border-card-border rounded-xl shadow-card overflow-hidden">
+        <AnimatePresence initial={false}>
+          {tasks.map((task, i) =>
+            editingTaskId === task.id ? (
+              <motion.div
+                key={task.id}
+                layout
+                className={`bg-sunken px-6 py-4 ${i ? "border-t border-border" : ""}`}
+              >
+                <TaskForm task={task} embedded onDone={() => setEditingTaskId(null)} />
+              </motion.div>
+            ) : (
+              <TaskRow
+                key={task.id}
+                task={task}
+                divider={i > 0}
+                onEdit={() => {
+                  setIsAdding(false)
+                  setEditingTaskId(task.id)
+                }}
+              />
+            ),
+          )}
+        </AnimatePresence>
+      </section>
+    )
+  }
 
   function handleCreateCategory() {
     const name = newCategoryName.trim()
@@ -140,43 +154,6 @@ export function TaskBoard({
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="grid grid-cols-3 w-[280px] p-0.5 rounded-[10px] bg-fill mb-3.5">
-        {(["all", "active", "done"] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => onStatusFilterChange(f)}
-            className={`h-8 rounded-lg text-sm transition-all ${
-              statusFilter === f
-                ? "bg-seg text-foreground font-bold shadow-card"
-                : "text-muted-foreground font-medium"
-            }`}
-          >
-            {t(STATUS_LABEL_KEYS[f])}
-          </button>
-        ))}
-      </div>
-
-      <div
-        className="flex flex-wrap items-center gap-2 mb-3.5"
-        role="group"
-        aria-label={t("tasks.date.label")}
-      >
-        <span className="text-xs font-semibold text-muted-foreground mr-1">{t("tasks.date.label")}</span>
-        {(["all", "undated", "dated"] as const).map(filter => (
-          <button
-            key={filter}
-            type="button"
-            aria-pressed={dateFilter === filter}
-            onClick={() => onDateFilterChange(filter)}
-            className={`h-8 px-3 rounded-lg text-sm font-semibold transition-colors ${
-              dateFilter === filter ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-fill"
-            }`}
-          >
-            {t(DATE_LABEL_KEYS[filter])}
-          </button>
-        ))}
-      </div>
 
       <div className="flex gap-2 mb-6 flex-wrap items-center">
         <button
@@ -329,55 +306,47 @@ export function TaskBoard({
         </AlertDialogContent>
       </AlertDialog>
 
-      {filteredTasks.length > 0 ? (
-        <section className="bg-card border border-card-border rounded-xl shadow-card overflow-hidden">
-          <AnimatePresence initial={false}>
-            {filteredTasks.map((task, i) =>
-              editingTaskId === task.id ? (
-                <motion.div
-                  key={task.id}
-                  layout
-                  className={`bg-sunken px-6 py-4 ${i ? "border-t border-border" : ""}`}
-                >
-                  <TaskForm task={task} embedded onDone={() => setEditingTaskId(null)} />
-                </motion.div>
-              ) : (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  divider={i > 0}
-                  onEdit={() => {
-                    setIsAdding(false)
-                    setEditingTaskId(task.id)
-                  }}
-                />
-              ),
-            )}
-          </AnimatePresence>
-        </section>
+      {activeTasks.length > 0 ? (
+        renderTasks(activeTasks)
       ) : (
         <div className="bg-card border border-dashed border-border-strong rounded-xl px-6 py-14 flex flex-col items-center gap-3 text-center">
           <span className="size-[52px] rounded-[14px] bg-primary-soft text-primary flex items-center justify-center">
             <CheckSquare2 size={24} strokeWidth={1.75} />
           </span>
           <span className="text-[17px] font-bold">
-            {t("tasks.noTasks")}
-            {statusFilter !== "all"
-              ? t("tasks.noTasksMarkedAs", { status: t(STATUS_LABEL_KEYS[statusFilter]) })
-              : ""}
+            {t("tasks.noActiveTasks")}
             {categoryFilter !== "all" ? t("tasks.noTasksIn", { category: categoryFilter }) : ""}
           </span>
-          {dateFilter !== "all" && (
-            <span className="text-sm text-muted-foreground">{t(DATE_LABEL_KEYS[dateFilter])}</span>
-          )}
         </div>
       )}
 
-      {hasMoreCompleted && (
-        <div className="flex justify-center mt-4">
-          <Button variant="outline" size="sm" onClick={onLoadMoreCompleted} className="text-xs">
-            {t("tasks.loadMore", { count: Math.min(remainingCompletedCount, 10) })}
-          </Button>
+      {completedCount > 0 && (
+        <div className="mt-6">
+          <button
+            type="button"
+            aria-expanded={showCompleted}
+            onClick={() => setShowCompleted(v => !v)}
+            className="flex items-center gap-2 mb-3 text-[15px] font-bold text-muted-foreground hover:text-foreground"
+          >
+            <ChevronDown
+              size={16}
+              strokeWidth={2.5}
+              className={`transition-transform ${showCompleted ? "rotate-180" : ""}`}
+            />
+            {t("tasks.completedSection", { count: completedCount })}
+          </button>
+          {showCompleted && (
+            <>
+              {renderTasks(completedPage)}
+              <Pager
+                page={page}
+                pageCount={pageCount}
+                onPageChange={onPageChange}
+                label={t("tasks.status.done")}
+                className="mt-4"
+              />
+            </>
+          )}
         </div>
       )}
     </>

@@ -1,8 +1,9 @@
-import { useCallback, useRef } from "react"
+import { useCallback } from "react"
 import { useDrag, useDrop } from "react-dnd"
 
 interface DragItem {
   id: string
+  lastTargetId?: string
 }
 
 // Generic drag-to-reorder wiring for a single list row/card. `type` scopes
@@ -23,35 +24,35 @@ export function useDragReorder<T extends HTMLElement>({
   type,
   id,
   onHoverMove,
+  canDrag = true,
 }: {
   type: string
   id: string
   onHoverMove: (draggedId: string, targetId: string) => void
+  // false = the row can't be picked up (e.g. a task whose position is set
+  // by its deadline, not by hand). Callers also give such rows their own
+  // drag type so nothing else reorders onto them.
+  canDrag?: boolean
 }) {
-  const [{ isDragging }, drag] = useDrag(
+  const [{ isDragging }, drag, preview] = useDrag(
     () => ({
       type,
       item: (): DragItem => ({ id }),
+      canDrag: () => canDrag,
       collect: monitor => ({ isDragging: monitor.isDragging() }),
     }),
-    [type, id],
+    [type, id, canDrag],
   )
 
-  // react-dnd's `hover` fires on nearly every pointer-move tick while the
-  // drag stays over this target, not just once when it actually arrives —
-  // without this guard, hovering a single target for a moment calls
-  // onHoverMove (and downstream, fires a real API request) dozens of times
-  // for the exact same move. This tracks the last dragged item already
-  // moved next to this target and skips repeats; a different drag (new
-  // `item.id`) naturally passes again.
-  const lastMovedIdRef = useRef<string | null>(null)
-
+  // Keep the last target on this drag's item, not on the mounted row:
+  // repeated hover ticks are ignored, but a new drag (or returning from
+  // another target) can move the same note/milestone again.
   const [, drop] = useDrop<DragItem>(
     () => ({
       accept: type,
       hover: item => {
-        if (item.id === id || lastMovedIdRef.current === item.id) return
-        lastMovedIdRef.current = item.id
+        if (item.id === id || item.lastTargetId === id) return
+        item.lastTargetId = id
         onHoverMove(item.id, id)
       },
     }),
@@ -65,5 +66,18 @@ export function useDragReorder<T extends HTMLElement>({
     [drag, drop],
   )
 
-  return { ref, isDragging }
+  // Lists with interactive content can attach dragging only to a handle.
+  const handleRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      drag(node)
+    },
+    [drag],
+  )
+  const dropRef = useCallback(
+    (node: T | null) => {
+      preview(drop(node))
+    },
+    [drop, preview],
+  )
+  return { ref, handleRef, dropRef, isDragging }
 }

@@ -3,14 +3,10 @@ import { generateId } from "@/shared/lib/id"
 import { reorderById } from "@/shared/lib/reorder"
 import { usePersistedCollection } from "@/shared/lib/storage"
 import { goalRepository } from "../api/goalRepository"
+import { computeGoalProgress } from "../lib/computeGoalProgress"
+import { nextGoalItemOrder, reorderGoalItems as reorderItems } from "../lib/goalItems"
 import { GoalContext } from "./goalContext"
-import type { Goal } from "./goal"
-
-function computeProgress(milestones: Goal["milestones"]): number {
-  return milestones.length
-    ? Math.round((milestones.filter(m => m.completed).length / milestones.length) * 100)
-    : 0
-}
+import type { Goal, Milestone, Subgoal } from "./goal"
 
 export function GoalProvider({ children }: { children: ReactNode }) {
   const {
@@ -23,11 +19,12 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   } = usePersistedCollection<Goal>(goalRepository, "goal")
 
   const addGoal = useCallback(
-    (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "progress">) => {
+    (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals" | "progress">) => {
       create({
         ...goal,
         id: generateId(),
         milestones: [],
+        subgoals: [],
         progress: 0,
         updatedAt: new Date().toISOString(),
       })
@@ -36,7 +33,8 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   )
 
   const updateGoal = useCallback(
-    (id: string, patch: Partial<Omit<Goal, "id" | "updatedAt" | "milestones">>) => update(id, patch),
+    (id: string, patch: Partial<Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals">>) =>
+      update(id, patch),
     [update],
   )
 
@@ -47,60 +45,109 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     [goals, reorder],
   )
 
-  // Milestones live as a JSON field inside Goal, not a separate table — so
-  // every milestone operation just computes a new `milestones` array (and
-  // recomputed `progress`) locally, then makes exactly one call to
-  // update(goalId, ...), same as any other Goal field edit. No separate
-  // milestone endpoints exist on the backend.
-  const addMilestone = useCallback(
-    (goalId: string, title: string) => {
+  // Steps and subgoals live as JSON fields inside Goal, not separate tables
+  // — every operation computes the new arrays locally and makes exactly one
+  // update(goalId, ...) call, same as any other Goal field edit. Progress is
+  // recomputed here for the optimistic view; the server recomputes it again
+  // and its value wins (server/src/lib/goalProgress.ts).
+  const saveTree = useCallback(
+    (goal: Goal, milestones: Milestone[], subgoals: Subgoal[]) =>
+      update(goal.id, { milestones, subgoals, progress: computeGoalProgress(milestones, subgoals) }),
+    [update],
+  )
+
+  // A step operation on either the goal's own steps (subgoalId undefined)
+  // or one subgoal's steps.
+  const editSteps = useCallback(
+    (goalId: string, subgoalId: string | undefined, edit: (steps: Milestone[]) => Milestone[]) => {
       const goal = goals.find(g => g.id === goalId)
       if (!goal) return
-      const milestones = [...goal.milestones, { id: generateId(), title, completed: false }]
-      update(goalId, { milestones, progress: computeProgress(milestones) })
+      if (!subgoalId) {
+        saveTree(goal, edit(goal.milestones), goal.subgoals)
+        return
+      }
+      const subgoals = goal.subgoals.map(s =>
+        s.id === subgoalId ? { ...s, milestones: edit(s.milestones) } : s,
+      )
+      saveTree(goal, goal.milestones, subgoals)
     },
-    [goals, update],
+    [goals, saveTree],
+  )
+
+  // A new top-level step goes after everything else (steps and subgoals);
+  // a step inside a subgoal just goes last in that subgoal.
+  const addMilestone = useCallback(
+    (goalId: string, title: string, subgoalId?: string) => {
+      const goal = goals.find(g => g.id === goalId)
+      const order = !subgoalId && goal ? nextGoalItemOrder(goal) : undefined
+      editSteps(goalId, subgoalId, steps => [...steps, { id: generateId(), title, completed: false, order }])
+    },
+    [goals, editSteps],
   )
 
   const updateMilestone = useCallback(
-    (goalId: string, milestoneId: string, title: string) => {
-      const goal = goals.find(g => g.id === goalId)
-      if (!goal) return
-      const milestones = goal.milestones.map(m => (m.id === milestoneId ? { ...m, title } : m))
-      update(goalId, { milestones })
-    },
-    [goals, update],
+    (goalId: string, milestoneId: string, title: string, subgoalId?: string) =>
+      editSteps(goalId, subgoalId, steps => steps.map(m => (m.id === milestoneId ? { ...m, title } : m))),
+    [editSteps],
   )
 
   const deleteMilestone = useCallback(
-    (goalId: string, milestoneId: string) => {
-      const goal = goals.find(g => g.id === goalId)
-      if (!goal) return
-      const milestones = goal.milestones.filter(m => m.id !== milestoneId)
-      update(goalId, { milestones, progress: computeProgress(milestones) })
-    },
-    [goals, update],
+    (goalId: string, milestoneId: string, subgoalId?: string) =>
+      editSteps(goalId, subgoalId, steps => steps.filter(m => m.id !== milestoneId)),
+    [editSteps],
   )
 
   const reorderMilestones = useCallback(
-    (goalId: string, draggedId: string, targetId: string) => {
-      const goal = goals.find(g => g.id === goalId)
-      if (!goal) return
-      update(goalId, { milestones: reorderById(goal.milestones, draggedId, targetId) })
-    },
-    [goals, update],
+    (goalId: string, draggedId: string, targetId: string, subgoalId?: string) =>
+      editSteps(goalId, subgoalId, steps => reorderById(steps, draggedId, targetId)),
+    [editSteps],
   )
 
   const toggleMilestone = useCallback(
-    (goalId: string, milestoneId: string) => {
+    (goalId: string, milestoneId: string, subgoalId?: string) =>
+      editSteps(goalId, subgoalId, steps =>
+        steps.map(m => (m.id === milestoneId ? { ...m, completed: !m.completed } : m)),
+      ),
+    [editSteps],
+  )
+
+  const editSubgoals = useCallback(
+    (goalId: string, edit: (subgoals: Subgoal[]) => Subgoal[]) => {
+      const goal = goals.find(g => g.id === goalId)
+      if (goal) saveTree(goal, goal.milestones, edit(goal.subgoals))
+    },
+    [goals, saveTree],
+  )
+
+  const addSubgoal = useCallback(
+    (goalId: string, title: string) => {
+      const goal = goals.find(g => g.id === goalId)
+      const order = goal ? nextGoalItemOrder(goal) : undefined
+      editSubgoals(goalId, subgoals => [...subgoals, { id: generateId(), title, milestones: [], order }])
+    },
+    [goals, editSubgoals],
+  )
+
+  const renameSubgoal = useCallback(
+    (goalId: string, subgoalId: string, title: string) =>
+      editSubgoals(goalId, subgoals => subgoals.map(s => (s.id === subgoalId ? { ...s, title } : s))),
+    [editSubgoals],
+  )
+
+  const deleteSubgoal = useCallback(
+    (goalId: string, subgoalId: string) =>
+      editSubgoals(goalId, subgoals => subgoals.filter(s => s.id !== subgoalId)),
+    [editSubgoals],
+  )
+
+  const reorderGoalItems = useCallback(
+    (goalId: string, draggedId: string, targetId: string) => {
       const goal = goals.find(g => g.id === goalId)
       if (!goal) return
-      const milestones = goal.milestones.map(m =>
-        m.id === milestoneId ? { ...m, completed: !m.completed } : m,
-      )
-      update(goalId, { milestones, progress: computeProgress(milestones) })
+      const { milestones, subgoals } = reorderItems(goal, draggedId, targetId)
+      saveTree(goal, milestones, subgoals)
     },
-    [goals, update],
+    [goals, saveTree],
   )
 
   const value = useMemo(
@@ -116,6 +163,10 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       deleteMilestone,
       reorderMilestones,
       toggleMilestone,
+      addSubgoal,
+      renameSubgoal,
+      deleteSubgoal,
+      reorderGoalItems,
     }),
     [
       goals,
@@ -129,6 +180,10 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       deleteMilestone,
       reorderMilestones,
       toggleMilestone,
+      addSubgoal,
+      renameSubgoal,
+      deleteSubgoal,
+      reorderGoalItems,
     ],
   )
 

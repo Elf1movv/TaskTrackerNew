@@ -76,19 +76,40 @@ git config --global user.email "твоя@почта"
 Нужна локальная база для разработки (продакшен-база — отдельно, на
 сервере, её трогать с домашнего компьютера не нужно).
 
-1. Скачать установщик с https://www.postgresql.org/download/windows/
-   (ссылка ведёт на установщик от EDB — это официально рекомендуемый
-   провайдистрибутив для Windows)
-2. При установке: запомнить пароль, который зададут для
-   пользователя `postgres` (спросит в процессе установки) — он
-   понадобится в шаге 5. Порт оставить по умолчанию — `5432`
-3. Установщик предложит поставить **Stack Builder** — не обязательно,
-   можно пропустить
-4. После установки — в терминале должна появиться команда `psql`
-   (клиент командной строки для Postgres). Если терминал её не видит,
-   переоткрыть терминал; если всё ещё не видит — добавить в PATH папку
-   `bin` внутри папки, куда установился PostgreSQL (обычно
-   `C:\Program Files\PostgreSQL\17\bin`)
+**Как сделано на домашнем ПК владельца (2026-11-07).** На этом
+компьютере уже стоит отдельный, *учебный* PostgreSQL 18 (служба
+`postgresql-x64-18`, порт `5432`, папка `E:\PostgreSQL\18`). Его
+**не трогаем**. Для проекта поставлена своя, полностью независимая
+копия:
+
+| Что | Где |
+|---|---|
+| Программа PostgreSQL **16.15** (та же основная версия, что `postgres:16` на сервере) | `E:\MyTracker\postgres16` |
+| Данные (сами базы) | `E:\MyTracker\pgdata16` |
+| Порт (номер «двери», через которую подключаются) | `5433`, только с этого компьютера (`localhost`) |
+| Пароль пользователя `postgres` | скрытый файл `E:\MyTracker\.pgpass_init` (не в git) |
+| Лог (журнал работы сервера базы) | `E:\MyTracker\pgdata16.log` |
+| Запуск / остановка / консоль | `E:\MyTracker\start-db.cmd`, `stop-db.cmd`, `open-db.cmd` |
+
+Это **не служба Windows**: после перезагрузки база сама не стартует —
+перед работой запустить `start-db.cmd` (двойной клик). Проверить, что
+работает: `E:\MyTracker\postgres16\bin\pg_isready.exe -h localhost -p 5433`.
+
+Как это повторить с нуля (если папку `E:\MyTracker` потеряли):
+1. Скачать архив без установщика: `https://get.enterprisedb.com/postgresql/postgresql-16.15-1-windows-x64-binaries.zip`
+   (официальная сборка EDB), распаковать папку `pgsql` в `E:\MyTracker\postgres16`.
+2. Придумать пароль, записать в `E:\MyTracker\.pgpass_init`, затем:
+   ```bash
+   E:/MyTracker/postgres16/bin/initdb.exe -D E:/MyTracker/pgdata16 -U postgres \
+     --pwfile=E:/MyTracker/.pgpass_init --auth=scram-sha-256 -E UTF8 --locale=C
+   ```
+3. Дописать в конец `E:\MyTracker\pgdata16\postgresql.conf`:
+   `port = 5433` и `listen_addresses = 'localhost'`.
+4. Запустить `start-db.cmd` и перейти к шагу 4 ниже.
+
+(Обычный вариант для «чистого» компьютера — установщик с
+https://www.postgresql.org/download/windows/, порт по умолчанию `5432`.
+Тогда в строках подключения ниже вместо `5433` будет `5432`.)
 
 ### 1.4 VS Code
 
@@ -171,11 +192,18 @@ cp server/.env.test.example server/.env.test
 
 ## 4. Создать локальные базы данных
 
-Два терминала не нужны — можно всё через `psql`:
-```bash
-psql -U postgres -h localhost
-```
-Спросит пароль — тот, что задавали при установке PostgreSQL (шаг 1.3).
+Нужны две базы: `tasktracker` — для запуска сайта у себя, и
+`tasktracker_test` — только для автотестов (тесты при каждом запуске
+**стирают её и заполняют заново**; `server/vitest.setup.ts` откажется
+запускаться, если в имени базы нет слова `test`). Обе живут только на
+этом компьютере и никак не связаны ни с боевой базой, ни с базой
+тестового сайта на VPS.
+
+Открыть консоль базы — `E:\MyTracker\open-db.cmd` (или
+`E:/MyTracker/postgres16/bin/psql.exe -h localhost -p 5433 -U postgres`).
+Посмотреть и поменять данные в виде таблиц в браузере — `cd server`,
+затем `npx prisma studio`. Всё, что здесь меняется, видно только на
+этом компьютере: настоящих пользователей mytracker.space это не касается.
 Дальше внутри `psql` (приглашение `postgres=#`):
 ```sql
 CREATE DATABASE tasktracker;
@@ -187,11 +215,13 @@ CREATE DATABASE tasktracker_test;
 (пароль — тот же, от `postgres`):
 ```
 # server/.env
-DATABASE_URL="postgresql://postgres:ТВОЙ_ПАРОЛЬ@localhost:5432/tasktracker"
+DATABASE_URL="postgresql://postgres:ТВОЙ_ПАРОЛЬ@localhost:5433/tasktracker"
 
 # server/.env.test
-DATABASE_URL="postgresql://postgres:ТВОЙ_ПАРОЛЬ@localhost:5432/tasktracker_test"
+DATABASE_URL="postgresql://postgres:ТВОЙ_ПАРОЛЬ@localhost:5433/tasktracker_test"
 ```
+На домашнем ПК оба файла уже созданы 2026-11-07 (пароль — из
+`E:\MyTracker\.pgpass_init`, `BETTER_AUTH_SECRET` — случайные строки).
 (На Mac используется вход без пароля через отдельного пользователя
 `maria` — на Windows PostgreSQL по умолчанию требует пароль даже для
 localhost, поэтому здесь используется `postgres` с паролем. Работает
@@ -208,14 +238,36 @@ npm install
 cd server
 npm install
 npx prisma generate
-npx prisma migrate deploy
+npx prisma db push      # создаёт таблицы в tasktracker по schema.prisma
 cd ..
 ```
 
-`prisma migrate deploy` применит все существующие миграции (создаст все
-таблицы) к свежей пустой базе `tasktracker` — то же самое произойдёт
-для `tasktracker_test`, когда впервые запустятся тесты
-(`server/vitest.setup.ts` сам следит за тестовой базой).
+**Почему `db push`, а не `migrate deploy` (выяснено 2026-11-07).**
+Миграции — это пошаговая история изменений схемы базы. Цепочка
+миграций проекта **не может собрать пустую базу с нуля**: миграция
+`20260917144335` добавляет категории без владельца, а
+`20260919075427` требует владельца у каждой строки — на пустой базе
+она падает с ошибкой `P3018`. На сервере это не мешает: там эти шаги
+давно пройдены, а восстановление из резервной копии миграций не
+использует. Для локальных баз `prisma db push` создаёт таблицы прямо по
+текущей `schema.prisma`, минуя историю.
+
+Тестовой базе таблицы нужно создать отдельно, указав её адрес (в Git Bash):
+```bash
+cd server
+export DATABASE_URL="$(node -e 'require("dotenv").config({path:".env.test",quiet:true});process.stdout.write(process.env.DATABASE_URL)')"
+npx prisma db push --skip-generate
+npm test
+```
+После переключения между `main` и веткой с другой схемой (например,
+`feat/product-logic-redesign`) — выполнить `npx prisma generate` и
+пересоздать таблицы тестовой базы: удалить и создать её заново в
+`open-db.cmd` (`DROP DATABASE tasktracker_test; CREATE DATABASE tasktracker_test;`),
+затем снова `db push`. Prisma сама запрещает Claude Code «сброс» базы
+(`--force-reset`), поэтому пересоздание делается через консоль.
+
+Проверено 2026-11-07: `main` — 64/64 тестов сервера,
+`feat/product-logic-redesign` — 83/83.
 
 ---
 

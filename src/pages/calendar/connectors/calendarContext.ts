@@ -2,7 +2,8 @@ import { createContext, useContext } from "react"
 import type { Goal } from "@/entities/goal"
 import type { Habit } from "@/entities/habit"
 import type { Reminder } from "@/entities/reminder"
-import type { Task } from "@/entities/task"
+import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
+import type { Task as DeadlineTask } from "@/entities/task"
 
 export type CalendarView = "agenda" | "day" | "week" | "month" | "year"
 
@@ -26,11 +27,17 @@ export interface CalendarContextValue {
   selectedDay: Date | null
   selectDay: (day: Date | null) => void
 
-  allTasks: Task[]
+  allPlans: Plan[]
+  // Real tasks (Tasks page) that have a deadline — NOT calendar plans,
+  // which are what `allPlans` above holds. Shown as read-only markers in
+  // Month, the day panel and Agenda; never on the Day/Week hour grid,
+  // since a deadline has no hour (same rule as goal deadlines).
+  allDeadlines: DeadlineTask[]
+  selectedDeadlines: DeadlineTask[]
   allReminders: Reminder[]
   allGoals: Goal[]
   allHabits: Habit[]
-  selectedTasks: Task[]
+  selectedPlans: Plan[]
   selectedReminders: Reminder[]
   selectedGoals: Goal[]
   // Habits scheduled on selectedDay's weekday — read-only on the calendar

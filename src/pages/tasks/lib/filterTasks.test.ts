@@ -1,11 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it } from "vitest"
 import type { Task } from "@/entities/task"
-import { filterTasks } from "./filterTasks"
+import { filterTasks, sortActiveTasks } from "./filterTasks"
 
-function task(id: string, overrides: Partial<Task> = {}): Task {
-  return {
-    id,
-    title: id,
+const task = (patch: Partial<Task>): Task =>
+  ({
+    id: "t",
+    title: "T",
     completed: false,
     priority: "medium",
     category: "Work",
@@ -14,51 +14,28 @@ function task(id: string, overrides: Partial<Task> = {}): Task {
     endTime: null,
     description: null,
     completedAt: null,
-    updatedAt: "2026-10-02T08:00:00.000Z",
-    createdAt: "2026-10-02T08:00:00.000Z",
-    ...overrides,
-  }
-}
+    createdAt: "2026-11-01T00:00:00Z",
+    updatedAt: "2026-11-01T00:00:00Z",
+    ...patch,
+  }) as Task
 
-describe("Tasks list visibility", () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(2026, 9, 2, 12))
+describe("filterTasks", () => {
+  it("filters by category only", () => {
+    const tasks = [task({ id: "a" }), task({ id: "b", category: "Home", completed: true })]
+    expect(filterTasks(tasks, "all").map(t => t.id)).toEqual(["a", "b"])
+    expect(filterTasks(tasks, "Home").map(t => t.id)).toEqual(["b"])
   })
-  afterEach(() => vi.useRealTimers())
+})
 
-  it("keeps the same record in the list when a date is assigned, moved or cleared", () => {
-    const original = task("same-id")
-    for (const dueDate of [null, "2026-09-01", "2026-10-02", "2026-11-01", null]) {
-      const edited = { ...original, dueDate }
-      expect(filterTasks([edited], "all", "all")).toEqual([edited])
-    }
-  })
-
-  it("combines date, category and status filters", () => {
+describe("sortActiveTasks", () => {
+  it("puts dated tasks first by deadline and keeps manual order otherwise", () => {
     const tasks = [
-      task("undated"),
-      task("scheduled", { dueDate: "2026-10-10" }),
-      task("other-category", { category: "Personal", dueDate: "2026-10-10" }),
-      task("done-today", {
-        completed: true,
-        dueDate: "2026-10-10",
-        completedAt: new Date(2026, 9, 2, 8).toISOString(),
-      }),
-      task("done-before", {
-        completed: true,
-        dueDate: "2026-10-10",
-        completedAt: "2026-09-01T08:00:00.000Z",
-      }),
+      task({ id: "free1" }),
+      task({ id: "late", dueDate: "2026-11-20" }),
+      task({ id: "free2" }),
+      task({ id: "soon", dueDate: "2026-11-10" }),
+      task({ id: "soon2", dueDate: "2026-11-10" }),
     ]
-    expect(filterTasks(tasks, "active", "Work", "dated").map(t => t.id)).toEqual(["scheduled"])
-    expect(filterTasks(tasks, "all", "all", "undated").map(t => t.id)).toEqual(["undated"])
-    expect(filterTasks(tasks, "done", "Work", "dated").map(t => t.id)).toEqual(["done-today"])
-    expect(filterTasks(tasks, "all", "all").map(t => t.id)).toEqual([
-      "undated",
-      "scheduled",
-      "other-category",
-      "done-today",
-    ])
+    expect(sortActiveTasks(tasks).map(t => t.id)).toEqual(["soon", "soon2", "late", "free1", "free2"])
   })
 })

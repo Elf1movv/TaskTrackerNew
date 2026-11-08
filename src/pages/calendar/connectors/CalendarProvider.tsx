@@ -4,12 +4,15 @@ import { isGoalDueOnDay, useGoals } from "@/entities/goal"
 import { selectHabitsOnDay, useHabits } from "@/entities/habit"
 import { selectRemindersOnDay, useReminders } from "@/entities/reminder"
 import { isTaskOnDay, useTasks } from "@/entities/task"
+import { usePlans } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
-import { addMinutesToTime, minutesFromMidnight } from "@/shared/lib/timeOffset"
+import { minutesFromMidnight } from "@/shared/lib/timeOffset"
 import { CalendarContext, type CalendarView } from "./calendarContext"
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
-  const { tasks, updateTask } = useTasks()
+  const { plans, updatePlan } = usePlans()
+  const { tasks: realTasks } = useTasks()
+  const deadlines = useMemo(() => realTasks.filter(task => task.dueDate), [realTasks])
   const { reminders } = useReminders()
   const { goals, updateGoal } = useGoals()
   const { habits } = useHabits()
@@ -66,11 +69,17 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setSelectedDay(now)
   }, [])
 
-  const selectedTasks = useMemo(() => {
+  const selectedPlans = useMemo(() => {
     if (!selectedDay) return []
     const selectedKey = formatDateKey(selectedDay)
-    return tasks.filter(t => isTaskOnDay(t, selectedKey))
-  }, [tasks, selectedDay])
+    return plans.filter(t => isTaskOnDay(t, selectedKey))
+  }, [plans, selectedDay])
+
+  const selectedDeadlines = useMemo(() => {
+    if (!selectedDay) return []
+    const selectedKey = formatDateKey(selectedDay)
+    return deadlines.filter(t => isTaskOnDay(t, selectedKey))
+  }, [deadlines, selectedDay])
 
   const selectedReminders = useMemo(() => {
     if (!selectedDay) return []
@@ -90,11 +99,11 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const moveTaskToDay = useCallback(
     (taskId: string, day: Date) => {
-      const task = tasks.find(t => t.id === taskId)
+      const task = plans.find(t => t.id === taskId)
       if (!task) return
-      updateTask(taskId, { dueDate: formatDateKey(day) })
+      updatePlan(taskId, { date: formatDateKey(day), onHold: false })
     },
-    [tasks, updateTask],
+    [plans, updatePlan],
   )
 
   const moveGoalDeadline = useCallback(
@@ -115,23 +124,42 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   // what depends on it" rule TaskForm already applies to time itself.
   const rescheduleTaskTime = useCallback(
     (taskId: string, day: Date, time: string | null) => {
-      const task = tasks.find(t => t.id === taskId)
+      const task = plans.find(t => t.id === taskId)
       if (!task) return
-      let endTime: string | null = null
-      if (time && task.time && task.endTime) {
-        const deltaMinutes = minutesFromMidnight(time) - minutesFromMidnight(task.time)
-        endTime = addMinutesToTime(task.endTime, deltaMinutes)
-      }
-      updateTask(taskId, { dueDate: formatDateKey(day), time, endTime })
+      const duration =
+        task.time && task.endTime
+          ? minutesFromMidnight(task.endTime) - minutesFromMidnight(task.time)
+          : task.durationMinutes
+      const startMinutes = time ? Math.min(minutesFromMidnight(time), 1439 - duration) : null
+      // The drop is already snapped. Do not round an existing interval's
+      // duration again (legacy or manually entered intervals may be 20 min).
+      const clock = (minutes: number) =>
+        `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
+      const start = startMinutes === null ? null : clock(Math.max(0, startMinutes))
+      const endTime = startMinutes === null ? null : clock(Math.max(0, startMinutes) + duration)
+      updatePlan(taskId, {
+        date: formatDateKey(day),
+        time: start,
+        endTime,
+        onHold: false,
+        durationMinutes: duration,
+      })
     },
-    [tasks, updateTask],
+    [plans, updatePlan],
   )
 
   // The hour-timeline's resize handle — start time is untouched, only how
   // far the block stretches changes.
   const resizeTask = useCallback(
-    (taskId: string, endTime: string) => updateTask(taskId, { endTime }),
-    [updateTask],
+    (taskId: string, endTime: string) => {
+      const task = plans.find(t => t.id === taskId)
+      if (task?.time && endTime > task.time)
+        updatePlan(taskId, {
+          endTime,
+          durationMinutes: minutesFromMidnight(endTime) - minutesFromMidnight(task.time),
+        })
+    },
+    [plans, updatePlan],
   )
 
   const value = useMemo(
@@ -145,11 +173,13 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       goToDate,
       selectedDay,
       selectDay,
-      allTasks: tasks,
+      allPlans: plans,
+      allDeadlines: deadlines,
+      selectedDeadlines,
       allReminders: reminders,
       allGoals: goals,
       allHabits: habits,
-      selectedTasks,
+      selectedPlans,
       selectedReminders,
       selectedGoals,
       selectedHabits,
@@ -167,11 +197,13 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       goToDate,
       selectedDay,
       selectDay,
-      tasks,
+      plans,
+      deadlines,
+      selectedDeadlines,
       reminders,
       goals,
       habits,
-      selectedTasks,
+      selectedPlans,
       selectedReminders,
       selectedGoals,
       selectedHabits,

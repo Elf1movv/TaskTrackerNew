@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react"
 import { format, isToday } from "date-fns"
-import { TaskForm } from "@/features/task-form"
+import { PlanForm } from "@/features/plan-form"
 import { ReminderForm } from "@/features/reminder-form"
 import { GoalForm } from "@/features/goal-form"
-import { DayGoalRow, DayReminderRow, DayTaskRow } from "@/widgets/day-detail-panel"
+import { DayDeadlineRow, DayGoalRow, DayReminderRow, DayTaskRow } from "@/widgets/day-detail-panel"
 import { isGoalDueOnDay, type Goal } from "@/entities/goal"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
-import { isTaskOnDay, type Task } from "@/entities/task"
+import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
+import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildAgendaRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
@@ -38,12 +39,14 @@ const LOAD_MORE_INCREMENT_DAYS = 6
 // list has no day-cell equivalent to drop onto.
 export function CalendarAgendaView({
   anchorDate,
-  allTasks,
+  allPlans,
+  allDeadlines = [],
   allReminders,
   allGoals,
 }: {
   anchorDate: Date
-  allTasks: Task[]
+  allPlans: Plan[]
+  allDeadlines?: DeadlineTask[]
   allReminders: Reminder[]
   allGoals: Goal[]
 }) {
@@ -72,20 +75,33 @@ export function CalendarAgendaView({
         const dayKey = formatDateKey(day)
         return {
           day,
-          tasks: allTasks.filter(t => isTaskOnDay(t, dayKey)),
+          tasks: allPlans.filter(t => isTaskOnDay(t, dayKey)),
+          deadlines: allDeadlines.filter(t => isTaskOnDay(t, dayKey)),
           reminders: selectRemindersOnDay(allReminders, dayKey),
           goals: allGoals.filter(g => isGoalDueOnDay(g, dayKey)),
         }
       })
-      .filter(g => g.tasks.length + g.reminders.length + g.goals.length > 0)
-  }, [days, allTasks, allReminders, allGoals])
+      .filter(g => g.tasks.length + g.deadlines.length + g.reminders.length + g.goals.length > 0)
+  }, [days, allPlans, allDeadlines, allReminders, allGoals])
 
   if (groups.length === 0) {
-    return <div className="text-center py-16 text-muted-foreground text-sm">{t("calendar.agendaEmpty")}</div>
+    return (
+      <div className="max-w-2xl mx-auto">
+        <p className="text-sm text-muted-foreground mb-4" data-agenda-hint>
+          {t("calendar.agendaHint", { count: LOAD_MORE_INCREMENT_DAYS })}
+        </p>
+        <div className="text-center py-16 text-muted-foreground text-sm">{t("calendar.agendaEmpty")}</div>
+      </div>
+    )
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* What this view is (owner asked, 2026-11-08) — shown in the UI so
+          nobody has to remember how Agenda works. */}
+      <p className="text-sm text-muted-foreground" data-agenda-hint>
+        {t("calendar.agendaHint", { count: LOAD_MORE_INCREMENT_DAYS })}
+      </p>
       {groups.map(group => {
         const dayKey = formatDateKey(group.day)
         return (
@@ -110,7 +126,7 @@ export function CalendarAgendaView({
             <div className="space-y-2.5">
               {group.tasks.map(task =>
                 editing?.kind === "task" && editing.id === task.id ? (
-                  <TaskForm key={task.id} task={task} onDone={() => setEditing(null)} />
+                  <PlanForm key={task.id} plan={task} onDone={() => setEditing(null)} />
                 ) : (
                   <DayTaskRow
                     key={task.id}
@@ -120,6 +136,9 @@ export function CalendarAgendaView({
                   />
                 ),
               )}
+              {group.deadlines.map(task => (
+                <DayDeadlineRow key={task.id} task={task} />
+              ))}
               {group.reminders.map(reminder =>
                 editing?.kind === "reminder" && editing.id === reminder.id ? (
                   <ReminderForm

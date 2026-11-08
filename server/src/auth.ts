@@ -16,6 +16,7 @@ export const auth = betterAuth({
   database: prismaAdapter(db, { provider: "postgresql" }),
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
+  advanced: { cookiePrefix: process.env.AUTH_COOKIE_PREFIX ?? "better-auth" },
   // The browser is always at :5173 in dev (Vite's server.proxy forwards
   // /api to :3001, but the request's Origin header is still :5173) — that
   // differs from BETTER_AUTH_URL (:3001), so without this Better Auth

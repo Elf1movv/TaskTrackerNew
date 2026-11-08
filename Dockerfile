@@ -11,6 +11,8 @@ RUN npm ci
 COPY . .
 # Same value in dev and prod, see docs/ARCHITECTURE.md — nginx/Express both
 # serve everything from one origin, so this is never environment-specific.
+ARG VITE_APP_ENV=production
+ENV VITE_APP_ENV=$VITE_APP_ENV
 ENV VITE_API_URL=/api
 RUN npm run build
 # -> /app/dist
@@ -54,6 +56,7 @@ COPY --from=backend-build /app/server/package.json ./server/package.json
 COPY --from=backend-build /app/server/node_modules ./server/node_modules
 COPY --from=backend-build /app/server/dist ./server/dist
 COPY --from=backend-build /app/server/prisma ./server/prisma
+COPY --from=backend-build /app/server/scripts ./server/scripts
 
 WORKDIR /app/server
 EXPOSE 3001

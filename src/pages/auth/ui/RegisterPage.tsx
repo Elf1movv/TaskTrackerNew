@@ -45,10 +45,13 @@ export function RegisterPage() {
   }
 
   if (submittedEmail) {
+    const isStaging = import.meta.env.VITE_APP_ENV === "staging"
     return (
-      <AuthLayout title={t("auth.register.checkEmailTitle")}>
+      <AuthLayout title={t(isStaging ? "auth.register.stagingTitle" : "auth.register.checkEmailTitle")}>
         <p className="text-sm text-muted-foreground">
-          {t("auth.register.checkEmailBody", { email: submittedEmail })}
+          {t(isStaging ? "auth.register.stagingBody" : "auth.register.checkEmailBody", {
+            email: submittedEmail,
+          })}
         </p>
         <Button asChild className="w-full h-12 rounded-[10px] text-base font-bold shadow-card">
           <Link to="/login">{t("auth.register.backToLogin")}</Link>

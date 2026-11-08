@@ -1,1 +1,1 @@
-export { TaskForm } from "./ui/TaskForm"
+export { TaskForm, type TaskDraftFields } from "./ui/TaskForm"

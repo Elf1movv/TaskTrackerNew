@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
 import { resolveCategoryColor, useCategories, type Category } from "@/entities/category"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
-import { PriorityDot, type Task } from "@/entities/task"
-import { TaskToggleCheckbox } from "@/features/toggle-task"
+import { PriorityDot } from "@/entities/task"
+import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { monoFont } from "@/shared/lib/typography"
 import {
@@ -290,7 +291,7 @@ const FALLBACK_BLOCK_HEIGHT_PX = 22
 const MIN_BLOCK_HEIGHT_PX = 18
 
 function blockHeightPx(task: Task): number {
-  if (!task.endTime || !task.time) return FALLBACK_BLOCK_HEIGHT_PX
+  if (!task.endTime || !task.time) return (task.durationMinutes * HOUR_HEIGHT_PX) / 60
   const raw = timeToOffsetPx(task.endTime) - timeToOffsetPx(task.time)
   return raw > 0 ? Math.max(MIN_BLOCK_HEIGHT_PX, raw) : FALLBACK_BLOCK_HEIGHT_PX
 }
@@ -299,7 +300,7 @@ function blockHeightPx(task: Task): number {
 // live preview (see TimelineDayColumn's movePreview) — mirrors
 // blockHeightPx's own fallback for an endTime-less/malformed task.
 function taskDurationMinutes(task: Task): number {
-  if (!task.endTime || !task.time) return DEFAULT_BLOCK_MINUTES
+  if (!task.endTime || !task.time) return task.durationMinutes
   const raw = minutesFromMidnight(task.endTime) - minutesFromMidnight(task.time)
   return raw > 0 ? raw : DEFAULT_BLOCK_MINUTES
 }
@@ -410,8 +411,8 @@ function TimedTaskBlock({
       <span css={monoFont} className="shrink-0 text-muted-foreground">
         {task.time}
       </span>
-      <span className={`truncate font-semibold ${task.completed ? "line-through text-tertiary" : ""}`}>
-        {task.title}
+      <span className={`truncate font-semibold ${task.completed ? "text-tertiary" : ""}`}>
+        <span className={task.completed ? "line-through" : ""}>{task.title}</span>
       </span>
       {onResizeTask && (
         <div

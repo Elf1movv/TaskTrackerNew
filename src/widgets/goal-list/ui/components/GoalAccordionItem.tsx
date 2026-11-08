@@ -1,10 +1,12 @@
-import { CalendarDays } from "lucide-react"
+import { CalendarDays, Tag } from "lucide-react"
+import { resolveCategoryColor, useCategories } from "@/entities/category"
 import styled from "@emotion/styled"
-import { AddMilestoneForm } from "@/features/add-milestone"
+import { AddMilestoneForm } from "./AddMilestoneForm"
 import { DeleteGoalButton } from "@/features/delete-goal"
 import { EditGoalButton } from "@/features/edit-goal"
-import { MilestoneRow } from "@/features/milestone-row"
-import { ProgressRing, useGoals } from "@/entities/goal"
+import { MilestoneRow } from "./MilestoneRow"
+import { SubgoalItem } from "./SubgoalItem"
+import { getGoalItems, ProgressRing, useGoals } from "@/entities/goal"
 import { useDragReorder } from "@/shared/lib/dnd"
 import { useLanguage } from "@/shared/lib/i18n"
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
@@ -25,6 +27,7 @@ const StyledAccordionItem = styled(AccordionItem)<{ color: string }>`
 
 export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit: () => void }) {
   const { reorderGoals } = useGoals()
+  const { categories } = useCategories()
   const { t } = useLanguage()
   const { ref, isDragging } = useDragReorder<HTMLDivElement>({
     type: "goal",
@@ -32,6 +35,11 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
     onHoverMove: reorderGoals,
   })
   const completedCount = goal.milestones.filter(m => m.completed).length
+  const items = getGoalItems(goal)
+  // "#N" counts only the goal's own steps, in the order they're shown.
+  const stepNumbers = new Map(
+    items.filter(entry => entry.kind === "step").map((entry, index) => [entry.item.id, index]),
+  )
 
   return (
     // `AccordionItem` (shared/ui, vendored shadcn output) is a plain function
@@ -69,11 +77,23 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
                         completed: completedCount,
                         total: goal.milestones.length,
                       })}
+                      {goal.subgoals.length > 0 &&
+                        ` · ${t("goals.subgoalsCount", { count: goal.subgoals.length })}`}
                     </span>
                     <span className="flex items-center gap-1.5 text-[13px] font-semibold text-tertiary whitespace-nowrap">
                       <CalendarDays size={14} strokeWidth={1.75} />
                       {goal.dueLabel ? t("goals.due", { date: goal.dueLabel }) : t("goalForm.noTargetDate")}
                     </span>
+                    {goal.category && (
+                      <span className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground whitespace-nowrap">
+                        <Tag
+                          size={13}
+                          strokeWidth={2}
+                          style={{ color: resolveCategoryColor(goal.category, categories) }}
+                        />
+                        {goal.category}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -84,26 +104,28 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
             <DeleteGoalButton goalId={goal.id} goalTitle={goal.title} />
           </div>
         </div>
-        <AccordionContent className="px-5 pb-5">
-          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1">
-            <span className="text-xs font-bold tracking-[0.06em] uppercase text-tertiary px-1 pb-2">
-              {t("goals.milestones")}
-            </span>
-            <div className="flex flex-col gap-1">
-              {goal.milestones.map((milestone, idx) => (
+        <AccordionContent className="px-5 pb-5 flex flex-col gap-3">
+          {/* One headerless list (owner, 2026-11-08 — same idea as the
+              headerless "without a block" habits): the goal's own steps and
+              subgoals (folders of steps) in one shared order the owner sets
+              by dragging — a step can sit before a subgoal or after it. */}
+          <div className="bg-sunken rounded-xl p-4 flex flex-col gap-1.5" data-goal-tree>
+            {items.map(entry =>
+              entry.kind === "step" ? (
                 <MilestoneRow
-                  key={milestone.id}
+                  key={entry.item.id}
                   goalId={goal.id}
-                  milestone={milestone}
+                  milestone={entry.item}
                   color={goal.color}
-                  index={idx}
+                  index={stepNumbers.get(entry.item.id) ?? 0}
                 />
-              ))}
-              {goal.milestones.length === 0 && (
-                <p className="text-sm text-tertiary px-1 pb-1">{t("goals.noMilestonesYet")}</p>
-              )}
-            </div>
+              ) : (
+                <SubgoalItem key={entry.item.id} goalId={goal.id} subgoal={entry.item} color={goal.color} />
+              ),
+            )}
+            {items.length === 0 && <p className="text-sm text-tertiary px-1 pb-1">{t("goals.emptyTree")}</p>}
             <AddMilestoneForm goalId={goal.id} />
+            <AddMilestoneForm goalId={goal.id} kind="subgoal" />
           </div>
         </AccordionContent>
       </StyledAccordionItem>

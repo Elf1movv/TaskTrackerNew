@@ -1,18 +1,18 @@
 import { createContext, useContext } from "react"
-import type { StatusFilter, Task, TaskDateFilter } from "@/entities/task"
+import type { Task } from "@/entities/task"
 
 export interface TasksContextValue {
   allTasks: Task[]
-  filteredTasks: Task[]
-  statusFilter: StatusFilter
-  setStatusFilter: (filter: StatusFilter) => void
-  dateFilter: TaskDateFilter
-  setDateFilter: (filter: TaskDateFilter) => void
+  // Active tasks of the chosen category, sorted (see sortActiveTasks).
+  activeTasks: Task[]
+  // One page of completed tasks, newest first, and how many there are.
+  completedPage: Task[]
+  completedCount: number
   categoryFilter: string
   setCategoryFilter: (category: string) => void
-  hasMoreCompleted: boolean
-  remainingCompletedCount: number
-  onLoadMoreCompleted: () => void
+  page: number
+  pageCount: number
+  setPage: (page: number) => void
 }
 
 export const TasksContext = createContext<TasksContextValue | null>(null)

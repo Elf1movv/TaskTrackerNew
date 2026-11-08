@@ -7,14 +7,9 @@ export interface Task {
   priority: Priority
   category: string
   dueDate: string | null
-  // "HH:mm", 24h — only meaningful when dueDate is set (see TaskForm,
-  // which clears it whenever the due-date toggle turns off). Same
-  // convention as Reminder.time.
+  // Legacy schedule fields, retained for reviewing old records.
+  // Current calendar intervals live in CalendarPlan.
   time: string | null
-  // "HH:mm", 24h — optional end of the task's timed block on the Day/Week
-  // calendar timeline. Only meaningful when both dueDate and time are
-  // set. Nullable: existing/older tasks render at a fixed fallback block
-  // height in the timeline until edited (see HourGrid).
   endTime: string | null
   completedAt: string | null
   // Optional free-text notes, same nullable-additive convention as endTime
@@ -32,6 +27,3 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
   medium: "var(--warning)",
   high: "var(--destructive)",
 }
-
-export type StatusFilter = "all" | "active" | "done"
-export type TaskDateFilter = "all" | "undated" | "dated"

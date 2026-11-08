@@ -38,44 +38,46 @@ const PriorityToggle = styled.button<{ color: string }>`
 // used when adding a task from a specific category tab (e.g. Health) so it
 // lands back in that same tab. Editing always shows the full picker.
 //
-// Calendar creation passes defaultDueDate (and optional time/endTime).
-// That selection is already the user's scheduling choice, so the date is
-// active immediately. Ordinary list creation has no defaultDueDate.
+// A task date is a deadline; calendar plans are independent records.
+//
+// `draft` pre-fills a NEW task (e.g. from a note being moved to tasks), and
+// `onCreate` replaces the default addTask call for that case — the caller
+// saves the task its own way and returns false to keep the form open on
+// failure. Editing an existing task ignores both.
+export type TaskDraftFields = Omit<Task, "id" | "updatedAt" | "completedAt" | "createdAt">
 export function TaskForm({
   task,
+  draft,
   lockedCategory,
   defaultDueDate,
-  defaultTime,
-  defaultEndTime,
   embedded,
+  onCreate,
   onDelete,
   onDone,
 }: {
   task?: Task
+  draft?: { title: string; description: string | null }
   lockedCategory?: string
   defaultDueDate?: string
-  defaultTime?: string | null
-  defaultEndTime?: string | null
   embedded?: boolean
+  onCreate?: (fields: TaskDraftFields) => Promise<boolean>
   onDelete?: () => void
   onDone: () => void
 }) {
   const { addTask, updateTask } = useTasks()
   const { categories } = useCategories()
   const { t } = useLanguage()
-  const [title, setTitle] = useState(task?.title ?? "")
-  const [description, setDescription] = useState(task?.description ?? "")
+  const [title, setTitle] = useState(task?.title ?? draft?.title ?? "")
+  const [description, setDescription] = useState(task?.description ?? draft?.description ?? "")
+  const [saving, setSaving] = useState(false)
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
   const [hasDueDate, setHasDueDate] = useState(task ? !!task.dueDate : !!defaultDueDate)
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? getTodayKey())
-  const [time, setTime] = useState<string | null>(task?.time ?? defaultTime ?? null)
-  const [endTime, setEndTime] = useState<string | null>(task?.endTime ?? defaultEndTime ?? null)
   const showCategoryPicker = !!task || !lockedCategory
 
-  // The month panel stays mounted when another day is selected. Adjust
-  // only the creation date, preserving the draft's title/notes/options.
-  // Never replace an existing task's own date with the panel's day.
+  // Preserve the draft when a caller changes the suggested deadline.
+  // An existing task always keeps its own deadline.
   const [previousDefaultDueDate, setPreviousDefaultDueDate] = useState(defaultDueDate)
   if (previousDefaultDueDate !== defaultDueDate) {
     setPreviousDefaultDueDate(defaultDueDate)
@@ -85,22 +87,28 @@ export function TaskForm({
     }
   }
 
-  function handleSubmit() {
-    if (!title.trim()) return
+  async function handleSubmit() {
+    if (!title.trim() || saving) return
     const patch = {
       title: title.trim(),
       description: description.trim() || null,
       priority,
       category,
       dueDate: hasDueDate ? dueDate : null,
-      // Time (and endTime, which depends on it) only ever make sense
-      // alongside a due date — clearing the date clears both rather than
-      // leaving an orphaned time/endTime on an undated task.
-      time: hasDueDate ? time : null,
-      endTime: hasDueDate && time ? endTime : null,
+      // Tasks have no hour since the redesign — schedules are calendar
+      // plans. Saving an old task clears its leftover hour; the original is
+      // kept in the LegacyTransition journal (release_cleanup migration).
+      // The columns themselves are dropped in the release after main.
+      time: null,
+      endTime: null,
     }
     if (task) {
       updateTask(task.id, { ...patch, completed: task.completed })
+    } else if (onCreate) {
+      setSaving(true)
+      const saved = await onCreate({ ...patch, completed: false })
+      setSaving(false)
+      if (!saved) return
     } else {
       addTask({ ...patch, completed: false })
     }
@@ -113,7 +121,7 @@ export function TaskForm({
         autoFocus
         value={title}
         onChange={e => setTitle(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && handleSubmit()}
+        onKeyDown={e => e.key === "Enter" && void handleSubmit()}
         placeholder={t("taskForm.placeholder")}
         className="border-0 border-b border-border rounded-none bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary"
       />
@@ -174,10 +182,6 @@ export function TaskForm({
             }
           }}
           placeholder={t("taskForm.noDueDate")}
-          time={time}
-          onTimeChange={setTime}
-          endTime={endTime}
-          onEndTimeChange={setEndTime}
         />
       </div>
 
@@ -191,7 +195,7 @@ export function TaskForm({
           <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
             {t("common.cancel")}
           </Button>
-          <Button size="sm" onClick={handleSubmit} className="text-xs">
+          <Button size="sm" disabled={saving} onClick={() => void handleSubmit()} className="text-xs">
             {task ? t("common.save") : t("tasks.addTask")}
           </Button>
         </div>

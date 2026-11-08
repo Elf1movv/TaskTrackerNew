@@ -13,7 +13,9 @@ export function GoalProgressSummary({ goals }: { goals: Goal[] }) {
       {goals.length > 0 ? (
         <>
           <div className="flex flex-col gap-[18px]">
-            {goals.map(goal => (
+            {/* First 5 in the Goals tab order (shared reorderGoals), so the
+                card never grows past a glance; "All goals" opens the rest. */}
+            {goals.slice(0, 5).map(goal => (
               <GoalProgressRow key={goal.id} goal={goal} />
             ))}
           </div>
