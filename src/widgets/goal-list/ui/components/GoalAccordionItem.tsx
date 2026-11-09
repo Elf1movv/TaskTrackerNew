@@ -34,6 +34,7 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
     // plain wrapper div instead of the accordion item itself.
     <div
       ref={ref}
+      data-goal-id={goal.id}
       className="cursor-grab active:cursor-grabbing select-none"
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
