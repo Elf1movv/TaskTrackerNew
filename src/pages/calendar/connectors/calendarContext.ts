@@ -46,7 +46,6 @@ export interface CalendarContextValue {
   selectedHabits: Habit[]
 
   moveTaskToDay: (taskId: string, day: Date) => void
-  moveGoalDeadline: (goalId: string, day: Date) => void
   rescheduleTaskTime: (taskId: string, day: Date, time: string | null) => void
   // Day's hour-timeline resize handle — adjusts only endTime, start stays put.
   resizeTask: (taskId: string, endTime: string) => void

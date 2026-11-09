@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
-import { resolveCategoryColor, useCategories, type Category } from "@/entities/category"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
-import { PriorityDot } from "@/entities/task"
-import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import { PLAN_COLOR, type CalendarEntry as Task } from "@/entities/calendar-plan"
 import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import {
@@ -79,7 +77,6 @@ export function HourGrid({
   onResizeTask?: (taskId: string, endTime: string) => void
   onCreateDraft?: (day: Date, startTime: string, endTime: string, anchorRect: DOMRect) => void
 }) {
-  const { categories } = useCategories()
   const [now, setNow] = useState(new Date())
   const scrollRef = useRef<HTMLDivElement>(null)
   const hasScrolledToNow = useRef(false)
@@ -129,7 +126,6 @@ export function HourGrid({
           <TimelineDayColumn
             key={column.day.toISOString()}
             column={column}
-            categories={categories}
             nowTop={isToday(column.day) ? nowTop : null}
             movePreview={movePreview?.day === formatDateKey(column.day) ? movePreview : null}
             onMovePreviewChange={setMovePreview}
@@ -147,7 +143,6 @@ export function HourGrid({
 
 function TimelineDayColumn({
   column,
-  categories,
   nowTop,
   movePreview,
   onMovePreviewChange,
@@ -158,7 +153,6 @@ function TimelineDayColumn({
   onCreateDraft,
 }: {
   column: HourGridColumn
-  categories: Category[]
   nowTop: number | null
   // Already filtered to this column by HourGrid (movePreview.day matched
   // against this column's own day) — null here just means "no move-drag
@@ -240,7 +234,7 @@ function TimelineDayColumn({
         <TimedTaskBlock
           key={task.id}
           task={task}
-          categoryColor={resolveCategoryColor(task.category, categories)}
+          categoryColor={PLAN_COLOR}
           lane={laneById.get(`task:${task.id}`) ?? { id: "", laneIndex: 0, laneCount: 1 }}
           columnRef={columnEl}
           onEdit={rect => onEditTask(task.id, rect)}
@@ -399,11 +393,6 @@ function TimedTaskBlock({
       <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
         <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={14} />
       </div>
-      <PriorityDot
-        priority={task.priority}
-        size={9}
-        colorOverride={task.completed ? "var(--muted-foreground)" : undefined}
-      />
       <span className="tabular-nums shrink-0 text-muted-foreground">{task.time}</span>
       <span className={`truncate font-semibold ${task.completed ? "text-tertiary" : ""}`}>
         <span className={task.completed ? "line-through" : ""}>{task.title}</span>

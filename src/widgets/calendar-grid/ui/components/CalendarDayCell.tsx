@@ -6,7 +6,7 @@ import { resolveCategoryColor, type Category } from "@/entities/category"
 import { type Goal } from "@/entities/goal"
 import type { Task as DeadlineTask } from "@/entities/task"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
-import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import { PLAN_COLOR, type CalendarEntry as Task } from "@/entities/calendar-plan"
 import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { useDropTarget } from "@/shared/lib/dnd"
 
@@ -28,7 +28,6 @@ export function CalendarDayCell({
   isCurrent,
   onSelect,
   onMoveTaskToDay,
-  onMoveGoalToDay,
   onEditTask,
   onEditReminder,
 }: {
@@ -43,7 +42,6 @@ export function CalendarDayCell({
   isCurrent: boolean
   onSelect: () => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
-  onMoveGoalToDay: (goalId: string, day: Date) => void
   onEditTask: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
 }) {
@@ -52,28 +50,12 @@ export function CalendarDayCell({
   // `day` and `onMoveTaskToDay` don't change — useDropTarget's ref callback
   // depends on this identity staying stable, see useDropTarget's comment.
   const handleTaskDrop = useCallback((taskId: string) => onMoveTaskToDay(taskId, day), [onMoveTaskToDay, day])
-  const handleGoalDrop = useCallback((goalId: string) => onMoveGoalToDay(goalId, day), [onMoveGoalToDay, day])
-  // Two drop targets, one per draggable type, composed onto the same node
-  // (same pattern used for the habit-group header's drag+drop composition)
-  // — react-dnd's useDrop only ever accepts one `type` per call, so a cell
-  // that must accept both a dragged task AND a dragged goal needs two
-  // hook instances, not one hook with a type union.
-  const { ref: taskDropRef, isOver: isTaskOver } = useDropTarget<HTMLDivElement>({
+  // Only plans can be dropped on a day. A goal's deadline is read-only in
+  // the calendar (audit П7, 2026-11-09) — it's changed on the Goals page.
+  const { ref, isOver } = useDropTarget<HTMLDivElement>({
     type: "calendar-task-move",
     onDrop: handleTaskDrop,
   })
-  const { ref: goalDropRef, isOver: isGoalOver } = useDropTarget<HTMLDivElement>({
-    type: "calendar-goal-move",
-    onDrop: handleGoalDrop,
-  })
-  const ref = useCallback(
-    (node: HTMLDivElement | null) => {
-      taskDropRef(node)
-      goalDropRef(node)
-    },
-    [taskDropRef, goalDropRef],
-  )
-  const isOver = isTaskOver || isGoalOver
 
   const visibleReminders = dayReminders.slice(0, MAX_VISIBLE_REMINDERS)
   const overflowCount = dayReminders.length - visibleReminders.length
@@ -181,7 +163,7 @@ export function CalendarDayCell({
               style={{
                 backgroundColor: task.completed
                   ? "var(--fill)"
-                  : `color-mix(in srgb, ${resolveCategoryColor(task.category, categories)} 22%, var(--card))`,
+                  : `color-mix(in srgb, ${PLAN_COLOR} 22%, var(--card))`,
               }}
             >
               <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
@@ -206,8 +188,8 @@ export function CalendarDayCell({
           another reminder" (outlined chip) at a glance. No click handler
           of its own — unlike task/reminder rows, which open their own
           inline-edit popover, a goal chip just falls through to the
-          cell's onSelect and opens the day panel, where DayGoalRow
-          already has full edit/delete (no need to build a second one). */}
+          cell's onSelect and opens the day panel, whose DayGoalRow links
+          to the goal (goals are read-only in the calendar, audit П7). */}
       {/* A task's deadline (iteration 3) — the same marker shape as a goal
           deadline (left bar + icon, plain background) but a Flag in the
           task's category color, so it reads as "due", not as a scheduled

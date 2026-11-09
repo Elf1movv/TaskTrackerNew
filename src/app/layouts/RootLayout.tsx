@@ -14,7 +14,7 @@ import { CriticalReminderAlert } from "@/widgets/critical-reminder-alert"
 import { DueDateReminders } from "@/widgets/due-date-reminders"
 import { FeedbackBanner } from "@/widgets/feedback"
 import { MobileNav, SidebarNav } from "@/widgets/navigation"
-import { ReminderBell } from "@/widgets/reminder-bell"
+import { ReminderBell } from "@/widgets/reminder-summary"
 import { SettingsPanel } from "@/widgets/settings-panel"
 
 export function RootLayout() {

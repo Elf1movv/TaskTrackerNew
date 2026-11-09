@@ -12,7 +12,7 @@ export interface GoalListItem extends Goal {
 }
 
 // `initialGoalId` — deep link from the Today page's goal-progress card
-// ("tap a goal there, land here with it expanded and moved to the top").
+// ("tap a goal there, land here with it expanded and scrolled into view").
 // Read once on mount; the page that owns the URL is responsible for
 // clearing the query param, this just consumes the id it's handed.
 // `isAdding`/`onCloseAdding` — the "Add goal" toggle itself lives in
@@ -31,7 +31,7 @@ export function GoalList({
   isAdding: boolean
   onCloseAdding: () => void
 }) {
-  const { reorderGoals, isLoaded } = useGoals()
+  const { isLoaded } = useGoals()
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const { t } = useLanguage()
 
@@ -55,18 +55,17 @@ export function GoalList({
     if (goals.length > 0 && !openGoalId) setOpenGoalId(goals[0].id)
   }
 
-  // Moves the deep-linked goal to the top of the list, once, as soon as
-  // `goals` actually contains it — separate from `openGoalId` above
-  // because this needs real loaded data to act on (reorderGoals sends the
-  // whole new order to the server).
-  const hasReordered = useRef(false)
+  // Scrolls to the deep-linked goal once it has rendered. The order is left
+  // alone (audit П5, decision 6, 2026-11-09): this used to move the goal to
+  // the top and save that, so just looking at a goal from Today reshuffled
+  // the shared goal order.
+  const hasScrolled = useRef(false)
   useEffect(() => {
-    if (!initialGoalId || hasReordered.current) return
-    const goal = goals.find(g => g.id === initialGoalId)
-    if (!goal) return
-    hasReordered.current = true
-    if (goals[0]?.id !== initialGoalId) reorderGoals(initialGoalId, goals[0].id)
-  }, [initialGoalId, goals, reorderGoals])
+    if (!initialGoalId || hasScrolled.current) return
+    if (!goals.some(g => g.id === initialGoalId)) return
+    hasScrolled.current = true
+    document.querySelector(`[data-goal-id="${initialGoalId}"]`)?.scrollIntoView({ block: "center" })
+  }, [initialGoalId, goals])
 
   return (
     <div>

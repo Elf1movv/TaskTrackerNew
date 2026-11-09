@@ -4,7 +4,6 @@ import { format } from "date-fns"
 import { Plus, X } from "lucide-react"
 import { PlanForm } from "@/features/plan-form"
 import { ReminderForm } from "@/features/reminder-form"
-import { GoalForm } from "@/features/goal-form"
 import { type Goal } from "@/entities/goal"
 import type { Task as DeadlineTask } from "@/entities/task"
 import { type Habit } from "@/entities/habit"
@@ -38,8 +37,6 @@ export function DayDetailPanel({
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const [isAddingReminder, setIsAddingReminder] = useState(false)
   const [editingReminderId, setEditingReminderId] = useState<string | null>(null)
-  const [isAddingGoal, setIsAddingGoal] = useState(false)
-  const [editingGoalId, setEditingGoalId] = useState<string | null>(null)
   const { language, t } = useLanguage()
   const locale = getDateLocale(language)
   const dueDate = formatDateKey(day)
@@ -198,59 +195,23 @@ export function DayDetailPanel({
         )
       )}
 
-      <div className="flex items-center justify-between mb-2.5">
+      {/* Goals are read-only here (audit П7): no "+", no inline form — a row
+          opens the goal on the Goals page. Same height as the other section
+          headers that do have a "+" button. */}
+      <div className="flex items-center justify-between mb-2.5 h-6">
         <span className="tabular-nums text-meta font-semibold text-tertiary">{t("nav.goals")}</span>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="rounded-lg h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-fill"
-          onClick={() => {
-            setEditingGoalId(null)
-            setIsAddingGoal(v => !v)
-          }}
-          aria-label="Add goal"
-        >
-          <Plus size={14} />
-        </Button>
       </div>
-
-      <AnimatePresence>
-        {isAddingGoal && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.18 }}
-            className="overflow-hidden mb-3"
-          >
-            <GoalForm defaultTargetDate={dueDate} onDone={() => setIsAddingGoal(false)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {goals.length > 0 ? (
         <div className="space-y-3 mb-6">
-          {goals.map(goal =>
-            editingGoalId === goal.id ? (
-              <GoalForm key={goal.id} goal={goal} onDone={() => setEditingGoalId(null)} />
-            ) : (
-              <DayGoalRow
-                key={goal.id}
-                goal={goal}
-                onEdit={() => {
-                  setIsAddingGoal(false)
-                  setEditingGoalId(goal.id)
-                }}
-              />
-            ),
-          )}
+          {goals.map(goal => (
+            <DayGoalRow key={goal.id} goal={goal} />
+          ))}
         </div>
       ) : (
-        !isAddingGoal && (
-          <div className="text-sm text-muted-foreground text-center py-6 mb-2">
-            {t("calendar.noGoalsScheduled")}
-          </div>
-        )
+        <div className="text-sm text-muted-foreground text-center py-6 mb-2">
+          {t("calendar.noGoalsScheduled")}
+        </div>
       )}
 
       <div className="mb-2.5">

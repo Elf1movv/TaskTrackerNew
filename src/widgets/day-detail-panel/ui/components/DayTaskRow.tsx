@@ -1,6 +1,5 @@
 import { EditTaskButton } from "@/features/edit-task"
 import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
-import { PriorityDot } from "@/entities/task"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { useDragItem } from "@/shared/lib/dnd"
 
@@ -39,7 +38,6 @@ export function DayTaskRow({
       >
         {task.title}
       </span>
-      <PriorityDot priority={task.priority} />
       <EditTaskButton onClick={onEdit} />
     </div>
   )

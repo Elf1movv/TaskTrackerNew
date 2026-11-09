@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Plus } from "lucide-react"
 import { useSearchParams } from "react-router"
 import { GoalList } from "@/widgets/goal-list"
-import { useCategories } from "@/entities/category"
+import { CategoryChips } from "@/features/category/manage-categories"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { GoalsProvider, useGoalsContext } from "../connectors"
@@ -10,23 +10,19 @@ import { filterGoals, NO_CATEGORY_FILTER } from "../lib/filterGoals"
 
 function GoalsPageContent() {
   const { goals } = useGoalsContext()
-  const { categories } = useCategories()
   const { t } = useLanguage()
   const [isAdding, setIsAdding] = useState(false)
-  // Same category chips as the Tasks page, so "Work" shows both the work
-  // tasks (there) and the work goals (here). Reordering while filtered is
-  // safe: reorderGoals always reorders the full list (reorderById).
+  // The same category block as the Tasks page (CategoryChips), so "Work"
+  // shows both the work tasks (there) and the work goals (here), and
+  // categories can be managed from either page (audit Д4, decision 3).
+  // Reordering goals while filtered is safe: reorderGoals always reorders
+  // the full list (reorderById).
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const chips = [
-    { value: "all", label: t("tasks.categoryAll") },
-    ...categories.map(c => ({ value: c.name, label: c.name, color: c.color })),
-    { value: NO_CATEGORY_FILTER, label: t("goalForm.noCategory") },
-  ]
   const [searchParams, setSearchParams] = useSearchParams()
   const focusedGoalId = searchParams.get("goal") ?? undefined
 
   // One-shot deep link from the Today page's goal-progress card — GoalList
-  // reads it once to expand that goal and move it to the top; this just
+  // reads it once to expand that goal and scroll to it; this just
   // clears it from the URL right away so it doesn't linger or re-fire on a
   // later navigation.
   useEffect(() => {
@@ -57,28 +53,11 @@ function GoalsPageContent() {
         </Button>
       </div>
 
-      {goals.length > 0 && (
-        <div className="flex gap-2 mb-6 flex-wrap items-center">
-          {chips.map(chip => (
-            <button
-              key={chip.value}
-              type="button"
-              aria-pressed={categoryFilter === chip.value}
-              onClick={() => setCategoryFilter(chip.value)}
-              className={`flex items-center gap-2 h-8 px-3.5 rounded-full text-meta font-semibold transition ${
-                categoryFilter === chip.value
-                  ? "bg-primary text-primary-foreground border border-primary"
-                  : "border border-border bg-card text-foreground"
-              }`}
-            >
-              {"color" in chip && (
-                <span className="size-2 rounded-full shrink-0" style={{ background: chip.color }} />
-              )}
-              {chip.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <CategoryChips
+        value={categoryFilter}
+        onChange={setCategoryFilter}
+        extraChips={[{ value: NO_CATEGORY_FILTER, label: t("goalForm.noCategory") }]}
+      />
 
       <GoalList
         goals={filterGoals(goals, categoryFilter)}

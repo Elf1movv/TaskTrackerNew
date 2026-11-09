@@ -50,7 +50,7 @@ export function GoalReminderSwapCard({
 
   return (
     <div className="relative">
-      {/* The global bell (widgets/reminder-bell) is hidden on /today (see
+      {/* The global bell (widgets/reminder-summary, ReminderBell) is hidden on /today (see
           RootLayout.tsx) so this is now the only bell on this page — the
           badge/tooltip lives here instead of being duplicated on both.
           Badge/tooltip only show on the Bell state (offering to switch TO

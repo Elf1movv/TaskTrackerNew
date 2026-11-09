@@ -14,7 +14,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const { tasks: realTasks } = useTasks()
   const deadlines = useMemo(() => realTasks.filter(task => task.dueDate), [realTasks])
   const { reminders } = useReminders()
-  const { goals, updateGoal } = useGoals()
+  const { goals } = useGoals()
   const { habits } = useHabits()
 
   const [view, setView] = useState<CalendarView>("day")
@@ -106,15 +106,6 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     [plans, updatePlan],
   )
 
-  const moveGoalDeadline = useCallback(
-    (goalId: string, day: Date) => {
-      const goal = goals.find(g => g.id === goalId)
-      if (!goal) return
-      updateGoal(goalId, { targetDate: formatDateKey(day) })
-    },
-    [goals, updateGoal],
-  )
-
   // Day/Week's hour-timeline drag-to-reschedule — a plain PATCH, same
   // shape as moveTaskToDay, just also carrying the new time. Shifts
   // endTime by the same delta as time so the block's duration survives
@@ -184,7 +175,6 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       selectedGoals,
       selectedHabits,
       moveTaskToDay,
-      moveGoalDeadline,
       rescheduleTaskTime,
       resizeTask,
     }),
@@ -208,7 +198,6 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       selectedGoals,
       selectedHabits,
       moveTaskToDay,
-      moveGoalDeadline,
       rescheduleTaskTime,
       resizeTask,
     ],

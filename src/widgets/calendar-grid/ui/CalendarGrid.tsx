@@ -17,7 +17,6 @@ export function CalendarGrid({
   selectedDay,
   onSelectDay,
   onMoveTaskToDay,
-  onMoveGoalToDay,
   onEditTask,
   onEditReminder,
 }: {
@@ -31,7 +30,6 @@ export function CalendarGrid({
   selectedDay: Date | null
   onSelectDay: (day: Date, isCurrentMonth: boolean) => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
-  onMoveGoalToDay: (goalId: string, day: Date) => void
   onEditTask: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
 }) {
@@ -72,7 +70,6 @@ export function CalendarGrid({
               isCurrent={isToday(date)}
               onSelect={() => onSelectDay(date, isCurrentMonth)}
               onMoveTaskToDay={onMoveTaskToDay}
-              onMoveGoalToDay={onMoveGoalToDay}
               onEditTask={onEditTask}
               onEditReminder={onEditReminder}
             />

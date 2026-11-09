@@ -23,7 +23,7 @@ export function DayDeadlineRow({ task }: { task: Task }) {
       />
       <button
         type="button"
-        onClick={() => navigate("/tasks")}
+        onClick={() => navigate(`/tasks?task=${task.id}`)}
         title={t("calendar.openTasks")}
         className={`text-sm font-semibold flex-1 text-left leading-snug hover:underline ${
           task.completed ? "line-through text-tertiary" : ""

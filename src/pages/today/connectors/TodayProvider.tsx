@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react"
 import { useGoals } from "@/entities/goal"
 import { selectTodayHabits, useHabits } from "@/entities/habit"
-import { selectUpcomingReminders, useReminders } from "@/entities/reminder"
+import { selectVisibleReminders, useReminders } from "@/entities/reminder"
 import { TodayContext } from "./todayContext"
 
 export function TodayProvider({ children }: { children: ReactNode }) {
@@ -13,7 +13,7 @@ export function TodayProvider({ children }: { children: ReactNode }) {
     () => ({
       goals: goals.filter(goal => goal.progress < 100),
       habits: selectTodayHabits(habits),
-      reminders: selectUpcomingReminders(reminders),
+      reminders: selectVisibleReminders(reminders),
       remindersLoaded,
     }),
     [goals, habits, reminders, remindersLoaded],
