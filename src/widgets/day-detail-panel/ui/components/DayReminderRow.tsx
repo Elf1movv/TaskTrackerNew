@@ -2,16 +2,13 @@ import { Pencil } from "lucide-react"
 import { ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { DeleteReminderButton } from "@/features/delete-reminder"
 import { ReminderToggleCheckbox } from "@/features/toggle-reminder"
-import { numericFont } from "@/shared/lib/typography"
 
 export function DayReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdit: () => void }) {
   return (
     <div className="w-full flex items-center gap-2.5 text-left group">
       <ReminderToggleCheckbox reminderId={reminder.id} completed={reminder.completed} size={22} />
       {reminder.time && (
-        <span css={numericFont} className="text-xs font-bold text-muted-foreground shrink-0">
-          {reminder.time}
-        </span>
+        <span className="tabular-nums text-xs font-bold text-muted-foreground shrink-0">{reminder.time}</span>
       )}
       <span className="w-4 shrink-0 flex justify-center">
         <ReminderPriorityIcon priority={reminder.priority} size={13} />

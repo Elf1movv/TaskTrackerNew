@@ -1,4 +1,3 @@
-import { Global } from "@emotion/react"
 import type { ReactNode } from "react"
 import { ThemeProvider } from "next-themes"
 import { DndProvider } from "react-dnd"
@@ -7,7 +6,6 @@ import { HTML5toTouch } from "rdndmb-html5-to-touch"
 import { LanguageProvider } from "@/shared/lib/i18n"
 import { Toaster } from "@/shared/ui/sonner"
 import { TooltipProvider } from "@/shared/ui/tooltip"
-import { globalStyles } from "../styles/globalStyles"
 
 // HTML5toTouch: mouse keeps using HTML5Backend exactly as before, touch
 // input switches to TouchBackend — native HTML5 drag-and-drop (what the
@@ -40,7 +38,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <LanguageProvider>
         <DndProvider backend={MultiBackend} options={dndOptions}>
           <TooltipProvider>
-            <Global styles={globalStyles} />
             {/* Bottom-right, not top-right: the top-right corner holds the
                 fixed settings gear / reminder bell and each page's "Add"
                 button, and a toast there covered them. mobileOffset keeps

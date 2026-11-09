@@ -1,5 +1,3 @@
-import { numericFont } from "@/shared/lib/typography"
-
 const VIEWBOX = 52
 const RADIUS = 20
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
@@ -62,8 +60,7 @@ export function ProgressRing({
       </svg>
       {showLabel && (
         <span
-          css={numericFont}
-          className={`absolute inset-0 flex items-center justify-center ${labelClassName}`}
+          className={`tabular-nums absolute inset-0 flex items-center justify-center ${labelClassName}`}
           style={{ color: labelColor }}
         >
           {progress}%

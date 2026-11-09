@@ -18,7 +18,6 @@ import {
   type Language,
   type TranslationKey,
 } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { useIsMobile } from "@/shared/ui/use-mobile"
 import { CalendarYear } from "@/widgets/calendar-year"
@@ -207,8 +206,7 @@ function CalendarPageContent() {
             variant="ghost"
             size="sm"
             onClick={goToToday}
-            css={numericFont}
-            className="rounded-md h-9 px-4 text-xs font-semibold shadow-card bg-card text-foreground hover:bg-card"
+            className="tabular-nums rounded-md h-9 px-4 text-xs font-semibold shadow-card bg-card text-foreground hover:bg-card"
           >
             {isViewingCurrentPeriod(view, anchorDate) ? t("common.today") : t("calendar.backToToday")}
           </Button>

@@ -1,24 +1,11 @@
-import styled from "@emotion/styled"
-
-const Track = styled.div`
-  height: 6px;
-  background-color: var(--muted);
-  border-radius: 9999px;
-  overflow: hidden;
-`
-
-const Fill = styled.div<{ color: string; percent: number }>`
-  height: 100%;
-  border-radius: 9999px;
-  transition: width 0.7s ease;
-  background-color: ${p => p.color};
-  width: ${p => p.percent}%;
-`
-
 export function GoalProgressBar({ percent, color }: { percent: number; color: string }) {
   return (
-    <Track>
-      <Fill color={color} percent={percent} />
-    </Track>
+    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+      {/* width and color come from data, so they stay inline styles */}
+      <div
+        className="h-full rounded-full transition-[width] duration-700 ease-[ease]"
+        style={{ backgroundColor: color, width: `${percent}%` }}
+      />
+    </div>
   )
 }

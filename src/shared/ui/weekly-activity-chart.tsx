@@ -1,6 +1,5 @@
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts"
 import { chartAnimation } from "@/shared/ui/chart-animation"
-import { numericFont } from "@/shared/lib/typography"
 
 export interface WeeklyActivityPoint {
   label: string
@@ -35,7 +34,7 @@ export function WeeklyActivityChart({
   seriesName: string
 }) {
   return (
-    <div css={numericFont} className="h-16">
+    <div className="tabular-nums h-16">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 4, right: 10, bottom: 0, left: 10 }}>
           <XAxis

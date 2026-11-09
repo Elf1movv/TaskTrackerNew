@@ -11,7 +11,6 @@ import {
   useLanguage,
   type TranslationKey,
 } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
 import { BrandMark } from "@/shared/ui/brand-mark"
 import { WeeklyActivityChart, type WeeklyActivityPoint } from "@/shared/ui/weekly-activity-chart"
 import { NAV_ITEMS } from "../model/navItems"
@@ -102,9 +101,7 @@ export function SidebarNav() {
           {stats.map(({ labelKey, value }) => (
             <div key={labelKey} className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">{t(labelKey)}</span>
-              <span css={numericFont} className="text-sm font-semibold">
-                {value}
-              </span>
+              <span className="tabular-nums text-sm font-semibold">{value}</span>
             </div>
           ))}
         </div>

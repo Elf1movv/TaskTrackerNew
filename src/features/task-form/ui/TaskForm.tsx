@@ -1,5 +1,4 @@
 import { useState } from "react"
-import styled from "@emotion/styled"
 import { useCategories } from "@/entities/category"
 import { PRIORITY_COLORS, useTasks, type Priority, type Task } from "@/entities/task"
 import { getTodayKey } from "@/shared/lib/date"
@@ -21,15 +20,6 @@ const PRIORITY_LABEL_KEYS: Record<Priority, TranslationKey> = {
 function nextPriority(current: Priority): Priority {
   return PRIORITIES[(PRIORITIES.indexOf(current) + 1) % PRIORITIES.length]
 }
-
-// Always styled as "active" for its current value — same cycling-button
-// pattern as language-toggle.tsx/theme-toggle.tsx, just with a per-value
-// color instead of a fixed one.
-const PriorityToggle = styled.button<{ color: string }>`
-  border-color: ${p => p.color};
-  background-color: ${p => `${p.color}28`};
-  color: ${p => p.color};
-`
 
 // Handles both creating a new task and editing an existing one — pass
 // `task` to pre-fill the fields and save via update instead of create.
@@ -136,14 +126,20 @@ export function TaskForm({
       <div className="flex gap-4 flex-wrap items-center">
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("taskForm.priority")}</span>
-          <PriorityToggle
+          <button
             type="button"
-            color={PRIORITY_COLORS[priority]}
+            // Always styled as "active" for its current value — same cycling-button
+            // pattern as language-toggle.tsx/theme-toggle.tsx, with a per-priority
+            // color (from data, so it stays an inline style)
+            style={{
+              borderColor: PRIORITY_COLORS[priority],
+              color: PRIORITY_COLORS[priority],
+            }}
             onClick={() => setPriority(nextPriority(priority))}
             className="px-2.5 py-1 rounded-lg text-xs capitalize transition border"
           >
             {t(PRIORITY_LABEL_KEYS[priority])}
-          </PriorityToggle>
+          </button>
         </div>
 
         {showCategoryPicker ? (

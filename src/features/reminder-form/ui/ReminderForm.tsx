@@ -1,5 +1,4 @@
 import { useState } from "react"
-import styled from "@emotion/styled"
 import {
   REMINDER_PRIORITY_COLORS,
   useReminders,
@@ -23,14 +22,8 @@ function nextPriority(current: ReminderPriority): ReminderPriority {
   return PRIORITIES[(PRIORITIES.indexOf(current) + 1) % PRIORITIES.length]
 }
 
-// Same cycling-toggle pattern as TaskForm's PriorityToggle, just over the
+// Same cycling-toggle pattern as TaskForm's priority button, just over the
 // two-value ReminderPriority instead of Task's three.
-const PriorityToggle = styled.button<{ color: string }>`
-  border-color: ${p => p.color};
-  background-color: ${p => `${p.color}28`};
-  color: ${p => p.color};
-`
-
 // Handles both creating a new reminder and editing an existing one — pass
 // `reminder` to pre-fill and save via update instead of create.
 // `lockedDate` is for create mode only: when set (e.g. adding from a
@@ -89,14 +82,18 @@ export function ReminderForm({
       <div className="flex gap-4 flex-wrap items-center">
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("reminderForm.priority")}</span>
-          <PriorityToggle
+          <button
             type="button"
-            color={REMINDER_PRIORITY_COLORS[priority]}
+            // color comes from the priority, so it stays an inline style
+            style={{
+              borderColor: REMINDER_PRIORITY_COLORS[priority],
+              color: REMINDER_PRIORITY_COLORS[priority],
+            }}
             onClick={() => setPriority(nextPriority(priority))}
             className="px-2.5 py-1 rounded-lg text-xs transition border"
           >
             {t(PRIORITY_LABEL_KEYS[priority])}
-          </PriorityToggle>
+          </button>
         </div>
 
         {showDatePicker ? (

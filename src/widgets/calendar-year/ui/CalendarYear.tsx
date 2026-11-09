@@ -5,7 +5,6 @@ import { getHabitMonthCompletionStats, type Habit } from "@/entities/habit"
 import { getTaskMonthCompletionStats, type Task } from "@/entities/task"
 import { buildMonthGrid } from "@/shared/lib/calendarGrid"
 import { getDateLocale, getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { ProgressRing } from "@/shared/ui/progress-ring"
 
@@ -97,7 +96,7 @@ function YearMonthCard({
   return (
     <div className="bg-card border border-card-border rounded-xl shadow-card p-3">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <div css={numericFont} className="text-meta font-semibold capitalize">
+        <div className="tabular-nums text-meta font-semibold capitalize">
           {format(month, "LLLL", { locale })}
         </div>
         {total > 0 && (
@@ -114,9 +113,7 @@ function YearMonthCard({
             </PopoverTrigger>
             <PopoverContent className="w-auto px-3 py-2" side="top">
               <div className="text-xs font-medium capitalize mb-0.5">{monthLabel}</div>
-              <div css={numericFont} className="text-sm">
-                {t("calendar.yearMonthSummary", { done, total })}
-              </div>
+              <div className="tabular-nums text-sm">{t("calendar.yearMonthSummary", { done, total })}</div>
             </PopoverContent>
           </Popover>
         )}

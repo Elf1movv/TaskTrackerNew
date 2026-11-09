@@ -23,7 +23,6 @@ import {
   getWeekdayLabels,
   useLanguage,
 } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
 import { Button } from "@/shared/ui/button"
 import { useIsMobile } from "@/shared/ui/use-mobile"
@@ -312,7 +311,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                         className={`flex flex-col items-center gap-1 self-end pb-1 ${isToday ? "text-primary" : "text-muted-foreground"}`}
                       >
                         {period === "month" && (
-                          <div css={numericFont} className="text-caption font-bold opacity-70 leading-tight">
+                          <div className="tabular-nums text-caption font-bold opacity-70 leading-tight">
                             {weekdayLabels[(date.getDay() + 6) % 7]}
                           </div>
                         )}
@@ -322,8 +321,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                           </div>
                         )}
                         <div
-                          css={numericFont}
-                          className={`flex items-center justify-center leading-tight ${
+                          className={`tabular-nums flex items-center justify-center leading-tight ${
                             period === "week"
                               ? `size-7 rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
                               : `size-[22px] rounded-full text-caption font-bold ${isToday ? "bg-primary text-primary-foreground" : ""}`
@@ -475,8 +473,7 @@ function HabitGridRow({
         </span>
         <span className="text-sm font-semibold truncate flex-1">{habit.title}</span>
         <span
-          css={numericFont}
-          className="flex items-center gap-1 text-xs shrink-0"
+          className="tabular-nums flex items-center gap-1 text-xs shrink-0"
           style={{
             color:
               streak > 0

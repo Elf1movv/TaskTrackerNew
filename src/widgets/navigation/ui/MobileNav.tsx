@@ -1,6 +1,5 @@
 import { NavLink } from "react-router"
 import { useLanguage } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
 import { NAV_ITEMS } from "../model/navItems"
 
 export function MobileNav() {
@@ -19,9 +18,7 @@ export function MobileNav() {
           }
         >
           <Icon size={18} />
-          <span css={numericFont} className="text-caption">
-            {t(labelKey)}
-          </span>
+          <span className="tabular-nums text-caption">{t(labelKey)}</span>
         </NavLink>
       ))}
     </div>

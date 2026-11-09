@@ -11,7 +11,6 @@ import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildAgendaRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 
 type EditingItem = { kind: "task" | "reminder" | "goal"; id: string } | null
@@ -108,8 +107,7 @@ export function CalendarAgendaView({
           <div key={dayKey} className="bg-card border border-card-border rounded-xl shadow-card p-5">
             <div className="flex items-baseline gap-2 mb-4">
               <span
-                css={numericFont}
-                className={`text-meta font-semibold capitalize ${isToday(group.day) ? "text-primary" : "text-tertiary"}`}
+                className={`tabular-nums text-meta font-semibold capitalize ${isToday(group.day) ? "text-primary" : "text-tertiary"}`}
               >
                 {format(group.day, "EEEE", { locale })}
               </span>

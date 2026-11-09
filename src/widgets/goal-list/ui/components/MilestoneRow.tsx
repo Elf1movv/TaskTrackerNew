@@ -1,19 +1,8 @@
 import { useCallback, useState } from "react"
 import { Check, Trash2 } from "lucide-react"
-import styled from "@emotion/styled"
 import { useGoals, type Milestone } from "@/entities/goal"
 import { useDragReorder } from "@/shared/lib/dnd"
-import { numericFont } from "@/shared/lib/typography"
 import { Input } from "@/shared/ui/input"
-
-const Circle = styled.div<{ completed: boolean; color: string }>`
-  border-radius: 9999px;
-  border-width: 2px;
-  border-style: solid;
-  transition: all 0.15s;
-  border-color: ${p => (p.completed ? p.color : "var(--border)")};
-  background-color: ${p => (p.completed ? p.color : "transparent")};
-`
 
 // One step — either the goal's own (no `subgoalId`) or a subgoal's. The
 // goal's own steps share one drag type with its subgoals, so they reorder
@@ -70,13 +59,15 @@ export function MilestoneRow({
         aria-label={milestone.completed ? "Mark milestone as not done" : "Mark milestone as done"}
         aria-pressed={milestone.completed}
       >
-        <Circle
-          completed={milestone.completed}
-          color={color}
-          className="w-[22px] h-6 flex items-center justify-center"
+        <div
+          className={`w-[22px] h-6 flex items-center justify-center rounded-full border-2 transition-all duration-150 ease-[ease] ${
+            milestone.completed ? "" : "border-border bg-transparent"
+          }`}
+          // the goal's color comes from data, so it stays an inline style
+          style={milestone.completed ? { borderColor: color, backgroundColor: color } : undefined}
         >
           {milestone.completed && <Check size={12} strokeWidth={3} className="text-white" />}
-        </Circle>
+        </div>
       </button>
 
       {isEditing ? (
@@ -105,9 +96,7 @@ export function MilestoneRow({
         </button>
       )}
 
-      <span css={numericFont} className="text-xs font-semibold text-tertiary">
-        #{index + 1}
-      </span>
+      <span className="tabular-nums text-xs font-semibold text-tertiary">#{index + 1}</span>
 
       <button
         onClick={() => deleteMilestone(goalId, milestone.id, subgoalId)}
