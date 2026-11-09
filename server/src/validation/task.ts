@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { dateField, instantField, timeField } from "./dateTime.js"
+import { dateField, instantField } from "./dateTime.js"
 
 const taskFields = z.object({
   id: z.string().uuid(),
@@ -10,12 +10,6 @@ const taskFields = z.object({
   // Wire format stays "YYYY-MM-DD" even though the DB column is a real
   // `date` — the shared check converts it to the Date Prisma expects.
   dueDate: dateField.nullable(),
-  // "HH:mm", nullable — same convention as Reminder.time, see the
-  // comment on Task.time in schema.prisma.
-  time: timeField.nullable(),
-  // "HH:mm", nullable — end of the task's timed block, see the comment
-  // on Task.endTime in schema.prisma.
-  endTime: timeField.nullable(),
   description: z.string().nullable(),
   // Set by the client to the current instant when `completed` flips to true,
   // and to `null` when it flips back to false — see the comment on
