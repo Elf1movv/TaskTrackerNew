@@ -1,0 +1,567 @@
+<title>MyTracker среди конкурентов</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (max 1080px), summary → map → cards → matrix → plan. Palette = MyTracker's own theme tokens. */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --sunken: #edf0f3;
+  --fg: #131c20;
+  --muted: #525c65;
+  --faint: #79828b;
+  --line: #dde2e6;
+  --accent: #1c3049;
+  --accent-soft: color-mix(in srgb, #1c3049 9%, transparent);
+  --good: #2e7d5b;
+  --good-bg: #e6f1ec;
+  --warn: #b8741f;
+  --warn-bg: #fbf1e2;
+  --bad: #c0453d;
+  --bad-bg: #f7e7e6;
+  --font: "Manrope", -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Courier New", monospace;
+  --shadow: 0 1px 2px rgba(19,28,32,.04), 0 1px 3px rgba(19,28,32,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1117; --surface: #141c24; --sunken: #1e2831; --fg: #eef2f5; --muted: #a3adb6; --faint: #7d8892; --line: #26313b;
+    --accent: #8ea9c8; --accent-soft: color-mix(in srgb, #8ea9c8 14%, transparent);
+    --good: #6cc49c; --good-bg: #16302a; --warn: #e0a65a; --warn-bg: #33281a; --bad: #e4776e; --bad-bg: #3a2020;
+    --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1117; --surface: #141c24; --sunken: #1e2831; --fg: #eef2f5; --muted: #a3adb6; --faint: #7d8892; --line: #26313b;
+  --accent: #8ea9c8; --accent-soft: color-mix(in srgb, #8ea9c8 14%, transparent);
+  --good: #6cc49c; --good-bg: #16302a; --warn: #e0a65a; --warn-bg: #33281a; --bad: #e4776e; --bad-bg: #3a2020;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 800; line-height: 1.1; }
+h2 { font-size: 24px; font-weight: 800; }
+h3 { font-size: 17px; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
+.lead { font-size: 17px; color: var(--muted); max-width: 68ch; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.sec-head { display: flex; flex-direction: column; gap: 6px; }
+.sec-head p { color: var(--muted); max-width: 70ch; }
+
+/* header */
+header.top { display: flex; flex-direction: column; gap: 14px; }
+.meta { font-family: var(--mono); font-size: 12px; color: var(--faint); }
+
+/* key takeaways */
+.takeaways { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.tk { background: var(--surface); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; }
+.tk b { font-size: 15px; }
+.tk p { color: var(--muted); font-size: 14px; }
+.tk .tag { align-self: flex-start; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+
+/* us: strengths/weaknesses */
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.panel { background: var(--surface); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.panel ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.panel li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 14px; }
+.panel li span:first-child { font-weight: 800; }
+.plus { color: var(--good); } .minus { color: var(--bad); }
+.panel li small { display: block; color: var(--faint); font-size: 12.5px; }
+
+/* map */
+.map-box { background: var(--surface); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); overflow-x: auto; }
+.map-box svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.map-note { font-size: 13px; color: var(--faint); }
+
+/* filters */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+/* cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.card { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.card.us { outline: 2px solid var(--accent); }
+.card .shot { padding: 16px 16px 0; background: var(--sunken); }
+.card .body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.card .title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.card .grp { font-size: 11px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; }
+.card .pos { color: var(--muted); font-size: 14px; }
+.kv { display: grid; grid-template-columns: 92px 1fr; gap: 6px 10px; font-size: 13.5px; }
+.kv dt { color: var(--faint); font-weight: 600; }
+.kv dd { margin: 0; min-width: 0; }
+.swatches { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.sw { width: 16px; height: 16px; border-radius: 5px; border: 1px solid var(--line); }
+.vs { display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 13.5px; }
+.vs div { border-radius: 10px; padding: 10px 12px; }
+.vs .p { background: var(--good-bg); }
+.vs .m { background: var(--bad-bg); }
+.vs .l { background: var(--accent-soft); }
+.vs b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+.vs .p b { color: var(--good); } .vs .m b { color: var(--bad); } .vs .l b { color: var(--accent); }
+.card .link { font-size: 13px; font-weight: 600; margin-top: auto; }
+
+/* schematic mockups */
+.mock { --m-bg:#fff; --m-sf:#f5f5f5; --m-ac:#555; --m-tx:#222; --m-mu:#c9ccd0; height: 168px; border-radius: 12px 12px 0 0; background: var(--m-bg); border: 1px solid rgba(0,0,0,.08); border-bottom: 0; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+.mock .bar { height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; background: var(--m-sf); flex-shrink: 0; }
+.mock .bar i { width: 7px; height: 7px; border-radius: 50%; background: var(--m-mu); }
+.mock .bar em { margin-left: 6px; height: 6px; width: 60px; border-radius: 3px; background: var(--m-tx); opacity: .7; }
+.mock .in { flex: 1; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.mock .row { display: flex; align-items: center; gap: 8px; }
+.mock .cb { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--m-ac); flex-shrink: 0; }
+.mock .cb.done { background: var(--m-ac); }
+.mock .ln { height: 6px; border-radius: 3px; background: var(--m-mu); }
+.mock .ln.dk { background: var(--m-tx); opacity: .55; }
+.mock .side { display: flex; flex: 1; min-height: 0; }
+.mock .nav { width: 34%; background: var(--m-sf); padding: 10px 8px; display: flex; flex-direction: column; gap: 7px; }
+.mock .nav .ln.on { background: var(--m-ac); }
+.mock .tl { flex: 1; display: grid; grid-template-columns: 22px 1fr; gap: 0 6px; padding: 8px 10px; position: relative; }
+.mock .tl .hr { font-family: var(--mono); font-size: 8px; color: var(--m-tx); opacity: .45; height: 22px; }
+.mock .blk { position: absolute; left: 38px; right: 10px; border-radius: 6px; padding: 4px 6px; }
+.mock .blk .ln { background: rgba(0,0,0,.35); width: 50%; }
+.mock .dots { display: flex; gap: 4px; }
+.mock .dots span { width: 12px; height: 12px; border-radius: 3px; background: var(--m-mu); }
+.mock .dots span.on { background: var(--m-ac); }
+.mock .pet { width: 58px; height: 58px; border-radius: 50%; background: var(--m-ac); margin: 6px auto 0; position: relative; }
+.mock .pet::before, .mock .pet::after { content: ""; position: absolute; top: 22px; width: 7px; height: 7px; border-radius: 50%; background: var(--m-tx); }
+.mock .pet::before { left: 17px; } .mock .pet::after { right: 17px; }
+.mock .xp { height: 8px; border-radius: 4px; background: var(--m-mu); overflow: hidden; }
+.mock .xp b { display: block; height: 100%; width: 64%; background: var(--m-ac); }
+.mock .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; }
+.mock .col { background: var(--m-sf); border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 5px; }
+.mock .tile { background: var(--m-bg); border-radius: 4px; height: 20px; border-left: 3px solid var(--m-ac); }
+.mock .px { image-rendering: pixelated; border-radius: 0; }
+.mock-cap { font-size: 11px; color: var(--faint); padding: 6px 2px 8px; }
+
+/* matrix */
+.tbl-wrap { overflow-x: auto; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13.5px; }
+th, td { padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); font-weight: 600; }
+thead th { font-size: 12px; color: var(--muted); font-weight: 700; vertical-align: bottom; }
+thead th.us, td.us { background: var(--accent-soft); }
+.y, .h, .n { display: inline-block; width: 22px; height: 22px; line-height: 22px; border-radius: 6px; font-weight: 800; font-size: 12px; }
+.y { background: var(--good-bg); color: var(--good); }
+.h { background: var(--warn-bg); color: var(--warn); }
+.n { background: var(--sunken); color: var(--faint); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* opportunities */
+.opps { display: flex; flex-direction: column; gap: 10px; }
+.opp { background: var(--surface); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; align-items: start; }
+.opp p { color: var(--muted); font-size: 14px; grid-column: 1 / -1; }
+.opp .src { font-size: 12.5px; color: var(--faint); grid-column: 1 / -1; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.pill { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; font-family: var(--mono); }
+.e-s { background: var(--good-bg); color: var(--good); }
+.e-m { background: var(--warn-bg); color: var(--warn); }
+.e-l { background: var(--bad-bg); color: var(--bad); }
+.i-h { background: var(--accent-soft); color: var(--accent); }
+
+/* verdict */
+.verdict { background: var(--accent); color: var(--bg); border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.verdict h2 { color: inherit; }
+.verdict ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+.verdict li b { display: block; }
+.verdict p, .verdict li { opacity: .92; }
+.sources { font-size: 12.5px; color: var(--faint); columns: 2 280px; column-gap: 24px; }
+.sources a { color: var(--muted); word-break: break-word; }
+.sources div { break-inside: avoid; margin-bottom: 4px; }
+@media (max-width: 480px) { .opp { grid-template-columns: 1fr; } .pills { justify-content: flex-start; } .verdict { padding: 20px; } }
+@media (prefers-reduced-motion: no-preference) { .chip { transition: background .15s, color .15s; } }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <span class="eyebrow">Продуктовый ресёрч · MyTracker</span>
+  <h1>MyTracker среди конкурентов</h1>
+  <p class="lead">Сравнение с 15 планировщиками, трекерами задач и привычек: от Todoist и TickTick до Tiimo, Finch, инди-проектов одного автора и российских сервисов. Что у нас лучше, чего не хватает и с чего начать.</p>
+  <span class="meta">Данные из открытых обзоров на 9 ноября 2026 · цены и детали меняются · интерфейсы показаны схемами, не скриншотами</span>
+</header>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">Коротко</span><h2>Четыре главных вывода</h2></div>
+  <div class="takeaways">
+    <div class="tk"><span class="tag" style="background:var(--good-bg);color:var(--good)">наша сила</span><b>По широте мы уже на уровне TickTick</b><p>Заметки, задачи, цели с подцелями и этапами, привычки с графиками, календарь на 5 видов. У Todoist, Things и Sunsama нет привычек, у Todoist и Things — целей.</p></div>
+    <div class="tk"><span class="tag" style="background:var(--bad-bg);color:var(--bad)">главная дыра</span><b>Нас нельзя «носить с собой»</b><p>Нет приложения на телефон и нет push-уведомлений: напоминание сработает, только если сайт открыт. У всех конкурентов из обзора это есть.</p></div>
+    <div class="tk"><span class="tag" style="background:var(--warn-bg);color:var(--warn)">нет повода вернуться</span><b>Нет эмоций и ритуала</b><p>Победители последних лет выигрывают чувством: Tiimo (приложение года на iPhone в 2025) — «вспышками радости», Finch — питомцем, Sunsama — ритуалом дня. У нас пока чистый инструмент.</p></div>
+    <div class="tk"><span class="tag" style="background:var(--accent-soft);color:var(--accent)">шанс</span><b>Инди-продукты побеждают историей</b><p>Автор Ellie Planner в одиночку вырастил продукт, показывая разработку в соцсетях. Ваш блог — тот же путь. Фичи копируются за неделю, история автора — нет.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">Где мы сейчас</span><h2>MyTracker глазами пользователя</h2><p>По коду и интерфейсу проекта на ветке <code>feat/product-logic-redesign</code>.</p></div>
+  <div class="two">
+    <div class="panel">
+      <h3>Что у нас хорошо</h3>
+      <ul>
+        <li><span class="plus">+</span><span>Пять разделов в одном месте<small>Сегодня, Задачи, Цели, Привычки, Календарь и заметки. Обычно для этого нужны 2–3 приложения.</small></span></li>
+        <li><span class="plus">+</span><span>Цели с подцелями и этапами<small>Редкость: у Todoist, Things, Structured, Tiimo целей нет совсем.</small></span></li>
+        <li><span class="plus">+</span><span>Сильные привычки<small>Блоки привычек, своё расписание, графики за неделю, месяц и год в трёх стилях.</small></span></li>
+        <li><span class="plus">+</span><span>Календарь: повестка, день, неделя, месяц, год<small>Пять видов. Больше, чем у многих платных планировщиков.</small></span></li>
+        <li><span class="plus">+</span><span>Русский и английский, тёмная тема, выбор акцента<small>Работает в браузере без установки и регистрации в магазине приложений.</small></span></li>
+        <li><span class="plus">+</span><span>Бесплатно и без лимитов, живой автор, кнопка обратной связи<small>Пользователь может написать напрямую тому, кто делает продукт.</small></span></li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>Чего не хватает</h3>
+      <ul>
+        <li><span class="minus">−</span><span>Нет приложения на телефон и PWA<small>Сайт адаптирован под мобильный браузер, но его нельзя «установить» на экран.</small></span></li>
+        <li><span class="minus">−</span><span>Напоминания без push, почты или Telegram<small>Срабатывают только внутри открытой вкладки.</small></span></li>
+        <li><span class="minus">−</span><span>Разделы не связаны между собой<small>Цель не знает о привычках и задачах, которые к ней ведут. Это осознанное решение от 10.10.2026, но именно здесь конкурентное окно.</small></span></li>
+        <li><span class="minus">−</span><span>Онбординг — одно окно со списком разделов<small>Человек не совершает первое действие и не видит результат.</small></span></li>
+        <li><span class="minus">−</span><span>Нет моментов радости и обзора дня или недели<small>Ничто не зовёт вернуться завтра.</small></span></li>
+        <li><span class="minus">−</span><span>Нет продуктовой аналитики и ИИ<small>Мы не видим, где уходят новички. ИИ в 2026 году есть у Todoist, TickTick, Notion, Tiimo.</small></span></li>
+        <li><span class="minus">−</span><span>Дизайн аккуратный, но нейтральный<small>Тёмно-синий и серый выглядят солидно, но не запоминаются рядом с Tiimo, Amie или Finch.</small></span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">Карта рынка</span><h2>Где мы стоим среди других</h2><p>По горизонтали: держит ли приложение список дел или раскладывает день по времени. По вертикали: строгий инструмент или эмоции и игра. Позиции — экспертная оценка по обзорам.</p></div>
+  <div class="map-box">
+    <svg id="map" viewBox="0 0 720 440" role="img" aria-label="Карта позиционирования планировщиков"></svg>
+  </div>
+  <p class="map-note">Пунктиром отмечена слабо занятая зона: приложения для целей и привычек, которые дают тепло и награду, но не превращаются в игру. Туда можно двигаться от нашей текущей точки.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">Конкуренты</span><h2>Интерфейсы, цвета, киллер-фичи</h2><p>Схема показывает тип экрана и гамму, это не скриншот. Настоящие интерфейсы — по ссылке на сайт. Цвета приблизительные.</p></div>
+  <div class="chips" id="chips" role="group" aria-label="Фильтр по группе"></div>
+  <div class="cards" id="cards"></div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">Функции</span><h2>Сравнение по возможностям</h2></div>
+  <div class="legend"><span><i class="y">✓</i>есть</span><span><i class="h">~</i>частично или только в платной версии</span><span><i class="n">—</i>нет</span></div>
+  <div class="tbl-wrap"><table id="matrix"></table></div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">Что взять себе</span><h2>Возможности по итогам ресёрча</h2><p>Отсортировано по соотношению пользы и усилий. Оценка усилий примерная, для нашего стека и темпа.</p></div>
+  <div class="opps" id="opps"></div>
+</section>
+
+<section class="verdict">
+  <span class="eyebrow" style="color:inherit;opacity:.7">Рекомендация</span>
+  <h2>Начинать с онбординга, но в формате, который подсказал ресёрч</h2>
+  <p>Ресёрч не опровергает вашу идею, а усиливает её. Самая частая жалоба на Habitica — запутанный старт. Tiimo и Finch удерживают людей чувством с первых минут. Весь будущий трафик из блога сначала попадёт на онбординг, поэтому он окупается раньше остального.</p>
+  <ol>
+    <li><b>Сначала минимальная аналитика (1–2 дня).</b>Регистрация, прошёл или пропустил онбординг, вернулся через день и через неделю. Без этого не узнать, помог ли онбординг.</li>
+    <li><b>Онбординг-действие с анимациями.</b>Человек за 2 минуты создаёт первую привычку, задачу и цель и видит заполненный экран «Сегодня». Пропуск с подсказкой «вернуться можно из меню рядом с настройками», повторный запуск из настроек. Шаги храним списком, чтобы легко менять их, когда продукт изменится.</li>
+    <li><b>Моменты радости.</b>Анимация выполнения и конфетти на значимых событиях: закрытая цель, неделя привычки без пропусков. Небольшая работа, сразу заметна в видео для блога.</li>
+    <li><b>Потом PWA и push-напоминания.</b>Это главная функциональная дыра, но работа крупнее и затрагивает сервер.</li>
+    <li><b>Дальше обсудить отличие.</b>Связь «цель → привычки и задачи» и короткий обзор недели. Это пересматривает решение от 10.10.2026, поэтому сначала стоит послушать первых пользователей.</li>
+  </ol>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">Источники</span><h3>Откуда данные</h3></div>
+  <div class="sources" id="sources"></div>
+</section>
+
+</div>
+
+<script>
+const APPS = [
+  { id:"mt", name:"MyTracker", group:"Мы", url:"https://mytracker.space", layout:"ours",
+    pal:["#f4f6f8","#ffffff","#1c3049","#131c20","#d4dae0"], palText:"Светло-серый, тёмно-синий акцент (меняется), шрифт Manrope",
+    pos:"Личный трекер: заметки, задачи, цели, привычки и планы дня в одном месте.",
+    killer:"Цели с подцелями и этапами + привычки с графиками в одном приложении",
+    price:"Бесплатно", platforms:"Веб (адаптивный)",
+    plus:"Широта: пять разделов, русский язык, без лимитов.",
+    minus:"Нет телефона, push, онбординга-действия и эмоций.",
+    lesson:"Отличие нужно сформулировать одной фразой для блога." },
+  { id:"todoist", name:"Todoist", group:"Популярные", url:"https://todoist.com", layout:"list",
+    pal:["#ffffff","#fcfaf8","#dc4c3e","#202020","#e6e1dc"], palText:"Белый, тёплый серый, фирменный красный",
+    pos:"Стандарт списка дел: быстро записать и не забыть. Масштабируется до команд.",
+    killer:"Быстрый ввод текстом и голосом: Ramble (январь 2026) превращает речь в задачи с датами, 38 языков",
+    price:"Бесплатно / Pro ≈ $5 в месяц", platforms:"Все платформы",
+    plus:"У нас есть привычки, цели с этапами и заметки. У Todoist их нет.",
+    minus:"Скорость записи, голосовой ввод, приложения, интеграции.",
+    lesson:"Быстрое добавление строкой: «завтра в 9 позвонить маме» → задача с датой." },
+  { id:"ticktick", name:"TickTick", group:"Популярные", url:"https://ticktick.com", layout:"list2",
+    pal:["#ffffff","#f5f7fb","#4772fa","#1f2329","#dfe4ee"], palText:"Белый, холодный серый, ярко-синий",
+    pos:"Всё в одном за небольшие деньги: задачи, календарь, привычки, помодоро, матрица Эйзенхауэра.",
+    killer:"Набор инструментов: трекер привычек и помодоро-таймер прямо в списке дел",
+    price:"Бесплатно / Premium ≈ $36–50 в год", platforms:"Все платформы",
+    plus:"Цели с подцелями и этапами у нас глубже. Наш интерфейс проще.",
+    minus:"Телефон, уведомления, помодоро, ИИ-ввод (2026). Наш самый прямой конкурент.",
+    lesson:"Не копировать «всё подряд», а найти, чем быть глубже в целях и привычках." },
+  { id:"things", name:"Things 3", group:"Популярные", url:"https://culturedcode.com/things/", layout:"side",
+    pal:["#ffffff","#f4f5f7","#2e7cf6","#1d1d1f","#e3e5e9"], palText:"Почти белый, много воздуха, синие акценты",
+    pos:"Эталон дизайна среди списков дел. Спокойный, без лишних функций.",
+    killer:"Ощущение качества: анимации, типографика, порядок «Сегодня / Вечер / Когда-нибудь»",
+    price:"Разовая покупка $9.99–49.99", platforms:"Только Apple",
+    plus:"Работаем в любом браузере. Есть привычки, календарь, цели.",
+    minus:"Полировка интерфейса и микро-анимаций.",
+    lesson:"Качество деталей продаёт лучше количества функций." },
+  { id:"notion", name:"Notion", group:"Популярные", url:"https://notion.com", layout:"doc",
+    pal:["#ffffff","#f7f6f3","#191919","#191919","#e9e7e2"], palText:"Монохром: белый, бежево-серый, чёрный",
+    pos:"Конструктор: из страниц и баз собирают любую систему, в том числе трекер.",
+    killer:"Гибкость и шаблоны + ИИ во всех платных тарифах",
+    price:"Бесплатно / Business ≈ $20 в месяц за полный ИИ", platforms:"Все платформы",
+    plus:"У нас всё работает сразу, без сборки системы.",
+    minus:"Гибкость, шаблоны, сообщество.",
+    lesson:"Готовые шаблоны целей («Выучить язык», «Пробежать 10 км») снижают порог входа." },
+  { id:"sunsama", name:"Sunsama", group:"Планировщики дня", url:"https://sunsama.com", layout:"timeline",
+    pal:["#fbfbfd","#ffffff","#6b6fd6","#22232a","#e6e7ef"], palText:"Светлая и приглушённая, мягкий фиолетово-синий (примерно)",
+    pos:"Осознанное планирование для занятых людей. Узкая премиальная аудитория.",
+    killer:"Ритуалы: утреннее планирование, вечернее «закрытие дня», обзор недели",
+    price:"≈ $16–25 в месяц, бесплатного тарифа нет", platforms:"Веб, десктоп, телефон",
+    plus:"Бесплатно, есть привычки и цели.",
+    minus:"Ритуал дня и недели, предупреждение о перегрузке.",
+    lesson:"Ритуал работает, но в 2026 году жалуются, что он разрастается до 20 минут. Наш обзор — 2 минуты." },
+  { id:"motion", name:"Motion", group:"Планировщики дня", url:"https://usemotion.com", layout:"timeline",
+    pal:["#ffffff","#f3f5fb","#3b5bdb","#151a2d","#dfe3f0"], palText:"Белый, индиго (примерно)",
+    pos:"ИИ сам расставляет задачи в свободные окна календаря и перестраивает день.",
+    killer:"Автопланирование расписания",
+    price:"≈ $29–49 в месяц, без бесплатного тарифа", platforms:"Веб, десктоп, телефон",
+    plus:"Цена и простота. Пользователи жалуются на рост цен и поддержку Motion.",
+    minus:"ИИ-планирование.",
+    lesson:"ИИ продаётся, но дорогой ИИ без ценности для человека вызывает отток." },
+  { id:"structured", name:"Structured", group:"Планировщики дня", url:"https://structured.app", layout:"blocks",
+    pal:["#ffffff","#f6f6f8","#ff6b6b","#1c1c1e","#e5e5ea"], palText:"Белый, яркие цветные блоки задач",
+    pos:"День как одна вертикальная лента: у задачи есть время и длительность.",
+    killer:"Визуальный таймлайн дня. Финалист Apple Design Awards 2026 (инклюзивность)",
+    price:"Бесплатное ядро / Pro по подписке или навсегда", platforms:"iOS, Android, Mac, веб",
+    plus:"Цели с этапами, графики привычек, заметки.",
+    minus:"Наглядность дня, приложения.",
+    lesson:"Цвет как способ различать дела. Наш вид «День» в календаре можно сделать главным экраном." },
+  { id:"tiimo", name:"Tiimo", group:"Дизайн и эмоции", url:"https://tiimoapp.com", layout:"blocks2",
+    pal:["#fbf7f2","#ffffff","#9b8cf2","#2a2633","#ece6dc"], palText:"Тёплый светлый фон, пастель: лаванда, персик, мята",
+    pos:"Визуальный планировщик, созданный для людей с СДВГ и аутизмом, но нравится всем.",
+    killer:"Спокойный визуальный день + «вспышки радости» за выполнение. iPhone App of the Year 2025",
+    price:"Подписка, ограниченный бесплатный доступ", platforms:"iOS, Android, веб",
+    plus:"Цели, привычки с графиками, бесплатно.",
+    minus:"Эмоциональный дизайн, ИИ-помощник, таймер фокуса.",
+    lesson:"Нишевая аудитория и забота о ней дали главную награду года." },
+  { id:"amie", name:"Amie", group:"Дизайн и эмоции", url:"https://amie.so", layout:"blocks3",
+    pal:["#ffffff","#faf7fb","#f08bb4","#1e1b22","#ece7ef"], palText:"Белый, пастельные розовый и голубой",
+    pos:"«Радостный» календарь, где задачи живут прямо в расписании.",
+    killer:"Календарь как список дел + дизайн, который хочется открывать",
+    price:"Бесплатный план / платные функции", platforms:"Mac, iOS, веб",
+    plus:"Привычки, цели. Есть Android-браузер.",
+    minus:"Характер и игривость интерфейса.",
+    lesson:"Визуальная индивидуальность сама становится маркетингом." },
+  { id:"habitica", name:"Habitica", group:"Геймификация", url:"https://habitica.com", layout:"game",
+    pal:["#edecee","#4f2a93","#ffa623","#ffffff","#c3c0c7"], palText:"Тёмно-фиолетовый, золото, пиксель-арт",
+    pos:"Ролевая игра: привычки и задачи качают персонажа, команда сражается с боссами.",
+    killer:"RPG-механики и группы: пропуск бьёт по всей команде",
+    price:"Бесплатное ядро, платная косметика", platforms:"Веб, iOS, Android",
+    plus:"Понятнее старт, нет «игрушечности», есть цели и календарь.",
+    minus:"Социальная мотивация и сильный крючок.",
+    lesson:"Самая частая жалоба — запутанный онбординг. Подтверждает ценность нашего онбординга." },
+  { id:"finch", name:"Finch", group:"Геймификация", url:"https://finchcare.com", layout:"pet",
+    pal:["#fdf6e9","#ffffff","#7cc58f","#3a3226","#efe5d2"], palText:"Тёплый кремовый, мягкий зелёный, рисованный питомец",
+    pos:"Забота о себе через питомца: выполняешь маленькие цели — птичка растёт.",
+    killer:"Эмоциональная привязанность к питомцу. Удержание D1/D7 ≈ 54% / 37% (выше Duolingo, по данным Sensor Tower)",
+    price:"Бесплатно / подписка", platforms:"iOS, Android",
+    plus:"Серьёзные цели, задачи, календарь.",
+    minus:"Привязанность и ежедневный повод вернуться.",
+    lesson:"Маскот работает, если он живой и реагирует на действия, а не просто логотип." },
+  { id:"ellie", name:"Ellie Planner", group:"Инди", url:"https://ellieplanner.com", layout:"timeline2",
+    pal:["#ffffff","#f7f7f7","#111111","#111111","#e8e8e8"], palText:"Минимализм, чёрно-белый, пастельные метки",
+    pos:"Планировщик одного разработчика: свалка задач + перетаскивание в расписание дня.",
+    killer:"Не функция, а автор: Крис Рароке показывал разработку в Twitter и YouTube",
+    price:"Бесплатно / ≈ $9.99 в месяц", platforms:"Веб, Windows, Mac, iOS",
+    plus:"Привычки, цели, русский язык.",
+    minus:"Аудитория, собранная заранее; простой понятный сценарий.",
+    lesson:"Прямой пример вашей стратегии: блог и видео о разработке приводят первых пользователей." },
+  { id:"habi", name:"Habi", group:"Инди", url:"https://www.producthunt.com/products/habi-vibe-coded-habit-tracker", layout:"list",
+    pal:null, palText:"Не изучали подробно",
+    pos:"Вайбкоженный трекер (Product Hunt, 2026): события календаря превращаются в привычки с чек-листами.",
+    killer:"Одна узкая идея: «календарь → привычки»",
+    price:"—", platforms:"Мобильное приложение",
+    plus:"Мы шире и глубже.",
+    minus:"Чёткая одна идея, которую легко объяснить.",
+    lesson:"Вайбкоженные трекеры конкурируют не функциями, а одной понятной идеей и историей." },
+  { id:"singularity", name:"SingularityApp", group:"Российские", url:"https://apps.apple.com/ru/app/singularityapp/id1481535767", layout:"side",
+    pal:null, palText:"См. страницу в App Store",
+    pos:"Российский ИИ-планировщик с 30+ инструментами: задачи, проекты, привычки, помодоро, напоминания.",
+    killer:"Много инструментов + все платформы, включая ОС Аврора",
+    price:"Бесплатно / Pro (синхронизация устройств)", platforms:"Все, включая Аврору",
+    plus:"Проще и спокойнее, цели с этапами.",
+    minus:"Приложения, уведомления, ИИ. Рейтинг ≈ 4.7 в App Store.",
+    lesson:"Русскоязычный рынок занят «комбайнами». Простота может быть отличием." },
+  { id:"weeek", name:"WEEEK", group:"Российские", url:"https://weeek.net", layout:"board",
+    pal:null, palText:"См. сайт",
+    pos:"Планер для личных и командных проектов: канбан, Гант, база знаний.",
+    killer:"Командная работа по низкой цене",
+    price:"Бесплатно / от ≈ 199 ₽ за пользователя в месяц", platforms:"Веб, приложения",
+    plus:"Мы про личную жизнь: привычки и цели.",
+    minus:"Командные функции (нам они не нужны).",
+    lesson:"Не уходить в команды. Личный трекер — отдельная ниша." },
+];
+
+const GROUPS = ["Все", "Мы", "Популярные", "Планировщики дня", "Дизайн и эмоции", "Геймификация", "Инди", "Российские"];
+
+function rows(n, done) {
+  let h = "";
+  for (let i = 0; i < n; i++) h += `<div class="row"><span class="cb ${i < done ? "done" : ""}"></span><span class="ln ${i === 0 ? "dk" : ""}" style="width:${[70,52,62,44,58][i % 5]}%"></span></div>`;
+  return h;
+}
+function blocks(colors, slots) {
+  const hours = ["9","10","11","12","13","14"].map(h => `<span class="hr">${h}</span><span></span>`).join("");
+  const b = slots.map((s, i) => `<div class="blk" style="top:${8 + s[0] * 22}px;height:${s[1] * 22 - 4}px;background:${colors[i % colors.length]}"><span class="ln" style="display:block"></span></div>`).join("");
+  return `<div class="tl">${hours}${b}</div>`;
+}
+function mock(app) {
+  const p = app.pal || ["#ffffff", "#f1f2f4", "#8a929a", "#30363c", "#dadde1"];
+  const style = `--m-bg:${p[0]};--m-sf:${p[1]};--m-ac:${p[2]};--m-tx:${p[3]};--m-mu:${p[4]}`;
+  const bar = `<div class="bar"><i></i><i></i><i></i><em></em></div>`;
+  let inner = "";
+  switch (app.layout) {
+    case "ours": inner = `<div class="side"><div class="nav"><span class="ln on" style="width:80%"></span><span class="ln" style="width:65%"></span><span class="ln" style="width:70%"></span><span class="ln" style="width:60%"></span><span class="ln" style="width:72%"></span></div><div class="in">${rows(3, 1)}<div class="dots"><span class="on"></span><span class="on"></span><span></span><span class="on"></span><span class="on"></span><span></span><span></span></div></div></div>`; break;
+    case "list": inner = `<div class="in">${rows(5, 1)}</div>`; break;
+    case "list2": inner = `<div class="side"><div class="nav"><span class="ln on" style="width:75%"></span><span class="ln" style="width:60%"></span><span class="ln" style="width:68%"></span></div><div class="in">${rows(4, 2)}<div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span class="on"></span></div></div></div>`; break;
+    case "side": inner = `<div class="side"><div class="nav"><span class="ln on" style="width:70%"></span><span class="ln" style="width:55%"></span><span class="ln" style="width:62%"></span><span class="ln" style="width:48%"></span></div><div class="in">${rows(4, 0)}</div></div>`; break;
+    case "doc": inner = `<div class="in"><span class="ln dk" style="width:46%;height:10px"></span><span class="ln" style="width:90%"></span><span class="ln" style="width:80%"></span><div class="cols"><div class="col"></div><div class="col"></div><div class="col"></div></div></div>`; break;
+    case "timeline": inner = blocks([p[2] + "55", p[2] + "33", p[2] + "77"], [[0, 1.5], [2, 1], [3.5, 2]]); break;
+    case "timeline2": inner = `<div class="side"><div class="nav">${'<span class="ln" style="width:80%"></span>'.repeat(4)}</div>${blocks(["#cfe8ff", "#ffe1c7", "#d9f2d0"], [[0, 1], [1.5, 1.5], [3.5, 1.2]])}</div>`; break;
+    case "blocks": inner = blocks(["#ff8a80", "#ffd166", "#7bdff2", "#b8e986"], [[0, 1], [1.2, 1.4], [2.8, 1], [4, 1.5]]); break;
+    case "blocks2": inner = blocks(["#c9c0fb", "#ffd3b5", "#bfeadb"], [[0, 1.6], [2, 1.2], [3.5, 1.8]]); break;
+    case "blocks3": inner = blocks(["#f9c6dc", "#c6e3f9", "#f9e7c6"], [[0, 1.2], [1.6, 2], [4, 1.2]]); break;
+    case "game": inner = `<div class="in"><div class="row"><span class="px" style="width:34px;height:34px;background:var(--m-sf)"></span><div style="flex:1;display:flex;flex-direction:column;gap:5px"><div class="xp"><b></b></div><div class="xp"><b style="width:40%;background:#e45b5b"></b></div></div></div>${rows(3, 1)}</div>`; break;
+    case "pet": inner = `<div class="in"><div class="pet"></div><div class="xp"><b></b></div>${rows(2, 1)}</div>`; break;
+    case "board": inner = `<div class="in"><div class="cols"><div class="col"><span class="tile"></span><span class="tile"></span></div><div class="col"><span class="tile"></span></div><div class="col"><span class="tile"></span><span class="tile"></span><span class="tile"></span></div></div></div>`; break;
+  }
+  return `<div class="mock" style="${style}" aria-hidden="true">${app.layout === "game" ? `<div class="bar" style="background:${p[1]}"><i></i><i></i><i></i><em style="background:#fff"></em></div>` : bar}${inner}</div>`;
+}
+function card(app) {
+  const sw = app.pal ? `<span class="swatches">${app.pal.slice(0, 4).map(c => `<span class="sw" style="background:${c}" title="${c}"></span>`).join("")}</span>` : "";
+  return `<article class="card ${app.id === "mt" ? "us" : ""}" data-group="${app.group}">
+    <div class="shot">${mock(app)}</div>
+    <div class="body">
+      <div class="title"><h3>${app.name}</h3><span class="grp">${app.group}</span></div>
+      <p class="pos">${app.pos}</p>
+      <dl class="kv">
+        <dt>Гамма</dt><dd><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${sw}<span>${app.palText}</span></div></dd>
+        <dt>Киллер-фича</dt><dd>${app.killer}</dd>
+        <dt>Цена</dt><dd>${app.price}</dd>
+        <dt>Где</dt><dd>${app.platforms}</dd>
+      </dl>
+      <div class="vs">
+        ${app.id === "mt" ? `<div class="p"><b>Сильные стороны</b>${app.plus}</div><div class="m"><b>Слабые стороны</b>${app.minus}</div>` : `<div class="p"><b>Мы лучше</b>${app.plus}</div><div class="m"><b>Они лучше</b>${app.minus}</div>`}
+        <div class="l"><b>Урок для нас</b>${app.lesson}</div>
+      </div>
+      <a class="link" href="${app.url}" target="_blank" rel="noopener">${app.id === "mt" ? "Открыть сайт →" : "Посмотреть настоящий интерфейс →"}</a>
+    </div>
+  </article>`;
+}
+
+const cardsEl = document.getElementById("cards");
+cardsEl.innerHTML = APPS.map(card).join("");
+const chipsEl = document.getElementById("chips");
+let current = "Все";
+try { current = localStorage.getItem("mt-research-group") || "Все"; } catch (e) {}
+if (!GROUPS.includes(current)) current = "Все";
+function applyFilter() {
+  chipsEl.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.g === current)));
+  cardsEl.querySelectorAll(".card").forEach(c => { c.hidden = !(current === "Все" || c.dataset.group === current || c.dataset.group === "Мы"); });
+}
+chipsEl.innerHTML = GROUPS.map(g => `<button type="button" class="chip" data-g="${g}" aria-pressed="false">${g}</button>`).join("");
+chipsEl.addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  current = b.dataset.g;
+  try { localStorage.setItem("mt-research-group", current); } catch (e) {}
+  applyFilter();
+});
+applyFilter();
+
+/* Matrix: y = есть, h = частично/платно, n = нет */
+const COLS = ["MyTracker", "Todoist", "TickTick", "Things 3", "Sunsama", "Structured", "Tiimo", "Habitica", "Finch"];
+const FEATS = [
+  ["Задачи",                      "yyyyyyyyh"],
+  ["Привычки",                    "yhynnhhyy"],
+  ["Цели с этапами",              "ynhhhnnnh"],
+  ["Календарь",                   "yhyhyyynn"],
+  ["Заметки",                     "yhyhhhnny"],
+  ["Таймлайн дня",                "hnhnyyynn"],
+  ["Приложение на телефон",       "hyyyyyyyy"],
+  ["Push-напоминания",            "nyyyhyyyy"],
+  ["ИИ-функции",                  "nyynhhynn"],
+  ["Награды и геймификация",      "nhhnnnhyy"],
+  ["Ритуал или обзор дня/недели", "nnhnynhny"],
+  ["Бесплатное ядро",             "yyyninhyy"],
+];
+const sym = { y: ["y", "✓"], h: ["h", "~"], n: ["n", "—"] };
+let t = `<thead><tr><th>Функция</th>${COLS.map((c, i) => `<th class="${i === 0 ? "us" : ""}">${c}</th>`).join("")}</tr></thead><tbody>`;
+for (const [f, v] of FEATS) t += `<tr><td>${f}</td>${[...v].map((ch, i) => `<td class="${i === 0 ? "us" : ""}"><span class="${sym[ch][0]}" aria-label="${ch === "y" ? "есть" : ch === "h" ? "частично" : "нет"}">${sym[ch][1]}</span></td>`).join("")}</tr>`;
+document.getElementById("matrix").innerHTML = t + "</tbody>";
+
+/* Opportunities */
+const OPPS = [
+  { t:"Онбординг-действие «первые 2 минуты»", e:"S–M", ei:"e-s", i:"высокая", d:"Вместо окна со списком — 3–4 шага: создать привычку, задачу, цель, увидеть заполненный «Сегодня». Анимации, пропуск, подсказка про меню, повторный запуск из настроек.", s:"Habitica (жалобы на старт), Tiimo, Finch" },
+  { t:"Продуктовая аналитика", e:"S", ei:"e-s", i:"высокая", d:"Минимум событий: регистрация, онбординг пройден или пропущен, возврат через день и неделю, активные разделы. Нужна, чтобы проверять все остальные идеи.", s:"Удержание D1/D7 — главная метрика у Finch и Duolingo" },
+  { t:"Моменты радости", e:"S", ei:"e-s", i:"средняя", d:"Приятная анимация галочки, конфетти на закрытую цель и неделю привычки без пропусков, мягкие серии с «заморозкой». Учитывать настройку «уменьшить движение».", s:"Tiimo («pops of joy»), Things 3" },
+  { t:"PWA и push-напоминания", e:"M", ei:"e-m", i:"высокая", d:"Установка сайта на экран телефона и уведомления, даже когда вкладка закрыта. Закрывает главную функциональную дыру без отдельного приложения.", s:"Есть у всех конкурентов в таблице" },
+  { t:"Быстрое добавление строкой", e:"M", ei:"e-m", i:"средняя", d:"«Завтра в 9 позвонить маме» → задача с датой и временем. Можно сделать без ИИ, на разборе русских и английских фраз.", s:"Todoist (Quick Add, Ramble)" },
+  { t:"Обзор недели за 2 минуты", e:"M", ei:"e-m", i:"средняя", d:"Раз в неделю: что выполнено, какие привычки держатся, что перенести. Коротко, иначе ритуал становится обузой.", s:"Sunsama (и жалобы на 20-минутный ритуал)" },
+  { t:"Telegram-бот", e:"M–L", ei:"e-m", i:"средняя", d:"Добавлять задачи сообщением, получать утренний план и вечерний итог. Сильный аргумент для русскоязычной аудитории и кандидат в Pro.", s:"Мессенджер-напоминания у Any.do (WhatsApp)" },
+  { t:"Связь «цель → привычки и задачи»", e:"L", ei:"e-l", i:"высокая", d:"Видно, какие действия ведут к цели, и прогресс цели растёт от них. Может стать отличием, но пересматривает решение от 10.10.2026.", s:"Пустая зона на карте рынка" },
+  { t:"ИИ: разбить цель на этапы", e:"M", ei:"e-m", i:"средняя", d:"Человек пишет цель, ИИ предлагает подцели, этапы и привычки, человек подтверждает. Платная функция, с лимитами и согласием на передачу данных.", s:"Todoist Assist, Tiimo AI, Motion" },
+  { t:"Характер бренда или маскот", e:"L", ei:"e-l", i:"средняя", d:"Цвет, иллюстрации или живой персонаж, который реагирует на действия. Позже, когда будут первые пользователи.", s:"Finch, Amie, Tiimo" },
+];
+document.getElementById("opps").innerHTML = OPPS.map(o => `<div class="opp"><h3>${o.t}</h3><div class="pills"><span class="pill ${o.ei}">усилия ${o.e}</span><span class="pill i-h">польза: ${o.i}</span></div><p>${o.d}</p><span class="src">Откуда: ${o.s}</span></div>`).join("");
+
+/* Positioning map */
+const POS = [
+  ["Todoist", 22, 20], ["TickTick", 36, 30], ["Things 3", 16, 38], ["Notion", 10, 10], ["Sunsama", 74, 40], ["Motion", 90, 12],
+  ["Structured", 82, 52], ["Tiimo", 74, 76], ["Amie", 64, 62], ["Habitica", 26, 92], ["Finch", 42, 95], ["Ellie", 68, 28],
+  ["SingularityApp", 34, 18], ["WEEEK", 22, 6], ["MyTracker", 46, 32],
+];
+(function drawMap() {
+  const svg = document.getElementById("map");
+  const L = 70, R = 690, T = 24, B = 396;
+  const x = v => L + (R - L) * v / 100, y = v => B - (B - T) * v / 100;
+  let s = `<rect x="${L}" y="${T}" width="${R - L}" height="${B - T}" fill="var(--sunken)" rx="10"/>`;
+  s += `<line x1="${x(50)}" y1="${T}" x2="${x(50)}" y2="${B}" stroke="var(--line)" stroke-width="1.5"/><line x1="${L}" y1="${y(50)}" x2="${R}" y2="${y(50)}" stroke="var(--line)" stroke-width="1.5"/>`;
+  s += `<ellipse cx="${x(52)}" cy="${y(66)}" rx="78" ry="46" fill="var(--accent-soft)" stroke="var(--accent)" stroke-dasharray="5 5" stroke-width="1.5"/>`;
+  s += `<text x="${x(52)}" y="${y(66) + 4}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--accent)" font-family="Manrope, sans-serif">свободная зона</text>`;
+  s += `<path d="M${x(46) + 8} ${y(32) - 8} L${x(50)} ${y(56)}" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>`;
+  s += `<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs>`;
+  for (const [n, px, py] of POS) {
+    const us = n === "MyTracker";
+    const cx = x(px), cy = y(py);
+    s += `<circle cx="${cx}" cy="${cy}" r="${us ? 8 : 5}" fill="${us ? "var(--accent)" : "var(--muted)"}" ${us ? 'stroke="var(--surface)" stroke-width="3"' : ""}/>`;
+    const anchor = px > 85 ? "end" : "start", dx = px > 85 ? -9 : 9;
+    s += `<text x="${cx + dx}" y="${cy + 4}" text-anchor="${anchor}" font-size="${us ? 13 : 11.5}" font-weight="${us ? 800 : 600}" fill="${us ? "var(--accent)" : "var(--fg)"}" font-family="Manrope, sans-serif">${n}</text>`;
+  }
+  const lab = (t, X, Y, a = "middle", rot = 0) => `<text x="${X}" y="${Y}" text-anchor="${a}" font-size="11.5" fill="var(--faint)" font-weight="600" font-family="Manrope, sans-serif" ${rot ? `transform="rotate(${rot} ${X} ${Y})"` : ""}>${t}</text>`;
+  s += lab("Список дел", L, B + 22, "start") + lab("План дня по времени", R, B + 22, "end");
+  s += lab("Строгий инструмент", 30, B, "start", -90) + lab("Эмоции и игра", 30, T, "end", -90);
+  svg.innerHTML = s;
+})();
+
+/* Sources */
+const SRC = [
+  ["TechCrunch: Todoist Ramble, январь 2026", "https://techcrunch.com/2026/01/21/todoists-app-now-lets-you-add-tasks-to-your-to-do-list-by-speaking-to-its-ai/"],
+  ["Dupple: лучшие таск-менеджеры 2026", "https://dupple.com/learn/best-task-management-apps"],
+  ["2sync: TickTick vs Todoist", "https://2sync.com/blog/ticktick-vs-todoist"],
+  ["Lifestack: цены TickTick", "https://lifestack.ai/blog/ticktick-pricing"],
+  ["Asian Efficiency: обзор Sunsama (2026)", "https://www.asianefficiency.com/schedule-management/sunsama-review/"],
+  ["Morgen: обзор Motion (2026)", "https://www.morgen.so/blog-posts/motion-review"],
+  ["Структура и цены Structured (App Store)", "https://apps.apple.com/app/structured-daily-planner/id1499198946"],
+  ["Tiimo: App Store Awards 2025", "https://www.tiimoapp.com/resource-hub/tiimo-finalist-2025-app-store-awards"],
+  ["ClickUp: обзор Amie (2026)", "https://clickup.com/blog/amie-calendar-review/"],
+  ["TechRadar: обзор Habitica", "https://www.techradar.com/reviews/habitica"],
+  ["Deconstructor of Fun: удержание в Finch", "https://www.deconstructoroffun.com/blog/x0hd2ssr80y5n7gv0w967pg7hwd7tl"],
+  ["Ellie Planner: заметка автора о ценах", "https://ellieplanner.com/2023-price-change"],
+  ["Starter Story: как строился Ellie", "https://www.starterstory.com/ellie-planner-breakdown"],
+  ["Product Hunt: Habi", "https://www.producthunt.com/products/habi-vibe-coded-habit-tracker"],
+  ["SingularityApp в App Store", "https://apps.apple.com/ru/app/singularityapp/id1481535767"],
+  ["Workspace: топ российских таск-менеджеров 2026", "https://workspace.ru/blog/top-10-rossiyskih-task-menedzherov-v-2026-godu/"],
+  ["Яндекс Практикум: как выбрать планировщик (2026)", "https://practicum.yandex.ru/blog/top-planirovschikov-zadach-kak-vybrat/"],
+];
+document.getElementById("sources").innerHTML = SRC.map(([t, u]) => `<div><a href="${u}" target="_blank" rel="noopener">${t}</a></div>`).join("");
+</script>
