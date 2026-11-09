@@ -1956,7 +1956,8 @@ CC BY 4.0). Сам skill не устанавливаем: скрипты и ге
   `/home/deploy/backups/prerelease/tasktracker_prerelease_2026-11-08_17-26-07.dump`
   + образ `ghcr.io/elf1movv/tasktracker:rollback-eaf417d` на сервере.
   Порядок: остановить app → `pg_restore --clean` дампа → в
-  `docker-compose.yml` образ `rollback-eaf417d` → `up -d app`.
+  `docker-compose.yml` образ `rollback-eaf417d` → `up -d app`. (Устарело: образ
+  удалён 2026-11-09 после пачки 4 аудита; актуальная точка отката — в её записи.)
 - [x] Владелец проверяет https://mytracker.space своим аккаунтом — проверено при выпусках 2026-11-08 (в т. ч. письмо «Забыли пароль?» с прода).
 - [ ] Следующий выпуск: удалить `Task.time/endTime`,
   `CalendarPlan.priority/category` (см. выше), когда новая версия поработает
@@ -2152,7 +2153,7 @@ deepmerge-ts.
 - [x] Диск 2026-11-09: удалены 12 старых образов стенда и 3 неиспользуемых
   (`node:24-bookworm-slim`, `curlimages/curl`, `hello-world`) — 85 % → 50 %
   (свободно 9,3 ГБ). Оставлены `latest` (прод), два последних образа стенда,
-  `postgres:16`, `rollback-eaf417d` (удалить вместе с `Task.time/endTime`).
+  `postgres:16`, `rollback-eaf417d` (удалён 2026-11-09 вместе с `Task.time/endTime`).
   Прод и раньше сам чистил свои старые образы (`docker image prune -f` в
   `deploy.yml`); копились только образы стенда.
 - [x] `scripts/staging-deploy.sh`: после успешной выкладки (health 200)
