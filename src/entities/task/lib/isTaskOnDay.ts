@@ -6,9 +6,7 @@ import type { Task } from "../model/task"
 // an undated task completed today would then show up on the calendar as
 // if it were "due today," which read as confusing/broken (a struck-through
 // task with no visible reason for being there) — direct feedback,
-// 2026-09-24. Today's own page (selectTodayTasks) keeps its own separate
-// completedAt-fallback logic for undated tasks — that's a different,
-// intentional "still relevant to look at today" concept, not this one.
+// 2026-09-24.
 export function isTaskOnDay(task: Task, dayKey: string): boolean {
   return task.dueDate === dayKey
 }

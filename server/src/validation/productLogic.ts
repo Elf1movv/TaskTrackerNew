@@ -1,17 +1,5 @@
 import { z } from "zod"
-export const dateField = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine(s => {
-    const date = new Date(s)
-    return !isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === s
-  }, "Invalid date")
-  .transform(s => new Date(s))
-export const timeField = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/)
-export const instantField = z
-  .string()
-  .datetime()
-  .transform(s => new Date(s))
+import { dateField, instantField, timeField } from "./dateTime.js"
 export const noteFields = z.object({
   id: z.string().uuid(),
   completed: z.boolean().optional(),

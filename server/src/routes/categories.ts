@@ -4,7 +4,7 @@ import { db } from "../db.js"
 import { requireAuth } from "../middleware/requireAuth.js"
 import { createCategorySchema, reorderSchema, updateCategorySchema } from "../validation/category.js"
 
-import { ownerTransaction, removeTask } from "../lib/productLogic.js"
+import { ownerTransaction } from "../lib/productLogic.js"
 
 export const categoriesRouter = Router()
 
@@ -198,11 +198,7 @@ categoriesRouter.delete("/:id", async (req, res) => {
   // failure can't leave the category gone but its tasks still around (or
   // vice versa).
   await ownerTransaction(req.userId, async tx => {
-    const tasks = await tx.task.findMany({
-      where: { userId: req.userId, category: category.name },
-      orderBy: { id: "asc" },
-    })
-    for (const task of tasks) await removeTask(tx, task)
+    await tx.task.deleteMany({ where: { userId: req.userId, category: category.name } })
     // Goals are long-lived records with their own milestones — unlike the
     // category's tasks they are kept and only lose the category label.
     await tx.goal.updateMany({

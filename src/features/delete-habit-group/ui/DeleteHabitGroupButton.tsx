@@ -27,8 +27,8 @@ export function DeleteHabitGroupButton({ group }: { group: HabitGroup }) {
     await deleteHabitGroup(group.id)
     // The backend reassigns this group's habits to General in the same
     // transaction — this collection's local state doesn't know that
-    // happened on its own (same pattern as category delete cascading
-    // to tasks, see TaskBoard.tsx's refreshTasks call).
+    // happened on its own. (Category delete doesn't need this: its
+    // cascade is covered by shared/lib/storage/invalidate.ts.)
     await refreshHabits()
   }
 

@@ -1,5 +1,4 @@
 import { useState } from "react"
-import styled from "@emotion/styled"
 import { useCategories } from "@/entities/category"
 import { PRIORITY_COLORS, useTasks, type Priority, type Task } from "@/entities/task"
 import { getTodayKey } from "@/shared/lib/date"
@@ -22,15 +21,6 @@ function nextPriority(current: Priority): Priority {
   return PRIORITIES[(PRIORITIES.indexOf(current) + 1) % PRIORITIES.length]
 }
 
-// Always styled as "active" for its current value — same cycling-button
-// pattern as language-toggle.tsx/theme-toggle.tsx, just with a per-value
-// color instead of a fixed one.
-const PriorityToggle = styled.button<{ color: string }>`
-  border-color: ${p => p.color};
-  background-color: ${p => `${p.color}28`};
-  color: ${p => p.color};
-`
-
 // Handles both creating a new task and editing an existing one — pass
 // `task` to pre-fill the fields and save via update instead of create.
 // `lockedCategory` is for create mode only: when set, the new task is
@@ -49,19 +39,15 @@ export function TaskForm({
   task,
   draft,
   lockedCategory,
-  defaultDueDate,
   embedded,
   onCreate,
-  onDelete,
   onDone,
 }: {
   task?: Task
   draft?: { title: string; description: string | null }
   lockedCategory?: string
-  defaultDueDate?: string
   embedded?: boolean
   onCreate?: (fields: TaskDraftFields) => Promise<boolean>
-  onDelete?: () => void
   onDone: () => void
 }) {
   const { addTask, updateTask } = useTasks()
@@ -72,20 +58,9 @@ export function TaskForm({
   const [saving, setSaving] = useState(false)
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
-  const [hasDueDate, setHasDueDate] = useState(task ? !!task.dueDate : !!defaultDueDate)
-  const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? getTodayKey())
+  const [hasDueDate, setHasDueDate] = useState(!!task?.dueDate)
+  const [dueDate, setDueDate] = useState(task?.dueDate ?? getTodayKey())
   const showCategoryPicker = !!task || !lockedCategory
-
-  // Preserve the draft when a caller changes the suggested deadline.
-  // An existing task always keeps its own deadline.
-  const [previousDefaultDueDate, setPreviousDefaultDueDate] = useState(defaultDueDate)
-  if (previousDefaultDueDate !== defaultDueDate) {
-    setPreviousDefaultDueDate(defaultDueDate)
-    if (!task && defaultDueDate) {
-      setHasDueDate(true)
-      setDueDate(defaultDueDate)
-    }
-  }
 
   async function handleSubmit() {
     if (!title.trim() || saving) return
@@ -136,14 +111,20 @@ export function TaskForm({
       <div className="flex gap-4 flex-wrap items-center">
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("taskForm.priority")}</span>
-          <PriorityToggle
+          <button
             type="button"
-            color={PRIORITY_COLORS[priority]}
+            // Always styled as "active" for its current value — same cycling-button
+            // pattern as language-toggle.tsx/theme-toggle.tsx, with a per-priority
+            // color (from data, so it stays an inline style)
+            style={{
+              borderColor: PRIORITY_COLORS[priority],
+              color: PRIORITY_COLORS[priority],
+            }}
             onClick={() => setPriority(nextPriority(priority))}
             className="px-2.5 py-1 rounded-lg text-xs capitalize transition border"
           >
             {t(PRIORITY_LABEL_KEYS[priority])}
-          </PriorityToggle>
+          </button>
         </div>
 
         {showCategoryPicker ? (
@@ -186,11 +167,6 @@ export function TaskForm({
       </div>
 
       <div className="flex gap-2 justify-between pt-1">
-        {onDelete && (
-          <Button variant="ghost" size="sm" onClick={onDelete} className="text-xs text-destructive">
-            {t("common.delete")}
-          </Button>
-        )}
         <div className="flex gap-2 justify-end ml-auto">
           <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
             {t("common.cancel")}

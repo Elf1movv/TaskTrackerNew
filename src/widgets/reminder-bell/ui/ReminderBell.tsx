@@ -11,7 +11,6 @@ import {
 import { ReminderToggleCheckbox } from "@/features/toggle-reminder"
 import { getTodayKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip"
 
@@ -56,7 +55,7 @@ export function ReminderBell() {
       </Tooltip>
 
       <PopoverContent align="end" className="w-72">
-        <div css={numericFont} className="text-meta font-semibold text-muted-foreground mb-3">
+        <div className="tabular-nums text-meta font-semibold text-muted-foreground mb-3">
           {t("reminderSummary.title")}
         </div>
         {upcoming.length > 0 ? (
@@ -89,7 +88,7 @@ export function ReminderBell() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs leading-snug">{reminder.title}</div>
-                    <div css={numericFont} className="text-caption text-muted-foreground mt-0.5">
+                    <div className="tabular-nums text-caption text-muted-foreground mt-0.5">
                       {reminder.time ? `${dateLabel}, ${reminder.time}` : dateLabel}
                     </div>
                   </div>

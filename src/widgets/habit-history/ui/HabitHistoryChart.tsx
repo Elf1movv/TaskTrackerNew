@@ -12,7 +12,6 @@ import {
   YAxis,
 } from "recharts"
 import { chartAnimation } from "@/shared/ui/chart-animation"
-import { numericFont } from "@/shared/lib/typography"
 import type { ChartPoint } from "../lib/habitHistorySummary"
 
 // Three styles the user asked to try side by side, switched via
@@ -88,7 +87,7 @@ export function HabitHistoryChart({
 }) {
   if (style === "bar") {
     return (
-      <div css={numericFont} className="h-36 -ml-2">
+      <div className="tabular-nums h-36 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
             {chartAxes()}
@@ -107,7 +106,7 @@ export function HabitHistoryChart({
 
   if (style === "step") {
     return (
-      <div css={numericFont} className="h-36 -ml-2">
+      <div className="tabular-nums h-36 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
             {chartAxes()}
@@ -128,7 +127,7 @@ export function HabitHistoryChart({
   }
 
   return (
-    <div css={numericFont} className="h-36 -ml-2">
+    <div className="tabular-nums h-36 -ml-2">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
           {chartAxes()}

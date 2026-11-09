@@ -6,7 +6,6 @@ import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildWeekRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
 import { HourGrid } from "@/widgets/calendar-timeline"
 import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-item-popover"
 
@@ -77,8 +76,7 @@ export function CalendarWeekView({
           {days.map(day => (
             <div key={day.toISOString()} className="text-center min-w-0">
               <div
-                css={numericFont}
-                className={`text-caption uppercase tracking-wider font-bold ${
+                className={`tabular-nums text-caption uppercase tracking-wider font-bold ${
                   isToday(day) ? "text-primary" : "text-tertiary"
                 }`}
               >

@@ -1,7 +1,6 @@
 import { format } from "date-fns"
 import { getHabitMonthCompletionStats, type Habit } from "@/entities/habit"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 import { ProgressRing } from "@/shared/ui/progress-ring"
 
@@ -41,9 +40,7 @@ export function MonthCell({ habit, month, today }: { habit: Habit; month: Date; 
       </PopoverTrigger>
       <PopoverContent className="w-auto px-3 py-2" side="top">
         <div className="text-xs font-medium capitalize mb-0.5">{monthLabel}</div>
-        <div css={numericFont} className="text-sm">
-          {t("habits.monthCellSummary", { done, scheduled })}
-        </div>
+        <div className="tabular-nums text-sm">{t("habits.monthCellSummary", { done, scheduled })}</div>
       </PopoverContent>
     </Popover>
   )

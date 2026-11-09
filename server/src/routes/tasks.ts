@@ -8,7 +8,7 @@ export const tasksRouter = Router()
 tasksRouter.use(requireAuth)
 
 import type { Task } from "@prisma/client"
-import { fail, ownerTransaction, removeTask } from "../lib/productLogic.js"
+import { fail, ownerTransaction } from "../lib/productLogic.js"
 export function toClientTask(task: Task) {
   return {
     id: task.id,
@@ -120,7 +120,7 @@ tasksRouter.delete("/:id", async (req, res) => {
       where: { id: req.params.id, userId: req.userId },
     })
     if (!task) fail(404, "Task not found")
-    await removeTask(tx, task)
+    await tx.task.delete({ where: { id: task.id } })
   })
   res.status(204).end()
 })

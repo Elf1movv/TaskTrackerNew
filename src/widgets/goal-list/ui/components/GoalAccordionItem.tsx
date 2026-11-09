@@ -1,6 +1,6 @@
+import type { CSSProperties } from "react"
 import { CalendarDays, Tag } from "lucide-react"
 import { resolveCategoryColor, useCategories } from "@/entities/category"
-import styled from "@emotion/styled"
 import { AddMilestoneForm } from "./AddMilestoneForm"
 import { DeleteGoalButton } from "@/features/delete-goal"
 import { EditGoalButton } from "@/features/edit-goal"
@@ -11,19 +11,6 @@ import { useDragReorder } from "@/shared/lib/dnd"
 import { useLanguage } from "@/shared/lib/i18n"
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
 import type { GoalListItem } from "../GoalList"
-
-const StyledAccordionItem = styled(AccordionItem)<{ color: string }>`
-  border-radius: 0.75rem;
-  overflow: hidden;
-  background-color: var(--card);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--shadow-card);
-
-  &[data-state="open"] {
-    border-color: color-mix(in srgb, ${p => p.color} 45%, transparent);
-    box-shadow: var(--shadow-raised);
-  }
-`
 
 export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit: () => void }) {
   const { reorderGoals } = useGoals()
@@ -50,7 +37,14 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
       className="cursor-grab active:cursor-grabbing select-none"
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
-      <StyledAccordionItem value={goal.id} color={goal.color} className="!border-b-0">
+      {/* The open card's border takes the goal's own color (data), passed in
+          as the --goal-color variable. !border-b-0: no bottom border — this is
+          how the card has always rendered (Emotion era included, 2026-11-09). */}
+      <AccordionItem
+        value={goal.id}
+        className="rounded-[0.75rem] overflow-hidden bg-card border border-card-border shadow-card !border-b-0 data-[state=open]:border-[color:color-mix(in_srgb,var(--goal-color)_45%,transparent)] data-[state=open]:shadow-raised"
+        style={{ "--goal-color": goal.color } as CSSProperties}
+      >
         <div className="flex items-start gap-1 pl-4 pr-3 sm:pl-6 sm:pr-5 py-5">
           {/* flex-1 on this wrapper, not directly on AccordionTrigger —
               Radix wraps every trigger in its own <h3 class="flex">
@@ -136,7 +130,7 @@ export function GoalAccordionItem({ goal, onEdit }: { goal: GoalListItem; onEdit
             {items.length === 0 && <p className="text-sm text-tertiary px-1">{t("goals.emptyTree")}</p>}
           </div>
         </AccordionContent>
-      </StyledAccordionItem>
+      </AccordionItem>
     </div>
   )
 }

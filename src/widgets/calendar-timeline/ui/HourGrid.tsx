@@ -6,7 +6,6 @@ import { PriorityDot } from "@/entities/task"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { formatDateKey } from "@/shared/lib/date"
-import { numericFont } from "@/shared/lib/typography"
 import {
   DEFAULT_BLOCK_MINUTES,
   HOUR_HEIGHT_PX,
@@ -118,10 +117,7 @@ export function HourGrid({
       <div className="shrink-0 w-12 border-r border-border" style={{ height: GRID_HEIGHT_PX }}>
         {HOURS.map(hour => (
           <div key={hour} className="relative" style={{ height: HOUR_HEIGHT_PX }}>
-            <span
-              css={numericFont}
-              className="absolute -top-[7px] right-1.5 text-caption font-bold text-tertiary bg-card px-0.5"
-            >
+            <span className="tabular-nums absolute -top-[7px] right-1.5 text-caption font-bold text-tertiary bg-card px-0.5">
               {String(hour).padStart(2, "0")}:00
             </span>
           </div>
@@ -408,9 +404,7 @@ function TimedTaskBlock({
         size={9}
         colorOverride={task.completed ? "var(--muted-foreground)" : undefined}
       />
-      <span css={numericFont} className="shrink-0 text-muted-foreground">
-        {task.time}
-      </span>
+      <span className="tabular-nums shrink-0 text-muted-foreground">{task.time}</span>
       <span className={`truncate font-semibold ${task.completed ? "text-tertiary" : ""}`}>
         <span className={task.completed ? "line-through" : ""}>{task.title}</span>
       </span>
@@ -466,9 +460,7 @@ function TimedReminderBlock({
         size={9}
         colorOverride={REMINDER_BORDER_COLORS[reminder.priority]}
       />
-      <span css={numericFont} className="shrink-0 text-muted-foreground font-bold">
-        {reminder.time}
-      </span>
+      <span className="tabular-nums shrink-0 text-muted-foreground font-bold">{reminder.time}</span>
       <span className="truncate font-semibold">{reminder.title}</span>
     </button>
   )

@@ -1,23 +1,7 @@
 import { Flame } from "lucide-react"
-import styled from "@emotion/styled"
 import { getStreak, HabitIcon, useHabits, type Habit } from "@/entities/habit"
 import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
-import { numericFont } from "@/shared/lib/typography"
-
-const Card = styled.button<{ active: boolean; color: string }>`
-  border-color: ${p => (p.active ? `color-mix(in srgb, ${p.color} 50%, transparent)` : "var(--border)")};
-  background-color: ${p => (p.active ? `color-mix(in srgb, ${p.color} 13%, var(--card))` : "var(--card)")};
-`
-
-const IconTile = styled.span<{ active: boolean; color: string }>`
-  background-color: ${p => (p.active ? p.color : `color-mix(in srgb, ${p.color} 14%, transparent)`)};
-  color: ${p => (p.active ? "#fff" : p.color)};
-`
-
-const StreakLabel = styled.div<{ color: string }>`
-  color: ${p => p.color};
-`
 
 export function HabitCard({ habit }: { habit: Habit }) {
   const { toggleHabit } = useHabits()
@@ -27,20 +11,24 @@ export function HabitCard({ habit }: { habit: Habit }) {
   const streak = getStreak(habit.completedDates, habit.activeDays)
 
   return (
-    <Card
-      active={doneToday}
-      color={habit.color}
+    <button
       onClick={() => toggleHabit(habit.id, today)}
       className="w-full h-full min-h-[150px] p-3.5 rounded-xl border shadow-card text-left transition active:scale-[0.98] flex flex-col items-start gap-2.5"
       aria-pressed={doneToday}
+      style={{
+        borderColor: doneToday ? `color-mix(in srgb, ${habit.color} 50%, transparent)` : "var(--border)",
+        backgroundColor: doneToday ? `color-mix(in srgb, ${habit.color} 13%, var(--card))` : "var(--card)",
+      }}
     >
-      <IconTile
-        active={doneToday}
-        color={habit.color}
+      <span
         className="size-9 shrink-0 rounded-md flex items-center justify-center"
+        style={{
+          backgroundColor: doneToday ? habit.color : `color-mix(in srgb, ${habit.color} 14%, transparent)`,
+          color: doneToday ? "#fff" : habit.color,
+        }}
       >
         <HabitIcon emoji={habit.icon} size={18} />
-      </IconTile>
+      </span>
       {/* flex-1 on a wrapper, line-clamp on the text: with both on one
           element the box grew to the card's free height, so the clipped
           third line showed under the "…" (owner screenshot, 2026-11-08). */}
@@ -52,16 +40,17 @@ export function HabitCard({ habit }: { habit: Habit }) {
           {habit.title}
         </div>
       </div>
-      <StreakLabel
-        color={
-          streak > 0 ? `color-mix(in srgb, ${habit.color} 80%, var(--foreground))` : "var(--text-tertiary)"
-        }
+      <div
+        style={{
+          color:
+            streak > 0 ? `color-mix(in srgb, ${habit.color} 80%, var(--foreground))` : "var(--text-tertiary)",
+        }}
         className={`flex items-center gap-1 text-xs ${streak > 0 ? "font-semibold" : "font-semibold"}`}
       >
         <Flame size={13} fill={streak > 0 ? "currentColor" : "none"} />
-        <span css={numericFont}>{streak}</span>
+        <span className="tabular-nums">{streak}</span>
         <span className="font-semibold text-muted-foreground">{t("habitCard.days")}</span>
-      </StreakLabel>
-    </Card>
+      </div>
+    </button>
   )
 }

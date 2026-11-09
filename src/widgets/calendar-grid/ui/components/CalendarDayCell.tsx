@@ -9,7 +9,6 @@ import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/e
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
 import { useDropTarget } from "@/shared/lib/dnd"
-import { numericFont } from "@/shared/lib/typography"
 
 // Shown inline on the cell without a tap — up to this many, the rest is
 // summarized as "+N". Reminders keep this cap (their own redesign wasn't
@@ -112,8 +111,7 @@ export function CalendarDayCell({
       } ${isOver ? "ring-2 ring-primary" : ""}`}
     >
       <span
-        css={numericFont}
-        className={`self-center w-[26px] h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
+        className={`tabular-nums self-center w-[26px] h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
           isCurrent ? "bg-primary text-primary-foreground" : ""
         }`}
       >
@@ -145,9 +143,7 @@ export function CalendarDayCell({
                 colorOverride={REMINDER_BORDER_COLORS[reminder.priority]}
               />
               {reminder.time && (
-                <span css={numericFont} className="shrink-0 text-muted-foreground font-bold">
-                  {reminder.time}
-                </span>
+                <span className="tabular-nums shrink-0 text-muted-foreground font-bold">{reminder.time}</span>
               )}
               <span
                 className={`truncate font-semibold ${reminder.completed ? "line-through text-tertiary" : ""}`}
@@ -192,9 +188,7 @@ export function CalendarDayCell({
                 <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={11} />
               </div>
               {task.time && (
-                <span css={numericFont} className="shrink-0 text-muted-foreground font-bold">
-                  {task.time}
-                </span>
+                <span className="tabular-nums shrink-0 text-muted-foreground font-bold">{task.time}</span>
               )}
               <span
                 className={`truncate font-semibold ${task.completed ? "line-through text-tertiary" : ""}`}

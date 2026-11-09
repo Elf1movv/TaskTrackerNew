@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { css } from "@emotion/react"
 import { toast } from "sonner"
 import {
   Archive,
@@ -27,16 +26,6 @@ const NOTES_PAGE_SIZE = 5
 // Row actions sit on the title line and show on hover or keyboard focus —
 // only where a mouse can hover. Phones and tablets keep them visible on a
 // second line (no room beside the title at 390px). Unslop pass 2026-11-08.
-const revealOnHover = css`
-  @media (min-width: 768px) and (hover: hover) {
-    opacity: 0;
-    transition: opacity 150ms ease-out;
-    [data-note-id]:hover &,
-    &:focus-within {
-      opacity: 1;
-    }
-  }
-`
 // Notes are undated (iteration 3): only "current" and "archive" tabs.
 export function NotesCard() {
   const { notes, isLoaded } = useNotes()
@@ -141,7 +130,7 @@ function NoteRow({ note, previousId, nextId }: { note: Note; previousId?: string
     <article
       ref={dropRef}
       data-note-id={note.id}
-      className={`px-4 py-3 border-b border-border last:border-0 min-w-0 ${isDragging ? "opacity-40" : ""}`}
+      className={`group/note px-4 py-3 border-b border-border last:border-0 min-w-0 ${isDragging ? "opacity-40" : ""}`}
     >
       <div className="flex flex-wrap md:flex-nowrap items-start gap-x-2 gap-y-1">
         <Button
@@ -190,7 +179,8 @@ function NoteRow({ note, previousId, nextId }: { note: Note; previousId?: string
             />
           )}
         </button>
-        <div css={revealOnHover} className="flex items-center justify-end gap-1 w-full md:w-auto md:-my-1">
+        {/* Desktop with a mouse: hidden until the note is hovered or a button in it is focused. */}
+        <div className="md:[@media(hover:hover)]:opacity-0 md:[@media(hover:hover)]:group-hover/note:opacity-100 md:[@media(hover:hover)]:focus-within:opacity-100 transition-opacity duration-150 ease-out flex items-center justify-end gap-1 w-full md:w-auto md:-my-1">
           <Button
             variant="ghost"
             size="icon"

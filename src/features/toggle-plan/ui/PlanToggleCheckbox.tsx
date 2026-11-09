@@ -1,20 +1,5 @@
 import { Check } from "lucide-react"
-import styled from "@emotion/styled"
 import { usePlans } from "@/entities/calendar-plan"
-
-const Circle = styled.div<{ size: number; checked: boolean }>`
-  width: ${p => p.size}px;
-  height: ${p => p.size}px;
-  border-radius: 9999px;
-  border-width: 2px;
-  border-style: solid;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-  border-color: ${p => (p.checked ? "var(--primary)" : "var(--border)")};
-  background-color: ${p => (p.checked ? "var(--primary)" : "transparent")};
-`
 
 export function PlanToggleCheckbox({
   taskId,
@@ -34,11 +19,16 @@ export function PlanToggleCheckbox({
       aria-label={completed ? "Mark task as not done" : "Mark task as done"}
       aria-pressed={completed}
     >
-      <Circle size={size} checked={completed} className="group-hover:border-primary/40">
+      <div
+        className={`flex items-center justify-center rounded-full border-2 transition-all duration-150 ease-[ease] ${
+          completed ? "border-primary bg-primary" : "border-border bg-transparent"
+        }`}
+        style={{ width: size, height: size }}
+      >
         {completed && (
           <Check size={Math.round(size / 2)} strokeWidth={3} className="text-primary-foreground" />
         )}
-      </Circle>
+      </div>
     </button>
   )
 }

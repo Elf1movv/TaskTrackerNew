@@ -12,7 +12,6 @@ import { type Reminder } from "@/entities/reminder"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { formatDay, getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { displayFont, numericFont } from "@/shared/lib/typography"
 import { Button } from "@/shared/ui/button"
 import { DayDeadlineRow, DayGoalRow, DayHabitRow, DayReminderRow, DayTaskRow } from "./components"
 
@@ -49,10 +48,10 @@ export function DayDetailPanel({
     <div className="bg-card border border-card-border rounded-xl shadow-card p-5 min-w-0">
       <div className="flex items-start justify-between gap-2 mb-5">
         <div>
-          <div css={numericFont} className="text-meta font-semibold text-tertiary mb-1">
+          <div className="tabular-nums text-meta font-semibold text-tertiary mb-1">
             {format(day, "EEEE", { locale })}
           </div>
-          <div css={displayFont} className="text-2xl font-bold">
+          <div className="font-[family-name:var(--font-display)] text-2xl font-bold">
             {formatDay(day, language)}
           </div>
         </div>
@@ -68,9 +67,7 @@ export function DayDetailPanel({
       </div>
 
       <div className="flex items-center justify-between mb-2.5">
-        <span css={numericFont} className="text-meta font-semibold text-tertiary">
-          {t("plans.title")}
-        </span>
+        <span className="tabular-nums text-meta font-semibold text-tertiary">{t("plans.title")}</span>
         <Button
           size="icon"
           variant="ghost"
@@ -127,7 +124,7 @@ export function DayDetailPanel({
       {deadlines.length > 0 && (
         <>
           <div className="mb-2.5">
-            <span css={numericFont} className="text-meta font-semibold text-tertiary">
+            <span className="tabular-nums text-meta font-semibold text-tertiary">
               {t("calendar.deadlines")}
             </span>
           </div>
@@ -140,7 +137,7 @@ export function DayDetailPanel({
       )}
 
       <div className="flex items-center justify-between mb-2.5">
-        <span css={numericFont} className="text-meta font-semibold text-tertiary">
+        <span className="tabular-nums text-meta font-semibold text-tertiary">
           {t("reminderSummary.title")}
         </span>
         <Button
@@ -202,9 +199,7 @@ export function DayDetailPanel({
       )}
 
       <div className="flex items-center justify-between mb-2.5">
-        <span css={numericFont} className="text-meta font-semibold text-tertiary">
-          {t("nav.goals")}
-        </span>
+        <span className="tabular-nums text-meta font-semibold text-tertiary">{t("nav.goals")}</span>
         <Button
           size="icon"
           variant="ghost"
@@ -259,9 +254,7 @@ export function DayDetailPanel({
       )}
 
       <div className="mb-2.5">
-        <span css={numericFont} className="text-meta font-semibold text-tertiary">
-          {t("nav.habits")}
-        </span>
+        <span className="tabular-nums text-meta font-semibold text-tertiary">{t("nav.habits")}</span>
       </div>
 
       {habits.length > 0 ? (
