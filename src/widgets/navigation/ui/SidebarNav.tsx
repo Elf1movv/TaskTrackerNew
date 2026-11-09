@@ -22,10 +22,8 @@ export function SidebarNav() {
   const { language, t } = useLanguage()
 
   const today = getTodayKey()
-  // Tasks scheduled for today, not "all open tasks" (selectTodayTasks means
-  // something else now — see entities/task/lib/selectTodayTasks.ts) —
-  // this is specifically the "due today, done/total" reading the stat's
-  // label implies.
+  // Tasks due today, not "all open tasks" — the "due today, done/total"
+  // reading the stat's label implies.
   const tasksToday = tasks.filter(task => isTaskOnDay(task, today))
   // The nav badge counts all open tasks, matching the unified Tasks list.
   // The stat below still measures only tasks scheduled for today.

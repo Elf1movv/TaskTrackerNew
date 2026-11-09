@@ -39,9 +39,6 @@ export const ru: Record<keyof typeof en, string> = {
   "pagination.previous": "Назад",
   "pagination.next": "Далее",
   "pagination.page": "Страница {page} из {total}",
-  "delete.taskTitle": "Удалить задачу?",
-  "delete.taskBody":
-    "Будущих и отложенных планов будет удалено: {count}. Связанные будущие напоминания отменятся. Прошлая история сохранится.",
   "delete.planTitle": "Удалить план?",
 
   "common.today": "Сегодня",
@@ -87,14 +84,12 @@ export const ru: Record<keyof typeof en, string> = {
   "tasks.title": "Задачи",
   "tasks.remainingDone": "осталось: {remaining} · выполнено: {done}",
   "tasks.addTask": "Добавить задачу",
-  "tasks.status.active": "Активные",
   "tasks.status.done": "Готово",
   "tasks.categorySettings": "Название и цвет категории «{name}»",
   "tasks.categoryName": "Название",
   "tasks.categoryNameTaken": "Такая категория уже есть",
   "tasks.categoryAll": "Все",
   "tasks.date.label": "Срок",
-  "tasks.viewInCalendar": "Открыть в календаре: {date}",
   "tasks.addCategory": "Добавить категорию",
   "tasks.deleteCategoryTitle": "Удалить категорию?",
   "tasks.deleteCategoryBody":
@@ -105,7 +100,6 @@ export const ru: Record<keyof typeof en, string> = {
   "tasks.noActiveTasks": "Нет активных задач",
   "tasks.completedSection": "Выполненные ({count})",
   "tasks.noTasksIn": " в категории {category}",
-  "tasks.loadMore": "Показать ещё {count}",
 
   "taskForm.placeholder": "Что нужно сделать?",
   "taskForm.descriptionPlaceholder": "Описание (необязательно)",
@@ -175,7 +169,6 @@ export const ru: Record<keyof typeof en, string> = {
   "habits.group.addBlock": "Добавить блок",
   "habits.group.generalTitle": "Общие",
   "habits.group.titlePlaceholder": "Название блока",
-  "habits.group.editTitle": "Изменить блок",
   "habits.group.deleteTitle": "Удалить блок?",
   "habits.group.deleteBody":
     "Блок «{title}» будет удалён, но привычки в нём никуда не денутся — переедут в «Общие».",
@@ -205,10 +198,6 @@ export const ru: Record<keyof typeof en, string> = {
 
   "reminderSummary.title": "Напоминания",
 
-  "today.title": "Общие задачи",
-  "today.allTasks": "Все задачи",
-  "today.doneCount": "{done}/{total} выполнено",
-  "today.noTasksToday": "Нет незавершённых задач",
   "today.showReminders": "Показать напоминания",
   "today.showGoals": "Показать цели",
 

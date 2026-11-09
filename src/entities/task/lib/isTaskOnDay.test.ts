@@ -30,8 +30,8 @@ describe("isTaskOnDay", () => {
   })
 
   it("does not match an undated task, even if completed that day", () => {
-    // Deliberately no completedAt fallback on the calendar (unlike
-    // selectTodayTasks) — see this file's own comment for why.
+    // Deliberately no completedAt fallback on the calendar — see
+    // isTaskOnDay.ts for why.
     const task = makeTask({ dueDate: null, completed: true, completedAt: "2026-09-24T10:00:00.000Z" })
     expect(isTaskOnDay(task, "2026-09-24")).toBe(false)
   })

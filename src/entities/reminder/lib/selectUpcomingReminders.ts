@@ -3,7 +3,7 @@ import type { Reminder } from "../model/reminder"
 
 // Reminders from today onward, soonest first — used by the Today page's
 // reminder summary card, capped by the caller (not here — this just orders
-// and filters, same "selector, not a UI concern" split as selectTodayTasks).
+// and filters, same "selector, not a UI concern" split as selectTodayHabits).
 export function selectUpcomingReminders(reminders: Reminder[]): Reminder[] {
   const today = getTodayKey()
   return reminders

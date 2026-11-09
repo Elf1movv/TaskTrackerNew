@@ -3,7 +3,7 @@ import type { Habit } from "../model/habit"
 
 // Only habits scheduled for today's day of week — an unscheduled habit
 // still exists (manage it from the Habits page), it just doesn't clutter
-// Today. Mirrors entities/task/lib/selectTodayTasks.ts.
+// Today.
 //
 // Sorted by todayOrder — GET /api/habits (server/src/routes/habits.ts)
 // always sorts its response by `order` (the /habits page's own axis),

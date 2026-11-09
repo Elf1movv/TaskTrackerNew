@@ -37,9 +37,6 @@ export const en = {
   "pagination.previous": "Previous",
   "pagination.next": "Next",
   "pagination.page": "Page {page} of {total}",
-  "delete.taskTitle": "Delete task?",
-  "delete.taskBody":
-    "{count} future or held plans will be removed. Future linked reminders will be cancelled. Past history will remain.",
   "delete.planTitle": "Delete plan?",
 
   "common.today": "Today",
@@ -85,14 +82,12 @@ export const en = {
   "tasks.title": "Tasks",
   "tasks.remainingDone": "{remaining} remaining · {done} done",
   "tasks.addTask": "Add task",
-  "tasks.status.active": "Active",
   "tasks.status.done": "Done",
   "tasks.categorySettings": 'Name and color of "{name}"',
   "tasks.categoryName": "Name",
   "tasks.categoryNameTaken": "A category with this name already exists",
   "tasks.categoryAll": "All",
   "tasks.date.label": "Deadline",
-  "tasks.viewInCalendar": "Open in calendar: {date}",
   "tasks.addCategory": "Add category",
   "tasks.deleteCategoryTitle": "Delete category?",
   "tasks.deleteCategoryBody":
@@ -103,7 +98,6 @@ export const en = {
   "tasks.noActiveTasks": "No active tasks",
   "tasks.completedSection": "Completed ({count})",
   "tasks.noTasksIn": " in {category}",
-  "tasks.loadMore": "Load {count} more",
 
   "taskForm.placeholder": "What needs to be done?",
   "taskForm.descriptionPlaceholder": "Description (optional)",
@@ -173,7 +167,6 @@ export const en = {
   "habits.group.addBlock": "Add block",
   "habits.group.generalTitle": "General",
   "habits.group.titlePlaceholder": "Block name",
-  "habits.group.editTitle": "Edit block",
   "habits.group.deleteTitle": "Delete block?",
   "habits.group.deleteBody":
     'The "{title}" block will be deleted, but its habits aren\'t — they\'ll move to "General".',
@@ -203,10 +196,6 @@ export const en = {
 
   "reminderSummary.title": "Reminders",
 
-  "today.title": "General Tasks",
-  "today.allTasks": "All tasks",
-  "today.doneCount": "{done}/{total} done",
-  "today.noTasksToday": "No unfinished tasks",
   "today.showReminders": "Show reminders",
   "today.showGoals": "Show goals",
 

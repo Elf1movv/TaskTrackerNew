@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { CheckSquare2, ChevronDown, Plus, X } from "lucide-react"
 import { TaskForm } from "@/features/task-form"
 import { useCategories, type Category } from "@/entities/category"
-import { isCompletedToday, type Task, useTasks } from "@/entities/task"
+import { isCompletedToday, type Task } from "@/entities/task"
 import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { useLanguage } from "@/shared/lib/i18n"
 import {
@@ -47,7 +47,6 @@ export function TaskBoard({
   onPageChange: (page: number) => void
 }) {
   const { categories, addCategory, updateCategory, deleteCategory } = useCategories()
-  const { refreshTasks } = useTasks()
   const { t } = useLanguage()
   const [isAdding, setIsAdding] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
@@ -106,9 +105,9 @@ export function TaskBoard({
     setCategoryPendingDelete(null)
     await deleteCategory(id)
     if (categoryFilter === name) onCategoryFilterChange("all")
-    // The backend cascades tasks in that category when it deletes it — this
-    // collection's local state doesn't know that happened on its own.
-    await refreshTasks()
+    // The backend cascades tasks in that category when it deletes it; the
+    // repository's invalidateRelated (shared/lib/storage/invalidate.ts)
+    // already reloads tasks and goals after the delete.
   }
 
   return (

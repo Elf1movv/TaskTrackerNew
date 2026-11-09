@@ -39,19 +39,15 @@ export function TaskForm({
   task,
   draft,
   lockedCategory,
-  defaultDueDate,
   embedded,
   onCreate,
-  onDelete,
   onDone,
 }: {
   task?: Task
   draft?: { title: string; description: string | null }
   lockedCategory?: string
-  defaultDueDate?: string
   embedded?: boolean
   onCreate?: (fields: TaskDraftFields) => Promise<boolean>
-  onDelete?: () => void
   onDone: () => void
 }) {
   const { addTask, updateTask } = useTasks()
@@ -62,20 +58,9 @@ export function TaskForm({
   const [saving, setSaving] = useState(false)
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium")
   const [category, setCategory] = useState(task?.category ?? lockedCategory ?? categories[0]?.name ?? "")
-  const [hasDueDate, setHasDueDate] = useState(task ? !!task.dueDate : !!defaultDueDate)
-  const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? getTodayKey())
+  const [hasDueDate, setHasDueDate] = useState(!!task?.dueDate)
+  const [dueDate, setDueDate] = useState(task?.dueDate ?? getTodayKey())
   const showCategoryPicker = !!task || !lockedCategory
-
-  // Preserve the draft when a caller changes the suggested deadline.
-  // An existing task always keeps its own deadline.
-  const [previousDefaultDueDate, setPreviousDefaultDueDate] = useState(defaultDueDate)
-  if (previousDefaultDueDate !== defaultDueDate) {
-    setPreviousDefaultDueDate(defaultDueDate)
-    if (!task && defaultDueDate) {
-      setHasDueDate(true)
-      setDueDate(defaultDueDate)
-    }
-  }
 
   async function handleSubmit() {
     if (!title.trim() || saving) return
@@ -182,11 +167,6 @@ export function TaskForm({
       </div>
 
       <div className="flex gap-2 justify-between pt-1">
-        {onDelete && (
-          <Button variant="ghost" size="sm" onClick={onDelete} className="text-xs text-destructive">
-            {t("common.delete")}
-          </Button>
-        )}
         <div className="flex gap-2 justify-end ml-auto">
           <Button variant="ghost" size="sm" onClick={onDone} className="text-xs">
             {t("common.cancel")}
