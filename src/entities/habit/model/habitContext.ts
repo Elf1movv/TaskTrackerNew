@@ -3,7 +3,9 @@ import type { Habit } from "./habit"
 
 export interface HabitContextValue {
   habits: Habit[]
-  addHabit: (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates">) => void
+  // Returns the new habit's id (generated on the client) — the onboarding
+  // uses it to find and highlight the habit it just created.
+  addHabit: (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates">) => string
   updateHabit: (id: string, patch: Partial<Omit<Habit, "id" | "updatedAt">>) => void
   deleteHabit: (id: string) => void
   // Reorders within one group (writes `order`). One habit order for Today

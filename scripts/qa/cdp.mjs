@@ -47,7 +47,10 @@ export async function evaluate(expression) {
 export const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
 export async function wait(expression) {
   for (let i = 0; i < 150; i++) {
-    if (await evaluate(`Boolean(${expression})`)) return
+    // Right after Page.navigate the new document can still have no <body>,
+    // so an expression like `document.body.innerText…` throws — that means
+    // "not ready yet", not a failure (first seen 2026-11-10 on a cold start).
+    if (await evaluate(`Boolean(${expression})`).catch(() => false)) return
     await pause(200)
   }
   throw new Error("Timeout: " + expression)

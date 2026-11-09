@@ -485,6 +485,8 @@ erDiagram
         string email
         boolean emailVerified
         boolean categoriesSeeded
+        string onboardingStatus "null | completed | skipped"
+        datetime onboardingAt
     }
     Feedback {
         string id PK
@@ -721,3 +723,41 @@ Task и журнале. Транзакция по владельцу и уник
   prisma main>` + тот же ремонт P3018, что в `deploy-staging-schema.mjs`;
   вставить старые данные; затем `prisma migrate deploy` ветки и
   `prisma migrate diff --exit-code`.
+
+## Онбординг (2026-11-10)
+
+Онбординг-действие («знакомство») — `src/widgets/onboarding`, спецификация —
+`docs/requirements/11. Onboarding/`. Решения и подводные камни:
+
+- **Статус на сервере, а не в браузере.** `User.onboardingStatus`
+  (`null` = показать, `"completed"`, `"skipped"`) + `onboardingAt`, маршрут
+  `GET`/`PUT /api/me/onboarding` (`server/src/routes/me.ts`). Миграция
+  `20261110120000_onboarding_status` ставит всем существующим пользователям
+  `"completed"`. В `localStorage` лежит только шаг, на котором остановились
+  (`mytracker-onboarding-progress`).
+- **Шаги — один список** `model/steps.ts`; переходы — чистый reducer
+  `model/onboardingMachine.ts` с тестом. Экран для каждого `id` — словарь
+  `SCREENS` в `ui/OnboardingFlow.tsx`.
+- **Контроллер живёт в `RootLayout`** (`useOnboarding(!!session)` вызывается
+  до ранних `return`, правило хуков), потому что пункт «Пройти знакомство
+  заново» в `SettingsPanel` — другой виджет, а виджеты не импортируют друг
+  друга. Колбэк передаётся пропом `onRestartOnboarding`.
+- **Создание записей — через те же функции сущностей**, что и формы.
+  Для этого `addHabit` теперь возвращает id новой привычки (её подсвечивает
+  финал), а `addGoal(goal, steps?)` принимает первые этапы — добавлять этап
+  отдельным `addMilestone` сразу после создания нельзя: запрос создания
+  ещё мог не дойти до сервера.
+- **Подсветка (`ui/Spotlight.tsx`)**: затемнение — SVG на весь экран с
+  вырезанным маской «окном» (огромная `box-shadow` почти не затемняла в
+  Chrome). Слой сам `pointer-events-none`, клики ловят четыре прозрачных
+  прямоугольника вокруг окна — иначе слой перехватывает клик и по
+  подсвеченной карточке. Метки для поиска: `data-onboarding-habit` на
+  `HabitGridItem`, `data-onboarding="settings-gear"` на шестерёнке.
+- **Превью «Плитка / список»** рисует настоящие `HabitCard` /
+  `HabitListRow` внутри контейнера с атрибутом `inert` (выставляется через
+  ref — React 18 не знает этот атрибут в типах), чтобы нажатие не
+  отмечало привычку.
+- **Браузерные проверки:** `qa-browser-user.mjs verify` теперь ставит QA-
+  пользователю `onboardingStatus = "completed"`, иначе онбординг закрывает
+  экран для основного набора. Сам онбординг проверяет
+  `scripts/qa/onboarding.mjs` после сброса `onboarding-reset`.

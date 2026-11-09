@@ -70,7 +70,9 @@
   - [10.01. Feedback Widget-FRONTEND](./10.%20Feedback/10.01.%20Feedback%20Widget-FRONTEND.md)
   - [10.01. Feedback Widget-BACKEND](./10.%20Feedback/10.01.%20Feedback%20Widget-BACKEND.md)
 - [11. Onboarding](./11.%20Onboarding.md)
-  - [11.01. Welcome Screens-FRONTEND](./11.%20Onboarding/11.01.%20Welcome%20Screens-FRONTEND.md)
+  - [11.01. Onboarding Flow-FRONTEND](./11.%20Onboarding/11.01.%20Onboarding%20Flow-FRONTEND.md)
+  - [11.02. Onboarding Status-BACKEND](./11.%20Onboarding/11.02.%20Onboarding%20Status-BACKEND.md)
+  - [11.03. Welcome Back Greeting-FRONTEND](./11.%20Onboarding/11.03.%20Welcome%20Back%20Greeting-FRONTEND.md)
     (без BACKEND — чисто клиентские экраны поверх уже описанного флоу
     Better Auth)
 - [12. Settings](./12.%20Settings.md)

@@ -19,11 +19,11 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   } = usePersistedCollection<Goal>(goalRepository, "goal")
 
   const addGoal = useCallback(
-    (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals" | "progress">) => {
+    (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals" | "progress">, steps: string[] = []) => {
       create({
         ...goal,
         id: generateId(),
-        milestones: [],
+        milestones: steps.map((title, order) => ({ id: generateId(), title, completed: false, order })),
         subgoals: [],
         progress: 0,
         updatedAt: new Date().toISOString(),

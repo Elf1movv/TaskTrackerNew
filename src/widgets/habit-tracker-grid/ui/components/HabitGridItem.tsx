@@ -38,6 +38,8 @@ export function HabitGridItem({
   return (
     <div
       ref={ref}
+      // The onboarding's finale highlights the habit it just created.
+      data-onboarding-habit={habit.id}
       className={`relative group cursor-grab active:cursor-grabbing select-none rounded-2xl ${viewMode === "grid" ? "h-full" : ""} ${isOver ? "ring-2 ring-primary/40" : ""}`}
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >

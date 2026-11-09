@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
 import { useSearchParams } from "react-router"
 import { NoteForm } from "@/features/note-form"
-import { WelcomeBackGreeting, WelcomeModal } from "@/widgets/onboarding"
+import { WelcomeBackGreeting } from "@/widgets/onboarding"
 import { HabitTrackerGrid } from "@/widgets/habit-tracker-grid"
 import { NotesCard } from "@/widgets/notes-card"
 import { useLanguage } from "@/shared/lib/i18n"
@@ -18,9 +18,11 @@ function TodayPageContent() {
   const heroDate = formatHeroDate(new Date(), language)
   const [isAdding, setIsAdding] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
-  const isFirstLogin = searchParams.get("firstLogin") === "1"
   const isWelcomeBack = searchParams.get("welcomeBack") === "1"
 
+  // The first-run walkthrough is no longer tied to "?firstLogin=1" (it's
+  // opened by the account's onboarding status, see widgets/onboarding);
+  // the param is still cleaned up so it doesn't linger in the address bar.
   function clearGreetingParam() {
     setSearchParams(
       prev => {
@@ -67,7 +69,6 @@ function TodayPageContent() {
 
       <HabitTrackerGrid habits={habits} />
 
-      {isFirstLogin && <WelcomeModal open onClose={clearGreetingParam} />}
       {isWelcomeBack && <WelcomeBackGreeting onDone={clearGreetingParam} />}
     </div>
   )

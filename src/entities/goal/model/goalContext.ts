@@ -6,7 +6,13 @@ import type { Goal } from "./goal"
 export interface GoalContextValue {
   goals: Goal[]
   isLoaded: boolean
-  addGoal: (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals" | "progress">) => void
+  // `steps` seeds the goal's own first steps in the same request (the
+  // onboarding's "first step" field) — adding them afterwards with
+  // addMilestone could race the create that hasn't reached the server yet.
+  addGoal: (
+    goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals" | "progress">,
+    steps?: string[],
+  ) => void
   updateGoal: (id: string, patch: Partial<Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals">>) => void
   deleteGoal: (id: string) => void
   reorderGoals: (draggedId: string, targetId: string) => void

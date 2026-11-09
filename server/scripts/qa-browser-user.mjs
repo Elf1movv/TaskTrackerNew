@@ -12,9 +12,15 @@ if (!/^independence-[a-f0-9-]+@example.invalid$/.test(email ?? ""))
   throw new Error("Disposable QA account required")
 const db = new PrismaClient()
 try {
-  if (action === "verify") await db.user.update({ where: { email }, data: { emailVerified: true } })
+  // verify also marks the onboarding as done, so the regular suite isn't
+  // covered by the first-run walkthrough; onboarding-reset brings it back
+  // for scripts/qa/onboarding.mjs.
+  if (action === "verify")
+    await db.user.update({ where: { email }, data: { emailVerified: true, onboardingStatus: "completed" } })
+  else if (action === "onboarding-reset")
+    await db.user.update({ where: { email }, data: { onboardingStatus: null, onboardingAt: null } })
   else if (action === "cleanup") await db.user.deleteMany({ where: { email } })
-  else throw new Error("Use verify or cleanup")
+  else throw new Error("Use verify, onboarding-reset or cleanup")
   console.log(JSON.stringify({ action, ok: true }))
 } finally {
   await db.$disconnect()

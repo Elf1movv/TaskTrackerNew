@@ -18,6 +18,10 @@ The app must be built and running before registration. No mail is sent when
    owner credentials; both the email pattern and session identity are checked.
 4. `node scripts/qa/calendar-gestures.mjs` — six additional mouse/touch checks,
    in the same QA browser session after the suite.
+   `verify` (step 2) also marks the onboarding as done so it doesn't cover the
+   screen. `node scripts/qa/onboarding.mjs` checks the onboarding itself (9
+   checks); it needs `QA_RESET` — a shell command running
+   `scripts/qa-browser-user.mjs onboarding-reset <email>` (run-local.sh sets it).
 5. Cleanup using `scripts/qa-browser-user.mjs cleanup <email>` on that isolated DB,
    delete the local credentials file, then close the QA Chrome.
 
