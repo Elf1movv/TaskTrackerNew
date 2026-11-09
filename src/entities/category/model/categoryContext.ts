@@ -6,6 +6,7 @@ export interface CategoryContextValue {
   addCategory: (name: string, color: string) => void
   updateCategory: (id: string, patch: Partial<Omit<Category, "id" | "updatedAt">>) => void
   deleteCategory: (id: string) => void
+  reorderCategories: (draggedId: string, targetId: string) => void
 }
 
 export const CategoryContext = createContext<CategoryContextValue | null>(null)

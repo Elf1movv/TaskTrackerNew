@@ -1,16 +1,13 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { CheckSquare2, ChevronDown, Plus, X } from "lucide-react"
+import { CheckSquare2, ChevronDown, Plus } from "lucide-react"
+import { CategoryChips } from "@/features/category/manage-categories"
 import { TaskForm } from "@/features/task-form"
-import { useCategories, type Category } from "@/entities/category"
 import { isCompletedToday, type Task } from "@/entities/task"
-import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
-import { ConfirmAction } from "@/shared/ui/confirm-action"
-import { Input } from "@/shared/ui/input"
 import { Pager } from "@/shared/ui/pager"
-import { CategorySettingsPopover, TaskRow } from "./components"
+import { TaskRow } from "./components"
 
 // One filter only — the category chips (owner decision 2026-11-08: status
 // and deadline filters were too many to be useful). Active tasks come first,
@@ -37,14 +34,9 @@ export function TaskBoard({
   pageCount: number
   onPageChange: (page: number) => void
 }) {
-  const { categories, addCategory, updateCategory, deleteCategory } = useCategories()
   const { t } = useLanguage()
   const [isAdding, setIsAdding] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
-  const [isAddingCategory, setIsAddingCategory] = useState(false)
-  const [newCategoryName, setNewCategoryName] = useState("")
-  const [newCategoryColor, setNewCategoryColor] = useState(PALETTE_COLORS[0])
-  const [categoryPendingDelete, setCategoryPendingDelete] = useState<Category | null>(null)
   const [showCompleted, setShowCompleted] = useState(false)
 
   function renderTasks(tasks: Task[]) {
@@ -75,30 +67,6 @@ export function TaskBoard({
         </AnimatePresence>
       </section>
     )
-  }
-
-  function handleCreateCategory() {
-    const name = newCategoryName.trim()
-    if (!name) return
-    addCategory(name, newCategoryColor)
-    setNewCategoryName("")
-    setNewCategoryColor(PALETTE_COLORS[0])
-    setIsAddingCategory(false)
-  }
-
-  const taskCountInPendingCategory = categoryPendingDelete
-    ? allTasks.filter(task => task.category === categoryPendingDelete.name).length
-    : 0
-
-  async function handleConfirmDeleteCategory() {
-    if (!categoryPendingDelete) return
-    const { id, name } = categoryPendingDelete
-    setCategoryPendingDelete(null)
-    await deleteCategory(id)
-    if (categoryFilter === name) onCategoryFilterChange("all")
-    // The backend cascades tasks in that category when it deletes it; the
-    // repository's invalidateRelated (shared/lib/storage/invalidate.ts)
-    // already reloads tasks and goals after the delete.
   }
 
   return (
@@ -144,120 +112,7 @@ export function TaskBoard({
         )}
       </AnimatePresence>
 
-      <div className="flex gap-2 mb-6 flex-wrap items-center">
-        <button
-          onClick={() => onCategoryFilterChange("all")}
-          className={`h-8 px-3.5 rounded-full text-meta font-semibold transition ${
-            categoryFilter === "all"
-              ? "bg-primary text-primary-foreground border border-primary"
-              : "border border-border bg-card text-foreground"
-          }`}
-        >
-          {t("tasks.categoryAll")}
-        </button>
-        {categories.map(c => (
-          <div
-            key={c.id}
-            className={`relative group flex items-center gap-2 h-8 pl-3.5 pr-7 rounded-full text-meta font-semibold transition ${
-              categoryFilter === c.name
-                ? "bg-primary text-primary-foreground border border-primary"
-                : "border border-border bg-card text-foreground"
-            }`}
-          >
-            <CategorySettingsPopover
-              category={c}
-              categories={categories}
-              onColor={color => updateCategory(c.id, { color })}
-              onRename={name => {
-                updateCategory(c.id, { name })
-                if (categoryFilter === c.name) onCategoryFilterChange(name)
-              }}
-            />
-            <button onClick={() => onCategoryFilterChange(c.name)}>{c.name}</button>
-            <button
-              onClick={() => setCategoryPendingDelete(c)}
-              aria-label={`Delete category ${c.name}`}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 size-5 rounded-full border border-border bg-card shadow-card flex items-center justify-center opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition"
-            >
-              <X size={9} strokeWidth={3.5} />
-            </button>
-          </div>
-        ))}
-        {isAddingCategory ? (
-          <div className="flex items-center gap-2 h-10 pl-2 pr-1.5 rounded-full bg-card border border-primary/25 shadow-card">
-            <Input
-              autoFocus
-              value={newCategoryName}
-              onChange={e => setNewCategoryName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === "Enter") handleCreateCategory()
-                if (e.key === "Escape") setIsAddingCategory(false)
-              }}
-              placeholder={t("taskForm.newCategoryPlaceholder")}
-              className="border-0 shadow-none focus-visible:ring-0 text-sm h-8 w-32 px-2"
-            />
-            <div className="flex gap-1 flex-wrap max-w-32">
-              {PALETTE_COLORS.map(color => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setNewCategoryColor(color)}
-                  aria-label={`Color ${color}`}
-                  aria-pressed={newCategoryColor === color}
-                  className="w-4 h-4 rounded-full transition-transform"
-                  style={{
-                    backgroundColor: color,
-                    outline: newCategoryColor === color ? "2px solid var(--foreground)" : "none",
-                    outlineOffset: 2,
-                  }}
-                />
-              ))}
-            </div>
-            <Button
-              type="button"
-              className="text-meta font-bold h-8 px-3 rounded-full"
-              onClick={handleCreateCategory}
-            >
-              {t("common.add")}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-meta font-semibold h-8 px-2.5 rounded-full"
-              onClick={() => setIsAddingCategory(false)}
-            >
-              {t("common.cancel")}
-            </Button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setIsAddingCategory(true)}
-            className="h-8 px-3 rounded-full border border-dashed border-border-strong text-meta font-semibold text-muted-foreground hover:text-foreground transition flex items-center gap-1.5"
-          >
-            <Plus size={14} />
-            {t("tasks.addCategory")}
-          </button>
-        )}
-      </div>
-
-      <ConfirmAction
-        open={!!categoryPendingDelete}
-        onOpenChange={open => !open && setCategoryPendingDelete(null)}
-        title={
-          taskCountInPendingCategory > 0
-            ? t("tasks.deleteCategoryTitleWithTasks")
-            : t("tasks.deleteCategoryTitle")
-        }
-        description={
-          taskCountInPendingCategory > 0
-            ? t("tasks.deleteCategoryBodyWithTasks", {
-                name: categoryPendingDelete?.name ?? "",
-                count: taskCountInPendingCategory,
-              })
-            : t("tasks.deleteCategoryBody", { name: categoryPendingDelete?.name ?? "" })
-        }
-        onConfirm={handleConfirmDeleteCategory}
-      />
+      <CategoryChips value={categoryFilter} onChange={onCategoryFilterChange} />
 
       {activeTasks.length > 0 ? (
         renderTasks(activeTasks)
