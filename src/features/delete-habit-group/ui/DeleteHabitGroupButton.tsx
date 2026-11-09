@@ -1,19 +1,8 @@
-import { useState } from "react"
 import { Trash2 } from "lucide-react"
 import { useHabits } from "@/entities/habit"
 import { useHabitGroups, type HabitGroup } from "@/entities/habit-group"
 import { useLanguage } from "@/shared/lib/i18n"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/shared/ui/alert-dialog"
-import { buttonVariants } from "@/shared/ui/button"
+import { ConfirmAction } from "@/shared/ui/confirm-action"
 
 // Never rendered for the General group (see HabitGroupAccordionItem) — no
 // isGeneral guard needed here, the backend also rejects it defensively.
@@ -21,7 +10,6 @@ export function DeleteHabitGroupButton({ group }: { group: HabitGroup }) {
   const { deleteHabitGroup } = useHabitGroups()
   const { refreshHabits } = useHabits()
   const { t } = useLanguage()
-  const [confirming, setConfirming] = useState(false)
 
   async function handleDelete() {
     await deleteHabitGroup(group.id)
@@ -33,34 +21,19 @@ export function DeleteHabitGroupButton({ group }: { group: HabitGroup }) {
   }
 
   return (
-    <>
+    <ConfirmAction
+      title={t("habits.group.deleteTitle")}
+      description={t("habits.group.deleteBody", { title: group.title })}
+      onConfirm={handleDelete}
+    >
       <button
-        onClick={e => {
-          e.stopPropagation()
-          setConfirming(true)
-        }}
+        // Sits in the block's accordion header: don't open/close it too.
+        onClick={e => e.stopPropagation()}
         className="p-1 rounded text-muted-foreground hover:text-destructive transition"
         aria-label="Delete habit block"
       >
         <Trash2 size={13} />
       </button>
-
-      <AlertDialog open={confirming} onOpenChange={setConfirming}>
-        <AlertDialogContent onClick={e => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("habits.group.deleteTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("habits.group.deleteBody", { title: group.title })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className={buttonVariants({ variant: "destructive" })}>
-              {t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </ConfirmAction>
   )
 }

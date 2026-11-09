@@ -70,8 +70,8 @@ export function PlanForm({
     <div className={embedded ? "space-y-4" : "bg-card border border-primary/25 rounded-xl p-5 space-y-4"}>
       <Input
         autoFocus
-        placeholder={t("plans.add")}
-        aria-label={t("plans.add")}
+        placeholder={t("plans.placeholder")}
+        aria-label={t("plans.placeholder")}
         maxLength={500}
         value={title}
         onChange={e => setTitle(e.target.value)}
@@ -111,7 +111,6 @@ export function PlanForm({
       <div className="flex flex-wrap gap-2 justify-end">
         {plan && (
           <ConfirmAction
-            confirmLabel={t("common.delete")}
             title={t("delete.planTitle")}
             description={t("plans.deleteBody")}
             onConfirm={() => {

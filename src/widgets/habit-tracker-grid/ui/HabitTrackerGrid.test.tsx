@@ -104,6 +104,7 @@ describe("Today habit groups", () => {
     renderGrid([water])
     expect(document.querySelector("[data-general-habits]")?.textContent).toContain("Water")
     expect(screen.queryByText("General")).toBeNull()
+    expect(screen.queryByText("Without a block")).toBeNull()
     expect(screen.queryByText("Default")).toBeNull()
   })
 

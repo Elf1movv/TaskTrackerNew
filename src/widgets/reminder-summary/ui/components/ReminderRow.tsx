@@ -60,7 +60,7 @@ export function ReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdit: 
         >
           <Pencil size={13} />
         </button>
-        <DeleteReminderButton reminderId={reminder.id} />
+        <DeleteReminderButton reminderId={reminder.id} reminderTitle={reminder.title} />
       </span>
     </div>
   )

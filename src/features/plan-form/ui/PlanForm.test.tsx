@@ -29,8 +29,10 @@ describe("Calendar creation", () => {
 
   it("uses the selected day and keeps the draft when another day is selected", async () => {
     const { rerender } = render(<PlanForm defaultDate="2026-10-05" onDone={() => {}} />, { wrapper })
-    fireEvent.change(screen.getByRole("textbox", { name: "Add plan" }), { target: { value: "Visit" } })
-    fireEvent.change(screen.getByPlaceholderText("Description — optional"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "What do you want to plan?" }), {
+      target: { value: "Visit" },
+    })
+    fireEvent.change(screen.getByPlaceholderText("Description (optional)"), {
       target: { value: "Bring documents" },
     })
     rerender(<PlanForm defaultDate="2026-10-07" onDone={() => {}} />)
@@ -52,7 +54,7 @@ describe("Calendar creation", () => {
     addPlan.mockResolvedValue(false)
     const onDone = vi.fn()
     render(<PlanForm defaultDate="2026-10-05" onDone={onDone} />, { wrapper })
-    fireEvent.change(screen.getByRole("textbox", { name: "Add plan" }), {
+    fireEvent.change(screen.getByRole("textbox", { name: "What do you want to plan?" }), {
       target: { value: "Keep this draft" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Save" }))
@@ -60,8 +62,8 @@ describe("Calendar creation", () => {
       expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(false),
     )
     expect(onDone).not.toHaveBeenCalled()
-    expect((screen.getByRole("textbox", { name: "Add plan" }) as HTMLInputElement).value).toBe(
-      "Keep this draft",
-    )
+    expect(
+      (screen.getByRole("textbox", { name: "What do you want to plan?" }) as HTMLInputElement).value,
+    ).toBe("Keep this draft")
   })
 })

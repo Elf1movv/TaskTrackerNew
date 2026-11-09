@@ -27,7 +27,7 @@ export function DayReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdi
       >
         <Pencil size={13} />
       </button>
-      <DeleteReminderButton reminderId={reminder.id} />
+      <DeleteReminderButton reminderId={reminder.id} reminderTitle={reminder.title} />
     </div>
   )
 }

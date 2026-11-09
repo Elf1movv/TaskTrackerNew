@@ -1,14 +1,18 @@
-import { CalendarDays, Flame, Layers, Target } from "lucide-react"
+import { BellRing, CalendarDays, Layers, Repeat, StickyNote, Target } from "lucide-react"
 import { useLanguage } from "@/shared/lib/i18n"
 import { BrandMark } from "@/shared/ui/brand-mark"
 import { Button } from "@/shared/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/ui/dialog"
 
+// One line per row of the "куда что записывать" table
+// (docs/PRODUCT_LOGIC_DECISIONS.md), with the same icons the app uses.
 const FEATURES = [
+  { Icon: StickyNote, labelKey: "onboarding.welcome.featureNotes" as const },
   { Icon: Layers, labelKey: "onboarding.welcome.featureTasks" as const },
   { Icon: Target, labelKey: "onboarding.welcome.featureGoals" as const },
-  { Icon: Flame, labelKey: "onboarding.welcome.featureHabits" as const },
-  { Icon: CalendarDays, labelKey: "onboarding.welcome.featureCalendar" as const },
+  { Icon: Repeat, labelKey: "onboarding.welcome.featureHabits" as const },
+  { Icon: CalendarDays, labelKey: "onboarding.welcome.featurePlans" as const },
+  { Icon: BellRing, labelKey: "onboarding.welcome.featureReminders" as const },
 ]
 
 interface WelcomeModalProps {

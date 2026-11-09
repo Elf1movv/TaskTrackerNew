@@ -1,8 +1,8 @@
 import { format } from "date-fns"
 import { NavLink } from "react-router"
-import { getTaskCompletionsByDay, isTaskOnDay, useTasks } from "@/entities/task"
+import { getTaskCompletionsByDay, isCompletedToday, useTasks } from "@/entities/task"
 import { useGoals } from "@/entities/goal"
-import { getHabitCompletionsByDay, useHabits } from "@/entities/habit"
+import { getHabitCompletionsByDay, selectTodayHabits, useHabits } from "@/entities/habit"
 import { getLastNDays, getTodayKey } from "@/shared/lib/date"
 import {
   capitalizeFirst,
@@ -22,23 +22,21 @@ export function SidebarNav() {
   const { language, t } = useLanguage()
 
   const today = getTodayKey()
-  // Tasks due today, not "all open tasks" — the "due today, done/total"
-  // reading the stat's label implies.
-  const tasksToday = tasks.filter(task => isTaskOnDay(task, today))
-  // The nav badge counts all open tasks, matching the unified Tasks list.
-  // The stat below still measures only tasks scheduled for today.
+  // Each number reads the same as the screen it points to (audit П1–П3):
+  // tasks done today = "выполнено" in the Tasks header; habits = only the
+  // ones scheduled for today, like Today's "1 из 3 сегодня"; goals = active.
   const openTasksCount = tasks.filter(task => !task.completed).length
+  const tasksDoneToday = tasks.filter(task => task.completed && isCompletedToday(task)).length
+  const habitsToday = selectTodayHabits(habits)
+  const activeGoalsCount = goals.filter(goal => goal.progress < 100).length
 
   const stats: { labelKey: TranslationKey; value: string }[] = [
-    {
-      labelKey: "sidebar.statTasksDone",
-      value: `${tasksToday.filter(t => t.completed).length} / ${tasksToday.length}`,
-    },
+    { labelKey: "sidebar.statTasksDone", value: String(tasksDoneToday) },
     {
       labelKey: "sidebar.statHabits",
-      value: `${habits.filter(h => h.completedDates.includes(today)).length} / ${habits.length}`,
+      value: `${habitsToday.filter(h => h.completedDates.includes(today)).length} / ${habitsToday.length}`,
     },
-    { labelKey: "sidebar.statActiveGoals", value: String(goals.filter(goal => goal.progress < 100).length) },
+    { labelKey: "sidebar.statActiveGoals", value: String(activeGoalsCount) },
   ]
 
   const last7Days = getLastNDays(7, new Date())
@@ -52,7 +50,7 @@ export function SidebarNav() {
 
   const badgeCounts: Partial<Record<string, number>> = {
     "/tasks": openTasksCount,
-    "/goals": goals.length,
+    "/goals": activeGoalsCount,
   }
 
   return (
