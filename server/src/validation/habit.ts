@@ -1,11 +1,13 @@
 import { z } from "zod"
+import { dayString } from "./dateTime.js"
 
 const habitFields = z.object({
   id: z.string().uuid(),
   title: z.string().min(1),
   icon: z.string().min(1),
   color: z.string().min(1),
-  completedDates: z.array(z.string()),
+  // Days the habit was done, "YYYY-MM-DD" each (shared check, dateTime.ts).
+  completedDates: z.array(dayString),
   activeDays: z.array(z.number().int().min(0).max(6)),
   groupId: z.string().uuid(),
 })

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { dayString } from "./dateTime.js"
 
 const milestoneSchema = z.object({
   id: z.string(),
@@ -22,7 +23,8 @@ const goalFields = z.object({
   title: z.string().min(1),
   description: z.string(),
   progress: z.number().int().min(0).max(100),
-  targetDate: z.string().nullable(),
+  // "YYYY-MM-DD", a real day (shared check, dateTime.ts).
+  targetDate: dayString.nullable(),
   color: z.string().min(1),
   // Optional so older clients that never send it keep working.
   category: z.string().min(1).nullable().optional(),

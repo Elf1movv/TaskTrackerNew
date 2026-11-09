@@ -28,6 +28,14 @@ describe("goals router", () => {
     expect(res.status).toBe(401)
   })
 
+  it.each(["2026-02-31", "31.12.2026", "soon"])(
+    "rejects a goal deadline that isn't a real day: %s",
+    async targetDate => {
+      const res = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID(), targetDate })
+      expect(res.status).toBe(400)
+    },
+  )
+
   it("creates a goal with milestones and lists it", async () => {
     const created = await agent.post("/api/goals").send({
       ...baseGoal,
