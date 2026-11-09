@@ -409,8 +409,7 @@ erDiagram
         string category
         date dueDate
         datetime completedAt
-        boolean legacyPending
-        datetime retiredAt
+        string description
         int order
         string userId FK
     }
@@ -463,6 +462,16 @@ erDiagram
         string color
         string_array completedDates
         int order
+        string userId FK
+    }
+    Reminder {
+        string id PK
+        string title
+        date date
+        string time
+        string priority
+        boolean completed
+        datetime completedAt
         string userId FK
     }
     Category {
@@ -694,14 +703,19 @@ Task и журнале. Транзакция по владельцу и уник
 - **Принцип удаления колонок при выпуске:** в выпуске удаляются только
   колонки, которых не знает текущий прод (они появились в неопубликованных
   миграциях). Тогда при аварии старый код прода можно запустить на новой
-  схеме без восстановления базы. Task.time/endTime (старый прод их читает) и
-  CalendarPlan.priority/category (ещё ходят через API) — **следующим
-  выпуском**, после спокойной работы новой версии.
+  схеме без восстановления базы. Task.time/endTime и
+  CalendarPlan.priority/category удалены следующим выпуском — миграцией
+  `20261109190000_audit_batch4` (аудит, пачка 4), вместе с Habit.todayOrder
+  (один порядок привычек) и с добавлением Reminder.completedAt. **После неё
+  код прежних выпусков на новой схеме не работает** — откат только
+  восстановлением дампа `backups/prerelease/…`, снятого перед выпуском.
 - В календаре на уровне страницы `allTasks`/`selectedTasks` переименованы в
   `allPlans`/`selectedPlans` (там всегда были планы; настоящие задачи —
-  `allDeadlines`). Пропсы виджетов (`tasks=` у CalendarGrid/HourGrid и др.)
-  пока прежние: часть из них несёт настоящие задачи (CalendarYear), их
-  переименование — отдельный рефакторинг.
+  `allDeadlines`). С пачки 4 аудита (2026-11-09) и в виджетах планы
+  называются планами: `DayPlanRow`, `TimedPlanBlock`, `onEditPlan`,
+  `movePlanToDay`, `isPlanOnDay`, тип перетаскивания `calendar-plan-move`.
+  Локальные переменные `task` внутри HourGrid/CalendarDayCell местами
+  остались — это только имена.
 - **Репетиция миграций «как на проде»** (локально): схема в `tasktracker_test`,
   миграции main (`eaf417d`) через `prisma migrate deploy --schema <копия
   prisma main>` + тот же ремонт P3018, что в `deploy-staging-schema.mjs`;
