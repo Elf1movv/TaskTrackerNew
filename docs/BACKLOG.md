@@ -2250,7 +2250,9 @@ https://claude.ai/artifact/NSsLRZ7sfosKJDGtNPrtH5 (отметки — в её б
     и не сворачивают цель. `docs/requirements` обновлены (6 файлов).
 - [x] **Пачка 3 — поведение экранов** — сделано 2026-11-09, коммиты `908154d`
   (календарь и напоминания), `668c68a` (открытие цели), `c1c44fb` (категории);
-  на стенде (выпуск в main — после «да» владельца). Миграций нет. До/после:
+  **выпущено в прод 2026-11-09** (~17:30 UTC): `main` = `474ae00` (merge «Release:
+  audit batch 3…»), бандл `index-ugzPxdWu.js` → `index-NWVh6Asc.js`, health ok, новый
+  код в бандле подтверждён. Миграций нет. До/после:
   https://claude.ai/artifact/9aeEevda1y8XQxJNjYZRwe
   - П4 + Д1: `selectVisibleReminders` — одно правило для главной и
     колокольчика; день отметки берётся по `updatedAt` (поля «когда отмечено»
