@@ -51,6 +51,14 @@ describe("habits router", () => {
     expect(list.body[0].groupId).toBe(baseHabit.groupId)
   })
 
+  it("rejects a completed day that isn't a real day", async () => {
+    const created = await agent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID() })
+    const res = await agent
+      .patch(`/api/habits/${created.body.id}`)
+      .send({ patch: { completedDates: ["2026-09-16", "вчера"] }, expectedUpdatedAt: created.body.updatedAt })
+    expect(res.status).toBe(400)
+  })
+
   it("toggles a completed date via patch, then rejects a stale patch", async () => {
     const created = await agent.post("/api/habits").send({ ...baseHabit, id: crypto.randomUUID() })
 

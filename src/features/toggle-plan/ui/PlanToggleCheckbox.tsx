@@ -21,7 +21,9 @@ export function PlanToggleCheckbox({
     >
       <div
         className={`flex items-center justify-center rounded-full border-2 transition-all duration-150 ease-[ease] ${
-          completed ? "border-primary bg-primary" : "border-border bg-transparent"
+          completed
+            ? "border-primary bg-primary"
+            : "border-border bg-transparent group-hover:border-primary/40"
         }`}
         style={{ width: size, height: size }}
       >

@@ -112,6 +112,9 @@ export function TaskForm({
             // color (from data, so it stays an inline style)
             style={{
               borderColor: PRIORITY_COLORS[priority],
+              // A light tint of the same color (owner choice 2026-11-09; the old
+              // `${color}28` never worked because the colors are var(--…)).
+              backgroundColor: `color-mix(in srgb, ${PRIORITY_COLORS[priority]} 16%, transparent)`,
               color: PRIORITY_COLORS[priority],
             }}
             onClick={() => setPriority(nextPriority(priority))}

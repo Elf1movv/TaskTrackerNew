@@ -87,6 +87,7 @@ export function ReminderForm({
             // color comes from the priority, so it stays an inline style
             style={{
               borderColor: REMINDER_PRIORITY_COLORS[priority],
+              backgroundColor: `color-mix(in srgb, ${REMINDER_PRIORITY_COLORS[priority]} 16%, transparent)`,
               color: REMINDER_PRIORITY_COLORS[priority],
             }}
             onClick={() => setPriority(nextPriority(priority))}
