@@ -8,16 +8,16 @@ const MIN_DURATION_MINUTES = 15
 
 // The drag on a task block's bottom-edge handle — start time is fixed,
 // only how far the block stretches changes. `draftEndTime` is a live
-// local preview during the gesture; the actual `onResizeTask` commit only
+// local preview during the gesture; the actual `onResizePlan` commit only
 // fires once, on release.
 export function useResizeDrag({
   startTime,
   columnRef,
-  onResizeTask,
+  onResizePlan,
 }: {
   startTime: string
   columnRef: RefObject<HTMLDivElement | null>
-  onResizeTask: (endTime: string) => void
+  onResizePlan: (endTime: string) => void
 }) {
   const [draftEndTime, setDraftEndTime] = useState<string | null>(null)
 
@@ -44,9 +44,9 @@ export function useResizeDrag({
     (clientY: number) => {
       const clamped = clampedEndTimeAtClientY(clientY)
       setDraftEndTime(null)
-      if (clamped) onResizeTask(clamped)
+      if (clamped) onResizePlan(clamped)
     },
-    [clampedEndTimeAtClientY, onResizeTask],
+    [clampedEndTimeAtClientY, onResizePlan],
   )
 
   const onPointerDownRaw = usePointerVerticalDrag({ onMove: handleMove, onEnd: handleEnd })

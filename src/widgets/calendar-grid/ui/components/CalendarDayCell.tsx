@@ -7,7 +7,7 @@ import { type Goal } from "@/entities/goal"
 import type { Task as DeadlineTask } from "@/entities/task"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { PLAN_COLOR, type CalendarEntry as Task } from "@/entities/calendar-plan"
-import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
+import { PlanToggleCheckbox } from "@/features/toggle-plan"
 import { useDropTarget } from "@/shared/lib/dnd"
 
 // Shown inline on the cell without a tap — up to this many, the rest is
@@ -19,7 +19,7 @@ const MAX_VISIBLE_REMINDERS = 2
 export function CalendarDayCell({
   day,
   isCurrentMonth,
-  dayTasks,
+  dayPlans,
   dayReminders,
   dayGoals,
   dayDeadlines = [],
@@ -27,13 +27,13 @@ export function CalendarDayCell({
   isSelected,
   isCurrent,
   onSelect,
-  onMoveTaskToDay,
-  onEditTask,
+  onMovePlanToDay,
+  onEditPlan,
   onEditReminder,
 }: {
   day: Date
   isCurrentMonth: boolean
-  dayTasks: Task[]
+  dayPlans: Task[]
   dayReminders: Reminder[]
   dayGoals: Goal[]
   dayDeadlines?: DeadlineTask[]
@@ -41,19 +41,19 @@ export function CalendarDayCell({
   isSelected: boolean
   isCurrent: boolean
   onSelect: () => void
-  onMoveTaskToDay: (taskId: string, day: Date) => void
-  onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onMovePlanToDay: (taskId: string, day: Date) => void
+  onEditPlan: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
 }) {
   // Composed here (not passed down as a ready-made per-day closure from the
   // parent's .map()) so it stays referentially stable across renders where
-  // `day` and `onMoveTaskToDay` don't change — useDropTarget's ref callback
+  // `day` and `onMovePlanToDay` don't change — useDropTarget's ref callback
   // depends on this identity staying stable, see useDropTarget's comment.
-  const handleTaskDrop = useCallback((taskId: string) => onMoveTaskToDay(taskId, day), [onMoveTaskToDay, day])
+  const handleTaskDrop = useCallback((taskId: string) => onMovePlanToDay(taskId, day), [onMovePlanToDay, day])
   // Only plans can be dropped on a day. A goal's deadline is read-only in
   // the calendar (audit П7, 2026-11-09) — it's changed on the Goals page.
   const { ref, isOver } = useDropTarget<HTMLDivElement>({
-    type: "calendar-task-move",
+    type: "calendar-plan-move",
     onDrop: handleTaskDrop,
   })
 
@@ -65,7 +65,7 @@ export function CalendarDayCell({
     // with its own click target (toggle complete) — both invalid nested
     // inside a native <button>. role="button" + tabIndex give the same
     // keyboard/a11y affordances instead, same pattern already established
-    // for TimedTaskBlock in HourGrid.tsx.
+    // for TimedPlanBlock in HourGrid.tsx.
     <div
       data-plan-day={formatDateKey(day)}
       ref={ref}
@@ -143,21 +143,21 @@ export function CalendarDayCell({
       {/* One row per task, no cap — a CSS Grid row already stretches every
           cell in it to the tallest one, so a busy day naturally grows its
           whole week row, matching the TickTick reference. */}
-      {dayTasks.length > 0 && (
+      {dayPlans.length > 0 && (
         <div className="w-full flex flex-col gap-0.5">
-          {dayTasks.map(task => (
+          {dayPlans.map(task => (
             <div
               key={task.id}
               role="button"
               tabIndex={0}
               onClick={e => {
                 e.stopPropagation()
-                onEditTask(task.id, e.currentTarget.getBoundingClientRect())
+                onEditPlan(task.id, e.currentTarget.getBoundingClientRect())
               }}
               onKeyDown={e => {
                 if (e.key !== "Enter" && e.key !== " ") return
                 e.stopPropagation()
-                onEditTask(task.id, e.currentTarget.getBoundingClientRect())
+                onEditPlan(task.id, e.currentTarget.getBoundingClientRect())
               }}
               className="w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-caption leading-tight overflow-hidden cursor-pointer"
               style={{
@@ -167,7 +167,7 @@ export function CalendarDayCell({
               }}
             >
               <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
-                <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={11} />
+                <PlanToggleCheckbox taskId={task.id} completed={task.completed} size={11} />
               </div>
               {task.time && (
                 <span className="tabular-nums shrink-0 text-muted-foreground font-bold">{task.time}</span>

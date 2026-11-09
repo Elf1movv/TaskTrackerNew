@@ -42,12 +42,12 @@ export interface MoveDragPreview {
 export function useMoveDrag({
   taskId,
   durationMinutes,
-  onRescheduleTask,
+  onReschedulePlan,
   onPreviewChange,
 }: {
   taskId: string
   durationMinutes: number
-  onRescheduleTask: (taskId: string, day: Date, time: string) => void
+  onReschedulePlan: (taskId: string, day: Date, time: string) => void
   onPreviewChange: (preview: MoveDragPreview | null) => void
 }) {
   const [isDragging, setIsDragging] = useState(false)
@@ -110,10 +110,10 @@ export function useMoveDrag({
           return
         }
         const result = computeAt(clientX, clientY)
-        if (result) onRescheduleTask(taskId, parseISO(result.day), result.startTime)
+        if (result) onReschedulePlan(taskId, parseISO(result.day), result.startTime)
       }
     },
-    [computeAt, onPreviewChange, onRescheduleTask, taskId],
+    [computeAt, onPreviewChange, onReschedulePlan, taskId],
   )
 
   const onPointerDownRaw = usePointerVerticalDrag({ onMove: handleMove, onEnd: handleEnd })

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { format, isToday } from "date-fns"
 import { REMINDER_BORDER_COLORS, ReminderPriorityIcon, type Reminder } from "@/entities/reminder"
 import { PLAN_COLOR, type CalendarEntry as Task } from "@/entities/calendar-plan"
-import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
+import { PlanToggleCheckbox } from "@/features/toggle-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import {
   DEFAULT_BLOCK_MINUTES,
@@ -57,24 +57,24 @@ export interface HourGridColumn {
 // isGoalDueOnDay), so it never appears in the hour grid at all; Reminders
 // keep a single point in time, no resize handle.
 //
-// `onCreateDraft`/`onResizeTask` are optional — click/drag-to-create and
+// `onCreateDraft`/`onResizePlan` are optional — click/drag-to-create and
 // resize are Day-view-only this round (see CalendarWeekView, which simply
 // doesn't pass them): when absent, the column attaches no pointerdown
 // listener at all and no resize handle is rendered, so Week keeps its
 // existing whole-block-move-only behavior unchanged.
 export function HourGrid({
   columns,
-  onEditTask,
+  onEditPlan,
   onEditReminder,
-  onRescheduleTask,
-  onResizeTask,
+  onReschedulePlan,
+  onResizePlan,
   onCreateDraft,
 }: {
   columns: HourGridColumn[]
-  onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onEditPlan: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
-  onRescheduleTask: (taskId: string, day: Date, time: string) => void
-  onResizeTask?: (taskId: string, endTime: string) => void
+  onReschedulePlan: (taskId: string, day: Date, time: string) => void
+  onResizePlan?: (taskId: string, endTime: string) => void
   onCreateDraft?: (day: Date, startTime: string, endTime: string, anchorRect: DOMRect) => void
 }) {
   const [now, setNow] = useState(new Date())
@@ -129,10 +129,10 @@ export function HourGrid({
             nowTop={isToday(column.day) ? nowTop : null}
             movePreview={movePreview?.day === formatDateKey(column.day) ? movePreview : null}
             onMovePreviewChange={setMovePreview}
-            onEditTask={onEditTask}
+            onEditPlan={onEditPlan}
             onEditReminder={onEditReminder}
-            onRescheduleTask={onRescheduleTask}
-            onResizeTask={onResizeTask}
+            onReschedulePlan={onReschedulePlan}
+            onResizePlan={onResizePlan}
             onCreateDraft={onCreateDraft}
           />
         ))}
@@ -146,10 +146,10 @@ function TimelineDayColumn({
   nowTop,
   movePreview,
   onMovePreviewChange,
-  onEditTask,
+  onEditPlan,
   onEditReminder,
-  onRescheduleTask,
-  onResizeTask,
+  onReschedulePlan,
+  onResizePlan,
   onCreateDraft,
 }: {
   column: HourGridColumn
@@ -159,10 +159,10 @@ function TimelineDayColumn({
   // is currently over ME", not "no move-drag is happening at all".
   movePreview: MoveDragPreview | null
   onMovePreviewChange: (preview: MoveDragPreview | null) => void
-  onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onEditPlan: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
-  onRescheduleTask: (taskId: string, day: Date, time: string) => void
-  onResizeTask?: (taskId: string, endTime: string) => void
+  onReschedulePlan: (taskId: string, day: Date, time: string) => void
+  onResizePlan?: (taskId: string, endTime: string) => void
   onCreateDraft?: (day: Date, startTime: string, endTime: string, anchorRect: DOMRect) => void
 }) {
   const columnEl = useRef<HTMLDivElement | null>(null)
@@ -231,15 +231,15 @@ function TimelineDayColumn({
       {movePreview && <TimePreviewBlock startTime={movePreview.startTime} endTime={movePreview.endTime} />}
 
       {column.tasks.map(task => (
-        <TimedTaskBlock
+        <TimedPlanBlock
           key={task.id}
           task={task}
           categoryColor={PLAN_COLOR}
           lane={laneById.get(`task:${task.id}`) ?? { id: "", laneIndex: 0, laneCount: 1 }}
           columnRef={columnEl}
-          onEdit={rect => onEditTask(task.id, rect)}
-          onResizeTask={onResizeTask ? endTime => onResizeTask(task.id, endTime) : undefined}
-          onRescheduleTask={onRescheduleTask}
+          onEdit={rect => onEditPlan(task.id, rect)}
+          onResizePlan={onResizePlan ? endTime => onResizePlan(task.id, endTime) : undefined}
+          onReschedulePlan={onReschedulePlan}
           onMovePreviewChange={onMovePreviewChange}
         />
       ))}
@@ -295,14 +295,14 @@ function taskDurationMinutes(task: Task): number {
   return raw > 0 ? raw : DEFAULT_BLOCK_MINUTES
 }
 
-function TimedTaskBlock({
+function TimedPlanBlock({
   task,
   categoryColor,
   lane,
   columnRef,
   onEdit,
-  onResizeTask,
-  onRescheduleTask,
+  onResizePlan,
+  onReschedulePlan,
   onMovePreviewChange,
 }: {
   task: Task
@@ -310,8 +310,8 @@ function TimedTaskBlock({
   lane: LaneAssignment
   columnRef: React.RefObject<HTMLDivElement | null>
   onEdit: (anchorRect: DOMRect) => void
-  onResizeTask?: (endTime: string) => void
-  onRescheduleTask: (taskId: string, day: Date, time: string) => void
+  onResizePlan?: (endTime: string) => void
+  onReschedulePlan: (taskId: string, day: Date, time: string) => void
   onMovePreviewChange: (preview: MoveDragPreview | null) => void
 }) {
   const {
@@ -321,13 +321,13 @@ function TimedTaskBlock({
   } = useMoveDrag({
     taskId: task.id,
     durationMinutes: taskDurationMinutes(task),
-    onRescheduleTask,
+    onReschedulePlan,
     onPreviewChange: onMovePreviewChange,
   })
   const { onPointerDown: onResizePointerDown, draftEndTime } = useResizeDrag({
     startTime: task.time ?? "00:00",
     columnRef,
-    onResizeTask: onResizeTask ?? (() => {}),
+    onResizePlan: onResizePlan ?? (() => {}),
   })
 
   const height = draftEndTime
@@ -391,13 +391,13 @@ function TimedTaskBlock({
       title={`${task.time} · ${task.title}`}
     >
       <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
-        <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={14} />
+        <PlanToggleCheckbox taskId={task.id} completed={task.completed} size={14} />
       </div>
       <span className="tabular-nums shrink-0 text-muted-foreground">{task.time}</span>
       <span className={`truncate font-semibold ${task.completed ? "text-tertiary" : ""}`}>
         <span className={task.completed ? "line-through" : ""}>{task.title}</span>
       </span>
-      {onResizeTask && (
+      {onResizePlan && (
         <div
           onPointerDown={onResizePointerDown}
           // stopPropagation on pointerdown only stops THAT event from

@@ -7,12 +7,11 @@ import { selectUpcomingReminders } from "./selectUpcomingReminders"
 // one stays (struck through) until the end of the day it was checked, then
 // it's gone — the same rule tasks follow.
 //
-// A reminder has no "checked at" field of its own, so `updatedAt` stands in
-// for it. Side effect: editing an already-checked reminder shows it again
-// until the end of that day — acceptable, and it avoids a migration.
+// The day it was checked is `completedAt` (audit batch 4), so editing a
+// checked reminder later doesn't bring it back.
 export function selectVisibleReminders(reminders: Reminder[]): Reminder[] {
   const today = getTodayKey()
   return selectUpcomingReminders(reminders).filter(
-    r => !r.completed || formatDateKey(new Date(r.updatedAt)) === today,
+    r => !r.completed || (!!r.completedAt && formatDateKey(new Date(r.completedAt)) === today),
   )
 }

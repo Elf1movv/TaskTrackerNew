@@ -28,5 +28,8 @@ export interface Reminder {
   time: string | null
   priority: ReminderPriority
   completed: boolean
+  // When it was checked (set by the server, cleared when unchecked) — a
+  // checked reminder stays visible until the end of that day.
+  completedAt: string | null
   updatedAt: string
 }

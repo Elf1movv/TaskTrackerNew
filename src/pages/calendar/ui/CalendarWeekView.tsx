@@ -2,8 +2,8 @@ import { useState } from "react"
 import { format, isToday } from "date-fns"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import type { Goal } from "@/entities/goal"
-import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
-import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
+import type { Task as DeadlineTask } from "@/entities/task"
+import { isPlanOnDay, type CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildWeekRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
@@ -26,7 +26,7 @@ export function CalendarWeekView({
   allDeadlines,
   allGoals,
   onRescheduleTaskTime,
-  onResizeTask,
+  onResizePlan,
 }: {
   anchorDate: Date
   allPlans: Plan[]
@@ -34,7 +34,7 @@ export function CalendarWeekView({
   allDeadlines: DeadlineTask[]
   allGoals: Goal[]
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
-  onResizeTask: (taskId: string, endTime: string) => void
+  onResizePlan: (taskId: string, endTime: string) => void
 }) {
   const { language } = useLanguage()
   const locale = getDateLocale(language)
@@ -52,17 +52,17 @@ export function CalendarWeekView({
     const dayKey = formatDateKey(day)
     return {
       day,
-      tasks: allPlans.filter(task => isTaskOnDay(task, dayKey) && task.time),
+      tasks: allPlans.filter(task => isPlanOnDay(task, dayKey) && task.time),
       reminders: selectRemindersOnDay(allReminders, dayKey).filter(reminder => reminder.time),
     }
   })
 
   // Week has 7 day arrays, not Day's single one — look items up directly
   // in the full collections by id rather than a per-column array.
-  function openEditTask(taskId: string, rect: DOMRect) {
+  function openEditPlan(taskId: string, rect: DOMRect) {
     const task = allPlans.find(t => t.id === taskId)
     if (!task) return
-    setDraft({ mode: "edit-task", task })
+    setDraft({ mode: "edit-plan", task })
     setAnchorRect(rect)
   }
 
@@ -109,10 +109,10 @@ export function CalendarWeekView({
 
       <HourGrid
         columns={hourGridColumns}
-        onEditTask={openEditTask}
+        onEditPlan={openEditPlan}
         onEditReminder={openEditReminder}
-        onRescheduleTask={onRescheduleTaskTime}
-        onResizeTask={onResizeTask}
+        onReschedulePlan={onRescheduleTaskTime}
+        onResizePlan={onResizePlan}
         onCreateDraft={(day, startTime, endTime, rect) => {
           setDraft({ mode: "create", day, defaultTime: startTime, defaultEndTime: endTime })
           setAnchorRect(rect)

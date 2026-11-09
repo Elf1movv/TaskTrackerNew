@@ -7,13 +7,8 @@ export interface Task {
   priority: Priority
   category: string
   dueDate: string | null
-  // Legacy schedule fields, retained for reviewing old records.
-  // Current calendar intervals live in CalendarPlan.
-  time: string | null
-  endTime: string | null
   completedAt: string | null
-  // Optional free-text notes, same nullable-additive convention as endTime
-  // — existing tasks have no value until edited.
+  // Optional free-text notes — existing tasks have no value until edited.
   description: string | null
   updatedAt: string
   createdAt: string

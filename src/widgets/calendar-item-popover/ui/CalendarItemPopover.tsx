@@ -10,7 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group"
 
 export type CalendarItemDraft =
   | { mode: "create"; day: Date; defaultTime: string | null; defaultEndTime: string | null }
-  | { mode: "edit-task"; task: Task }
+  | { mode: "edit-plan"; task: Task }
   | { mode: "edit-reminder"; reminder: Reminder }
 
 // The click/drag-anchored replacement for Day's old static sidebar — one
@@ -85,7 +85,7 @@ export function CalendarItemPopover({
           </>
         )}
 
-        {draft?.mode === "edit-task" && <PlanForm embedded plan={draft.task} onDone={onClose} />}
+        {draft?.mode === "edit-plan" && <PlanForm embedded plan={draft.task} onDone={onClose} />}
 
         {draft?.mode === "edit-reminder" && (
           <ReminderForm

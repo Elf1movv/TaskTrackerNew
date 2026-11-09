@@ -15,11 +15,20 @@ const reminder = (fields: Partial<Reminder>): Reminder => ({
   time: null,
   priority: "normal",
   completed: false,
+  completedAt: null,
   updatedAt: now.toISOString(),
   ...fields,
 })
 
 describe("selectVisibleReminders", () => {
+  it("goes by the day it was checked, not by the last edit", () => {
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12).toISOString()
+    const list = [
+      reminder({ id: "edited", completed: true, completedAt: yesterday, updatedAt: now.toISOString() }),
+    ]
+    expect(selectVisibleReminders(list)).toEqual([])
+  })
+
   it("keeps open reminders from today on and drops past ones", () => {
     const list = [
       reminder({ id: "past", date: dayOffset(-1) }),
@@ -30,13 +39,15 @@ describe("selectVisibleReminders", () => {
   })
 
   it("keeps a reminder checked today, even one dated later", () => {
-    const list = [reminder({ id: "later-done", date: dayOffset(3), completed: true })]
+    const list = [
+      reminder({ id: "later-done", date: dayOffset(3), completed: true, completedAt: now.toISOString() }),
+    ]
     expect(selectVisibleReminders(list).map(r => r.id)).toEqual(["later-done"])
   })
 
   it("hides a reminder checked on an earlier day", () => {
     const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12).toISOString()
-    const list = [reminder({ id: "old-done", date: dayOffset(3), completed: true, updatedAt: yesterday })]
+    const list = [reminder({ id: "old-done", date: dayOffset(3), completed: true, completedAt: yesterday })]
     expect(selectVisibleReminders(list)).toEqual([])
   })
 })

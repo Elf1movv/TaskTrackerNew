@@ -42,7 +42,7 @@ export function offsetToTime(minutes: number, snapMinutes = 15): string {
 
 // Shifts a "HH:mm" time by deltaMinutes (positive or negative), same clamp
 // as offsetToTime — used to preserve a task block's duration when its
-// start time moves (see CalendarProvider.rescheduleTaskTime). No
+// start time moves (see CalendarProvider.reschedulePlanTime). No
 // rounding: the delta is already exact (the difference between two times
 // that were each already snapped), re-snapping it here would distort the
 // shift instead of just moving it.

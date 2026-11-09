@@ -12,7 +12,7 @@ import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { formatDay, getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
-import { DayDeadlineRow, DayGoalRow, DayHabitRow, DayReminderRow, DayTaskRow } from "./components"
+import { DayDeadlineRow, DayGoalRow, DayHabitRow, DayReminderRow, DayPlanRow } from "./components"
 
 export function DayDetailPanel({
   day,
@@ -73,7 +73,7 @@ export function DayDetailPanel({
             setEditingTaskId(null)
             setIsAddingTask(v => !v)
           }}
-          aria-label="Add task"
+          aria-label="Add plan"
         >
           <Plus size={14} />
         </Button>
@@ -99,7 +99,7 @@ export function DayDetailPanel({
             editingTaskId === task.id ? (
               <PlanForm key={task.id} plan={task} onDone={() => setEditingTaskId(null)} />
             ) : (
-              <DayTaskRow
+              <DayPlanRow
                 key={task.id}
                 task={task}
                 onEdit={() => {

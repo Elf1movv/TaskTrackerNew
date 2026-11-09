@@ -10,6 +10,7 @@ function makeReminder(overrides: Partial<Reminder> = {}): Reminder {
     time: "14:00",
     priority: "critical",
     completed: false,
+    completedAt: null,
     updatedAt: "2026-09-22T00:00:00.000Z",
     ...overrides,
   }

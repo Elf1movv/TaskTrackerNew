@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import type { Goal } from "@/entities/goal"
-import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
-import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
+import type { Task as DeadlineTask } from "@/entities/task"
+import { isPlanOnDay, type CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { AllDayStrip, HourGrid } from "@/widgets/calendar-timeline"
 import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-item-popover"
@@ -28,7 +28,7 @@ export function CalendarDayView({
   allDeadlines,
   allGoals,
   onRescheduleTaskTime,
-  onResizeTask,
+  onResizePlan,
 }: {
   anchorDate: Date
   allPlans: Plan[]
@@ -36,7 +36,7 @@ export function CalendarDayView({
   allDeadlines: DeadlineTask[]
   allGoals: Goal[]
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
-  onResizeTask: (taskId: string, endTime: string) => void
+  onResizePlan: (taskId: string, endTime: string) => void
 }) {
   const [draft, setDraft] = useState<CalendarItemDraft | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
@@ -47,16 +47,16 @@ export function CalendarDayView({
     setAnchorRect(null)
   }
 
-  const dayTasks = allPlans.filter(task => isTaskOnDay(task, dayKey))
+  const dayPlans = allPlans.filter(task => isPlanOnDay(task, dayKey))
   const dayReminders = selectRemindersOnDay(allReminders, dayKey)
 
-  const timedTasks = dayTasks.filter(task => task.time)
+  const timedPlans = dayPlans.filter(task => task.time)
   const timedReminders = dayReminders.filter(reminder => reminder.time)
 
-  function openEditTask(taskId: string, rect: DOMRect) {
-    const task = dayTasks.find(t => t.id === taskId)
+  function openEditPlan(taskId: string, rect: DOMRect) {
+    const task = dayPlans.find(t => t.id === taskId)
     if (!task) return
-    setDraft({ mode: "edit-task", task })
+    setDraft({ mode: "edit-plan", task })
     setAnchorRect(rect)
   }
 
@@ -77,11 +77,11 @@ export function CalendarDayView({
         onEditReminder={openEditReminder}
       />
       <HourGrid
-        columns={[{ day: anchorDate, tasks: timedTasks, reminders: timedReminders }]}
-        onEditTask={openEditTask}
+        columns={[{ day: anchorDate, tasks: timedPlans, reminders: timedReminders }]}
+        onEditPlan={openEditPlan}
         onEditReminder={openEditReminder}
-        onRescheduleTask={onRescheduleTaskTime}
-        onResizeTask={onResizeTask}
+        onReschedulePlan={onRescheduleTaskTime}
+        onResizePlan={onResizePlan}
         onCreateDraft={(day, startTime, endTime, rect) => {
           setDraft({ mode: "create", day, defaultTime: startTime, defaultEndTime: endTime })
           setAnchorRect(rect)

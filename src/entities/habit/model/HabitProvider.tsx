@@ -17,16 +17,14 @@ export function HabitProvider({ children }: { children: ReactNode }) {
   } = usePersistedCollection<Habit>(habitRepository, "habit")
 
   const addHabit = useCallback(
-    (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates" | "todayOrder">) => {
-      // updatedAt/createdAt/todayOrder are placeholders here —
-      // usePersistedCollection.create replaces them with the server's real
-      // values (todayOrder included) once the request resolves.
+    (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates">) => {
+      // updatedAt/createdAt are placeholders here — usePersistedCollection.create
+      // replaces them with the server's real values once the request resolves.
       const now = new Date().toISOString()
       create({
         ...habit,
         id: generateId(),
         completedDates: [],
-        todayOrder: 0,
         updatedAt: now,
         createdAt: now,
       })
@@ -35,7 +33,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
   )
 
   const updateHabit = useCallback(
-    (id: string, patch: Partial<Omit<Habit, "id" | "updatedAt" | "todayOrder">>) => update(id, patch),
+    (id: string, patch: Partial<Omit<Habit, "id" | "updatedAt">>) => update(id, patch),
     [update],
   )
 
@@ -78,50 +76,6 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     [habits, update, reorder],
   )
 
-  // Today-page mirrors of the two above — same group membership (shared,
-  // via `update(..., {groupId})`), but reorder against `todayOrder`
-  // instead of `order` by passing habitRepository.reorderToday as
-  // reorder()'s second argument. Same subset-of-one-group scoping, same
-  // race-safety machinery, just a different column on the server.
-  //
-  // Also stamps each item's own `todayOrder` field to match its new index
-  // in the reordered subset — `reorder()` itself only ever moves array
-  // POSITIONS (it has no entity-specific knowledge of field names), but
-  // selectTodayHabits.ts sorts by the `todayOrder` FIELD (needed so a
-  // fresh fetch — e.g. right after a page reload — reflects this order;
-  // GET /api/habits always sorts its response by `order`, not
-  // `todayOrder`, see that file's comment). Without re-stamping the field
-  // here too, a drag would optimistically move the array position but
-  // that selector's field-based sort would immediately snap it right back
-  // until the next full reload — found and fixed together, 2026-09-28.
-  const reorderHabitsToday = useCallback(
-    (groupId: string, draggedId: string, targetId: string) => {
-      const groupHabits = habits.filter(h => h.groupId === groupId)
-      const reordered = reorderById(groupHabits, draggedId, targetId).map((h, index) => ({
-        ...h,
-        todayOrder: index,
-      }))
-      reorder(reordered, habitRepository.reorderToday)
-    },
-    [habits, reorder],
-  )
-
-  const moveHabitToGroupToday = useCallback(
-    async (habitId: string, targetGroupId: string) => {
-      const habit = habits.find(h => h.id === habitId)
-      if (!habit || habit.groupId === targetGroupId) return
-      const movedHabit = await update(habitId, { groupId: targetGroupId })
-      if (!movedHabit) return
-      const targetGroupHabits = habits.filter(h => h.groupId === targetGroupId)
-      const reordered = [...targetGroupHabits, movedHabit].map((h, index) => ({
-        ...h,
-        todayOrder: index,
-      }))
-      reorder(reordered, habitRepository.reorderToday)
-    },
-    [habits, update, reorder],
-  )
-
   const toggleHabit = useCallback(
     (id: string, date: string) => {
       const habit = habits.find(h => h.id === id)
@@ -143,8 +97,6 @@ export function HabitProvider({ children }: { children: ReactNode }) {
       deleteHabit,
       reorderHabitsInGroup,
       moveHabitToGroup,
-      reorderHabitsToday,
-      moveHabitToGroupToday,
       toggleHabit,
       refreshHabits: refresh,
     }),
@@ -155,8 +107,6 @@ export function HabitProvider({ children }: { children: ReactNode }) {
       deleteHabit,
       reorderHabitsInGroup,
       moveHabitToGroup,
-      reorderHabitsToday,
-      moveHabitToGroupToday,
       toggleHabit,
       refresh,
     ],

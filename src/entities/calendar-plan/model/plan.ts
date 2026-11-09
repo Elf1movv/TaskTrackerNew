@@ -16,8 +16,6 @@ export interface CalendarPlan {
   durationMinutes: number
   onHold: boolean
   completed: boolean
-  priority: "low" | "medium" | "high"
-  category: string
   createdAt: string
   updatedAt: string
 }

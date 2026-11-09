@@ -2,11 +2,11 @@ import { useMemo, useState } from "react"
 import { format, isToday } from "date-fns"
 import { PlanForm } from "@/features/plan-form"
 import { ReminderForm } from "@/features/reminder-form"
-import { DayDeadlineRow, DayGoalRow, DayReminderRow, DayTaskRow } from "@/widgets/day-detail-panel"
+import { DayDeadlineRow, DayGoalRow, DayReminderRow, DayPlanRow } from "@/widgets/day-detail-panel"
 import { isGoalDueOnDay, type Goal } from "@/entities/goal"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
-import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
+import { isPlanOnDay, type CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildAgendaRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { formatDay, getDateLocale, useLanguage } from "@/shared/lib/i18n"
@@ -27,7 +27,7 @@ const LOAD_MORE_INCREMENT_DAYS = 6
 // Habits are deliberately absent — they have their own dedicated tabs
 // (Habits page, Today's habit grid), repeating them here per-day was
 // noise. Reuses the exact same row components the day panel already has
-// (DayTaskRow etc., exported from widgets/day-detail-panel) instead of a
+// (DayPlanRow etc., exported from widgets/day-detail-panel) instead of a
 // second rendering for the same three entity types.
 //
 // Deliberately no "+ add" here, unlike the day panel — this view's job is
@@ -73,7 +73,7 @@ export function CalendarAgendaView({
         const dayKey = formatDateKey(day)
         return {
           day,
-          tasks: allPlans.filter(t => isTaskOnDay(t, dayKey)),
+          tasks: allPlans.filter(t => isPlanOnDay(t, dayKey)),
           deadlines: allDeadlines.filter(t => isTaskOnDay(t, dayKey)),
           reminders: selectRemindersOnDay(allReminders, dayKey),
           goals: allGoals.filter(g => isGoalDueOnDay(g, dayKey)),
@@ -123,7 +123,7 @@ export function CalendarAgendaView({
                 editing?.kind === "task" && editing.id === task.id ? (
                   <PlanForm key={task.id} plan={task} onDone={() => setEditing(null)} />
                 ) : (
-                  <DayTaskRow
+                  <DayPlanRow
                     key={task.id}
                     task={task}
                     draggable={false}

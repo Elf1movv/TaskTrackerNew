@@ -1,6 +1,6 @@
 import { HabitIcon, type Habit } from "@/entities/habit"
 
-// Read-only — unlike DayTaskRow/DayGoalRow, a habit has no per-day record
+// Read-only — unlike DayPlanRow/DayGoalRow, a habit has no per-day record
 // to drag or edit here: `activeDays` is a recurring weekday pattern, not a
 // specific instance, so "move this occurrence" doesn't map onto the data
 // model. Manage the habit itself (rename, change color/schedule) from

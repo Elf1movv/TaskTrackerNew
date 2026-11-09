@@ -1,8 +1,9 @@
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { HabitForm } from "@/features/habit-form"
-import { useHabits, type Habit } from "@/entities/habit"
-import { useHabitGroups, type HabitGroup } from "@/entities/habit-group"
-import { useDragReorder, useDropTarget, useIsDragging } from "@/shared/lib/dnd"
+import { type Habit } from "@/entities/habit"
+import { type HabitGroup } from "@/entities/habit-group"
+import { HABIT_MOVE_TYPE, useHabitGroupDnd } from "@/features/habit/group-dnd"
+import { useIsDragging } from "@/shared/lib/dnd"
 import { useLanguage } from "@/shared/lib/i18n"
 import { HabitGridItem } from "./components"
 import type { HabitViewMode } from "../lib/habitViewMode"
@@ -29,34 +30,11 @@ export function GeneralHabitsList({
   isAdding: boolean
   onCloseAdding: () => void
 }) {
-  const { habits: allHabits, reorderHabitsToday, moveHabitToGroupToday } = useHabits()
   const { t } = useLanguage()
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
-  const isDraggingHabit = useIsDragging("habit-move-today")
-  const { reorderHabitGroups } = useHabitGroups()
-  const { ref: dropRef, isOver } = useDropTarget<HTMLDivElement>({
-    type: "habit-move-today",
-    onDrop: habitId => moveHabitToGroupToday(habitId, group.id),
-  })
-  const { ref: dragGroupRef, isDragging } = useDragReorder<HTMLDivElement>({
-    type: "habit-group",
-    id: group.id,
-    onHoverMove: reorderHabitGroups,
-  })
-  const listRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      dragGroupRef(node)
-      dropRef(node)
-    },
-    [dragGroupRef, dropRef],
-  )
-
-  function handleHabitDrop(draggedId: string, targetHabitId: string) {
-    const dragged = allHabits.find(h => h.id === draggedId)
-    if (!dragged || draggedId === targetHabitId) return
-    if (dragged.groupId === group.id) reorderHabitsToday(group.id, draggedId, targetHabitId)
-    else moveHabitToGroupToday(draggedId, group.id)
-  }
+  const isDraggingHabit = useIsDragging(HABIT_MOVE_TYPE)
+  // Block drag + habit drops, shared with the other two block cards (audit Д3).
+  const { ref: listRef, isDragging, isOver, dropHabitOn } = useHabitGroupDnd(group)
 
   const showForm = isAdding || editingHabit
   if (habits.length === 0 && !showForm && !isDraggingHabit) return null
@@ -87,7 +65,7 @@ export function GeneralHabitsList({
               key={habit.id}
               habit={habit}
               viewMode={viewMode}
-              onDropHabit={draggedId => handleHabitDrop(draggedId, habit.id)}
+              onDropHabit={draggedId => dropHabitOn(draggedId, habit.id)}
               onEdit={() => {
                 onCloseAdding()
                 setEditingHabit(habit)

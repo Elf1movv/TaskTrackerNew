@@ -29,8 +29,6 @@ describe("Task deadline", () => {
     priority: "medium",
     completed: false,
     dueDate: null,
-    time: null,
-    endTime: null,
     description: null,
     completedAt: null,
     createdAt: "2026-10-02T08:00:00.000Z",
@@ -50,10 +48,9 @@ describe("Task deadline", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: "Clear" }))
     fireEvent.click(screen.getByRole("button", { name: "Save" }))
-    expect(updateTask).toHaveBeenCalledWith(
-      "same-id",
-      expect.objectContaining({ dueDate: null, time: null, endTime: null }),
-    )
+    expect(updateTask).toHaveBeenCalledWith("same-id", expect.objectContaining({ dueDate: null }))
+    // Tasks have no hour at all since audit batch 4 — nothing to send.
+    expect(updateTask.mock.calls[0][1]).not.toHaveProperty("time")
   })
 
   it("edits the existing undated record and keeps it undated", () => {

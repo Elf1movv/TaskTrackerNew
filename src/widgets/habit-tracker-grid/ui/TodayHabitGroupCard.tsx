@@ -1,17 +1,12 @@
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { ChevronDown, Plus } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
 import { EditHabitGroupButton } from "@/features/edit-habit-group"
 import { DeleteHabitGroupButton } from "@/features/delete-habit-group"
 import { HabitGroupForm } from "@/features/habit-group-form"
 import { HabitIcon, useHabits, type Habit } from "@/entities/habit"
-import {
-  getHabitGroupIcon,
-  getHabitGroupTitle,
-  useHabitGroups,
-  type HabitGroup,
-} from "@/entities/habit-group"
-import { useDragReorder, useDropTarget } from "@/shared/lib/dnd"
+import { useHabitGroupDnd } from "@/features/habit/group-dnd"
+import { getHabitGroupIcon, getHabitGroupTitle, type HabitGroup } from "@/entities/habit-group"
 import { getTodayKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
@@ -39,8 +34,10 @@ export function TodayHabitGroupCard({
   habits: Habit[]
   viewMode: HabitViewMode
 }) {
-  const { habits: allHabits, reorderHabitsToday, moveHabitToGroupToday } = useHabits()
-  const { reorderHabitGroups } = useHabitGroups()
+  const { habits: allHabits } = useHabits()
+  // Block drag, habit drop into the block, and row-to-row drops — shared with
+  // the other two block cards (audit Д3).
+  const { ref: headerRef, isDragging, dropHabitOn } = useHabitGroupDnd(group)
   const { t } = useLanguage()
 
   // Collapsed by default; the choice is remembered for this browser session.
@@ -50,41 +47,6 @@ export function TodayHabitGroupCard({
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
   const doneCount = habits.filter(h => h.completedDates.includes(getTodayKey())).length
   const hasHabitsInGroup = allHabits.some(habit => habit.groupId === group.id)
-
-  // Block reordering — same shared order/type as /habits' own block drag
-  // (HabitGroupAccordionItem), since the blocks' relative order is shared
-  // between the two screens (only habit order within a block isn't).
-  const { ref: dragGroupRef, isDragging } = useDragReorder<HTMLDivElement>({
-    type: "habit-group",
-    id: group.id,
-    onHoverMove: reorderHabitGroups,
-  })
-  // Accepts a habit dragged from any Today block's card — type
-  // "habit-move-today" is separate from /habits' "habit-move", so this
-  // axis's drops can never land on the /habits page's accordion or vice
-  // versa.
-  const { ref: dropHabitRef } = useDropTarget<HTMLDivElement>({
-    type: "habit-move-today",
-    onDrop: habitId => moveHabitToGroupToday(habitId, group.id),
-  })
-  const headerRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      dragGroupRef(node)
-      dropHabitRef(node)
-    },
-    [dragGroupRef, dropHabitRef],
-  )
-
-  function handleHabitDrop(draggedId: string, targetHabitId: string) {
-    const dragged = allHabits.find(h => h.id === draggedId)
-    const target = allHabits.find(h => h.id === targetHabitId)
-    if (!dragged || !target || draggedId === targetHabitId) return
-    if (dragged.groupId === target.groupId) {
-      reorderHabitsToday(target.groupId, draggedId, targetHabitId)
-    } else {
-      moveHabitToGroupToday(draggedId, target.groupId)
-    }
-  }
 
   return (
     <div ref={headerRef} className="select-none" style={{ opacity: isDragging ? 0.4 : 1 }}>
@@ -189,7 +151,7 @@ export function TodayHabitGroupCard({
                     key={habit.id}
                     habit={habit}
                     viewMode={viewMode}
-                    onDropHabit={draggedId => handleHabitDrop(draggedId, habit.id)}
+                    onDropHabit={draggedId => dropHabitOn(draggedId, habit.id)}
                     onEdit={() => {
                       setIsAdding(false)
                       setEditingHabit(habit)

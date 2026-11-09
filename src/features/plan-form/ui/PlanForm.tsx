@@ -56,8 +56,6 @@ export function PlanForm({
           : (plan?.durationMinutes ?? 60),
       onHold,
       completed: plan?.completed ?? false,
-      category: plan?.category ?? "",
-      priority: plan?.priority ?? ("medium" as const),
     }
     if (plan) updatePlan(plan.id, fields)
     else if (!(await addPlan(fields))) {

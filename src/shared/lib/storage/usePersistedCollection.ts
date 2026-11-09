@@ -160,11 +160,9 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
       nextItems: T[],
       // Which network call to send the reordered {id, order}[] payload to
       // — defaults to this repository's own `reorder`. An entity with a
-      // second, independent ordering axis (Habit's todayOrder, alongside
-      // its usual order) passes a different function here instead, and
-      // gets the exact same optimistic-update/pendingReorder-queue/
-      // pendingUpdates-seeding protection for free, since it's the same
-      // code path either way.
+      // second, independent ordering axis could pass a different function
+      // here and get the same optimistic-update/queue protection. (Habit's
+      // todayOrder used this until audit batch 4 merged the two orders.)
       reorderRequest: (
         order: { id: string; order: number }[],
       ) => Promise<{ id: string; updatedAt: string }[]> = repository.reorder,

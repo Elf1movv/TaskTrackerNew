@@ -11,7 +11,6 @@ function makeHabit(overrides: Partial<Habit> = {}): Habit {
     color: "#000000",
     activeDays: [0, 1, 2, 3, 4, 5, 6],
     groupId: "g1",
-    todayOrder: 0,
     updatedAt: "2026-09-22T00:00:00.000Z",
     createdAt: "2026-09-22T00:00:00.000Z",
     ...overrides,

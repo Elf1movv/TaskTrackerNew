@@ -3,6 +3,7 @@ import { DeleteHabitButton } from "@/features/delete-habit"
 import { EditHabitButton } from "@/features/edit-habit"
 import { HabitCard, HabitListRow } from "@/features/habit-card"
 import { type Habit } from "@/entities/habit"
+import { HABIT_MOVE_TYPE } from "@/features/habit/group-dnd"
 import { useDragItem, useDropTarget } from "@/shared/lib/dnd"
 import type { HabitViewMode } from "../../lib/habitViewMode"
 
@@ -21,9 +22,9 @@ export function HabitGridItem({
   onDropHabit: (draggedId: string) => void
   onEdit: () => void
 }) {
-  const { ref: dragRef, isDragging } = useDragItem<HTMLDivElement>({ type: "habit-move-today", id: habit.id })
+  const { ref: dragRef, isDragging } = useDragItem<HTMLDivElement>({ type: HABIT_MOVE_TYPE, id: habit.id })
   const { ref: dropRef, isOver } = useDropTarget<HTMLDivElement>({
-    type: "habit-move-today",
+    type: HABIT_MOVE_TYPE,
     onDrop: onDropHabit,
   })
   const ref = useCallback(

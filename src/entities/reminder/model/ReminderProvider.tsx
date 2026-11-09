@@ -15,8 +15,8 @@ export function ReminderProvider({ children }: { children: ReactNode }) {
   } = usePersistedCollection<Reminder>(reminderRepository, "reminder")
 
   const addReminder = useCallback(
-    (reminder: Omit<Reminder, "id" | "updatedAt">) => {
-      create({ ...reminder, id: generateId(), updatedAt: new Date().toISOString() })
+    (reminder: Omit<Reminder, "id" | "updatedAt" | "completedAt">) => {
+      create({ ...reminder, id: generateId(), completedAt: null, updatedAt: new Date().toISOString() })
     },
     [create],
   )
@@ -32,7 +32,12 @@ export function ReminderProvider({ children }: { children: ReactNode }) {
     (id: string) => {
       const reminder = reminders.find(r => r.id === id)
       if (!reminder) return
-      update(id, { completed: !reminder.completed })
+      // completedAt is set optimistically so a just-checked reminder stays on
+      // screen right away; the server ignores the field and sets its own.
+      update(id, {
+        completed: !reminder.completed,
+        completedAt: reminder.completed ? null : new Date().toISOString(),
+      })
     },
     [reminders, update],
   )
