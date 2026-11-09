@@ -2185,8 +2185,14 @@ https://claude.ai/artifact/NSsLRZ7sfosKJDGtNPrtH5 (отметки — в её б
 пачка: стенд → «да» владельца → main.
 
 - [x] **Пачка 1 — чистка без видимых изменений** — сделано 2026-11-09,
-  коммиты `648a140`…`b37ffcc` на ветке, на стенде (выпуск в main — после «да»
-  владельца).
+  коммиты `648a140`…`b37ffcc`. **Выпущено в прод 2026-11-09** (~15:20 UTC):
+  `main` = `c5be320` (merge «Release: audit batch 1…»), бандл `index-qJbtDAaR.js`
+  → `index-CYdVTISU.js`, CSS `index-9I93zJCR.css` как на стенде; health ok,
+  0 ошибок и перезапусков. Миграций нет. Свежий дамп прода перед выпуском не
+  делался (ассистенту не разрешены команды на прод-сервере; база при выкладке
+  не менялась); последняя точка отката базы —
+  `prerelease/tasktracker_prerelease_2026-11-08_23-35-04.dump`, кода —
+  предыдущий `main` `aa801e7`.
   - Л1: удалены 29 компонентов `src/shared/ui`, которые никто не импортировал.
   - Л2: удалены ~30 библиотек (MUI, popper, slick, masonry, confetti, cmdk,
     embla, input-otp, vaul, resizable-panels, react-hook-form, 14 пакетов
