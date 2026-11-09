@@ -3,6 +3,7 @@ export { REMINDER_PRIORITY_COLORS, REMINDER_BORDER_COLORS } from "./model/remind
 export { ReminderProvider } from "./model/ReminderProvider"
 export { useReminders } from "./model/reminderContext"
 export { selectUpcomingReminders } from "./lib/selectUpcomingReminders"
+export { selectVisibleReminders } from "./lib/selectVisibleReminders"
 export { selectRemindersOnDay } from "./lib/selectRemindersOnDay"
 export { summarizeReminders, type ReminderSummaryCounts } from "./lib/summarizeReminders"
 export { ReminderPriorityIcon } from "./ui/ReminderPriorityIcon"

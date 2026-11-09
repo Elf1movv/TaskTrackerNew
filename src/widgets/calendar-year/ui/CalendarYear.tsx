@@ -3,6 +3,7 @@ import { format, isToday } from "date-fns"
 import { getGoalMonthCompletionStats, type Goal } from "@/entities/goal"
 import { getHabitMonthCompletionStats, type Habit } from "@/entities/habit"
 import { getTaskMonthCompletionStats, type Task } from "@/entities/task"
+import { getPlanMonthCompletionStats, type CalendarPlan } from "@/entities/calendar-plan"
 import { buildMonthGrid } from "@/shared/lib/calendarGrid"
 import { getDateLocale, getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
@@ -22,12 +23,14 @@ import { ProgressRing } from "@/shared/ui/progress-ring"
 export function CalendarYear({
   year,
   tasks,
+  plans,
   goals,
   habits,
   onSelectDay,
 }: {
   year: Date
   tasks: Task[]
+  plans: CalendarPlan[]
   goals: Goal[]
   habits: Habit[]
   onSelectDay: (day: Date) => void
@@ -46,6 +49,7 @@ export function CalendarYear({
           month={month}
           today={today}
           tasks={tasks}
+          plans={plans}
           goals={goals}
           habits={habits}
           onSelectDay={onSelectDay}
@@ -59,6 +63,7 @@ function YearMonthCard({
   month,
   today,
   tasks,
+  plans,
   goals,
   habits,
   onSelectDay,
@@ -66,6 +71,7 @@ function YearMonthCard({
   month: Date
   today: Date
   tasks: Task[]
+  plans: CalendarPlan[]
   goals: Goal[]
   habits: Habit[]
   onSelectDay: (day: Date) => void
@@ -77,6 +83,7 @@ function YearMonthCard({
 
   const { done, total } = useMemo(() => {
     const taskStats = getTaskMonthCompletionStats(tasks, month)
+    const planStats = getPlanMonthCompletionStats(plans, month)
     const goalStats = getGoalMonthCompletionStats(goals, month)
     const habitStats = habits.reduce(
       (acc, habit) => {
@@ -86,10 +93,10 @@ function YearMonthCard({
       { done: 0, scheduled: 0 },
     )
     return {
-      done: taskStats.done + goalStats.done + habitStats.done,
-      total: taskStats.total + goalStats.total + habitStats.scheduled,
+      done: taskStats.done + planStats.done + goalStats.done + habitStats.done,
+      total: taskStats.total + planStats.total + goalStats.total + habitStats.scheduled,
     }
-  }, [tasks, goals, habits, month, today])
+  }, [tasks, plans, goals, habits, month, today])
 
   const percent = total === 0 ? 0 : Math.round((done / total) * 100)
 

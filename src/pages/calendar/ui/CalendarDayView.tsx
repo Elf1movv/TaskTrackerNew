@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
-import { isTaskOnDay } from "@/entities/task"
+import type { Goal } from "@/entities/goal"
+import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
 import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
-import { HourGrid } from "@/widgets/calendar-timeline"
+import { AllDayStrip, HourGrid } from "@/widgets/calendar-timeline"
 import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-item-popover"
 
 // Composes calendar-timeline full-width, edge to edge (no reserved
@@ -16,23 +17,24 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 // give goals no CRUD, only their own page (or Month's day panel) can
 // create/edit them.
 //
-// No all-day/untimed strip above the grid — removed per user feedback
-// that it read as an unclear intermediate layer (a bare row of "+"
-// buttons above the actual calendar). This means an untimed task/
-// reminder (a due date but no time) has nowhere to render in Day/Week
-// specifically — it's still visible in Month, Agenda, and the Tasks/
-// Reminders pages, just not on this hour-grid timeline, which now only
-// ever shows items that have a time.
+// Above the grid, AllDayStrip shows what belongs to the day but has no hour
+// — untimed reminders, task and goal deadlines (audit П8, 2026-11-09) — so
+// Day shows the same things as Month and Agenda. It renders nothing on an
+// empty day: an always-visible strip was removed earlier as confusing.
 export function CalendarDayView({
   anchorDate,
   allPlans,
   allReminders,
+  allDeadlines,
+  allGoals,
   onRescheduleTaskTime,
   onResizeTask,
 }: {
   anchorDate: Date
   allPlans: Plan[]
   allReminders: Reminder[]
+  allDeadlines: DeadlineTask[]
+  allGoals: Goal[]
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizeTask: (taskId: string, endTime: string) => void
 }) {
@@ -59,7 +61,7 @@ export function CalendarDayView({
   }
 
   function openEditReminder(reminderId: string, rect: DOMRect) {
-    const reminder = dayReminders.find(r => r.id === reminderId)
+    const reminder = allReminders.find(r => r.id === reminderId)
     if (!reminder) return
     setDraft({ mode: "edit-reminder", reminder })
     setAnchorRect(rect)
@@ -67,6 +69,13 @@ export function CalendarDayView({
 
   return (
     <div className="min-w-0">
+      <AllDayStrip
+        days={[anchorDate]}
+        reminders={allReminders}
+        deadlines={allDeadlines}
+        goals={allGoals}
+        onEditReminder={openEditReminder}
+      />
       <HourGrid
         columns={[{ day: anchorDate, tasks: timedTasks, reminders: timedReminders }]}
         onEditTask={openEditTask}

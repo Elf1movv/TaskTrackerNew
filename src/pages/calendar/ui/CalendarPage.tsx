@@ -1,6 +1,3 @@
-import { usePlans } from "@/entities/calendar-plan"
-import { PlanForm } from "@/features/plan-form"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { useTasks } from "@/entities/task"
 import { PlanShelf } from "@/widgets/calendar-timeline"
 import { useEffect, useRef } from "react"
@@ -90,22 +87,11 @@ function CalendarPageContent() {
     goToToday,
     goToDate,
     moveTaskToDay,
-    moveGoalDeadline,
     rescheduleTaskTime,
     resizeTask,
   } = useCalendarContext()
   const { language, t } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { plans } = usePlans()
-  const focusedPlan = plans.find(plan => plan.id === searchParams.get("plan"))
-  const closePlan = () =>
-    setSearchParams(
-      previous => {
-        previous.delete("plan")
-        return previous
-      },
-      { replace: true },
-    )
   const hasConsumedInitialParams = useRef(false)
   const isMobile = useIsMobile()
 
@@ -221,14 +207,6 @@ function CalendarPageContent() {
         </div>
       </div>
 
-      <Dialog open={!!focusedPlan} onOpenChange={open => !open && closePlan()}>
-        <DialogContent className="max-h-[85vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle>{t("plans.title")}</DialogTitle>
-          </DialogHeader>
-          {focusedPlan && <PlanForm key={focusedPlan.id} plan={focusedPlan} embedded onDone={closePlan} />}
-        </DialogContent>
-      </Dialog>
       <PlanShelf
         anchorDate={formatDateKey(anchorDate)}
         days={
@@ -257,7 +235,6 @@ function CalendarPageContent() {
           onSelectDay={handleSelectDay}
           onCloseDayPanel={() => selectDay(null)}
           onMoveTaskToDay={moveTaskToDay}
-          onMoveGoalToDay={moveGoalDeadline}
         />
       )}
 
@@ -276,6 +253,8 @@ function CalendarPageContent() {
           anchorDate={anchorDate}
           allPlans={allPlans}
           allReminders={allReminders}
+          allDeadlines={allDeadlines}
+          allGoals={allGoals}
           onRescheduleTaskTime={rescheduleTaskTime}
           onResizeTask={resizeTask}
         />
@@ -286,6 +265,8 @@ function CalendarPageContent() {
           anchorDate={anchorDate}
           allPlans={allPlans}
           allReminders={allReminders}
+          allDeadlines={allDeadlines}
+          allGoals={allGoals}
           onRescheduleTaskTime={rescheduleTaskTime}
           onResizeTask={resizeTask}
         />
@@ -295,6 +276,7 @@ function CalendarPageContent() {
         <CalendarYear
           year={anchorDate}
           tasks={canonicalTasks}
+          plans={allPlans}
           goals={allGoals}
           habits={allHabits}
           onSelectDay={day => {

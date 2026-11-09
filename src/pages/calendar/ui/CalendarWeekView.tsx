@@ -1,12 +1,13 @@
 import { useState } from "react"
 import { format, isToday } from "date-fns"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
-import { isTaskOnDay } from "@/entities/task"
+import type { Goal } from "@/entities/goal"
+import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
 import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildWeekRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
-import { HourGrid } from "@/widgets/calendar-timeline"
+import { AllDayStrip, HourGrid } from "@/widgets/calendar-timeline"
 import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-item-popover"
 
 // Same calendar-timeline widget as CalendarDayView, just 7 day columns
@@ -14,20 +15,24 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 // this round: CalendarItemPopover instead of a static sidebar,
 // click/drag-to-create, resize, immediate day+time reflection on drag.
 // Block visuals are unchanged — only Day's own layout/interaction gap is
-// closed here, not its appearance. No all-day/untimed strip above the
-// grid (see CalendarDayView's comment) — Week shows only timed items,
-// same as Day. No Goal create/edit anywhere in Week, same as Day — only
-// Goals' own page can create/edit them.
+// closed here, not its appearance. Above the grid, AllDayStrip shows what
+// has a day but no hour (untimed reminders, task and goal deadlines), same
+// as Day (audit П8). No Goal create/edit anywhere in Week — only Goals' own
+// page can create/edit them.
 export function CalendarWeekView({
   anchorDate,
   allPlans,
   allReminders,
+  allDeadlines,
+  allGoals,
   onRescheduleTaskTime,
   onResizeTask,
 }: {
   anchorDate: Date
   allPlans: Plan[]
   allReminders: Reminder[]
+  allDeadlines: DeadlineTask[]
+  allGoals: Goal[]
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizeTask: (taskId: string, endTime: string) => void
 }) {
@@ -93,6 +98,14 @@ export function CalendarWeekView({
           ))}
         </div>
       </div>
+
+      <AllDayStrip
+        days={days}
+        reminders={allReminders}
+        deadlines={allDeadlines}
+        goals={allGoals}
+        onEditReminder={openEditReminder}
+      />
 
       <HourGrid
         columns={hourGridColumns}

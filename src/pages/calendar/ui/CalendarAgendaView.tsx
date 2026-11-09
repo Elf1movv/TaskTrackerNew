@@ -2,7 +2,6 @@ import { useMemo, useState } from "react"
 import { format, isToday } from "date-fns"
 import { PlanForm } from "@/features/plan-form"
 import { ReminderForm } from "@/features/reminder-form"
-import { GoalForm } from "@/features/goal-form"
 import { DayDeadlineRow, DayGoalRow, DayReminderRow, DayTaskRow } from "@/widgets/day-detail-panel"
 import { isGoalDueOnDay, type Goal } from "@/entities/goal"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
@@ -13,7 +12,7 @@ import { formatDateKey } from "@/shared/lib/date"
 import { formatDay, getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 
-type EditingItem = { kind: "task" | "reminder" | "goal"; id: string } | null
+type EditingItem = { kind: "task" | "reminder"; id: string } | null
 
 const INITIAL_WINDOW_DAYS = 6
 const LOAD_MORE_INCREMENT_DAYS = 6
@@ -151,18 +150,9 @@ export function CalendarAgendaView({
                   />
                 ),
               )}
-              {group.goals.map(goal =>
-                editing?.kind === "goal" && editing.id === goal.id ? (
-                  <GoalForm key={goal.id} goal={goal} onDone={() => setEditing(null)} />
-                ) : (
-                  <DayGoalRow
-                    key={goal.id}
-                    goal={goal}
-                    draggable={false}
-                    onEdit={() => setEditing({ kind: "goal", id: goal.id })}
-                  />
-                ),
-              )}
+              {group.goals.map(goal => (
+                <DayGoalRow key={goal.id} goal={goal} />
+              ))}
             </div>
           </div>
         )

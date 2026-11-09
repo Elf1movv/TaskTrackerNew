@@ -1,40 +1,21 @@
-import { DeleteGoalButton } from "@/features/delete-goal"
-import { EditGoalButton } from "@/features/edit-goal"
+import { Target } from "lucide-react"
+import { useNavigate } from "react-router"
 import { type Goal } from "@/entities/goal"
-import { useDragItem } from "@/shared/lib/dnd"
 
-// Mirrors DayTaskRow exactly — drag source only, dragging onto a day cell
-// moves this goal's deadline there (see moveGoalDeadline in
-// CalendarProvider). Type "calendar-goal-move", separate from Task's
-// "calendar-task-move" so the two never cross-accept each other's drops.
-// `draggable=false` for callers with no day-cell equivalent (Agenda).
-export function DayGoalRow({
-  goal,
-  onEdit,
-  draggable = true,
-}: {
-  goal: Goal
-  onEdit: () => void
-  draggable?: boolean
-}) {
-  const { ref, isDragging } = useDragItem<HTMLDivElement>({
-    type: "calendar-goal-move",
-    id: goal.id,
-    canDrag: draggable,
-  })
-
+// A goal's deadline on this day — read-only, like a task deadline (audit П7,
+// decision 1, 2026-11-09): goals are created and edited on the Goals page
+// only. The row shows the title and progress and opens that goal there.
+export function DayGoalRow({ goal }: { goal: Goal }) {
+  const navigate = useNavigate()
   return (
-    <div
-      ref={ref}
-      className={`w-full flex items-start gap-2.5 text-left group select-none ${
-        draggable ? "cursor-grab active:cursor-grabbing" : ""
-      }`}
-      style={{ opacity: isDragging ? 0.4 : 1 }}
+    <button
+      type="button"
+      onClick={() => navigate(`/goals?goal=${goal.id}`)}
+      className="w-full flex items-start gap-2.5 text-left group"
     >
-      <span className="text-sm font-semibold flex-1 text-left leading-snug">{goal.title}</span>
+      <Target size={13} strokeWidth={2} className="shrink-0 mt-1" style={{ color: goal.color }} />
+      <span className="text-sm font-semibold flex-1 leading-snug group-hover:underline">{goal.title}</span>
       <span className="tabular-nums text-xs font-bold text-muted-foreground shrink-0">{goal.progress}%</span>
-      <EditGoalButton onClick={onEdit} />
-      <DeleteGoalButton goalId={goal.id} goalTitle={goal.title} />
-    </div>
+    </button>
   )
 }

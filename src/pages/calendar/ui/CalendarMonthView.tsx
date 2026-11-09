@@ -40,7 +40,6 @@ export function CalendarMonthView({
   onSelectDay,
   onCloseDayPanel,
   onMoveTaskToDay,
-  onMoveGoalToDay,
 }: {
   anchorDate: Date
   selectedDay: Date | null
@@ -56,7 +55,6 @@ export function CalendarMonthView({
   onSelectDay: (day: Date, isCurrentMonth: boolean) => void
   onCloseDayPanel: () => void
   onMoveTaskToDay: (taskId: string, day: Date) => void
-  onMoveGoalToDay: (goalId: string, day: Date) => void
 }) {
   const monthGrid = useMemo(() => buildMonthGrid(anchorDate), [anchorDate])
   const [draft, setDraft] = useState<CalendarItemDraft | null>(null)
@@ -107,7 +105,6 @@ export function CalendarMonthView({
             selectedDay={selectedDay}
             onSelectDay={onSelectDay}
             onMoveTaskToDay={onMoveTaskToDay}
-            onMoveGoalToDay={onMoveGoalToDay}
             onEditTask={openEditTask}
             onEditReminder={openEditReminder}
           />
