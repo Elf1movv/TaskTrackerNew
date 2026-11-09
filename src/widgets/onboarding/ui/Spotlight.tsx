@@ -18,6 +18,17 @@ interface Rect {
 
 const PAD = 6
 const TIP_WIDTH = 280
+const GAP = 12
+
+// The element that actually scrolls around `el` (in this app it's <main>, the
+// page itself never scrolls).
+function scrollParentOf(el: Element | null): HTMLElement | null {
+  for (let node = el?.parentElement; node; node = node.parentElement) {
+    const { overflowY } = getComputedStyle(node)
+    if ((overflowY === "auto" || overflowY === "scroll") && node.scrollHeight > node.clientHeight) return node
+  }
+  return document.scrollingElement as HTMLElement | null
+}
 
 export function Spotlight({
   selector,
@@ -39,6 +50,12 @@ export function Spotlight({
   const reduceMotion = useReducedMotion()
   const maskId = `spotlight-${useId().replace(/:/g, "")}`
   const [rect, setRect] = useState<Rect | null>(null)
+  const tipRef = useRef<HTMLDivElement>(null)
+  // Real height of the tip, measured after render — a guess (it used to be a
+  // fixed 170 px) put the tip below the screen edge on some displays
+  // (owner report, 2026-11-10).
+  const [tipHeight, setTipHeight] = useState(160)
+  const touchY = useRef<number | null>(null)
   const missingSince = useRef(0)
   const onActionRef = useRef(onAction)
   useEffect(() => {
@@ -95,6 +112,31 @@ export function Spotlight({
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
+  useLayoutEffect(() => {
+    const h = tipRef.current?.offsetHeight
+    if (h && h !== tipHeight) setTipHeight(h)
+  }, [rect, tipHeight])
+
+  // The blockers around the window sit on top of the page, so the mouse
+  // wheel or a finger swipe over them scrolled nothing — once the page moved
+  // and the cursor ended up over the dim area, scrolling "stopped working"
+  // (owner report, 2026-11-10). Pass the scroll on to the page.
+  const scroller = () => scrollParentOf(document.querySelector(selector))
+  const onWheel = (e: React.WheelEvent) => {
+    const factor = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1
+    scroller()?.scrollBy({ top: e.deltaY * factor, left: e.deltaX * factor })
+  }
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchY.current = e.touches[0]?.clientY ?? null
+  }
+  const onTouchMove = (e: React.TouchEvent) => {
+    const y = e.touches[0]?.clientY
+    if (y === undefined || touchY.current === null) return
+    scroller()?.scrollBy({ top: touchY.current - y })
+    touchY.current = y
+  }
+  const scrollPass = { onWheel, onTouchStart, onTouchMove }
+
   if (!rect) return null
 
   const hole = {
@@ -107,9 +149,13 @@ export function Spotlight({
   const vh = window.innerHeight
   const tipWidth = Math.min(TIP_WIDTH, vw - 32)
   const tipLeft = Math.min(Math.max(16, hole.left + hole.width / 2 - tipWidth / 2), vw - tipWidth - 16)
-  const below = hole.top + hole.height + 12
-  const placeBelow = below + 170 < vh
-  const tipStyle = placeBelow ? { top: below } : { bottom: vh - hole.top + 12 }
+  // Below the window if it fits, otherwise above; and always kept on screen
+  // (the window itself can be partly off screen while the page scrolls).
+  const below = hole.top + hole.height + GAP
+  const above = hole.top - GAP - tipHeight
+  const placeBelow = below + tipHeight + GAP <= vh || above < GAP
+  const tipTop = Math.min(Math.max(GAP, placeBelow ? below : above), vh - tipHeight - GAP)
+  const tipStyle = { top: tipTop }
   const radiusPx = round ? Math.min(hole.width, hole.height) / 2 : 16
 
   return createPortal(
@@ -118,18 +164,22 @@ export function Spotlight({
     // four blockers around the window and the tip catch them.
     <div className="pointer-events-none fixed inset-0 z-[60]">
       <div
+        {...scrollPass}
         className="pointer-events-auto absolute inset-x-0 top-0"
         style={{ height: Math.max(0, hole.top) }}
       />
       <div
+        {...scrollPass}
         className="pointer-events-auto absolute inset-x-0 bottom-0"
         style={{ top: hole.top + hole.height }}
       />
       <div
+        {...scrollPass}
         className="pointer-events-auto absolute left-0"
         style={{ top: hole.top, height: hole.height, width: Math.max(0, hole.left) }}
       />
       <div
+        {...scrollPass}
         className="pointer-events-auto absolute right-0"
         style={{ top: hole.top, height: hole.height, left: hole.left + hole.width }}
       />
@@ -175,6 +225,7 @@ export function Spotlight({
       </div>
 
       <motion.div
+        ref={tipRef}
         role="dialog"
         aria-label={title}
         initial={{ opacity: 0, y: placeBelow ? -6 : 6 }}

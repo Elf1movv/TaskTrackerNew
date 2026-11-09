@@ -85,10 +85,25 @@ try {
   await screenshot("onboarding-finale-desktop")
   ok("Task with a new category, goal with a first step, info screens, finale")
 
+  // A short window puts the habit near the bottom edge (owner report
+  // 2026-11-10: the tip went below the screen, and the wheel stopped
+  // scrolling once the cursor was over the dimmed area).
+  await send("Emulation.setDeviceMetricsOverride", { ...desktop, height: 620 })
   await click(button("Посмотреть"))
   await wait(text("Сделали сегодня?"))
-  await pause(700)
+  await pause(1200)
   await screenshot("onboarding-spotlight-desktop")
+  const tipInside = await evaluate(
+    `(()=>{const t=[...document.querySelectorAll('[role=dialog]')].find(e=>e.innerText.includes('Сделали сегодня?')).getBoundingClientRect();return t.top>=0&&t.bottom<=innerHeight})()`,
+  )
+  assert(tipInside, "spotlight tip stays on screen")
+  const scrollBefore = await evaluate("document.querySelector('main').scrollTop")
+  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x: 300, y: 60, deltaX: 0, deltaY: -400 })
+  await pause(400)
+  const scrollAfter = await evaluate("document.querySelector('main').scrollTop")
+  assert(scrollAfter < scrollBefore, `wheel over the dim area scrolls the page (${scrollBefore} → ${scrollAfter})`)
+  await send("Emulation.setDeviceMetricsOverride", desktop)
+  ok("Spotlight tip stays on screen; the wheel scrolls the page over the dim area")
   const habit = (await api("habits")).findLast(h => h.title === "Бег")
   assert(habit, "habit saved")
   await click(`document.querySelector('[data-onboarding-habit="${habit.id}"] button')`)
