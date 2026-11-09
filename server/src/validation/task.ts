@@ -1,23 +1,5 @@
 import { z } from "zod"
-
-// Wire format stays "YYYY-MM-DD" (what the client has always sent/received)
-// even though the DB column is a real `date` now — this is the one place
-// that converts the incoming string to the Date Prisma expects.
-const dueDateField = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "dueDate must be in YYYY-MM-DD format")
-  .transform(s => new Date(s))
-  .nullable()
-
-// Set by the client to the current instant when `completed` flips to true,
-// and to `null` when it flips back to false — see the comment on
-// Task.completedAt in schema.prisma for why this can't be derived from
-// `updatedAt` instead.
-const completedAtField = z
-  .string()
-  .datetime()
-  .transform(s => new Date(s))
-  .nullable()
+import { dateField, instantField, timeField } from "./dateTime.js"
 
 const taskFields = z.object({
   id: z.string().uuid(),
@@ -25,21 +7,21 @@ const taskFields = z.object({
   completed: z.boolean(),
   priority: z.enum(["low", "medium", "high"]),
   category: z.string(),
-  dueDate: dueDateField,
+  // Wire format stays "YYYY-MM-DD" even though the DB column is a real
+  // `date` — the shared check converts it to the Date Prisma expects.
+  dueDate: dateField.nullable(),
   // "HH:mm", nullable — same convention as Reminder.time, see the
   // comment on Task.time in schema.prisma.
-  time: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/, "time must be in HH:mm format")
-    .nullable(),
+  time: timeField.nullable(),
   // "HH:mm", nullable — end of the task's timed block, see the comment
   // on Task.endTime in schema.prisma.
-  endTime: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/, "endTime must be in HH:mm format")
-    .nullable(),
+  endTime: timeField.nullable(),
   description: z.string().nullable(),
-  completedAt: completedAtField,
+  // Set by the client to the current instant when `completed` flips to true,
+  // and to `null` when it flips back to false — see the comment on
+  // Task.completedAt in schema.prisma for why this can't be derived from
+  // `updatedAt` instead.
+  completedAt: instantField.nullable(),
 })
 
 export const createTaskSchema = taskFields

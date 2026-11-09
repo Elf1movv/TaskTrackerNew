@@ -131,6 +131,24 @@ describe("tasks router", () => {
     expect(res.status).toBe(400)
   })
 
+  it.each([
+    ["an impossible dueDate", { dueDate: "2026-02-31" }],
+    ["a time out of range", { dueDate: "2026-01-01", time: "99:99" }],
+    ["24:00 as a time", { dueDate: "2026-01-01", time: "24:00" }],
+    ["an endTime out of range", { dueDate: "2026-01-01", time: "10:00", endTime: "10:60" }],
+  ])("rejects %s (shared date/time check)", async (_, fields) => {
+    const res = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID(), ...fields })
+    expect(res.status).toBe(400)
+  })
+
+  it("rejects an impossible dueDate in a patch", async () => {
+    const created = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID() })
+    const res = await agent
+      .patch(`/api/tasks/${created.body.id}`)
+      .send({ patch: { dueDate: "2026-13-01" }, expectedUpdatedAt: created.body.updatedAt })
+    expect(res.status).toBe(400)
+  })
+
   it("rejects an invalid task", async () => {
     const res = await agent
       .post("/api/tasks")
