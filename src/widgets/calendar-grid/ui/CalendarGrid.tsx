@@ -3,7 +3,7 @@ import { useCategories } from "@/entities/category"
 import { isGoalDueOnDay, type Goal } from "@/entities/goal"
 import { selectRemindersOnDay, type Reminder } from "@/entities/reminder"
 import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
-import type { CalendarEntry as Task } from "@/entities/calendar-plan"
+import { isPlanOnDay, type CalendarEntry as Plan } from "@/entities/calendar-plan"
 import type { MonthGridDay } from "@/shared/lib/calendarGrid"
 import { getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { CalendarDayCell } from "./components"
@@ -16,12 +16,12 @@ export function CalendarGrid({
   goals,
   selectedDay,
   onSelectDay,
-  onMoveTaskToDay,
-  onEditTask,
+  onMovePlanToDay,
+  onEditPlan,
   onEditReminder,
 }: {
   days: MonthGridDay[]
-  tasks: Task[]
+  tasks: Plan[]
   // Real tasks with a deadline (not calendar plans) — open ones only are
   // shown as small markers; see CalendarDayCell.
   deadlines?: DeadlineTask[]
@@ -29,8 +29,8 @@ export function CalendarGrid({
   goals: Goal[]
   selectedDay: Date | null
   onSelectDay: (day: Date, isCurrentMonth: boolean) => void
-  onMoveTaskToDay: (taskId: string, day: Date) => void
-  onEditTask: (taskId: string, anchorRect: DOMRect) => void
+  onMovePlanToDay: (taskId: string, day: Date) => void
+  onEditPlan: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
 }) {
   const { language } = useLanguage()
@@ -51,7 +51,7 @@ export function CalendarGrid({
       <div className="grid grid-cols-7 gap-1.5">
         {days.map(({ date, isCurrentMonth }) => {
           const dayStr = format(date, "yyyy-MM-dd")
-          const dayTasks = tasks.filter(t => isTaskOnDay(t, dayStr))
+          const dayPlans = tasks.filter(t => isPlanOnDay(t, dayStr))
           const dayReminders = selectRemindersOnDay(reminders, dayStr)
           const dayGoals = goals.filter(g => isGoalDueOnDay(g, dayStr))
           const dayDeadlines = deadlines.filter(d => !d.completed && isTaskOnDay(d, dayStr))
@@ -61,7 +61,7 @@ export function CalendarGrid({
               key={dayStr}
               day={date}
               isCurrentMonth={isCurrentMonth}
-              dayTasks={dayTasks}
+              dayPlans={dayPlans}
               dayReminders={dayReminders}
               dayGoals={dayGoals}
               dayDeadlines={dayDeadlines}
@@ -69,8 +69,8 @@ export function CalendarGrid({
               isSelected={selectedDay ? isSameDay(date, selectedDay) : false}
               isCurrent={isToday(date)}
               onSelect={() => onSelectDay(date, isCurrentMonth)}
-              onMoveTaskToDay={onMoveTaskToDay}
-              onEditTask={onEditTask}
+              onMovePlanToDay={onMovePlanToDay}
+              onEditPlan={onEditPlan}
               onEditReminder={onEditReminder}
             />
           )

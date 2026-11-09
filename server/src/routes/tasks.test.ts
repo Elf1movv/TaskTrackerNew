@@ -12,8 +12,6 @@ const baseTask = {
   priority: "medium",
   category: "Work",
   dueDate: null,
-  time: null,
-  endTime: null,
   completedAt: null,
   description: null,
 }
@@ -51,67 +49,6 @@ describe("tasks router", () => {
     expect(list.body[0].dueDate).toBe("2026-01-01")
   })
 
-  it("round-trips time alongside dueDate, and clears it independently via patch", async () => {
-    const created = await agent
-      .post("/api/tasks")
-      .send({ ...baseTask, id: crypto.randomUUID(), dueDate: "2026-01-01", time: "14:30" })
-    expect(created.status).toBe(201)
-    expect(created.body.time).toBe("14:30")
-
-    const list = await agent.get("/api/tasks")
-    expect(list.body[0].time).toBe("14:30")
-
-    // Rescheduling to a new time (the calendar's day/week drag) — dueDate
-    // untouched, only time changes.
-    const rescheduled = await agent
-      .patch(`/api/tasks/${created.body.id}`)
-      .send({ patch: { time: "09:15" }, expectedUpdatedAt: created.body.updatedAt })
-    expect(rescheduled.status).toBe(200)
-    expect(rescheduled.body.time).toBe("09:15")
-    expect(rescheduled.body.dueDate).toBe("2026-01-01")
-
-    const cleared = await agent
-      .patch(`/api/tasks/${created.body.id}`)
-      .send({ patch: { time: null }, expectedUpdatedAt: rescheduled.body.updatedAt })
-    expect(cleared.status).toBe(200)
-    expect(cleared.body.time).toBeNull()
-  })
-
-  it("rejects a time that isn't in HH:mm format", async () => {
-    const res = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID(), time: "2:30pm" })
-    expect(res.status).toBe(400)
-  })
-
-  it("round-trips endTime alongside time, independently of it", async () => {
-    const created = await agent
-      .post("/api/tasks")
-      .send({ ...baseTask, id: crypto.randomUUID(), dueDate: "2026-01-01", time: "14:30", endTime: "15:15" })
-    expect(created.status).toBe(201)
-    expect(created.body.endTime).toBe("15:15")
-
-    // Resizing (dragging the block's bottom edge) — time untouched, only
-    // endTime changes.
-    const resized = await agent
-      .patch(`/api/tasks/${created.body.id}`)
-      .send({ patch: { endTime: "16:00" }, expectedUpdatedAt: created.body.updatedAt })
-    expect(resized.status).toBe(200)
-    expect(resized.body.endTime).toBe("16:00")
-    expect(resized.body.time).toBe("14:30")
-
-    const cleared = await agent
-      .patch(`/api/tasks/${created.body.id}`)
-      .send({ patch: { endTime: null }, expectedUpdatedAt: resized.body.updatedAt })
-    expect(cleared.status).toBe(200)
-    expect(cleared.body.endTime).toBeNull()
-  })
-
-  it("rejects an endTime that isn't in HH:mm format", async () => {
-    const res = await agent
-      .post("/api/tasks")
-      .send({ ...baseTask, id: crypto.randomUUID(), time: "14:30", endTime: "3:15pm" })
-    expect(res.status).toBe(400)
-  })
-
   it("round-trips completedAt when a task is marked completed", async () => {
     const created = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID() })
     expect(created.body.completedAt).toBeNull()
@@ -131,15 +68,13 @@ describe("tasks router", () => {
     expect(res.status).toBe(400)
   })
 
-  it.each([
-    ["an impossible dueDate", { dueDate: "2026-02-31" }],
-    ["a time out of range", { dueDate: "2026-01-01", time: "99:99" }],
-    ["24:00 as a time", { dueDate: "2026-01-01", time: "24:00" }],
-    ["an endTime out of range", { dueDate: "2026-01-01", time: "10:00", endTime: "10:60" }],
-  ])("rejects %s (shared date/time check)", async (_, fields) => {
-    const res = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID(), ...fields })
-    expect(res.status).toBe(400)
-  })
+  it.each([["an impossible dueDate", { dueDate: "2026-02-31" }]])(
+    "rejects %s (shared date/time check)",
+    async (_, fields) => {
+      const res = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID(), ...fields })
+      expect(res.status).toBe(400)
+    },
+  )
 
   it("rejects an impossible dueDate in a patch", async () => {
     const created = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID() })
@@ -147,6 +82,13 @@ describe("tasks router", () => {
       .patch(`/api/tasks/${created.body.id}`)
       .send({ patch: { dueDate: "2026-13-01" }, expectedUpdatedAt: created.body.updatedAt })
     expect(res.status).toBe(400)
+  })
+
+  it("no longer returns an hour for a task (audit batch 4)", async () => {
+    const created = await agent.post("/api/tasks").send({ ...baseTask, id: crypto.randomUUID() })
+    expect(created.status).toBe(201)
+    expect(created.body).not.toHaveProperty("time")
+    expect(created.body).not.toHaveProperty("endTime")
   })
 
   it("rejects an invalid task", async () => {

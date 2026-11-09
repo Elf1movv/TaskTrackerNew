@@ -17,8 +17,6 @@ export function toClientTask(task: Task) {
     priority: task.priority,
     category: task.category,
     dueDate: task.dueDate?.toISOString().slice(0, 10) ?? null,
-    time: task.time,
-    endTime: task.endTime,
     description: task.description,
     completedAt: task.completedAt,
     createdAt: task.createdAt,

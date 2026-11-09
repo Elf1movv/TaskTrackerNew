@@ -39,7 +39,7 @@ export function CalendarMonthView({
   allGoals,
   onSelectDay,
   onCloseDayPanel,
-  onMoveTaskToDay,
+  onMovePlanToDay,
 }: {
   anchorDate: Date
   selectedDay: Date | null
@@ -54,7 +54,7 @@ export function CalendarMonthView({
   allGoals: Goal[]
   onSelectDay: (day: Date, isCurrentMonth: boolean) => void
   onCloseDayPanel: () => void
-  onMoveTaskToDay: (taskId: string, day: Date) => void
+  onMovePlanToDay: (taskId: string, day: Date) => void
 }) {
   const monthGrid = useMemo(() => buildMonthGrid(anchorDate), [anchorDate])
   const [draft, setDraft] = useState<CalendarItemDraft | null>(null)
@@ -69,10 +69,10 @@ export function CalendarMonthView({
   // opens the same edit popover Day/Week use, anchored at the row — one
   // click to edit, matching their muscle memory, instead of forcing a
   // detour through the day panel first.
-  function openEditTask(taskId: string, rect: DOMRect) {
+  function openEditPlan(taskId: string, rect: DOMRect) {
     const task = allPlans.find(t => t.id === taskId)
     if (!task) return
-    setDraft({ mode: "edit-task", task })
+    setDraft({ mode: "edit-plan", task })
     setAnchorRect(rect)
   }
 
@@ -104,8 +104,8 @@ export function CalendarMonthView({
             goals={allGoals}
             selectedDay={selectedDay}
             onSelectDay={onSelectDay}
-            onMoveTaskToDay={onMoveTaskToDay}
-            onEditTask={openEditTask}
+            onMovePlanToDay={onMovePlanToDay}
+            onEditPlan={openEditPlan}
             onEditReminder={openEditReminder}
           />
         </div>

@@ -1,4 +1,4 @@
-export { DayTaskRow } from "./DayTaskRow"
+export { DayPlanRow } from "./DayPlanRow"
 export { DayReminderRow } from "./DayReminderRow"
 export { DayGoalRow } from "./DayGoalRow"
 export { DayHabitRow } from "./DayHabitRow"

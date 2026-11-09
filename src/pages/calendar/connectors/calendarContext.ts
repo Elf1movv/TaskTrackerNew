@@ -45,10 +45,10 @@ export interface CalendarContextValue {
   // moveHabitTo* action.
   selectedHabits: Habit[]
 
-  moveTaskToDay: (taskId: string, day: Date) => void
-  rescheduleTaskTime: (taskId: string, day: Date, time: string | null) => void
+  movePlanToDay: (taskId: string, day: Date) => void
+  reschedulePlanTime: (taskId: string, day: Date, time: string | null) => void
   // Day's hour-timeline resize handle — adjusts only endTime, start stays put.
-  resizeTask: (taskId: string, endTime: string) => void
+  resizePlan: (taskId: string, endTime: string) => void
 }
 
 export const CalendarContext = createContext<CalendarContextValue | null>(null)

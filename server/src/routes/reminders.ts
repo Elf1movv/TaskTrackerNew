@@ -14,6 +14,7 @@ interface ClientReminder {
   time: string | null
   priority: string
   completed: boolean
+  completedAt: Date | null
   updatedAt: Date
 }
 
@@ -26,6 +27,7 @@ function toClientReminder(reminder: {
   time: string | null
   priority: string
   completed: boolean
+  completedAt: Date | null
   updatedAt: Date
 }): ClientReminder {
   return {
@@ -35,6 +37,7 @@ function toClientReminder(reminder: {
     time: reminder.time,
     priority: reminder.priority,
     completed: reminder.completed,
+    completedAt: reminder.completedAt,
     updatedAt: reminder.updatedAt,
   }
 }
@@ -54,7 +57,9 @@ remindersRouter.post("/", async (req, res) => {
     return
   }
 
-  const created = await db.reminder.create({ data: { ...parsed.data, userId: req.userId } })
+  const created = await db.reminder.create({
+    data: { ...parsed.data, completedAt: parsed.data.completed ? new Date() : null, userId: req.userId },
+  })
   res.status(201).json(toClientReminder(created))
 })
 
@@ -66,9 +71,19 @@ remindersRouter.patch("/:id", async (req, res) => {
   }
   const { patch, expectedUpdatedAt } = parsed.data
 
+  // completedAt follows a real flip of `completed` — set when checked, cleared
+  // when unchecked; editing anything else keeps it (audit batch 4). The
+  // server decides it, like Task.completedAt, so the client can't backdate.
+  const data: typeof patch & { completedAt?: Date | null } = { ...patch }
+  if (patch.completed !== undefined) {
+    const current = await db.reminder.findFirst({ where: { id: req.params.id, userId: req.userId } })
+    if (current && current.completed !== patch.completed)
+      data.completedAt = patch.completed ? new Date() : null
+  }
+
   const result = await db.reminder.updateMany({
     where: { id: req.params.id, userId: req.userId, updatedAt: new Date(expectedUpdatedAt) },
-    data: patch,
+    data,
   })
 
   if (result.count === 0) {

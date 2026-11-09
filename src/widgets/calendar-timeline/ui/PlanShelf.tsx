@@ -22,7 +22,7 @@ export function PlanShelf({
   const { t } = useLanguage()
   const [editing, setEditing] = useState<CalendarEntry | "new" | null>(null)
   const hold = (id: string) => updatePlan(id, { onHold: true, date: null, time: null, endTime: null })
-  const { ref, isOver } = useDropTarget<HTMLDivElement>({ type: "calendar-task-move", onDrop: hold })
+  const { ref, isOver } = useDropTarget<HTMLDivElement>({ type: "calendar-plan-move", onDrop: hold })
   useEffect(() => {
     const handle = (event: Event) => {
       const { id, day } = (event as CustomEvent<{ id: string; day?: string }>).detail
@@ -111,7 +111,7 @@ function ShelfItem({
   const { onPointerDown, wasDraggedRef, isDragging } = useMoveDrag({
     taskId: plan.id,
     durationMinutes: plan.durationMinutes,
-    onRescheduleTask: onReschedule,
+    onReschedulePlan: onReschedule,
     onPreviewChange: () => {},
   })
   return (

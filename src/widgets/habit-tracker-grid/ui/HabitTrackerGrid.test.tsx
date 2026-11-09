@@ -35,7 +35,6 @@ function habit(patch: Partial<Habit>): Habit {
     completedDates: [],
     icon: "☀️",
     color: "#123456",
-    todayOrder: 0,
     createdAt: "2026-10-02T08:00:00.000Z",
     updatedAt: "2026-10-02T08:00:00.000Z",
     ...patch,

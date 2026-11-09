@@ -4,7 +4,7 @@ import { isGoalDueOnDay, useGoals } from "@/entities/goal"
 import { selectHabitsOnDay, useHabits } from "@/entities/habit"
 import { selectRemindersOnDay, useReminders } from "@/entities/reminder"
 import { isTaskOnDay, useTasks } from "@/entities/task"
-import { usePlans } from "@/entities/calendar-plan"
+import { isPlanOnDay, usePlans } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { minutesFromMidnight } from "@/shared/lib/timeOffset"
 import { CalendarContext, type CalendarView } from "./calendarContext"
@@ -72,7 +72,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const selectedPlans = useMemo(() => {
     if (!selectedDay) return []
     const selectedKey = formatDateKey(selectedDay)
-    return plans.filter(t => isTaskOnDay(t, selectedKey))
+    return plans.filter(t => isPlanOnDay(t, selectedKey))
   }, [plans, selectedDay])
 
   const selectedDeadlines = useMemo(() => {
@@ -97,7 +97,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     return selectHabitsOnDay(habits, selectedDay)
   }, [habits, selectedDay])
 
-  const moveTaskToDay = useCallback(
+  const movePlanToDay = useCallback(
     (taskId: string, day: Date) => {
       const task = plans.find(t => t.id === taskId)
       if (!task) return
@@ -107,13 +107,13 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   )
 
   // Day/Week's hour-timeline drag-to-reschedule — a plain PATCH, same
-  // shape as moveTaskToDay, just also carrying the new time. Shifts
+  // shape as movePlanToDay, just also carrying the new time. Shifts
   // endTime by the same delta as time so the block's duration survives
   // the move instead of silently collapsing to whatever the old endTime
   // now means relative to the new start. Dropping onto the all-day row
   // (time === null) clears endTime too, same "clearing the anchor clears
   // what depends on it" rule TaskForm already applies to time itself.
-  const rescheduleTaskTime = useCallback(
+  const reschedulePlanTime = useCallback(
     (taskId: string, day: Date, time: string | null) => {
       const task = plans.find(t => t.id === taskId)
       if (!task) return
@@ -141,7 +141,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   // The hour-timeline's resize handle — start time is untouched, only how
   // far the block stretches changes.
-  const resizeTask = useCallback(
+  const resizePlan = useCallback(
     (taskId: string, endTime: string) => {
       const task = plans.find(t => t.id === taskId)
       if (task?.time && endTime > task.time)
@@ -174,9 +174,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       selectedReminders,
       selectedGoals,
       selectedHabits,
-      moveTaskToDay,
-      rescheduleTaskTime,
-      resizeTask,
+      movePlanToDay,
+      reschedulePlanTime,
+      resizePlan,
     }),
     [
       view,
@@ -197,9 +197,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       selectedReminders,
       selectedGoals,
       selectedHabits,
-      moveTaskToDay,
-      rescheduleTaskTime,
-      resizeTask,
+      movePlanToDay,
+      reschedulePlanTime,
+      resizePlan,
     ],
   )
 

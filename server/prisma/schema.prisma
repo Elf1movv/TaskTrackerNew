@@ -17,18 +17,8 @@ model Task {
   // client's "YYYY-MM-DD" wire format exactly and avoids timezone drift
   // that a full timestamp would introduce.
   dueDate     DateTime? @db.Date
-  // "HH:mm", 24h — same convention as Reminder.time: a user-facing label
-  // with no instant/timezone attached, not a DB time type. Only
-  // meaningful when dueDate is set; the client (TaskForm) is responsible
-  // for not offering a time picker while the due-date toggle is off, the
-  // server doesn't enforce that relationship.
-  time        String?
-  // "HH:mm", 24h — optional end of the task's timed block on the Day/Week
-  // calendar timeline. Only meaningful when both dueDate and time are
-  // set; nullable and never backfilled, same convention as time itself.
-  endTime     String?
-  // Optional free-text notes. Nullable and never backfilled, same
-  // additive convention as endTime — existing tasks have no value.
+  // Optional free-text notes. Nullable and never backfilled — existing tasks
+  // have no value.
   description String?
   // Set when `completed` flips to true, cleared when it flips back to
   // false. Deliberately separate from `updatedAt`, which changes on any
@@ -91,12 +81,6 @@ model Habit {
   // it via HabitForm.
   activeDays     Int[]      @default([0, 1, 2, 3, 4, 5, 6])
   order          Int
-  // Independent from `order` above: `order` is this habit's position
-  // within its group on the /habits page, `todayOrder` is its position
-  // within the same group's card on the Today page — dragging on one
-  // screen must not move the habit on the other (see PROJECT_BRAIN.md /
-  // the habit-groups feature docs for why one screen isn't enough).
-  todayOrder     Int
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   userId         String
@@ -109,7 +93,6 @@ model Habit {
   group          HabitGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
 
   @@index([order])
-  @@index([todayOrder])
   @@index([userId])
   @@index([groupId])
 }
@@ -187,6 +170,10 @@ model Reminder {
   // center-screen alert popup; normal ones don't.
   priority  String   @default("normal")
   completed Boolean  @default(false)
+  // Set when the reminder is checked, cleared when unchecked (audit batch 4,
+  // 2026-11-09) — decides how long a checked reminder stays visible (until the
+  // end of that day), like Task.completedAt. updatedAt changes on any edit.
+  completedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    String
@@ -332,8 +319,6 @@ model CalendarPlan {
   durationMinutes Int @default(60)
   onHold Boolean @default(false)
   completed Boolean @default(false)
-  priority String @default("medium")
-  category String @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId String

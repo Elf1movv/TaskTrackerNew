@@ -27,7 +27,6 @@ const task = (fields: object) => ({ completed: false, completedAt: null, dueDate
 const habit = (fields: object) => ({
   completedDates: [],
   activeDays: [todayWeekday],
-  todayOrder: 0,
   ...fields,
 })
 

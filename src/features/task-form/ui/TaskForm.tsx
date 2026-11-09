@@ -70,12 +70,6 @@ export function TaskForm({
       priority,
       category,
       dueDate: hasDueDate ? dueDate : null,
-      // Tasks have no hour since the redesign — schedules are calendar
-      // plans. Saving an old task clears its leftover hour; the original is
-      // kept in the LegacyTransition journal (release_cleanup migration).
-      // The columns themselves are dropped in the release after main.
-      time: null,
-      endTime: null,
     }
     if (task) {
       updateTask(task.id, { ...patch, completed: task.completed })

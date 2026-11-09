@@ -1,5 +1,5 @@
 import { EditTaskButton } from "@/features/edit-task"
-import { PlanToggleCheckbox as TaskToggleCheckbox } from "@/features/toggle-plan"
+import { PlanToggleCheckbox } from "@/features/toggle-plan"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { useDragItem } from "@/shared/lib/dnd"
 
@@ -7,7 +7,7 @@ import { useDragItem } from "@/shared/lib/dnd"
 // onto a day cell in CalendarGrid moves the task to that day — it doesn't
 // reorder within this panel's own list. `draggable=false` for callers with
 // no day-cell equivalent to drop onto (the calendar's Agenda list).
-export function DayTaskRow({
+export function DayPlanRow({
   task,
   onEdit,
   draggable = true,
@@ -17,7 +17,7 @@ export function DayTaskRow({
   draggable?: boolean
 }) {
   const { ref, isDragging } = useDragItem<HTMLDivElement>({
-    type: "calendar-task-move",
+    type: "calendar-plan-move",
     id: task.id,
     canDrag: draggable,
   })
@@ -30,7 +30,7 @@ export function DayTaskRow({
       }`}
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
-      <TaskToggleCheckbox taskId={task.id} completed={task.completed} size={22} />
+      <PlanToggleCheckbox taskId={task.id} completed={task.completed} size={22} />
       <span
         className={`text-sm font-semibold flex-1 text-left leading-snug ${
           task.completed ? "line-through text-tertiary" : ""

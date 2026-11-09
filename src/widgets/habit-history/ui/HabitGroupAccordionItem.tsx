@@ -8,13 +8,9 @@ import { EditHabitGroupButton } from "@/features/edit-habit-group"
 import { DeleteHabitGroupButton } from "@/features/delete-habit-group"
 import { HabitGroupForm } from "@/features/habit-group-form"
 import { getStreak, HabitIcon, useHabits, type Habit } from "@/entities/habit"
-import {
-  getHabitGroupIcon,
-  getHabitGroupTitle,
-  useHabitGroups,
-  type HabitGroup,
-} from "@/entities/habit-group"
-import { useDragItem, useDragReorder, useDropTarget } from "@/shared/lib/dnd"
+import { HABIT_MOVE_TYPE, useHabitGroupDnd } from "@/features/habit/group-dnd"
+import { getHabitGroupIcon, getHabitGroupTitle, type HabitGroup } from "@/entities/habit-group"
+import { useDragItem, useDropTarget } from "@/shared/lib/dnd"
 import { formatDateKey } from "@/shared/lib/date"
 import {
   capitalizeFirst,
@@ -62,8 +58,7 @@ const CHART_STYLES: { style: HabitChartStyle; Icon: typeof TrendingUp }[] = [
 // shown period comes from `anchor`; `today` is always the real date, so
 // past days stay clickable and days after today stay disabled.
 export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; habits: Habit[] }) {
-  const { habits: allHabits, toggleHabit, reorderHabitsInGroup, moveHabitToGroup } = useHabits()
-  const { reorderHabitGroups } = useHabitGroups()
+  const { toggleHabit } = useHabits()
   const { t, language } = useLanguage()
   const locale = getDateLocale(language)
   const weekdayLabels = getWeekdayLabels(language)
@@ -78,45 +73,11 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
   const today = new Date()
 
-  // Block reordering — drags the whole header to swap this block's
-  // position with another's, same mechanism GoalAccordionItem uses for
-  // goals. The wrapper `<div>` (not AccordionItem itself) carries the
-  // ref — see that component's comment for why (AccordionItem has no
-  // forwardRef).
-  const { ref: dragGroupRef, isDragging } = useDragReorder<HTMLDivElement>({
-    // General ("without a block") takes part like any block since
-    // 2026-11-08 (owner request) — it sits wherever the shared order puts it.
-    type: "habit-group",
-    id: group.id,
-    onHoverMove: reorderHabitGroups,
-  })
-  // Accepts a habit dragged from any block's grid (including this one,
-  // dropped broadly rather than on a specific row) — appends it here.
-  const { ref: dropHabitRef } = useDropTarget<HTMLDivElement>({
-    type: "habit-move",
-    onDrop: habitId => moveHabitToGroup(habitId, group.id),
-  })
-  const headerRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      dragGroupRef(node)
-      dropHabitRef(node)
-    },
-    [dragGroupRef, dropHabitRef],
-  )
-
-  function handleHabitDrop(draggedId: string, targetHabitId: string) {
-    const dragged = allHabits.find(h => h.id === draggedId)
-    const target = allHabits.find(h => h.id === targetHabitId)
-    if (!dragged || !target || draggedId === targetHabitId) return
-    if (dragged.groupId === target.groupId) {
-      reorderHabitsInGroup(target.groupId, draggedId, targetHabitId)
-    } else {
-      // Cross-group drop on a specific row only decides WHICH group —
-      // moveHabitToGroup always appends at the end, exact drop position
-      // within the new group isn't tracked (a possible future refinement).
-      moveHabitToGroup(draggedId, target.groupId)
-    }
-  }
+  // Block reordering (drag the header), dropping a habit into this block, and
+  // row-to-row habit drops — shared with Today's two block cards (audit Д3).
+  // The wrapper <div> (not AccordionItem itself) carries the ref:
+  // AccordionItem has no forwardRef.
+  const { ref: headerRef, isDragging, dropHabitOn } = useHabitGroupDnd(group)
 
   const days = period !== "year" ? getPeriodDays(period, anchor) : null
   const months = period === "year" ? getYearMonths(anchor) : null
@@ -355,7 +316,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                       months={months}
                       today={today}
                       onToggle={dateKey => toggleHabit(habit.id, dateKey)}
-                      onDropHabit={draggedId => handleHabitDrop(draggedId, habit.id)}
+                      onDropHabit={draggedId => dropHabitOn(draggedId, habit.id)}
                       onEdit={() => {
                         setIsAdding(false)
                         setEditingHabit(habit)
@@ -441,8 +402,11 @@ function HabitGridRow({
   onDropHabit: (draggedId: string) => void
   onEdit: () => void
 }) {
-  const { ref: dragRef, isDragging } = useDragItem<HTMLDivElement>({ type: "habit-move", id: habit.id })
-  const { ref: dropRef, isOver } = useDropTarget<HTMLDivElement>({ type: "habit-move", onDrop: onDropHabit })
+  const { ref: dragRef, isDragging } = useDragItem<HTMLDivElement>({ type: HABIT_MOVE_TYPE, id: habit.id })
+  const { ref: dropRef, isOver } = useDropTarget<HTMLDivElement>({
+    type: HABIT_MOVE_TYPE,
+    onDrop: onDropHabit,
+  })
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
       dragRef(node)

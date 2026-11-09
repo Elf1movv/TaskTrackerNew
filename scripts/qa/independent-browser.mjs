@@ -235,9 +235,9 @@ try {
     await screenshot("goals-desktop")
     await navigate(
       "/calendar?view=month&date=2030-01-15",
-      "document.querySelector('[aria-label=\"Add task\"]')",
+      "document.querySelector('[aria-label=\"Add plan\"]')",
     )
-    await click("document.querySelector('[aria-label=\"Add task\"]')")
+    await click("document.querySelector('[aria-label=\"Add plan\"]')")
     await fill('input[placeholder="Что запланировать?"]', "План выбранного дня")
     await click(button("Сохранить"))
     await saved(async () => (await api("plans")).length === 1)
@@ -261,8 +261,6 @@ try {
       durationMinutes: 20,
       onHold: false,
       completed: false,
-      category: "",
-      priority: "medium",
     })
     const block =
       "[...document.querySelectorAll('[role=button]')].find(e=>e.title?.includes('План 20 минут'))"

@@ -4,7 +4,7 @@ import type { Reminder } from "./reminder"
 export interface ReminderContextValue {
   reminders: Reminder[]
   isLoaded: boolean
-  addReminder: (reminder: Omit<Reminder, "id" | "updatedAt">) => void
+  addReminder: (reminder: Omit<Reminder, "id" | "updatedAt" | "completedAt">) => void
   updateReminder: (id: string, patch: Partial<Omit<Reminder, "id" | "updatedAt">>) => void
   deleteReminder: (id: string) => void
   toggleReminder: (id: string) => void

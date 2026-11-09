@@ -3,7 +3,7 @@ import { selectTodayHabits } from "./selectTodayHabits"
 import type { Habit } from "../model/habit"
 
 // activeDays defaults to every day of the week — the tests below only
-// care about todayOrder sorting, not weekday filtering (already covered by
+// care about the order Today keeps, not weekday filtering (already covered by
 // selectHabitsOnDay.test.ts), so this keeps them independent of whatever
 // day they happen to run on.
 function makeHabit(overrides: Partial<Habit> = {}): Habit {
@@ -15,7 +15,6 @@ function makeHabit(overrides: Partial<Habit> = {}): Habit {
     color: "#000000",
     activeDays: [0, 1, 2, 3, 4, 5, 6],
     groupId: "g1",
-    todayOrder: 0,
     updatedAt: "2026-09-22T00:00:00.000Z",
     createdAt: "2026-09-22T00:00:00.000Z",
     ...overrides,
@@ -23,25 +22,15 @@ function makeHabit(overrides: Partial<Habit> = {}): Habit {
 }
 
 describe("selectTodayHabits", () => {
-  // Regression test for a real bug (2026-09-28): GET /api/habits always
-  // sorts by `order`, not `todayOrder` — without this sort, a fresh fetch
-  // (e.g. right after reloading the page post-drag) silently reverted
-  // Today's habit order back to the `order`-based sequence even though
-  // todayOrder was correctly saved server-side.
-  it("sorts the result by todayOrder, not by the input array's own order", () => {
-    const habits = [
-      makeHabit({ id: "c", todayOrder: 2 }),
-      makeHabit({ id: "a", todayOrder: 0 }),
-      makeHabit({ id: "b", todayOrder: 1 }),
-    ]
-    expect(selectTodayHabits(habits).map(h => h.id)).toEqual(["a", "b", "c"])
+  // One habit order for Today and Habits since audit batch 4 (decision 4):
+  // the input is already in that order, Today keeps it.
+  it("keeps the shared habit order", () => {
+    const habits = [makeHabit({ id: "c" }), makeHabit({ id: "a" }), makeHabit({ id: "b" })]
+    expect(selectTodayHabits(habits).map(h => h.id)).toEqual(["c", "a", "b"])
   })
 
   it("still filters out habits not scheduled for today's weekday", () => {
-    const habits = [
-      makeHabit({ id: "a", todayOrder: 0, activeDays: [] }),
-      makeHabit({ id: "b", todayOrder: 1 }),
-    ]
+    const habits = [makeHabit({ id: "a", activeDays: [] }), makeHabit({ id: "b" })]
     expect(selectTodayHabits(habits).map(h => h.id)).toEqual(["b"])
   })
 

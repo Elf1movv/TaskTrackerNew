@@ -86,9 +86,9 @@ function CalendarPageContent() {
     goToNext,
     goToToday,
     goToDate,
-    moveTaskToDay,
-    rescheduleTaskTime,
-    resizeTask,
+    movePlanToDay,
+    reschedulePlanTime,
+    resizePlan,
   } = useCalendarContext()
   const { language, t } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -216,7 +216,7 @@ function CalendarPageContent() {
               ? buildWeekRange(anchorDate).map(formatDateKey)
               : []
         }
-        onReschedule={rescheduleTaskTime}
+        onReschedule={reschedulePlanTime}
       />
 
       {view === "month" && (
@@ -234,7 +234,7 @@ function CalendarPageContent() {
           allGoals={allGoals}
           onSelectDay={handleSelectDay}
           onCloseDayPanel={() => selectDay(null)}
-          onMoveTaskToDay={moveTaskToDay}
+          onMovePlanToDay={movePlanToDay}
         />
       )}
 
@@ -255,8 +255,8 @@ function CalendarPageContent() {
           allReminders={allReminders}
           allDeadlines={allDeadlines}
           allGoals={allGoals}
-          onRescheduleTaskTime={rescheduleTaskTime}
-          onResizeTask={resizeTask}
+          onRescheduleTaskTime={reschedulePlanTime}
+          onResizePlan={resizePlan}
         />
       )}
 
@@ -267,8 +267,8 @@ function CalendarPageContent() {
           allReminders={allReminders}
           allDeadlines={allDeadlines}
           allGoals={allGoals}
-          onRescheduleTaskTime={rescheduleTaskTime}
-          onResizeTask={resizeTask}
+          onRescheduleTaskTime={reschedulePlanTime}
+          onResizePlan={resizePlan}
         />
       )}
 

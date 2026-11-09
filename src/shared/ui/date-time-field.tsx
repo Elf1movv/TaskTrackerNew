@@ -67,7 +67,7 @@ export function DateTimeField({
       {/* asChild renders our own div as the actual trigger element — a
           nested real <button> (the clear "×") inside a Popover's own
           <button> trigger would be invalid HTML, same reason
-          TimedTaskBlock's resize handle isn't nested in a <button> either. */}
+          TimedPlanBlock's resize handle isn't nested in a <button> either. */}
       <PopoverTrigger asChild>
         <div
           role="button"

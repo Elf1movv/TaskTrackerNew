@@ -54,4 +54,26 @@ describe("reminders router — shared date/time check (audit Д6)", () => {
       .send({ patch: { date: "2026-04-31" }, expectedUpdatedAt: created.body.updatedAt })
     expect(res.status).toBe(400)
   })
+
+  it("records when a reminder was checked, and clears it when unchecked", async () => {
+    const created = await agent.post("/api/reminders").send({ ...baseReminder, id: crypto.randomUUID() })
+    expect(created.body.completedAt).toBeNull()
+
+    const checked = await agent
+      .patch(`/api/reminders/${created.body.id}`)
+      .send({ patch: { completed: true }, expectedUpdatedAt: created.body.updatedAt })
+    expect(checked.status).toBe(200)
+    expect(checked.body.completedAt).toBeTypeOf("string")
+
+    // Editing something else keeps the day it was checked.
+    const renamed = await agent
+      .patch(`/api/reminders/${created.body.id}`)
+      .send({ patch: { title: "Call dad" }, expectedUpdatedAt: checked.body.updatedAt })
+    expect(renamed.body.completedAt).toBe(checked.body.completedAt)
+
+    const unchecked = await agent
+      .patch(`/api/reminders/${created.body.id}`)
+      .send({ patch: { completed: false }, expectedUpdatedAt: renamed.body.updatedAt })
+    expect(unchecked.body.completedAt).toBeNull()
+  })
 })
