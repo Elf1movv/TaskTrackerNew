@@ -20,7 +20,6 @@ server/.env.*
 
 # Docs / project notes — not needed to build or run the app
 docs
-legacy-figma-make-scaffold
 LEARNING.md
 PROJECT_BRAIN.md
 ATTRIBUTIONS.md

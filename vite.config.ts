@@ -6,26 +6,8 @@ import react from "@vitejs/plugin-react"
 // of duplicating them in a separate vitest.config.ts.
 import { defineConfig } from "vitest/config"
 
-function figmaAssetResolver() {
-  return {
-    name: "figma-asset-resolver",
-    resolveId(id) {
-      if (id.startsWith("figma:asset/")) {
-        const filename = id.replace("figma:asset/", "")
-        return path.resolve(__dirname, "src/assets", filename)
-      }
-    },
-  }
-}
-
 export default defineConfig({
-  plugins: [
-    figmaAssetResolver(),
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
-    react({ jsxImportSource: "@emotion/react" }),
-    tailwindcss(),
-  ],
+  plugins: [react({ jsxImportSource: "@emotion/react" }), tailwindcss()],
   resolve: {
     alias: {
       // Alias @ to the src directory
