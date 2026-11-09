@@ -6,17 +6,8 @@ import { useCategories, type Category } from "@/entities/category"
 import { isCompletedToday, type Task } from "@/entities/task"
 import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { useLanguage } from "@/shared/lib/i18n"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/shared/ui/alert-dialog"
-import { Button, buttonVariants } from "@/shared/ui/button"
+import { Button } from "@/shared/ui/button"
+import { ConfirmAction } from "@/shared/ui/confirm-action"
 import { Input } from "@/shared/ui/input"
 import { Pager } from "@/shared/ui/pager"
 import { CategorySettingsPopover, TaskRow } from "./components"
@@ -249,39 +240,24 @@ export function TaskBoard({
         )}
       </div>
 
-      <AlertDialog
+      <ConfirmAction
         open={!!categoryPendingDelete}
         onOpenChange={open => !open && setCategoryPendingDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {taskCountInPendingCategory > 0
-                ? t("tasks.deleteCategoryTitleWithTasks")
-                : t("tasks.deleteCategoryTitle")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {taskCountInPendingCategory > 0
-                ? t("tasks.deleteCategoryBodyWithTasks", {
-                    name: categoryPendingDelete?.name ?? "",
-                    count: taskCountInPendingCategory,
-                  })
-                : t("tasks.deleteCategoryBody", { name: categoryPendingDelete?.name ?? "" })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDeleteCategory}
-              className={
-                taskCountInPendingCategory > 0 ? buttonVariants({ variant: "destructive" }) : undefined
-              }
-            >
-              {t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title={
+          taskCountInPendingCategory > 0
+            ? t("tasks.deleteCategoryTitleWithTasks")
+            : t("tasks.deleteCategoryTitle")
+        }
+        description={
+          taskCountInPendingCategory > 0
+            ? t("tasks.deleteCategoryBodyWithTasks", {
+                name: categoryPendingDelete?.name ?? "",
+                count: taskCountInPendingCategory,
+              })
+            : t("tasks.deleteCategoryBody", { name: categoryPendingDelete?.name ?? "" })
+        }
+        onConfirm={handleConfirmDeleteCategory}
+      />
 
       {activeTasks.length > 0 ? (
         renderTasks(activeTasks)

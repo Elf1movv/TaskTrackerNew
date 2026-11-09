@@ -1,54 +1,26 @@
-import { useState } from "react"
 import { Trash2 } from "lucide-react"
 import { useHabits } from "@/entities/habit"
 import { useLanguage } from "@/shared/lib/i18n"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/shared/ui/alert-dialog"
-import { buttonVariants } from "@/shared/ui/button"
+import { ConfirmAction } from "@/shared/ui/confirm-action"
 
 export function DeleteHabitButton({ habitId }: { habitId: string }) {
   const { deleteHabit } = useHabits()
   const { t } = useLanguage()
-  const [confirming, setConfirming] = useState(false)
 
   return (
-    <>
+    <ConfirmAction
+      title={t("habits.deleteTitle")}
+      description={t("habits.deleteBody")}
+      onConfirm={() => deleteHabit(habitId)}
+    >
       <button
-        onClick={e => {
-          e.stopPropagation()
-          setConfirming(true)
-        }}
+        // Sits on a habit card that marks the habit done on click.
+        onClick={e => e.stopPropagation()}
         className="p-1 rounded text-muted-foreground hover:text-destructive transition"
         aria-label="Delete habit"
       >
         <Trash2 size={12} />
       </button>
-
-      <AlertDialog open={confirming} onOpenChange={setConfirming}>
-        <AlertDialogContent onClick={e => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("habits.deleteTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("habits.deleteBody")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteHabit(habitId)}
-              className={buttonVariants({ variant: "destructive" })}
-            >
-              {t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </ConfirmAction>
   )
 }

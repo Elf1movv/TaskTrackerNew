@@ -48,7 +48,7 @@ export function TaskRow({ task, divider, onEdit }: { task: Task; divider: boolea
       </div>
       <span className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         <EditTaskButton onClick={onEdit} />
-        <DeleteTaskButton taskId={task.id} />
+        <DeleteTaskButton taskId={task.id} taskTitle={task.title} />
       </span>
       <PriorityDot priority={task.priority} size={16} />
       {/* Fixed width — without it, a longer category name pushed this

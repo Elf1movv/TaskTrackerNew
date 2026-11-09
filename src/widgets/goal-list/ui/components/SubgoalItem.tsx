@@ -96,7 +96,6 @@ export function SubgoalItem({ goalId, subgoal, color }: { goalId: string; subgoa
         <ConfirmAction
           title={t("goals.deleteSubgoalTitle")}
           description={t("goals.deleteSubgoalBody", { title: subgoal.title })}
-          confirmLabel={t("common.delete")}
           onConfirm={() => deleteSubgoal(goalId, subgoal.id)}
         >
           <button

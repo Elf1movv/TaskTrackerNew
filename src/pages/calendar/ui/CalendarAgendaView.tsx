@@ -10,7 +10,7 @@ import { isTaskOnDay, type Task as DeadlineTask } from "@/entities/task"
 import type { CalendarEntry as Plan } from "@/entities/calendar-plan"
 import { buildAgendaRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
-import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
+import { formatDay, getDateLocale, useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 
 type EditingItem = { kind: "task" | "reminder" | "goal"; id: string } | null
@@ -111,7 +111,7 @@ export function CalendarAgendaView({
               >
                 {format(group.day, "EEEE", { locale })}
               </span>
-              <span className="text-lg font-semibold">{format(group.day, "d MMMM", { locale })}</span>
+              <span className="text-lg font-semibold">{formatDay(group.day, language)}</span>
               {isToday(group.day) && (
                 <span className="h-6 px-2 rounded-md bg-primary-soft text-primary text-xs font-bold inline-flex items-center">
                   {t("common.today")}

@@ -59,7 +59,7 @@ try {
     await navigate("/today", "document.body.innerText.includes('Заметки')")
     await click(button("Добавить заметку"))
     await fill('input[placeholder="Что нужно держать перед глазами?"]', "Первая заметка")
-    await fill('textarea[placeholder="Описание — при необходимости"]', "Одна строка описания")
+    await fill('textarea[placeholder="Описание (необязательно)"]', "Одна строка описания")
     await click(button("Сохранить"))
     await saved(async () => (await api("notes")).length === 1)
     const first = (await api("notes"))[0]
@@ -193,7 +193,7 @@ try {
     ok("Task creates no plan and has no goal binding")
     await navigate("/goals", "document.body.innerText.includes('Добавить цель')")
     await click(button("Добавить цель"))
-    await fill('input[placeholder="Название цели"]', "Моя цель")
+    await fill('input[placeholder="Чего хотите достичь?"]', "Моя цель")
     await click(
       "[...document.querySelectorAll('button')].filter(e=>e.textContent.trim()==='Добавить цель').slice(-1)[0]",
     )
@@ -238,7 +238,7 @@ try {
       "document.querySelector('[aria-label=\"Add task\"]')",
     )
     await click("document.querySelector('[aria-label=\"Add task\"]')")
-    await fill('input[placeholder="Добавить план"]', "План выбранного дня")
+    await fill('input[placeholder="Что запланировать?"]', "План выбранного дня")
     await click(button("Сохранить"))
     await saved(async () => (await api("plans")).length === 1)
     const plan = (await api("plans"))[0]

@@ -214,7 +214,6 @@ function NoteRow({ note, previousId, nextId }: { note: Note; previousId?: string
           <ConfirmAction
             title={t("notes.deleteTitle")}
             description={t("notes.deleteBody")}
-            confirmLabel={t("common.delete")}
             onConfirm={() => deleteNote(note.id)}
           >
             <Button
