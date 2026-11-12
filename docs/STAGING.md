@@ -123,7 +123,8 @@
   заметка осталась в «Актуальных».
 - Прод не менялся: `tasktracker` на `:latest`, бандл `index-sgl6wU7h.js`
   до и после.
-- Аккаунт владельца для проверки: `nikita-test@example.com` (подтверждён
+- Аккаунт владельца для проверки: `nikita-test2@example.com` (подтверждён
+  2026-11-12; пароль от прежнего `nikita-test@example.com` утерян). Прежний: `nikita-test@example.com` (подтверждён
   2026-11-08 скриптом `verify-staging-user.mjs`).
 - Откат к второй итерации: остановить app, восстановить дамп
   (`pg_restore --clean`), вернуть `STAGING_IMAGE` и checkout `586b931`.

@@ -395,7 +395,7 @@ export const en = {
   "pwa.ios.description":
     "An icon appears on your Home Screen, and MyTracker opens like an app — without the browser bars.",
   "pwa.ios.step1": "Tap Share at the bottom of Safari",
-  "pwa.ios.step2": "Choose “Add to Home Screen”, then tap Add",
+  "pwa.ios.step2": "Choose “Add to Home Screen”, turn on “Open as Web App”, then tap Add",
   "pwa.ios.done": "Got it",
   "onboarding.back.1": "Welcome back!",
   "onboarding.back.2": "Great to see you again!",
