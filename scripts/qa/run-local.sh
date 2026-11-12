@@ -57,5 +57,7 @@ node scripts/qa/independent-browser.mjs suite | grep -v '^PASS' || true
 QA_RESET="(cd server && node --env-file=\"$ENV_FILE\" scripts/qa-browser-user.mjs onboarding-reset \"$EMAIL\" >/dev/null)"
 export QA_RESET
 node scripts/qa/onboarding.mjs | grep -v '^PASS' || true
+# PWA: installable, service worker, offline page (restarts the local server).
+QA_ENV="$ENV_FILE" node scripts/qa/pwa.mjs | cut -c1-200 || true
 [ "${1:-}" = "--full" ] && node scripts/qa/calendar-gestures.mjs | tail -1
 echo "QA output: $QA_TMP"

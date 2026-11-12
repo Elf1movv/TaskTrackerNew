@@ -394,6 +394,13 @@ export const ru: Record<keyof typeof en, string> = {
   "onboarding.hint.body": "Настройки → «Пройти знакомство заново».",
   "onboarding.hint.ok": "Понятно",
   "settings.restartOnboarding": "Пройти знакомство заново",
+  "settings.installApp": "Установить приложение",
+  "pwa.ios.title": "Установить MyTracker на iPhone",
+  "pwa.ios.description":
+    "Иконка появится на экране «Домой», и MyTracker будет открываться как приложение — без панелей браузера.",
+  "pwa.ios.step1": "Нажмите «Поделиться» внизу экрана Safari",
+  "pwa.ios.step2": "Выберите «На экран „Домой“» и нажмите «Добавить»",
+  "pwa.ios.done": "Понятно",
   "onboarding.back.1": "С возвращением!",
   "onboarding.back.2": "Рады видеть вас снова!",
   "onboarding.back.3": "Вы вернулись — самое время закрыть пару задач.",
