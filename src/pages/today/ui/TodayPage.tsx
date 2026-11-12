@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from "motion/react"
 import { Plus } from "lucide-react"
 import { useSearchParams } from "react-router"
 import { NoteForm } from "@/features/note-form"
+import { EnablePushCard } from "@/features/notifications/push"
+import { useSession } from "@/shared/lib/auth"
 import { WelcomeBackGreeting } from "@/widgets/onboarding"
 import { HabitTrackerGrid } from "@/widgets/habit-tracker-grid"
 import { NotesCard } from "@/widgets/notes-card"
@@ -15,6 +17,7 @@ import { GoalReminderSwapCard } from "./components"
 function TodayPageContent() {
   const { goals, habits, reminders, remindersLoaded } = useTodayContext()
   const { language, t } = useLanguage()
+  const { data: session } = useSession()
   const heroDate = formatHeroDate(new Date(), language)
   const [isAdding, setIsAdding] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
@@ -47,6 +50,8 @@ function TodayPageContent() {
           {t("notes.add")}
         </Button>
       </div>
+
+      {session && <EnablePushCard userId={session.user.id} />}
 
       <AnimatePresence>
         {isAdding && (

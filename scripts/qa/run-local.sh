@@ -36,6 +36,8 @@ if [ "${1:-}" = "--stop" ]; then stop; exit 0; fi
 BASE=$(grep -E '^DATABASE_URL=' "$ROOT/server/.env.test" | sed 's/^DATABASE_URL=//; s/"//g; s/?.*//')
 grep -v -E '^(PORT|BETTER_AUTH_URL|EMAIL_DELIVERY|DATABASE_URL)=' "$ROOT/server/.env.test" > "$ENV_FILE"
 printf 'PORT=3002\nBETTER_AUTH_URL=http://localhost:3002\nEMAIL_DELIVERY=disabled\nDATABASE_URL=%s?schema=redesign_browser\n' "$BASE" >> "$ENV_FILE"
+# Push notifications: a throwaway VAPID key pair for the local server only.
+(cd "$ROOT/server" && node -e 'const k=require("web-push").generateVAPIDKeys();console.log(["VAPID_PUBLIC_KEY="+k.publicKey,"VAPID_PRIVATE_KEY="+k.privateKey,"VAPID_SUBJECT=mailto:qa@example.invalid"].join(String.fromCharCode(10)))') >> "$ENV_FILE"
 
 cd "$ROOT"
 npm run build >/dev/null

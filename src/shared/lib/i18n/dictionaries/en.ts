@@ -391,6 +391,30 @@ export const en = {
   "onboarding.hint.ok": "Got it",
   "settings.restartOnboarding": "Take the tour again",
   "settings.installApp": "Install the app",
+  "settings.menu.notifications": "Notifications",
+  "push.description":
+    "Reminders arrive on time, even when MyTracker is closed. Important ones also come early: a day and an hour ahead.",
+  "push.off": "Off",
+  "push.on": "On",
+  "push.morningTime": "Morning notifications",
+  "push.morningTimeHint": "Reminders without a time and the daily summary arrive at this time.",
+  "push.digest": "Morning summary: tasks, habits and reminders for the day",
+  "push.test": "Send a test notification",
+  "push.testSent": "Sent — check your notifications",
+  "push.testFailed": "Couldn't send. Try turning notifications off and on again",
+  "push.saveFailed": "Couldn't save the setting",
+  "push.enableFailed": "Couldn't turn notifications on",
+  "push.unsupported":
+    "This browser can't show notifications. Open MyTracker in Chrome, Edge, Firefox or Safari.",
+  "push.needsInstall":
+    "On iPhone and iPad notifications work only in the installed app. Tap “Install the app” below, open MyTracker from its icon and turn them on here.",
+  "push.unavailable": "Notifications aren't available yet.",
+  "push.denied":
+    "Notifications for MyTracker are blocked in your browser or phone settings. Allow them and open this tab again.",
+  "push.offer.title": "Turn on notifications?",
+  "push.offer.text": "We'll remind you on time, even when the app is closed.",
+  "push.offer.enable": "Turn on",
+  "push.offer.later": "Not now",
   "pwa.ios.title": "Install MyTracker on your iPhone",
   "pwa.ios.description":
     "An icon appears on your Home Screen, and MyTracker opens like an app — without the browser bars.",

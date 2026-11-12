@@ -781,3 +781,30 @@ Task и журнале. Транзакция по владельцу и уник
   в следующем кадре (`useThemeColorSync`).
 - Гоча проверки: «офлайн» в Chrome DevTools/CDP не действует на service worker
   — `scripts/qa/pwa.mjs` останавливает локальный сервер.
+
+## Push-напоминания (2026-11-12)
+
+- **Цепочка:** браузер подписывается у своего push-сервиса (Google FCM, Apple,
+  Mozilla) с нашим публичным ключом VAPID → `POST /api/push/subscriptions`
+  сохраняет адрес и ключи шифрования (`PushSubscription`) и часовой пояс
+  (`User.timeZone`) → `startPushScheduler()` (из `server/src/index.ts`, раз в
+  минуту, один процесс) → `runPushCheck()` → `duePushes()` решает, что пора →
+  `web-push` шифрует и отправляет → `public/sw.js` показывает уведомление.
+- **Модель:** `PushSubscription` (endpoint unique, p256dh, auth, language,
+  lastSuccessAt; каскад с User), `PushSent` (userId+key unique — журнал
+  отправленного, чистится через 7 дней), `User.timeZone/notifyTime/notifyDigest`.
+- **Часовые пояса:** время напоминания — местное «HH:mm» без пояса; сервер
+  переводит «сейчас» в местные дату/минуту через `Intl.DateTimeFormat`
+  (`toLocalNow`), новых библиотек нет. Переход на летнее время не учитывается
+  (сдвиг на час в ночь перевода для напоминаний «на завтра»).
+- `duePushes` — чистая функция, все правила в `schedule.test.ts`; полный цикл с
+  подменённым `web-push` — `routes/push.test.ts`.
+- 404/410 от push-сервиса → подписка удаляется (приложение удалено / браузер
+  отписался). Временная ошибка везде → не записываем в журнал, следующая
+  минута пробует снова.
+- Без ключей VAPID push выключен, сервер работает (`pushConfigured()`).
+- Гоча проверки: разрешение на уведомления, выданное через CDP
+  (`Browser.grantPermissions`), сбрасывается при отключении скрипта — каждая
+  проверка выдаёт его заново.
+- Гоча стенда: `docker-compose.staging.yml` пробрасывает `STAGING_VAPID_*`;
+  без них стенд работает без push.

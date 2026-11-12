@@ -10,6 +10,7 @@ import { PlanProvider } from "@/entities/calendar-plan"
 import { TaskProvider } from "@/entities/task"
 import { useLanguage } from "@/shared/lib/i18n"
 import { useSession } from "@/shared/lib/auth"
+import { usePushSync } from "@/features/notifications/push"
 import { CriticalReminderAlert } from "@/widgets/critical-reminder-alert"
 import { DueDateReminders } from "@/widgets/due-date-reminders"
 import { FeedbackBanner } from "@/widgets/feedback"
@@ -26,6 +27,8 @@ export function RootLayout() {
   // Called before the early returns below (hooks can't be skipped); it only
   // starts loading once there is a session.
   const onboarding = useOnboarding(session?.user.id)
+  // Push notifications: refresh this browser's subscription on the server.
+  usePushSync(session?.user.id)
 
   // isPending: session is still being fetched — render nothing rather than
   // flash the login page before the real answer arrives.

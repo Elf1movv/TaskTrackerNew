@@ -4,7 +4,8 @@
 // our own instead of the browser's "no internet" screen. It does NOT cache the
 // app or the API — a cached app shell could keep someone on an old version
 // after a deploy, and working offline with data was postponed by the owner
-// (PRODUCT_STRATEGY.md, section 6). Push notifications will be added here.
+// (PRODUCT_STRATEGY.md, section 6). It also shows push notifications
+// (2026-11-12) sent by the server (server/src/lib/push).
 
 const CACHE = "mytracker-offline-v1"
 const OFFLINE_URL = "/offline.html"
@@ -40,6 +41,42 @@ self.addEventListener("fetch", event => {
     fetch(request).catch(async () => {
       const cached = await caches.match(request.mode === "navigate" ? OFFLINE_URL : url.pathname)
       return cached ?? Response.error()
+    }),
+  )
+})
+
+// A push from our server: { title, body, tag, url } (server/src/lib/push/messages.ts).
+self.addEventListener("push", event => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { body: event.data ? event.data.text() : "" }
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || "MyTracker", {
+      body: data.body || "",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: data.tag,
+      renotify: Boolean(data.tag),
+      data: { url: data.url || "/today" },
+    }),
+  )
+})
+
+// Tap on a notification: bring an open MyTracker window forward (and move it
+// to the page), or open a new one.
+self.addEventListener("notificationclick", event => {
+  event.notification.close()
+  const url = new URL(event.notification.data?.url || "/today", self.location.origin).href
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(windows => {
+      const open = windows.find(w => new URL(w.url).origin === self.location.origin)
+      if (open) {
+        return open.focus().then(w => (w && "navigate" in w ? w.navigate(url) : undefined))
+      }
+      return self.clients.openWindow(url)
     }),
   )
 })

@@ -395,6 +395,30 @@ export const ru: Record<keyof typeof en, string> = {
   "onboarding.hint.ok": "Понятно",
   "settings.restartOnboarding": "Пройти знакомство заново",
   "settings.installApp": "Установить приложение",
+  "settings.menu.notifications": "Уведомления",
+  "push.description":
+    "Напоминания приходят вовремя, даже когда MyTracker закрыт. Важные — ещё и заранее: за сутки и за час.",
+  "push.off": "Выключены",
+  "push.on": "Включены",
+  "push.morningTime": "Утренние уведомления",
+  "push.morningTimeHint": "В это время приходят напоминания без времени и сводка на день.",
+  "push.digest": "Утренняя сводка: задачи, привычки и напоминания на день",
+  "push.test": "Отправить тестовое уведомление",
+  "push.testSent": "Отправили — проверьте уведомления",
+  "push.testFailed": "Не получилось отправить. Попробуйте выключить и снова включить уведомления",
+  "push.saveFailed": "Не удалось сохранить настройку",
+  "push.enableFailed": "Не удалось включить уведомления",
+  "push.unsupported":
+    "Этот браузер не умеет показывать уведомления. Откройте MyTracker в Chrome, Edge, Firefox или Safari.",
+  "push.needsInstall":
+    "На iPhone и iPad уведомления работают только в установленном приложении. Нажмите «Установить приложение» ниже, откройте MyTracker с иконки и включите их здесь.",
+  "push.unavailable": "Уведомления пока недоступны.",
+  "push.denied":
+    "Уведомления для MyTracker запрещены в настройках браузера или телефона. Разрешите их и откройте эту вкладку снова.",
+  "push.offer.title": "Включить уведомления?",
+  "push.offer.text": "Напомним вовремя, даже когда приложение закрыто.",
+  "push.offer.enable": "Включить",
+  "push.offer.later": "Не сейчас",
   "pwa.ios.title": "Установить MyTracker на iPhone",
   "pwa.ios.description":
     "Иконка появится на экране «Домой», и MyTracker будет открываться как приложение — без панелей браузера.",

@@ -8,7 +8,7 @@ import assert from "node:assert/strict"
 import { execSync } from "node:child_process"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { button, click, evaluate, pause, screenshot, send, wait, navigate, close, errors, origin } from "./cdp.mjs"
+import { api, button, click, evaluate, fill, pause, qaFile, screenshot, send, wait, navigate, close, errors, origin } from "./cdp.mjs"
 assert.equal(origin, "http://localhost:3002", "local only: the check stops the server")
 const serverDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "server")
 const text = v => `document.body.innerText.includes(${JSON.stringify(v)})`
@@ -34,7 +34,7 @@ await pause(800)
 out.offlineImg = await evaluate(`document.querySelector('img').naturalWidth`)
 await screenshot("pwa-offline")
 const env = process.env.QA_ENV
-execSync(`cd "${serverDir.split(path.sep).join("/")}" && (nohup npx tsx --env-file="${env}" src/index.ts > /dev/null 2>&1 &) ; for i in $(seq 1 40); do curl -s -m 2 http://localhost:3002/api/health | grep -q ok && break; sleep 1; done`, { shell: "bash", stdio: "ignore" })
+execSync(`cd "${serverDir.split(path.sep).join("/")}" && (nohup npx tsx --env-file="${env}" src/index.ts > "${qaFile("server-restarted.log").split(path.sep).join("/")}" 2>&1 &) ; for i in $(seq 1 40); do curl -s -m 2 http://localhost:3002/api/health | grep -q ok && break; sleep 1; done`, { shell: "bash", stdio: "ignore" })
 await click(button("Повторить"))
 await wait(`location.pathname==='/tasks' && ${gear}`)
 out.backOnline = true
@@ -50,12 +50,45 @@ await pause(500)
 await screenshot("pwa-ios")
 await click(button("Понятно"))
 await send("Emulation.setUserAgentOverride", { userAgent: "" })
+// Push notifications (2026-11-12): the offer on Today, turning them on in
+// settings (a real subscription at the browser's push service), a real test
+// notification through it, the settings saved, turning them off.
+await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false })
+await send("Browser.grantPermissions", { permissions: ["notifications"], origin })
+await navigate("/today", gear)
+await evaluate(`navigator.serviceWorker.ready.then(r=>r.pushManager.getSubscription()).then(s=>s&&s.unsubscribe())`)
+await navigate("/today", gear)
+await wait(text("Включить уведомления?"))
+out.pushOffer = true
+await click(gear)
+await pause(700)
+await click(`[...document.querySelectorAll('button')].find(b=>b.getAttribute('aria-label')==='Уведомления')`)
+await click(button("Включены"))
+await wait(button("Отправить тестовое уведомление"))
+await pause(600) // the offer's exit animation
+out.pushOfferGone = !(await evaluate(text("Включить уведомления?")))
+out.pushTimeZone = (await api("me/notifications")).timeZone
+await click(button("Отправить тестовое уведомление"))
+await wait(`${text("Отправили")} || ${text("Не получилось отправить")}`)
+out.pushTest = (await evaluate(text("Отправили"))) ? "delivered" : "failed"
+await fill("input[type=time]", "07:45")
+await pause(800)
+out.pushTime = (await api("me/notifications")).notifyTime
+await api("me/notifications", "PUT", { notifyTime: "09:00" })
+await click(button("Выключены"))
+await pause(1500)
+out.pushOffAfter = !(await evaluate(`navigator.serviceWorker.ready.then(r=>r.pushManager.getSubscription()).then(s=>!!s)`))
 out.errors = errors
 assert.equal(out.manifest.name, "MyTracker")
 assert.match(out.manifest.ct, /manifest\+json/)
 assert.equal(out.sw2, "controlled", "service worker controls the page")
 assert.deepEqual(out.installErrors, [], "installable")
 assert.equal(out.themeColor[2], "#0b1117", "theme color = dark background")
+assert(out.pushOffer && out.pushOfferGone, "push offer on Today, gone once turned on")
+assert(out.pushTimeZone, "time zone saved with the subscription")
+assert.equal(out.pushTest, "delivered", "a real test push went through the push service")
+assert.equal(out.pushTime, "07:45", "morning time saved")
+assert(out.pushOffAfter, "turning off removes the subscription")
 assert.deepEqual(errors, [], "no runtime errors")
 console.log(`pwa: ok ${JSON.stringify(out)}`)
 close()

@@ -1,5 +1,6 @@
-import { Compass, LogOut, Palette, Settings, User } from "lucide-react"
+import { Bell, Compass, LogOut, Palette, Settings, User } from "lucide-react"
 import { useState } from "react"
+import { NotificationsSection } from "@/features/notifications/push"
 import { signOut } from "@/shared/lib/auth"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
@@ -16,7 +17,13 @@ import { AccountSection } from "./components/AccountSection"
 import { AppearanceSection } from "./components/AppearanceSection"
 import { InstallAppButton } from "./components/InstallAppButton"
 
-type SettingsView = "account" | "appearance"
+type SettingsView = "account" | "appearance" | "notifications"
+
+const TABS = [
+  { value: "account", icon: User, label: "settings.account.title" },
+  { value: "appearance", icon: Palette, label: "settings.menu.appearance" },
+  { value: "notifications", icon: Bell, label: "settings.menu.notifications" },
+] as const
 
 // One entry point (the gear button, fixed top-right on every authenticated
 // page) for a panel meant to grow — a root menu of sections, each one
@@ -61,18 +68,24 @@ export function SettingsPanel({
             onValueChange={v => v && setView(v as SettingsView)}
             className="w-full"
           >
-            <ToggleGroupItem value="account" className="flex-1 gap-1.5">
-              <User size={14} />
-              {t("settings.account.title")}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="appearance" className="flex-1 gap-1.5">
-              <Palette size={14} />
-              {t("settings.menu.appearance")}
-            </ToggleGroupItem>
+            {TABS.map(({ value, icon: Icon, label }) => (
+              <ToggleGroupItem
+                key={value}
+                value={value}
+                aria-label={t(label)}
+                className={`gap-1.5 transition-[flex] ${view === value ? "flex-[3]" : "flex-1"}`}
+              >
+                <Icon size={14} />
+                {/* Three tabs don't fit with full labels: only the open one is named. */}
+                {view === value && <span className="truncate">{t(label)}</span>}
+              </ToggleGroupItem>
+            ))}
           </ToggleGroup>
         </div>
         <div className="flex-1 overflow-y-auto px-4">
-          {view === "account" ? <AccountSection email={email} /> : <AppearanceSection />}
+          {view === "account" && <AccountSection email={email} />}
+          {view === "appearance" && <AppearanceSection />}
+          {view === "notifications" && <NotificationsSection />}
         </div>
         <div className="px-4 pb-4 mt-auto flex flex-col gap-2">
           <InstallAppButton onDone={() => setOpen(false)} />
