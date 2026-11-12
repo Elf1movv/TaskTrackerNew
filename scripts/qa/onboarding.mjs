@@ -98,9 +98,10 @@ try {
   await pause(600)
   await screenshot("onboarding-spotlight-desktop")
   const tipInside = await evaluate(
-    `(()=>{const t=[...document.querySelectorAll('[role=dialog]')].find(e=>e.innerText.includes('Сделали сегодня?')).getBoundingClientRect();return t.top>=0&&t.bottom<=innerHeight})()`,
+    `(()=>{const t=[...document.querySelectorAll('[role=dialog]')].find(e=>e.innerText.includes('Сделали сегодня?')).getBoundingClientRect();return t.top>=0&&t.bottom<=innerHeight-64})()`,
   )
-  assert(tipInside, "spotlight tip stays on screen")
+  // 64 px clear at the bottom: a taskbar over a full-screen browser (2026-11-12).
+  assert(tipInside, "spotlight tip stays on screen, clear of the bottom edge")
   const scrollBefore = await evaluate("document.querySelector('main').scrollTop")
   await send("Input.dispatchMouseEvent", { type: "mouseWheel", x: 300, y: 60, deltaX: 0, deltaY: 400 })
   await pause(400)

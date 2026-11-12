@@ -19,6 +19,8 @@ interface Rect {
 const PAD = 6
 const TIP_WIDTH = 280
 const GAP = 12
+// Kept clear at the bottom edge — see the placement comment below.
+const BOTTOM_SAFE = 64
 
 // The element that actually scrolls around `el` (in this app it's <main>, the
 // page itself never scrolls).
@@ -155,10 +157,17 @@ export function Spotlight({
   const tipLeft = Math.min(Math.max(16, hole.left + hole.width / 2 - tipWidth / 2), vw - tipWidth - 16)
   // Below the window if it fits, otherwise above; and always kept on screen
   // (the window itself can be partly off screen while the page scrolls).
+  // The bottom of the window isn't always visible: the Windows taskbar is drawn
+  // over a full-screen (F11) browser, and phones have their own bars there
+  // (owner report 2026-11-12: the tip sat under the taskbar). So the tip goes
+  // to the side with more room, and below only with a wide margin.
   const below = hole.top + hole.height + GAP
   const above = hole.top - GAP - tipHeight
-  const placeBelow = below + tipHeight + GAP <= vh || above < GAP
-  const tipTop = Math.min(Math.max(GAP, placeBelow ? below : above), vh - tipHeight - GAP)
+  const fitsBelow = below + tipHeight + BOTTOM_SAFE <= vh
+  const fitsAbove = above >= GAP
+  const moreRoomBelow = vh - (hole.top + hole.height) >= hole.top
+  const placeBelow = moreRoomBelow ? fitsBelow || !fitsAbove : !fitsAbove
+  const tipTop = Math.min(Math.max(GAP, placeBelow ? below : above), vh - tipHeight - BOTTOM_SAFE)
   const tipStyle = { top: tipTop }
   const radiusPx = round ? Math.min(hole.width, hole.height) / 2 : 16
 

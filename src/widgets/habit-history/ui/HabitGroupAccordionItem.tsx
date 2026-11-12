@@ -108,7 +108,12 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   // every other width it's back to the original behavior — columns just
   // shrink to fit, no scrollbar.
   const dayColumnMin = isMobile ? "44px" : "0"
-  const gridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(${dayColumnMin}, 1fr))`
+  // The name column: 120 px left a phone ~35 px for the habit's name after
+  // the icon and the streak — names were cut to a syllable (owner report,
+  // 2026-11-12). The grid scrolls sideways on a phone anyway, so it gets
+  // more room there.
+  const nameColumn = isMobile ? "minmax(168px, 220px)" : "minmax(120px, 220px)"
+  const gridTemplateColumns = `${nameColumn} repeat(${columnCount}, minmax(${dayColumnMin}, 1fr))`
   // Same floor as the day/habit grid above, same mobile-only condition,
   // and for the same reason — a narrow "Месяц" chart (30 points) squeezed
   // into whatever width happened to be left over gave Recharts' tooltip
@@ -120,7 +125,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   // tooltip real room on mobile, exactly like it gives the day/habit grid
   // legible columns; on desktop it's unnecessary and was forcing the same
   // unwanted scrollbar the day/habit grid got.
-  const chartGridTemplateColumns = `minmax(120px, 220px) repeat(${columnCount}, minmax(${dayColumnMin}, 1fr))`
+  const chartGridTemplateColumns = `${nameColumn} repeat(${columnCount}, minmax(${dayColumnMin}, 1fr))`
   const summary = getHabitHistorySummary(habits, period, anchor, today)
   const isGeneral = group.isGeneral
   const percent = summary.total === 0 ? 0 : Math.round((summary.completed / summary.total) * 100)
@@ -435,7 +440,15 @@ function HabitGridRow({
         >
           <HabitIcon emoji={habit.icon} size={15} />
         </span>
-        <span className="text-sm font-semibold truncate flex-1">{habit.title}</span>
+        {/* Two lines before the ellipsis, full name on hover: in the narrow
+            name column on a phone one line cut most names to a word or two
+            (owner report, 2026-11-12). */}
+        <span
+          title={habit.title}
+          className="text-sm font-semibold leading-tight line-clamp-2 break-words min-w-0 flex-1"
+        >
+          {habit.title}
+        </span>
         <span
           className="tabular-nums flex items-center gap-1 text-xs shrink-0"
           style={{
