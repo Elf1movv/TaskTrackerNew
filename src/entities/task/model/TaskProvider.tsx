@@ -35,7 +35,9 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       // create replaces them with the server's real values once the
       // request resolves.
       const now = new Date().toISOString()
-      create({ ...task, id: generateId(), updatedAt: now, createdAt: now, completedAt: null })
+      const id = generateId()
+      create({ ...task, id, updatedAt: now, createdAt: now, completedAt: null })
+      return id
     },
     [create],
   )

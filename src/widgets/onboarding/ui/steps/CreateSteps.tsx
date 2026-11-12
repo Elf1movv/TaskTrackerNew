@@ -73,7 +73,11 @@ export function HabitStep({ ob }: StepProps) {
       activeDays: weekdaysOnly ? WEEKDAYS : ALL_DAYS,
       groupId: group.id,
     })
-    ob.created({ habitId, habitTitle: name, habitIcon: icon, habitColor: color }, preset ?? "custom")
+    ob.created(
+      { habitId, habitTitle: name, habitIcon: icon, habitColor: color },
+      { habits: [habitId] },
+      preset ?? "custom",
+    )
   }
 
   return (
@@ -157,10 +161,12 @@ export function TaskStep({ ob }: StepProps) {
   const [due, setDue] = useState<Due>("tomorrow")
 
   // Creates the typed category if there isn't one with that name yet and
-  // returns the name to use.
+  // returns the name to use. A category made here belongs to this run: it's
+  // deleted again if the walkthrough is skipped.
   function ensureCategory(name: string): string {
     if (!categories.some(c => c.name === name)) {
-      addCategory(name, PALETTE_COLORS[categories.length % PALETTE_COLORS.length])
+      const id = addCategory(name, PALETTE_COLORS[categories.length % PALETTE_COLORS.length])
+      ob.own({ categories: [id] })
     }
     return name
   }
@@ -181,7 +187,7 @@ export function TaskStep({ ob }: StepProps) {
     // was never created (owner report, 2026-11-12). Pressing "Create task"
     // now counts as confirming it.
     const typed = addingCategory ? newCategory.trim() : ""
-    addTask({
+    const taskId = addTask({
       title: name,
       description: null,
       priority: "medium",
@@ -189,7 +195,7 @@ export function TaskStep({ ob }: StepProps) {
       dueDate: due === "today" ? getTodayKey() : due === "tomorrow" ? tomorrowKey() : null,
       completed: false,
     })
-    ob.created({ taskTitle: name })
+    ob.created({ taskTitle: name }, { tasks: [taskId] })
   }
 
   return (
@@ -289,18 +295,17 @@ export function GoalStep({ ob }: StepProps) {
     if (!name) return
     const color = PALETTE_COLORS[0]
     const step = firstStep.trim()
-    addGoal(
+    const goalId = addGoal(
       {
         title: name,
         description: "",
         targetDate:
           target === "month" ? monthsFromNow(1) : target === "threeMonths" ? monthsFromNow(3) : null,
         color,
-        category: null,
       },
       step ? [step] : [],
     )
-    ob.created({ goalTitle: name, goalColor: color })
+    ob.created({ goalTitle: name, goalColor: color }, { goals: [goalId] })
   }
 
   return (

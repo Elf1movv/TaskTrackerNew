@@ -87,6 +87,15 @@ describe("goals router", () => {
     expect(withFreshTimestamp.status).toBe(200)
   })
 
+  it("lists a newly created goal first", async () => {
+    await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID(), title: "Older" })
+    const newer = await agent
+      .post("/api/goals")
+      .send({ ...baseGoal, id: crypto.randomUUID(), title: "Newer" })
+    const list = await agent.get("/api/goals")
+    expect(list.body[0].id).toBe(newer.body.id)
+  })
+
   it("stores an optional category, defaulting to none for older clients", async () => {
     const plain = await agent.post("/api/goals").send({ ...baseGoal, id: crypto.randomUUID() })
     expect(plain.status).toBe(201)

@@ -17,7 +17,9 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
 
   const addCategory = useCallback(
     (name: string, color: string) => {
-      create({ id: generateId(), name, color, updatedAt: new Date().toISOString() })
+      const id = generateId()
+      create({ id, name, color, updatedAt: new Date().toISOString() })
+      return id
     },
     [create],
   )
@@ -29,7 +31,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
 
   const deleteCategory = useCallback((id: string) => remove(id), [remove])
 
-  // Drag a category chip onto another (Tasks and Goals pages) — saved through
+  // Drag a category chip onto another (Tasks page) — saved through
   // PATCH /api/categories/reorder, which the server always had but nothing
   // called (audit Л4, kept by the owner: "должна быть возможность переставлять").
   const reorderCategories = useCallback(

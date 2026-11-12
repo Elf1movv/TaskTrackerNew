@@ -2,7 +2,12 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router"
 import { onboardingEvent } from "./events"
 import { fetchOnboardingStatus, saveOnboardingStatus, type OnboardingStatus } from "./onboardingApi"
-import { initialOnboardingState, onboardingReducer, type CreatedItems } from "./onboardingMachine"
+import {
+  initialOnboardingState,
+  onboardingReducer,
+  type CreatedItems,
+  type OwnedRecords,
+} from "./onboardingMachine"
 import { clearProgress, readProgress, writeProgress } from "./progressStorage"
 import { ONBOARDING_STEPS } from "./steps"
 
@@ -58,9 +63,9 @@ export function useOnboarding(userId: string | undefined) {
   // Remember where a first run is, in case the tab closes mid-way.
   useEffect(() => {
     if (userId && state.phase === "flow" && state.isFirstRun) {
-      writeProgress(userId, { stepIndex: state.stepIndex, created: state.created })
+      writeProgress(userId, { stepIndex: state.stepIndex, created: state.created, owned: state.owned })
     }
-  }, [userId, state.phase, state.isFirstRun, state.stepIndex, state.created])
+  }, [userId, state.phase, state.isFirstRun, state.stepIndex, state.created, state.owned])
 
   const persist = useCallback((next: OnboardingStatus) => {
     setStatus(next)
@@ -84,26 +89,25 @@ export function useOnboarding(userId: string | undefined) {
 
   const back = useCallback(() => dispatch({ type: "back" }), [])
 
+  // `owned` — ids of the records just made, deleted again if the run is
+  // skipped before the finale.
   const created = useCallback(
-    (items: CreatedItems, preset?: string) => {
+    (items: CreatedItems, owned: Partial<OwnedRecords>, preset?: string) => {
       onboardingEvent({
         name: "onboarding_step_done",
         step: ONBOARDING_STEPS[state.stepIndex]?.id ?? "",
         outcome: "created",
         preset,
       })
-      dispatch({ type: "created", items })
+      dispatch({ type: "created", items, owned })
     },
     [state.stepIndex],
   )
 
-  const skip = useCallback(() => {
-    onboardingEvent({ name: "onboarding_skipped", step: ONBOARDING_STEPS[state.stepIndex]?.id ?? "" })
-    if (userId) clearProgress(userId)
-    // A rerun from the menu that gets skipped keeps the earlier outcome.
-    if (state.isFirstRun) persist("skipped")
-    dispatch({ type: "skip" })
-  }, [state.stepIndex, state.isFirstRun, persist, userId])
+  // A record made without moving on (a new category in the task step).
+  const own = useCallback((owned: Partial<OwnedRecords>) => dispatch({ type: "own", owned }), [])
+
+  const rolledBack = useCallback(() => dispatch({ type: "rolledBack" }), [])
 
   const finish = useCallback(() => {
     onboardingEvent({
@@ -115,9 +119,22 @@ export function useOnboarding(userId: string | undefined) {
     dispatch({ type: "finish" })
   }, [persist, userId])
 
+  const skip = useCallback(() => {
+    // Esc on the finale screen: the person has seen it all — that's a finish.
+    if (state.stepIndex === ONBOARDING_STEPS.length - 1) {
+      finish()
+      return
+    }
+    onboardingEvent({ name: "onboarding_skipped", step: ONBOARDING_STEPS[state.stepIndex]?.id ?? "" })
+    if (userId) clearProgress(userId)
+    // A rerun from the menu that gets skipped keeps the earlier outcome.
+    if (state.isFirstRun) persist("skipped")
+    dispatch({ type: "skip" })
+  }, [state.stepIndex, state.isFirstRun, persist, userId, finish])
+
   const close = useCallback(() => dispatch({ type: "close" }), [])
 
-  return { state, restart, next, back, created, skip, finish, close }
+  return { state, restart, next, back, created, own, skip, finish, close, rolledBack }
 }
 
 export type OnboardingController = ReturnType<typeof useOnboarding>

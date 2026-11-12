@@ -72,9 +72,10 @@ goalsRouter.post("/", async (req, res) => {
     return
   }
 
-  // New goals are appended on the client (added goals show up last), so
-  // they need an order larger than everything currently stored.
-  const { _max } = await db.goal.aggregate({ where: { userId: req.userId }, _max: { order: true } })
+  // A new goal goes first (owner decision 2026-11-12): the client puts it at
+  // the top, so it needs an order smaller than everything currently stored —
+  // that also makes it show on Today's first-5 goal card right away.
+  const { _min } = await db.goal.aggregate({ where: { userId: req.userId }, _min: { order: true } })
   const subgoals = parsed.data.subgoals ?? []
   const created = await db.goal.create({
     data: {
@@ -83,7 +84,7 @@ goalsRouter.post("/", async (req, res) => {
       milestones: parsed.data.milestones as unknown as Prisma.InputJsonValue,
       subgoals: subgoals as unknown as Prisma.InputJsonValue,
       progress: computeGoalProgress(parsed.data.milestones, subgoals),
-      order: (_max.order ?? -1) + 1,
+      order: (_min.order ?? 1) - 1,
     },
   })
   res.status(201).json(toClientGoal(created))

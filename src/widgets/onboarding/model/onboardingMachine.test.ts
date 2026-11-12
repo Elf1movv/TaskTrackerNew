@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   initialOnboardingState,
+  NO_OWNED_RECORDS,
   onboardingReducer,
   type OnboardingAction,
   type OnboardingState,
@@ -81,6 +82,59 @@ describe("onboardingReducer", () => {
 
   it("ignores flow actions when the flow isn't open", () => {
     expect(run([{ type: "next" }, { type: "skip" }, { type: "finish" }])).toEqual(initialOnboardingState)
+  })
+
+  it("hands everything a skipped run created over for deletion, once", () => {
+    let s = run([
+      { type: "start", isFirstRun: true },
+      { type: "created", items: { habitId: "h1" }, owned: { habits: ["h1"] } },
+      { type: "own", owned: { categories: ["c1"] } },
+      { type: "created", items: { taskTitle: "Врач" }, owned: { tasks: ["t1"] } },
+      { type: "created", items: { goalTitle: "5 км" }, owned: { goals: ["g1"] } },
+      { type: "skip" },
+    ])
+    expect(s.rollback).toEqual({ habits: ["h1"], tasks: ["t1"], goals: ["g1"], categories: ["c1"] })
+    expect(s.owned).toEqual(NO_OWNED_RECORDS)
+    expect(s.created).toEqual({})
+    s = run([{ type: "rolledBack" }], s)
+    expect(s.rollback).toBeNull()
+  })
+
+  it("keeps everything once the finale is reached", () => {
+    const s = run([
+      { type: "start", isFirstRun: false },
+      { type: "created", items: { habitId: "h1" }, owned: { habits: ["h1"] } },
+      { type: "finish" },
+      { type: "close" },
+    ])
+    expect(s.rollback).toBeNull()
+    expect(s.owned).toEqual(NO_OWNED_RECORDS)
+  })
+
+  it("collects a second record made after going back", () => {
+    const s = run([
+      { type: "start", isFirstRun: true },
+      { type: "created", items: { habitId: "h1" }, owned: { habits: ["h1"] } },
+      { type: "back" },
+      { type: "created", items: { habitId: "h2" }, owned: { habits: ["h2"] } },
+    ])
+    expect(s.owned.habits).toEqual(["h1", "h2"])
+  })
+
+  it("resumes with the records of the interrupted run, so a later skip still undoes them", () => {
+    const s = run([
+      {
+        type: "start",
+        isFirstRun: true,
+        resume: { stepIndex: 3, created: {}, owned: { ...NO_OWNED_RECORDS, habits: ["h1"] } },
+      },
+      { type: "skip" },
+    ])
+    expect(s.rollback?.habits).toEqual(["h1"])
+  })
+
+  it("has nothing to undo when the skipped run created nothing", () => {
+    expect(run([{ type: "start", isFirstRun: true }, { type: "skip" }]).rollback).toBeNull()
   })
 
   it("closes the spotlight or hint", () => {

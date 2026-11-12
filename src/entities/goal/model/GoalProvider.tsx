@@ -20,14 +20,21 @@ export function GoalProvider({ children }: { children: ReactNode }) {
 
   const addGoal = useCallback(
     (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals" | "progress">, steps: string[] = []) => {
-      create({
-        ...goal,
-        id: generateId(),
-        milestones: steps.map((title, order) => ({ id: generateId(), title, completed: false, order })),
-        subgoals: [],
-        progress: 0,
-        updatedAt: new Date().toISOString(),
-      })
+      const id = generateId()
+      // A new goal goes first (owner decision 2026-11-12) — the server gives
+      // it the smallest order, so it stays first after a reload too.
+      create(
+        {
+          ...goal,
+          id,
+          milestones: steps.map((title, order) => ({ id: generateId(), title, completed: false, order })),
+          subgoals: [],
+          progress: 0,
+          updatedAt: new Date().toISOString(),
+        },
+        { prepend: true },
+      )
+      return id
     },
     [create],
   )

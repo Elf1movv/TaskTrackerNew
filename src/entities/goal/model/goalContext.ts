@@ -12,9 +12,9 @@ export interface GoalContextValue {
   addGoal: (
     goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals" | "progress">,
     steps?: string[],
-  ) => void
+  ) => string // the new goal's id
   updateGoal: (id: string, patch: Partial<Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals">>) => void
-  deleteGoal: (id: string) => void
+  deleteGoal: (id: string) => Promise<void>
   reorderGoals: (draggedId: string, targetId: string) => void
   addMilestone: (goalId: string, title: string, subgoalId?: string) => void
   updateMilestone: (goalId: string, milestoneId: string, title: string, subgoalId?: string) => void

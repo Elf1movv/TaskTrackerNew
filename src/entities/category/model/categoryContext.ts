@@ -3,9 +3,10 @@ import type { Category } from "./category"
 
 export interface CategoryContextValue {
   categories: Category[]
-  addCategory: (name: string, color: string) => void
+  // Returns the new category's id.
+  addCategory: (name: string, color: string) => string
   updateCategory: (id: string, patch: Partial<Omit<Category, "id" | "updatedAt">>) => void
-  deleteCategory: (id: string) => void
+  deleteCategory: (id: string) => Promise<void>
   reorderCategories: (draggedId: string, targetId: string) => void
 }
 

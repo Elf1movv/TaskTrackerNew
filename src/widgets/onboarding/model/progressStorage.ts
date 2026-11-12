@@ -1,8 +1,10 @@
-import type { CreatedItems } from "./onboardingMachine"
+import type { CreatedItems, OwnedRecords } from "./onboardingMachine"
 
 // Only a convenience: if the tab closes in the middle of the first
 // onboarding, the next visit continues from the same screen instead of
-// starting over (and creating a second copy of the habit). Whether the
+// starting over (and creating a second copy of the habit). `owned` keeps the
+// ids of what the run created, so a resumed run that is then skipped still
+// deletes them. Whether the
 // onboarding is finished at all is stored on the server, not here.
 // Keyed by user id: on a shared browser another account must not resume
 // someone else's walkthrough (found by the browser check, 2026-11-10).
@@ -11,6 +13,7 @@ const keyFor = (userId: string) => `mytracker-onboarding-progress:${userId}`
 interface StoredProgress {
   stepIndex: number
   created: CreatedItems
+  owned?: OwnedRecords
 }
 
 export function readProgress(userId: string): StoredProgress | null {

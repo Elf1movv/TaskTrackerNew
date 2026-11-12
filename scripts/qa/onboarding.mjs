@@ -102,10 +102,10 @@ try {
   )
   assert(tipInside, "spotlight tip stays on screen")
   const scrollBefore = await evaluate("document.querySelector('main').scrollTop")
-  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x: 300, y: 60, deltaX: 0, deltaY: -400 })
+  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x: 300, y: 60, deltaX: 0, deltaY: 400 })
   await pause(400)
   const scrollAfter = await evaluate("document.querySelector('main').scrollTop")
-  assert(scrollAfter < scrollBefore, `wheel over the dim area scrolls the page (${scrollBefore} → ${scrollAfter})`)
+  assert(scrollAfter > scrollBefore, `wheel over the dim area scrolls the page (${scrollBefore} → ${scrollAfter})`)
   await send("Emulation.setDeviceMetricsOverride", desktop)
   ok("Spotlight tip stays on screen; the wheel scrolls the page over the dim area")
   const habit = (await api("habits")).findLast(h => h.title === "Бег")
@@ -122,6 +122,51 @@ try {
   assert.equal(goal?.milestones[0]?.title, "Купить кроссовки")
   assert(goal?.targetDate, "goal has a deadline")
   ok("Spotlight check-off saves the habit and status 'completed'; records are real")
+
+  // Categories belong to tasks only and a new goal goes first (owner
+  // decisions 2026-11-12).
+  await navigate("/goals", "document.querySelector('[data-goal-id]')")
+  assert.equal(
+    await evaluate("document.querySelector('[data-goal-id]').getAttribute('data-goal-id')"),
+    goal.id,
+    "the onboarding goal is first on Goals",
+  )
+  assert(!(await evaluate(text("Без категории"))), "no 'No category' chip on Goals")
+  assert(!(await evaluate(`Boolean(${button("Все")})`)), "no category chips on Goals")
+  ok("Goals: the new goal is first, no category chips")
+
+  // Skipping a rerun half-way leaves nothing behind (owner decision
+  // 2026-11-12): habit, task and the category made in the task step are
+  // deleted again.
+  await navigate("/today", "document.querySelector('[data-onboarding=\"settings-gear\"]')")
+  await click("document.querySelector('[data-onboarding=\"settings-gear\"]')")
+  await click(button("Пройти знакомство заново"))
+  await wait(text("Добро пожаловать в MyTracker"))
+  await click(button("Начать"))
+  await wait(text("Что вы хотите делать регулярно?"))
+  await fill('[aria-label="Или впишите свою"]', "Откат QA привычка")
+  await click(button("Создать привычку"))
+  await wait(text("Ваша привычка готова"))
+  await click(button("Дальше"))
+  await wait(text("Какое дело нужно сделать?"))
+  await fill('[aria-label="Например, записаться к врачу"]', "Откат QA задача")
+  await click(button("+ Своя"))
+  await fill('[aria-label="Название категории"]', "Откат QA")
+  await click(button("Создать задачу"))
+  await wait(text("К чему вы идёте?"))
+  await click(button("Пропустить знакомство"))
+  await wait(`!${dialog}`)
+  await saved(async () => {
+    const [habits, tasks, categories] = await Promise.all([api("habits"), api("tasks"), api("categories")])
+    return (
+      !habits.some(h => h.title === "Откат QA привычка") &&
+      !tasks.some(t => t.title === "Откат QA задача") &&
+      !categories.some(c => c.name === "Откат QA")
+    )
+  })
+  assert(!(await evaluate(text("Откат QA привычка"))), "the habit is gone from Today too")
+  assert.equal((await api("me/onboarding")).status, "completed", "a skipped rerun keeps 'completed'")
+  ok("Skipping half-way deletes the habit, task and new category it created")
 
   await navigate("/today", "document.querySelector('[data-onboarding=\"settings-gear\"]')")
   await pause(800)
