@@ -12,7 +12,6 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
     milestones: [],
     subgoals: [],
     color: "#000000",
-    category: null,
     updatedAt: "2026-09-22T00:00:00.000Z",
     ...overrides,
   }

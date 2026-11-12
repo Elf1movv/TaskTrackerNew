@@ -96,11 +96,10 @@ export const ru: Record<keyof typeof en, string> = {
   "tasks.date.label": "Срок",
   "tasks.addCategory": "Добавить категорию",
   "tasks.deleteCategoryTitle": "Удалить категорию?",
-  "tasks.deleteCategoryBody":
-    "Категория «{name}» будет удалена. Цели из неё сохранятся, просто останутся без категории.",
+  "tasks.deleteCategoryBody": "Категория «{name}» будет удалена.",
   "tasks.deleteCategoryTitleWithTasks": "Удалить категорию вместе с задачами?",
   "tasks.deleteCategoryBodyWithTasks":
-    "В категории «{name}» {count} задача. При удалении категории она тоже будет удалена. Цели сохранятся без категории. Это действие нельзя отменить.|В категории «{name}» {count} задачи. При удалении категории они тоже будут удалены. Цели сохранятся без категории. Это действие нельзя отменить.|В категории «{name}» {count} задач. При удалении категории они тоже будут удалены. Цели сохранятся без категории. Это действие нельзя отменить.",
+    "В категории «{name}» {count} задача. При удалении категории она тоже будет удалена. Это действие нельзя отменить.|В категории «{name}» {count} задачи. При удалении категории они тоже будут удалены. Это действие нельзя отменить.|В категории «{name}» {count} задач. При удалении категории они тоже будут удалены. Это действие нельзя отменить.",
   "tasks.noActiveTasks": "Нет активных задач",
   "tasks.completedSection": "Выполненные ({count})",
   "tasks.noTasksIn": " в категории {category}",
@@ -135,7 +134,6 @@ export const ru: Record<keyof typeof en, string> = {
   "goalForm.titlePlaceholder": "Чего хотите достичь?",
   "goalForm.descriptionPlaceholder": "Описание (необязательно)",
   "goalForm.noTargetDate": "Без срока",
-  "goalForm.noCategory": "Без категории",
 
   "habitForm.namePlaceholder": "Что хотите делать регулярно?",
   "habitForm.activeDays": "Повторять по дням",

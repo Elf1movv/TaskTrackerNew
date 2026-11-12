@@ -94,11 +94,10 @@ export const en = {
   "tasks.date.label": "Deadline",
   "tasks.addCategory": "Add category",
   "tasks.deleteCategoryTitle": "Delete category?",
-  "tasks.deleteCategoryBody":
-    'The category "{name}" will be deleted. Its goals are kept, just without a category.',
+  "tasks.deleteCategoryBody": 'The category "{name}" will be deleted.',
   "tasks.deleteCategoryTitleWithTasks": "Delete category and its tasks?",
   "tasks.deleteCategoryBodyWithTasks":
-    '"{name}" has {count} task. Deleting the category will also delete it. Goals are kept without a category. This can\'t be undone.|"{name}" has {count} tasks. Deleting the category will also delete them. Goals are kept without a category. This can\'t be undone.',
+    '"{name}" has {count} task. Deleting the category will also delete it. This can\'t be undone.|"{name}" has {count} tasks. Deleting the category will also delete them. This can\'t be undone.',
   "tasks.noActiveTasks": "No active tasks",
   "tasks.completedSection": "Completed ({count})",
   "tasks.noTasksIn": " in {category}",
@@ -133,7 +132,6 @@ export const en = {
   "goalForm.titlePlaceholder": "What do you want to achieve?",
   "goalForm.descriptionPlaceholder": "Description (optional)",
   "goalForm.noTargetDate": "No deadline",
-  "goalForm.noCategory": "No category",
 
   "habitForm.namePlaceholder": "What do you want to do regularly?",
   "habitForm.activeDays": "Repeats on",

@@ -29,8 +29,8 @@ export interface Goal {
   milestones: Milestone[]
   subgoals: Subgoal[]
   color: string
-  // Optional life area shared with tasks: a Category name, same plain-string
-  // convention as Task.category. null = no category.
-  category: string | null
+  // No category: categories belong to tasks only (owner decision 2026-11-12).
+  // The server still stores and returns Goal.category until the schema
+  // cleanup (BACKLOG); the interface ignores it.
   updatedAt: string
 }

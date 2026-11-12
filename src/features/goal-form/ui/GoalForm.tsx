@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { useCategories } from "@/entities/category"
 import { useGoals, type Goal } from "@/entities/goal"
 import { formatDateKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
@@ -7,13 +6,7 @@ import { PALETTE_COLORS } from "@/shared/lib/colors"
 import { Button } from "@/shared/ui/button"
 import { DateTimeField } from "@/shared/ui/date-time-field"
 import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 import { Textarea } from "@/shared/ui/textarea"
-
-// Radix Select can't use "" as an item value, so "no category" needs its
-// own sentinel that's mapped back to null on save.
-const NO_CATEGORY = "__none__"
 
 // Handles both creating a new goal and editing an existing one — pass
 // `goal` to pre-fill the fields and save via update instead of create.
@@ -41,14 +34,6 @@ export function GoalForm({
     goal?.targetDate ?? defaultTargetDate ?? formatDateKey(new Date()),
   )
   const [color, setColor] = useState(goal?.color ?? PALETTE_COLORS[0])
-  const { categories } = useCategories()
-  // A goal can optionally sit in the same life area as tasks ("Work",
-  // "Health"…). A category deleted since keeps showing until changed.
-  const [category, setCategory] = useState(goal?.category ?? NO_CATEGORY)
-  const categoryOptions =
-    category !== NO_CATEGORY && !categories.some(c => c.name === category)
-      ? [...categories.map(c => c.name), category]
-      : categories.map(c => c.name)
 
   function handleSubmit() {
     if (!title.trim()) return
@@ -57,7 +42,6 @@ export function GoalForm({
       description: description.trim(),
       targetDate: hasTargetDate ? targetDate : null,
       color,
-      category: category === NO_CATEGORY ? null : category,
     }
     if (goal) {
       updateGoal(goal.id, patch)
@@ -97,25 +81,6 @@ export function GoalForm({
           }}
           placeholder={t("goalForm.noTargetDate")}
         />
-
-        <div className="flex items-center gap-2">
-          <Label htmlFor="goal-category" className="text-xs text-muted-foreground font-normal">
-            {t("taskForm.category")}
-          </Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger id="goal-category" size="sm" className="text-xs h-8 w-auto bg-muted">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NO_CATEGORY}>{t("goalForm.noCategory")}</SelectItem>
-              {categoryOptions.map(name => (
-                <SelectItem key={name} value={name}>
-                  {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("common.color")}</span>
