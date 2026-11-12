@@ -7,8 +7,13 @@ function Requirement({ met, label }: { met: boolean; label: string }) {
   const Icon = met ? CheckCircle2 : Circle
   return (
     <div className={cn("flex items-center gap-1.5 text-xs", met ? "text-success" : "text-muted-foreground")}>
-      <Icon size={13} />
-      {label}
+      {/* Each part in its own element: the icon is swapped on every change,
+          and next to a bare text node that a browser translator had replaced
+          React crashed (2026-11-12). */}
+      <span className="flex shrink-0">
+        <Icon size={13} />
+      </span>
+      <span>{label}</span>
     </div>
   )
 }

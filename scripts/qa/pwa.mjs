@@ -76,8 +76,13 @@ await pause(800)
 out.pushTime = (await api("me/notifications")).notifyTime
 await api("me/notifications", "PUT", { notifyTime: "09:00" })
 await click(button("Выключены"))
-await pause(1500)
-out.pushOffAfter = !(await evaluate(`navigator.serviceWorker.ready.then(r=>r.pushManager.getSubscription()).then(s=>!!s)`))
+// Turning off first tells the server, then unsubscribes — wait for it rather
+// than a fixed pause (a slow request made a 1.5 s pause flaky, 2026-11-12).
+out.pushOffAfter = false
+for (let i = 0; i < 50 && !out.pushOffAfter; i++) {
+  await pause(200)
+  out.pushOffAfter = !(await evaluate(`navigator.serviceWorker.ready.then(r=>r.pushManager.getSubscription()).then(s=>!!s)`))
+}
 out.errors = errors
 assert.equal(out.manifest.name, "MyTracker")
 assert.match(out.manifest.ct, /manifest\+json/)
