@@ -13,6 +13,11 @@ services:
       AUTH_COOKIE_PREFIX: mytracker-staging
       APP_ORIGINS: ${STAGING_ORIGIN}
       EMAIL_DELIVERY: disabled
+      # Push notifications (2026-11-12): the stand's own VAPID key pair in
+      # .env.staging; empty = push off on the stand, the app still starts.
+      VAPID_PUBLIC_KEY: ${STAGING_VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${STAGING_VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${STAGING_VAPID_SUBJECT:-}
     ports:
       - "127.0.0.1:3002:3001"
     depends_on:

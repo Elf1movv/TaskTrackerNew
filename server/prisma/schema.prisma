@@ -232,6 +232,16 @@ model User {
   // existed as "completed". See routes/me.ts and docs/BACKLOG.md.
   onboardingStatus  String?
   onboardingAt      DateTime?
+  // Push notifications (2026-11-12). IANA zone from the browser ("Europe/Kyiv"):
+  // reminder times are local "HH:mm" with no zone, so the server needs it to
+  // know when "14:30" happens for this person. null until notifications are on.
+  timeZone          String?
+  // "HH:mm" — when untimed reminders and the morning digest arrive (owner:
+  // the person picks it). notifyDigest switches the digest off.
+  notifyTime        String       @default("09:00")
+  notifyDigest      Boolean      @default(true)
+  pushSubscriptions PushSubscription[]
+  pushSent          PushSent[]
   sessions          Session[]
   accounts          Account[]
   tasks             Task[]
@@ -347,4 +357,38 @@ model LegacyTransition {
   userId String
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, sourceKey])
+}
+
+// One browser/device that agreed to receive push notifications. `endpoint`
+// is the push service's delivery address (Google, Apple, Mozilla); p256dh and
+// auth are the browser's keys to encrypt the message for it. Deleted when the
+// push service says the address is gone (404/410). See lib/push/.
+model PushSubscription {
+  id            String    @id @default(uuid())
+  endpoint      String    @unique
+  p256dh        String
+  auth          String
+  // "ru" | "en" — the interface language when it was turned on, for the
+  // notification texts.
+  language      String    @default("ru")
+  createdAt     DateTime  @default(now())
+  lastSuccessAt DateTime?
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// What was already sent, so a restart or a slow minute never sends twice.
+// `key` names the event: "reminder:<id>:at" | ":24h" | ":1h" | ":day",
+// "digest:<yyyy-mm-dd>". Rows older than a week are deleted.
+model PushSent {
+  id     String   @id @default(uuid())
+  key    String
+  sentAt DateTime @default(now())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([sentAt])
 }

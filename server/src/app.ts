@@ -14,6 +14,7 @@ import { goalsRouter } from "./routes/goals.js"
 import { habitGroupsRouter } from "./routes/habitGroups.js"
 import { habitsRouter } from "./routes/habits.js"
 import { meRouter } from "./routes/me.js"
+import { pushRouter } from "./routes/push.js"
 import { remindersRouter } from "./routes/reminders.js"
 import { notesRouter } from "./routes/notes.js"
 import { plansRouter } from "./routes/plans.js"
@@ -71,6 +72,7 @@ export function createApp() {
   app.use("/api/reminders", express.json({ limit: DEFAULT_JSON_LIMIT }), remindersRouter)
   app.use("/api/feedback", express.json({ limit: "8mb" }), feedbackRouter)
   app.use("/api/me", express.json({ limit: DEFAULT_JSON_LIMIT }), meRouter)
+  app.use("/api/push", express.json({ limit: DEFAULT_JSON_LIMIT }), pushRouter)
 
   // Anything under /api/ that didn't match a route above is a genuine 404,
   // not a frontend route — return JSON here so it doesn't fall through to
