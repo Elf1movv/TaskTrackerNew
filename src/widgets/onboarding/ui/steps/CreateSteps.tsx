@@ -156,13 +156,19 @@ export function TaskStep({ ob }: StepProps) {
   const [newCategory, setNewCategory] = useState("")
   const [due, setDue] = useState<Due>("tomorrow")
 
-  function saveCategory() {
-    const name = newCategory.trim()
-    if (!name) return
+  // Creates the typed category if there isn't one with that name yet and
+  // returns the name to use.
+  function ensureCategory(name: string): string {
     if (!categories.some(c => c.name === name)) {
       addCategory(name, PALETTE_COLORS[categories.length % PALETTE_COLORS.length])
     }
-    setCategory(name)
+    return name
+  }
+
+  function saveCategory() {
+    const name = newCategory.trim()
+    if (!name) return
+    setCategory(ensureCategory(name))
     setNewCategory("")
     setAddingCategory(false)
   }
@@ -170,11 +176,16 @@ export function TaskStep({ ob }: StepProps) {
   function create() {
     const name = title.trim()
     if (!name) return
+    // A category typed in the field but not confirmed with ✓ used to be
+    // dropped silently: the task went to the first category and the new one
+    // was never created (owner report, 2026-11-12). Pressing "Create task"
+    // now counts as confirming it.
+    const typed = addingCategory ? newCategory.trim() : ""
     addTask({
       title: name,
       description: null,
       priority: "medium",
-      category,
+      category: typed ? ensureCategory(typed) : category,
       dueDate: due === "today" ? getTodayKey() : due === "tomorrow" ? tomorrowKey() : null,
       completed: false,
     })

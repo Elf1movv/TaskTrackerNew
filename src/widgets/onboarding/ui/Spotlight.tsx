@@ -51,10 +51,12 @@ export function Spotlight({
   const maskId = `spotlight-${useId().replace(/:/g, "")}`
   const [rect, setRect] = useState<Rect | null>(null)
   const tipRef = useRef<HTMLDivElement>(null)
-  // Real height of the tip, measured after render — a guess (it used to be a
-  // fixed 170 px) put the tip below the screen edge on some displays
-  // (owner report, 2026-11-10).
-  const [tipHeight, setTipHeight] = useState(160)
+  // Screen size and the tip's real height, re-read every frame together with
+  // the element's position. Measuring the tip once (2026-11-10 fix) wasn't
+  // enough: when the window got shorter while the tip was already shown
+  // (downloads bar, dev tools, a phone's address bar), nothing re-rendered and
+  // the tip stayed below the new screen edge (owner report, 2026-11-12).
+  const [view, setView] = useState({ vw: window.innerWidth, vh: window.innerHeight, tipHeight: 160 })
   const touchY = useRef<number | null>(null)
   const missingSince = useRef(0)
   const onActionRef = useRef(onAction)
@@ -76,6 +78,14 @@ export function Spotlight({
           el.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" })
           scrolled = true
         }
+        const tipHeight = tipRef.current?.offsetHeight
+        setView(prev =>
+          prev.vw === window.innerWidth &&
+          prev.vh === window.innerHeight &&
+          (!tipHeight || prev.tipHeight === tipHeight)
+            ? prev
+            : { vw: window.innerWidth, vh: window.innerHeight, tipHeight: tipHeight || prev.tipHeight },
+        )
         const r = el.getBoundingClientRect()
         setRect(prev =>
           prev &&
@@ -112,11 +122,6 @@ export function Spotlight({
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
-  useLayoutEffect(() => {
-    const h = tipRef.current?.offsetHeight
-    if (h && h !== tipHeight) setTipHeight(h)
-  }, [rect, tipHeight])
-
   // The blockers around the window sit on top of the page, so the mouse
   // wheel or a finger swipe over them scrolled nothing — once the page moved
   // and the cursor ended up over the dim area, scrolling "stopped working"
@@ -145,8 +150,7 @@ export function Spotlight({
     width: rect.width + PAD * 2,
     height: rect.height + PAD * 2,
   }
-  const vw = window.innerWidth
-  const vh = window.innerHeight
+  const { vw, vh, tipHeight } = view
   const tipWidth = Math.min(TIP_WIDTH, vw - 32)
   const tipLeft = Math.min(Math.max(16, hole.left + hole.width / 2 - tipWidth / 2), vw - tipWidth - 16)
   // Below the window if it fits, otherwise above; and always kept on screen

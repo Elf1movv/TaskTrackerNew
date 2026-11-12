@@ -62,8 +62,9 @@ try {
   await wait(text("Какое дело нужно сделать?"))
   await fill('[aria-label="Например, записаться к врачу"]', "Записаться к врачу")
   await click(button("+ Своя"))
+  // Typed but not confirmed with ✓ — "Create task" must still create it
+  // (owner report 2026-11-12: the category was lost this way).
   await fill('[aria-label="Название категории"]', "Дом QA")
-  await click(`document.querySelector('[role=dialog] button[aria-label="+ Своя"]')`)
   await click(button("Сегодня"))
   await screenshot("onboarding-task-desktop")
   await click(button("Создать задачу"))
@@ -87,11 +88,14 @@ try {
 
   // A short window puts the habit near the bottom edge (owner report
   // 2026-11-10: the tip went below the screen, and the wheel stopped
-  // scrolling once the cursor was over the dimmed area).
-  await send("Emulation.setDeviceMetricsOverride", { ...desktop, height: 620 })
+  // scrolling once the cursor was over the dimmed area). The window shrinks
+  // only after the tip is shown (owner report 2026-11-12: the tip didn't
+  // follow a window that got shorter).
   await click(button("Посмотреть"))
   await wait(text("Сделали сегодня?"))
   await pause(1200)
+  await send("Emulation.setDeviceMetricsOverride", { ...desktop, height: 620 })
+  await pause(600)
   await screenshot("onboarding-spotlight-desktop")
   const tipInside = await evaluate(
     `(()=>{const t=[...document.querySelectorAll('[role=dialog]')].find(e=>e.innerText.includes('Сделали сегодня?')).getBoundingClientRect();return t.top>=0&&t.bottom<=innerHeight})()`,
