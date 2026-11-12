@@ -1,9 +1,10 @@
 import type { ReactNode } from "react"
-import { ThemeProvider } from "next-themes"
+import { ThemeProvider, useTheme } from "next-themes"
 import { DndProvider } from "react-dnd"
 import { MultiBackend } from "react-dnd-multi-backend"
 import { HTML5toTouch } from "rdndmb-html5-to-touch"
 import { LanguageProvider } from "@/shared/lib/i18n"
+import { useThemeColorSync } from "@/shared/lib/pwa"
 import { Toaster } from "@/shared/ui/sonner"
 import { TooltipProvider } from "@/shared/ui/tooltip"
 
@@ -30,11 +31,18 @@ const dndOptions = {
 // only fetch once a session actually exists. This wraps the whole app,
 // login screens included, with what those don't need a session for:
 // theme, language, drag-and-drop, tooltips, toasts.
+// Inside ThemeProvider so it sees the current theme.
+function ThemeColorSync() {
+  useThemeColorSync(useTheme().resolvedTheme)
+  return null
+}
+
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     // enableSystem={false} — the theme toggle is a plain binary
     // light/dark switch, not a three-way "match OS" option.
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <ThemeColorSync />
       <LanguageProvider>
         <DndProvider backend={MultiBackend} options={dndOptions}>
           <TooltipProvider>

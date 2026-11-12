@@ -14,6 +14,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group"
 import { AccountSection } from "./components/AccountSection"
 import { AppearanceSection } from "./components/AppearanceSection"
+import { InstallAppButton } from "./components/InstallAppButton"
 
 type SettingsView = "account" | "appearance"
 
@@ -74,6 +75,7 @@ export function SettingsPanel({
           {view === "account" ? <AccountSection email={email} /> : <AppearanceSection />}
         </div>
         <div className="px-4 pb-4 mt-auto flex flex-col gap-2">
+          <InstallAppButton onDone={() => setOpen(false)} />
           {onRestartOnboarding && (
             <Button
               variant="outline"
