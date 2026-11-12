@@ -2458,7 +2458,9 @@ https://claude.ai/artifact/NSsLRZ7sfosKJDGtNPrtH5 (отметки — в её б
   (браузер не шлёт `beforeinstallprompt`). В Chrome установка работает. Варианты:
   (1) узнавать такие браузеры и показывать «Откройте в Chrome» с кнопкой
   (ссылка `intent://…;package=com.android.chrome`); (2) приложение в Google Play
-  (Trusted Web Activity, 25 $ один раз). Выбор — за владельцем.
+  (Trusted Web Activity, 25 $ один раз). **Решение владельца 2026-11-12:** делаем
+  (1) в этой итерации; Google Play — не раньше 500–1000 пользователей или когда
+  пользователи сами попросят Android-приложение.
 - [ ] **Своя страница ошибки** вместо стандартной «Unexpected Application
   Error» React Router (`errorElement`): по-человечески и с кнопкой
   «Обновить». Найдено вместе с падением выше.
