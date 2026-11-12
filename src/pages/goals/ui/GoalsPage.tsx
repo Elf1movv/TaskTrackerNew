@@ -2,22 +2,14 @@ import { useEffect, useState } from "react"
 import { Plus } from "lucide-react"
 import { useSearchParams } from "react-router"
 import { GoalList } from "@/widgets/goal-list"
-import { CategoryChips } from "@/features/category/manage-categories"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { GoalsProvider, useGoalsContext } from "../connectors"
-import { filterGoals, NO_CATEGORY_FILTER } from "../lib/filterGoals"
 
 function GoalsPageContent() {
   const { goals } = useGoalsContext()
   const { t } = useLanguage()
   const [isAdding, setIsAdding] = useState(false)
-  // The same category block as the Tasks page (CategoryChips), so "Work"
-  // shows both the work tasks (there) and the work goals (here), and
-  // categories can be managed from either page (audit Д4, decision 3).
-  // Reordering goals while filtered is safe: reorderGoals always reorders
-  // the full list (reorderById).
-  const [categoryFilter, setCategoryFilter] = useState("all")
   const [searchParams, setSearchParams] = useSearchParams()
   const focusedGoalId = searchParams.get("goal") ?? undefined
 
@@ -53,14 +45,8 @@ function GoalsPageContent() {
         </Button>
       </div>
 
-      <CategoryChips
-        value={categoryFilter}
-        onChange={setCategoryFilter}
-        extraChips={[{ value: NO_CATEGORY_FILTER, label: t("goalForm.noCategory") }]}
-      />
-
       <GoalList
-        goals={filterGoals(goals, categoryFilter)}
+        goals={goals}
         initialGoalId={focusedGoalId}
         isAdding={isAdding}
         onCloseAdding={() => setIsAdding(false)}

@@ -13,6 +13,7 @@ import { useSession } from "@/shared/lib/auth"
 import { CriticalReminderAlert } from "@/widgets/critical-reminder-alert"
 import { DueDateReminders } from "@/widgets/due-date-reminders"
 import { FeedbackBanner } from "@/widgets/feedback"
+import { OnboardingRoot, useOnboarding } from "@/widgets/onboarding"
 import { MobileNav, SidebarNav } from "@/widgets/navigation"
 import { ReminderBell } from "@/widgets/reminder-summary"
 import { SettingsPanel } from "@/widgets/settings-panel"
@@ -22,6 +23,9 @@ export function RootLayout() {
   const location = useLocation()
   const element = useOutlet()
   const { data: session, isPending } = useSession()
+  // Called before the early returns below (hooks can't be skipped); it only
+  // starts loading once there is a session.
+  const onboarding = useOnboarding(session?.user.id)
 
   // isPending: session is still being fetched — render nothing rather than
   // flash the login page before the real answer arrives.
@@ -45,7 +49,7 @@ export function RootLayout() {
                   <ReminderProvider>
                     <div className="flex h-screen bg-background text-foreground overflow-hidden">
                       <SidebarNav />
-                      <SettingsPanel email={session.user.email} />
+                      <SettingsPanel email={session.user.email} onRestartOnboarding={onboarding.restart} />
                       {/* Hidden on /today — that page already has its own bell
                       (with the same badge) on the goal/reminder swap card,
                       see GoalReminderSwapCard.tsx; showing both was
@@ -81,6 +85,7 @@ export function RootLayout() {
                       </main>
 
                       <MobileNav />
+                      <OnboardingRoot ob={onboarding} />
                     </div>
                   </ReminderProvider>
                 </CategoryProvider>

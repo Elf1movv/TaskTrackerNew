@@ -1,4 +1,4 @@
-import { LogOut, Palette, Settings, User } from "lucide-react"
+import { Compass, LogOut, Palette, Settings, User } from "lucide-react"
 import { useState } from "react"
 import { signOut } from "@/shared/lib/auth"
 import { useLanguage } from "@/shared/lib/i18n"
@@ -22,7 +22,15 @@ type SettingsView = "account" | "appearance"
 // level deep. Reachable on every screen width, so it's also how a mobile
 // visitor gets to things the desktop sidebar shows directly (language,
 // theme, log out) — the sidebar's own footer no longer duplicates them.
-export function SettingsPanel({ email }: { email: string }) {
+// `onRestartOnboarding` comes from app/layouts/RootLayout, which owns the
+// onboarding (a widget can't import another widget).
+export function SettingsPanel({
+  email,
+  onRestartOnboarding,
+}: {
+  email: string
+  onRestartOnboarding?: () => void
+}) {
   const { t } = useLanguage()
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<SettingsView>("account")
@@ -33,6 +41,7 @@ export function SettingsPanel({ email }: { email: string }) {
         <button
           type="button"
           aria-label={t("settings.open")}
+          data-onboarding="settings-gear"
           className="fixed top-4 right-4 md:top-6 md:right-6 z-40 flex size-11 items-center justify-center rounded-full bg-card border border-border shadow-card text-muted-foreground hover:text-foreground transition-colors"
         >
           <Settings size={18} strokeWidth={1.75} />
@@ -64,7 +73,20 @@ export function SettingsPanel({ email }: { email: string }) {
         <div className="flex-1 overflow-y-auto px-4">
           {view === "account" ? <AccountSection email={email} /> : <AppearanceSection />}
         </div>
-        <div className="px-4 pb-4 mt-auto">
+        <div className="px-4 pb-4 mt-auto flex flex-col gap-2">
+          {onRestartOnboarding && (
+            <Button
+              variant="outline"
+              className="w-full justify-center"
+              onClick={() => {
+                setOpen(false)
+                onRestartOnboarding()
+              }}
+            >
+              <Compass size={14} />
+              {t("settings.restartOnboarding")}
+            </Button>
+          )}
           <Button
             variant="outline"
             className="w-full justify-center text-muted-foreground hover:text-destructive"

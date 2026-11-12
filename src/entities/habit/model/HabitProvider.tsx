@@ -21,13 +21,15 @@ export function HabitProvider({ children }: { children: ReactNode }) {
       // updatedAt/createdAt are placeholders here — usePersistedCollection.create
       // replaces them with the server's real values once the request resolves.
       const now = new Date().toISOString()
+      const id = generateId()
       create({
         ...habit,
-        id: generateId(),
+        id,
         completedDates: [],
         updatedAt: now,
         createdAt: now,
       })
+      return id
     },
     [create],
   )

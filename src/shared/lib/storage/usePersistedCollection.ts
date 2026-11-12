@@ -60,19 +60,33 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
     return () => window.removeEventListener("collection-invalidated", handler)
   }, [entityLabel, refresh])
 
+  // Creates still on their way to the server, by id — remove() waits for
+  // the matching one, so deleting a record right after making it (the
+  // onboarding undoing what a skipped run created) can't send the DELETE
+  // before the POST and get a 404.
+  const pendingCreates = useRef(new Map<string, Promise<boolean>>())
+
+  // `prepend` puts the new item first instead of last — for collections
+  // whose server also gives new records the first place (goals, 2026-11-12).
   const create = useCallback(
-    async (item: T) => {
-      setItems(prev => [...prev, item])
-      try {
-        const saved = await repository.create(item)
-        setItems(prev => prev.map(i => (i.id === item.id ? saved : i)))
-        return true
-      } catch (err) {
-        setItems(prev => prev.filter(i => i.id !== item.id))
-        toast.error(t("toast.createFailed", { entity }))
-        console.error(err)
-        return false
-      }
+    (item: T, { prepend = false }: { prepend?: boolean } = {}) => {
+      setItems(prev => (prepend ? [item, ...prev] : [...prev, item]))
+      const request = (async () => {
+        try {
+          const saved = await repository.create(item)
+          setItems(prev => prev.map(i => (i.id === item.id ? saved : i)))
+          return true
+        } catch (err) {
+          setItems(prev => prev.filter(i => i.id !== item.id))
+          toast.error(t("toast.createFailed", { entity }))
+          console.error(err)
+          return false
+        } finally {
+          pendingCreates.current.delete(item.id)
+        }
+      })()
+      pendingCreates.current.set(item.id, request)
+      return request
     },
     [repository, t, entity],
   )
@@ -134,6 +148,9 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
     async (id: string) => {
       const previous = items
       setItems(prev => prev.filter(i => i.id !== id))
+      const pendingCreate = pendingCreates.current.get(id)
+      // A create that failed has already taken the item away — nothing to delete.
+      if (pendingCreate && !(await pendingCreate)) return
       try {
         await repository.remove(id)
       } catch (err) {

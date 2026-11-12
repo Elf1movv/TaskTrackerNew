@@ -21,7 +21,6 @@ const goal = (i: number): Goal => ({
   milestones: [],
   subgoals: [],
   color: "#123456",
-  category: null,
   updatedAt: "2026-11-08T00:00:00Z",
 })
 

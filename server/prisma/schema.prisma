@@ -226,6 +226,12 @@ model User {
   // as categoriesSeeded above — guards the one auto-created "General"
   // HabitGroup the same way, see routes/habitGroups.ts.
   habitGroupsSeeded Boolean      @default(false)
+  // First-run walkthrough ("знакомство"): null = not seen yet (show it),
+  // "completed" or "skipped". Stored here, not in the browser, so it follows
+  // the account to every device; the migration marks everyone who already
+  // existed as "completed". See routes/me.ts and docs/BACKLOG.md.
+  onboardingStatus  String?
+  onboardingAt      DateTime?
   sessions          Session[]
   accounts          Account[]
   tasks             Task[]

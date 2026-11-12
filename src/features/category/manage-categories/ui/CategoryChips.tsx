@@ -12,22 +12,12 @@ import { CategorySettingsPopover } from "./CategorySettingsPopover"
 
 const ALL = "all"
 
-// One category block for both the Tasks and the Goals page (audit Д4 + Л4,
-// decision 3, 2026-11-09): filter chips plus full management — add, rename,
-// recolor (the colored dot), delete (×, with the task count) and drag a
-// chip to a new place. Categories are shared by tasks and goals, so they're
-// managed the same way from either page.
-// `value` is the selected filter: "all" or a category name. `extraChips`
-// are plain filter chips after the categories (Goals: "No category").
-export function CategoryChips({
-  value,
-  onChange,
-  extraChips = [],
-}: {
-  value: string
-  onChange: (value: string) => void
-  extraChips?: { value: string; label: string }[]
-}) {
+// The category block of the Tasks page (audit Д4 + Л4): filter chips plus
+// full management — add, rename, recolor (the colored dot), delete (×, with
+// the task count) and drag a chip to a new place. Categories belong to tasks
+// only since 2026-11-12 (owner decision; goals had them from iteration 3).
+// `value` is the selected filter: "all" or a category name.
+export function CategoryChips({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const { categories, addCategory, deleteCategory } = useCategories()
   const { tasks } = useTasks()
   const { t } = useLanguage()
@@ -53,8 +43,8 @@ export function CategoryChips({
     setPendingDelete(null)
     await deleteCategory(id)
     if (value === name) onChange(ALL)
-    // The server deletes the category's tasks and clears it on goals; the
-    // repository's invalidateRelated reloads both collections afterwards.
+    // The server deletes the category's tasks; the repository's
+    // invalidateRelated reloads the tasks afterwards.
   }
 
   const chipClass = (selected: boolean) =>
@@ -85,17 +75,6 @@ export function CategoryChips({
             onRenamed={name => value === category.name && onChange(name)}
             onDelete={() => setPendingDelete(category)}
           />
-        ))}
-        {extraChips.map(chip => (
-          <button
-            key={chip.value}
-            type="button"
-            aria-pressed={value === chip.value}
-            onClick={() => onChange(chip.value)}
-            className={`${chipClass(value === chip.value)} px-3.5`}
-          >
-            {chip.label}
-          </button>
         ))}
         {isAdding ? (
           <div className="flex items-center gap-2 h-10 pl-2 pr-1.5 rounded-full bg-card border border-primary/25 shadow-card">

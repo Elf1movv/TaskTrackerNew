@@ -7,7 +7,7 @@ import { Input } from "@/shared/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover"
 
 // Opened from the colored dot on a category chip: rename + color. A rename
-// moves the category's tasks and goals with it (server side, one
+// moves the category's tasks with it (server side, one
 // transaction) — added 2026-11-08 so the English default categories of
 // older accounts can be renamed without deleting their tasks.
 export function CategorySettingsPopover({

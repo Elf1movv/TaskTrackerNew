@@ -6,7 +6,7 @@ import { GoalList, type GoalListItem } from "./GoalList"
 const { reorderGoals } = vi.hoisted(() => ({ reorderGoals: vi.fn() }))
 vi.mock("@/entities/goal", () => ({ useGoals: () => ({ reorderGoals, isLoaded: true }) }))
 vi.mock("@/features/goal-form", () => ({ GoalForm: () => null }))
-// The real item needs drag-and-drop and category providers; this test only
+// The real item needs drag-and-drop providers; this test only
 // cares about what GoalList itself does with a deep link.
 vi.mock("./components", () => ({
   GoalAccordionItem: ({ goal }: { goal: GoalListItem }) => <div data-goal-id={goal.id}>{goal.title}</div>,

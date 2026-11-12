@@ -19,15 +19,22 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   } = usePersistedCollection<Goal>(goalRepository, "goal")
 
   const addGoal = useCallback(
-    (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals" | "progress">) => {
-      create({
-        ...goal,
-        id: generateId(),
-        milestones: [],
-        subgoals: [],
-        progress: 0,
-        updatedAt: new Date().toISOString(),
-      })
+    (goal: Omit<Goal, "id" | "updatedAt" | "milestones" | "subgoals" | "progress">, steps: string[] = []) => {
+      const id = generateId()
+      // A new goal goes first (owner decision 2026-11-12) — the server gives
+      // it the smallest order, so it stays first after a reload too.
+      create(
+        {
+          ...goal,
+          id,
+          milestones: steps.map((title, order) => ({ id: generateId(), title, completed: false, order })),
+          subgoals: [],
+          progress: 0,
+          updatedAt: new Date().toISOString(),
+        },
+        { prepend: true },
+      )
+      return id
     },
     [create],
   )

@@ -4,7 +4,7 @@
 # tasktracker_test?schema=redesign_browser, starts headless Chrome on :9222,
 # registers + verifies a disposable QA user, runs the checks, then cleans up
 # the user and stops both processes.
-#   scripts/qa/run-local.sh            # 20-check suite only
+#   scripts/qa/run-local.sh            # 20-check suite + onboarding
 #   scripts/qa/run-local.sh --full     # suite + calendar gestures
 #   scripts/qa/run-local.sh --keep     # leave server+Chrome running and the
 #                                      # QA user logged in (for ad-hoc scripts);
@@ -52,5 +52,10 @@ EMAIL=$(node scripts/qa/independent-browser.mjs register | grep -oE 'independenc
 echo "$EMAIL" > "$EMAIL_FILE"
 (cd server && node --env-file="$ENV_FILE" scripts/qa-browser-user.mjs verify "$EMAIL" | tail -1)
 node scripts/qa/independent-browser.mjs suite | grep -v '^PASS' || true
+# Onboarding walkthrough (desktop, phone, skip hint, light/en, reduced motion)
+# on the same user, with its onboarding status reset to "not seen".
+QA_RESET="(cd server && node --env-file=\"$ENV_FILE\" scripts/qa-browser-user.mjs onboarding-reset \"$EMAIL\" >/dev/null)"
+export QA_RESET
+node scripts/qa/onboarding.mjs | grep -v '^PASS' || true
 [ "${1:-}" = "--full" ] && node scripts/qa/calendar-gestures.mjs | tail -1
 echo "QA output: $QA_TMP"

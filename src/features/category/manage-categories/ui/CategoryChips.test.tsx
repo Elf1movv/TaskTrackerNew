@@ -41,22 +41,11 @@ describe("CategoryChips (audit Д4 + Л4)", () => {
   })
   afterEach(cleanup)
 
-  it("filters by a category and shows page-specific extra chips", () => {
+  it("filters by a category", () => {
     const onChange = vi.fn()
-    render(
-      <CategoryChips
-        value="all"
-        onChange={onChange}
-        extraChips={[{ value: "__none__", label: "No category" }]}
-      />,
-      {
-        wrapper,
-      },
-    )
+    render(<CategoryChips value="all" onChange={onChange} />, { wrapper })
     fireEvent.click(screen.getByRole("button", { name: "Home" }))
     expect(onChange).toHaveBeenCalledWith("Home")
-    fireEvent.click(screen.getByRole("button", { name: "No category" }))
-    expect(onChange).toHaveBeenCalledWith("__none__")
   })
 
   it("deletes a category after confirming, warning about its tasks, and resets the filter", async () => {
