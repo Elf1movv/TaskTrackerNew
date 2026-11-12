@@ -199,6 +199,20 @@ Resend восстановление пароля и подтверждение �
 контейнера. Как только появится инбокс для отзывов — прописать сюда,
 письма начнут уходить сами, без передеплоя кода.
 
+**`VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT`** (2026-11-12,
+push-напоминания) — пара ключей, которой сервер подписывает уведомления, и
+«контакт» отправителя (`https://mytracker.space`). Без них сервер не падает:
+push просто выключен (`GET /api/push/key` → 503, в настройках «Уведомления
+пока недоступны»), расписание не запускается. Сгенерировать один раз (из
+`server/`, где установлен `web-push`):
+```bash
+node -e 'const k=require("web-push").generateVAPIDKeys();console.log("VAPID_PUBLIC_KEY="+k.publicKey);console.log("VAPID_PRIVATE_KEY="+k.privateKey)'
+```
+**Ключи не менять без причины:** подписки браузеров привязаны к публичному
+ключу — после смены все люди должны заново включить уведомления. Стенд —
+своя пара: `STAGING_VAPID_*` в `/var/www/tasktracker-staging/.env.staging`
+(пробрасываются в `docker-compose.staging.yml`).
+
 `/var/www/tasktracker/db.env` — новый файл (тоже gitignored), пароль для
 самого контейнера `db`:
 ```
