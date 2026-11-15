@@ -74,9 +74,14 @@ export function HourGrid({
   onReschedulePlan,
   onResizePlan,
   onCreateDraft,
+  onOpenDay,
 }: {
   columns: HourGridColumn[]
   compact?: boolean
+  // Week on a phone (owner, 2026-11-15): a tap on a day's empty space opens
+  // that day instead of creating a plan. Gets the tapped column's box, so
+  // the Day view can grow out of it.
+  onOpenDay?: (day: Date, from: DOMRect) => void
   onEditPlan: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
   onReschedulePlan: (taskId: string, day: Date, time: string) => void
@@ -149,6 +154,7 @@ export function HourGrid({
             onReschedulePlan={onReschedulePlan}
             onResizePlan={onResizePlan}
             onCreateDraft={onCreateDraft}
+            onOpenDay={onOpenDay}
           />
         ))}
       </div>
@@ -167,6 +173,7 @@ function TimelineDayColumn({
   onReschedulePlan,
   onResizePlan,
   onCreateDraft,
+  onOpenDay,
 }: {
   column: HourGridColumn
   compact: boolean
@@ -181,6 +188,7 @@ function TimelineDayColumn({
   onReschedulePlan: (taskId: string, day: Date, time: string) => void
   onResizePlan?: (taskId: string, endTime: string) => void
   onCreateDraft?: (day: Date, startTime: string, endTime: string, anchorRect: DOMRect) => void
+  onOpenDay?: (day: Date, from: DOMRect) => void
 }) {
   const columnEl = useRef<HTMLDivElement | null>(null)
 
@@ -222,9 +230,10 @@ function TimelineDayColumn({
       // column ref threaded down from HourGrid — see that hook's comment.
       data-calendar-day={formatDateKey(column.day)}
       onPointerDown={onCreateDraft ? onCreatePointerDown : undefined}
+      onClick={onOpenDay ? e => onOpenDay(column.day, e.currentTarget.getBoundingClientRect()) : undefined}
       className={`relative flex-1 border-r ${compact ? "min-w-0" : "min-w-[120px]"} border-border last:border-r-0 ${
         movePreview ? "bg-primary/5" : ""
-      } ${onCreateDraft ? "cursor-crosshair" : ""}`}
+      } ${onCreateDraft ? "cursor-crosshair" : onOpenDay ? "cursor-pointer" : ""}`}
       style={{ height: GRID_HEIGHT_PX }}
     >
       {HOURS.slice(1).map(hour => (
@@ -377,6 +386,7 @@ function TimedPlanBlock({
       // the popover right after a successful move. wasDraggedRef is set
       // by useMoveDrag for exactly this check.
       onClick={e => {
+        e.stopPropagation()
         if (wasDraggedRef.current) return
         onEdit(e.currentTarget.getBoundingClientRect())
       }}
@@ -466,7 +476,10 @@ function TimedReminderBlock({
   return (
     <button
       onPointerDown={e => e.stopPropagation()}
-      onClick={e => onEdit(e.currentTarget.getBoundingClientRect())}
+      onClick={e => {
+        e.stopPropagation()
+        onEdit(e.currentTarget.getBoundingClientRect())
+      }}
       style={{
         top: timeToOffsetPx(reminder.time!),
         height: FALLBACK_BLOCK_HEIGHT_PX,

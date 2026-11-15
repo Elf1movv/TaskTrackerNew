@@ -22,8 +22,9 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 // page can create/edit them.
 //
 // On a phone (owner, 2026-11-15) the week is the short overview: all 7 days
-// fit the screen (HourGrid `compact`), and tapping a day's header opens that
-// day in full (`onOpenDay`). The headers are buttons on a computer too.
+// fit the screen (HourGrid `compact`), and tapping a day — its column or its
+// header — opens that day in full (`onOpenDay`). The headers are buttons on a
+// computer too.
 export function CalendarWeekView({
   anchorDate,
   allPlans,
@@ -41,7 +42,7 @@ export function CalendarWeekView({
   allGoals: Goal[]
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizePlan: (taskId: string, endTime: string) => void
-  onOpenDay: (day: Date) => void
+  onOpenDay: (day: Date, from: DOMRect) => void
 }) {
   const { language, t } = useLanguage()
   const compact = useIsMobile()
@@ -87,7 +88,7 @@ export function CalendarWeekView({
               key={day.toISOString()}
               type="button"
               data-week-day={formatDateKey(day)}
-              onClick={() => onOpenDay(day)}
+              onClick={e => onOpenDay(day, e.currentTarget.getBoundingClientRect())}
               aria-label={t("calendar.openDay", { day: format(day, "EEEE d MMMM", { locale }) })}
               className="text-center min-w-0 rounded-md py-0.5 hover:bg-fill transition-colors"
             >
@@ -126,9 +127,16 @@ export function CalendarWeekView({
         onEditReminder={openEditReminder}
         onReschedulePlan={onRescheduleTaskTime}
         onResizePlan={onResizePlan}
-        onCreateDraft={(day, startTime, endTime) => {
-          setDraft({ mode: "create", day, defaultTime: startTime, defaultEndTime: endTime })
-        }}
+        // Phone: the week is an overview — a tap on a day opens it (new plans
+        // are made in Day, which has room). Computer: tap/drag creates a plan.
+        onCreateDraft={
+          compact
+            ? undefined
+            : (day, startTime, endTime) => {
+                setDraft({ mode: "create", day, defaultTime: startTime, defaultEndTime: endTime })
+              }
+        }
+        onOpenDay={compact ? onOpenDay : undefined}
       />
       <CalendarItemPopover draft={draft} onClose={closeDraft} />
     </div>

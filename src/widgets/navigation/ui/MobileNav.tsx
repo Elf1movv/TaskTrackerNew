@@ -6,11 +6,12 @@ export function MobileNav() {
   const { t } = useLanguage()
 
   return (
-    // pb-[env(safe-area-inset-bottom)]: on an iPhone without a Home button the
-    // installed app reaches the rounded corners and the home-indicator bar;
-    // the icons sit above that strip, the bar's background fills it
-    // (owner report, 2026-11-15). 0 everywhere else.
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border flex z-50 pb-[env(safe-area-inset-bottom)]">
+    // On an iPhone without a Home button the installed app reaches the rounded
+    // corners and the home-indicator bar (owner report, 2026-11-15). The full
+    // inset (34px) made the bar too tall — the labels only need to clear the
+    // thin indicator line itself, so the bar adds the inset minus 20px.
+    // Nothing anywhere else (the inset is 0).
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border flex z-50 pb-[max(0px,calc(env(safe-area-inset-bottom)-20px))]">
       {NAV_ITEMS.map(({ path, labelKey, Icon }) => (
         <NavLink
           key={path}

@@ -1,6 +1,6 @@
 import { useTasks } from "@/entities/task"
 import { PlanShelf } from "@/widgets/calendar-timeline"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { format, isSameDay, isSameMonth, isSameWeek } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
@@ -94,6 +94,9 @@ function CalendarPageContent() {
   const [searchParams, setSearchParams] = useSearchParams()
   const hasConsumedInitialParams = useRef(false)
   const reduceMotion = useReducedMotion()
+  // Where the Day view grows from after a tap on a day in Week (percent of
+  // the page width); null — an ordinary switch, a soft fade.
+  const [zoomFromX, setZoomFromX] = useState<number | null>(null)
 
   // One-time reconciliation of the URL the page was opened with — either an
   // external deep link (Today's reminder card sends `?date=`, no `?view=`,
@@ -154,7 +157,10 @@ function CalendarPageContent() {
         {BUILT_VIEWS.map(v => (
           <button
             key={v}
-            onClick={() => setView(v)}
+            onClick={() => {
+              setZoomFromX(null)
+              setView(v)
+            }}
             className={`h-8 flex-1 md:flex-none px-1 md:px-3 rounded-lg text-xs transition truncate ${
               view === v
                 ? "bg-seg text-foreground font-bold shadow-card"
@@ -166,59 +172,71 @@ function CalendarPageContent() {
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
-        <h1 className="text-page-sm sm:text-page">{formatPeriodTitle(view, anchorDate, language)}</h1>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={goToPrev}
-            className="rounded-md text-muted-foreground hover:text-foreground"
-          >
-            <ChevronLeft size={16} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={goToToday}
-            className="tabular-nums rounded-md h-9 px-4 text-xs font-semibold shadow-card bg-card text-foreground hover:bg-card"
-          >
-            {isViewingCurrentPeriod(view, anchorDate) ? t("common.today") : t("calendar.backToToday")}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={goToNext}
-            className="rounded-md text-muted-foreground hover:text-foreground"
-          >
-            <ChevronRight size={16} />
-          </Button>
-        </div>
-      </div>
-
-      <PlanShelf
-        anchorDate={formatDateKey(anchorDate)}
-        days={
-          view === "day"
-            ? [formatDateKey(anchorDate)]
-            : view === "week"
-              ? buildWeekRange(anchorDate).map(formatDateKey)
-              : []
-        }
-        onReschedule={reschedulePlanTime}
-      />
-
-      {/* Switching views fades the new one in with a slight zoom — reads as
-          "opening" a day from the week (owner, 2026-11-15). "Reduce motion":
-          fade only. */}
+      {/* Everything under the view switcher changes with the view, so it all
+          animates together: a soft fade between views, and a day opened from
+          Week grows out of the tapped day's column (owner, 2026-11-15:
+          "открывается через анимацию"). "Reduce motion": fade only. */}
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={view}
-          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+          style={zoomFromX !== null ? { transformOrigin: `${zoomFromX}% 35%` } : undefined}
+          initial={
+            reduceMotion
+              ? { opacity: 0 }
+              : zoomFromX !== null && view === "day"
+                ? { opacity: 0, scale: 0.3 }
+                : { opacity: 0, scale: 0.97 }
+          }
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
+          exit={{ opacity: 0, transition: { duration: 0.1 } }}
+          transition={
+            zoomFromX !== null && view === "day"
+              ? { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
+              : { duration: 0.18 }
+          }
         >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+            <h1 className="text-page-sm sm:text-page">{formatPeriodTitle(view, anchorDate, language)}</h1>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToPrev}
+                className="rounded-md text-muted-foreground hover:text-foreground"
+              >
+                <ChevronLeft size={16} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goToToday}
+                className="tabular-nums rounded-md h-9 px-4 text-xs font-semibold shadow-card bg-card text-foreground hover:bg-card"
+              >
+                {isViewingCurrentPeriod(view, anchorDate) ? t("common.today") : t("calendar.backToToday")}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToNext}
+                className="rounded-md text-muted-foreground hover:text-foreground"
+              >
+                <ChevronRight size={16} />
+              </Button>
+            </div>
+          </div>
+
+          <PlanShelf
+            anchorDate={formatDateKey(anchorDate)}
+            days={
+              view === "day"
+                ? [formatDateKey(anchorDate)]
+                : view === "week"
+                  ? buildWeekRange(anchorDate).map(formatDateKey)
+                  : []
+            }
+            onReschedule={reschedulePlanTime}
+          />
+
           {view === "month" && (
             <CalendarMonthView
               anchorDate={anchorDate}
@@ -269,7 +287,9 @@ function CalendarPageContent() {
               allGoals={allGoals}
               onRescheduleTaskTime={reschedulePlanTime}
               onResizePlan={resizePlan}
-              onOpenDay={day => {
+              onOpenDay={(day, from) => {
+                const pageWidth = document.documentElement.clientWidth || 1
+                setZoomFromX(Math.round(((from.left + from.width / 2) / pageWidth) * 100))
                 goToDate(day)
                 setView("day")
               }}

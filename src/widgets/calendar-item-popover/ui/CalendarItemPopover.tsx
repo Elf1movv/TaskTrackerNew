@@ -41,21 +41,25 @@ export function CalendarItemPopover({
         <DialogDescription className="sr-only">{t("plans.title")}</DialogDescription>
         {draft?.mode === "create" && (
           <>
-            <ToggleGroup
-              type="single"
-              variant="outline"
-              size="sm"
-              value={type}
-              onValueChange={v => v && setType(v as "task" | "reminder")}
-              className="mb-4"
-            >
-              <ToggleGroupItem value="task" className="text-xs flex-1">
-                {t("plans.title")}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="reminder" className="text-xs flex-1">
-                {t("calendar.typeReminder")}
-              </ToggleGroupItem>
-            </ToggleGroup>
+            {/* pr-8: the window's close cross sits in the top-right corner
+                and covered "Reminder" (owner, 2026-11-15). */}
+            <div className="mb-4 pr-8">
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                value={type}
+                onValueChange={v => v && setType(v as "task" | "reminder")}
+                className="w-full"
+              >
+                <ToggleGroupItem value="task" className="text-xs flex-1">
+                  {t("plans.title")}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="reminder" className="text-xs flex-1">
+                  {t("calendar.typeReminder")}
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
             {type === "task" ? (
               <PlanForm
                 embedded
