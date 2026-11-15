@@ -5,7 +5,7 @@ import { useReminders, type Reminder } from "@/entities/reminder"
 import type { CalendarEntry as Task } from "@/entities/calendar-plan"
 import { formatDateKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
-import { Popover, PopoverAnchor, PopoverContent } from "@/shared/ui/popover"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/ui/dialog"
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group"
 
 export type CalendarItemDraft =
@@ -13,24 +13,18 @@ export type CalendarItemDraft =
   | { mode: "edit-plan"; task: Task }
   | { mode: "edit-reminder"; reminder: Reminder }
 
-// The click/drag-anchored replacement for Day's old static sidebar — one
-// popover that handles both creating a new task/reminder (anchored where
-// the create-drag ended in the hour grid) and editing an existing one
-// (anchored at the clicked block). Goals are deliberately absent from the
-// type toggle: Day/Week give goals no CRUD at all, only their own page
-// can create/edit them.
-//
-// Anchored via a Radix virtual reference (`PopoverAnchor`'s `virtualRef`)
-// rather than a real DOM trigger element — there's no fixed "+" button
-// this popover opens from, the anchor point is wherever the pointer
-// gesture happened to end.
+// One window for creating a plan/reminder (after a click or drag on the hour
+// grid / a day) and for editing one. Until 2026-11-15 it was a popover
+// anchored where the gesture ended — it jumped around, scrolled away with the
+// page, and on a phone the keyboard covered it (owner report). Now it's a
+// regular Dialog: fixed in the middle of the visible screen, above the
+// keyboard (see shared/ui/dialog.tsx). Goals are deliberately absent from the
+// type toggle: only their own page creates/edits them.
 export function CalendarItemPopover({
   draft,
-  anchorRect,
   onClose,
 }: {
   draft: CalendarItemDraft | null
-  anchorRect: DOMRect | null
   onClose: () => void
 }) {
   const { t } = useLanguage()
@@ -38,17 +32,13 @@ export function CalendarItemPopover({
   const { deleteReminder } = useReminders()
   const [type, setType] = useState<"task" | "reminder">("task")
 
-  // A plain object, not a stored/mutated ref — anchorRect only changes
-  // while the popover is closed (a new draft opens it fresh each time),
-  // so a fresh virtual-anchor object built straight from the current
-  // render is enough; there's no live-tracking-while-open case here that
-  // would need a persisted, in-place-mutated ref.
-  const anchorRef = { current: { getBoundingClientRect: () => anchorRect ?? new DOMRect() } }
-
   return (
-    <Popover open={!!draft} onOpenChange={open => !open && onClose()}>
-      <PopoverAnchor virtualRef={anchorRef} />
-      <PopoverContent align="start" collisionPadding={12} className="w-80">
+    <Dialog open={!!draft} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogTitle className="sr-only">
+          {draft?.mode === "edit-reminder" ? t("calendar.typeReminder") : t("plans.title")}
+        </DialogTitle>
+        <DialogDescription className="sr-only">{t("plans.title")}</DialogDescription>
         {draft?.mode === "create" && (
           <>
             <ToggleGroup
@@ -98,7 +88,7 @@ export function CalendarItemPopover({
             }}
           />
         )}
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -34,7 +34,7 @@ function TasksPageContent() {
   return (
     <div className="p-6 md:p-10 max-w-3xl mx-auto">
       <Dialog open={!!focused} onOpenChange={open => !open && close()}>
-        <DialogContent className="max-h-[85vh] overflow-auto">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("tasks.title")}</DialogTitle>
           </DialogHeader>

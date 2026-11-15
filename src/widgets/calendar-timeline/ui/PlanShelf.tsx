@@ -81,7 +81,7 @@ export function PlanShelf({
         </div>
       )}
       <Dialog open={!!editing} onOpenChange={open => !open && setEditing(null)}>
-        <DialogContent className="max-h-[85vh] overflow-auto">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("plans.title")}</DialogTitle>
           </DialogHeader>

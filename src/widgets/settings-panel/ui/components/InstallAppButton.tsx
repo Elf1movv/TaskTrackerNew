@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { Download, Share, SquarePlus } from "lucide-react"
+import { Download, ExternalLink, Share, SquarePlus } from "lucide-react"
 import { useLanguage } from "@/shared/lib/i18n"
-import { usePwaInstall } from "@/shared/lib/pwa"
+import { chromeIntentUrl, usePwaInstall } from "@/shared/lib/pwa"
 import { Button } from "@/shared/ui/button"
 import {
   Dialog,
@@ -14,14 +14,30 @@ import {
 
 // "Install the app" in the settings panel (PWA, 2026-11-12). Android and
 // desktop Chrome/Edge get the browser's own install dialog; an iPhone has no
-// such dialog, so it gets the two steps of the Share menu. Hidden when the
-// app is already installed or the browser can't install sites.
+// such dialog, so it gets the two steps of the Share menu. Android browsers
+// that can't install sites (Yandex Browser and the like) get a hint and an
+// "Open in Chrome" link (owner decision 2026-11-12). Hidden when the app is
+// already installed or nothing can be offered.
 export function InstallAppButton({ onDone }: { onDone: () => void }) {
   const { t } = useLanguage()
   const { mode, promptInstall } = usePwaInstall()
   const [showIosSteps, setShowIosSteps] = useState(false)
 
   if (!mode) return null
+
+  if (mode === "chrome") {
+    return (
+      <div className="rounded-lg border border-border bg-sunken p-3 flex flex-col gap-2">
+        <p className="text-meta text-muted-foreground">{t("pwa.chrome.hint")}</p>
+        <Button asChild variant="outline" className="w-full justify-center">
+          <a href={chromeIntentUrl()}>
+            <ExternalLink size={14} />
+            {t("pwa.chrome.open")}
+          </a>
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <>

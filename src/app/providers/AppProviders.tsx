@@ -50,7 +50,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 fixed settings gear / reminder bell and each page's "Add"
                 button, and a toast there covered them. mobileOffset keeps
                 toasts above MobileNav on phones. */}
-            <Toaster richColors position="bottom-right" mobileOffset={{ bottom: 80 }} />
+            <Toaster
+              richColors
+              position="bottom-right"
+              mobileOffset={{ bottom: "calc(80px + env(safe-area-inset-bottom))" }}
+            />
             {children}
           </TooltipProvider>
         </DndProvider>

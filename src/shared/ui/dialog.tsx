@@ -44,6 +44,11 @@ const DialogOverlay = React.forwardRef<
 })
 DialogOverlay.displayName = "DialogOverlay"
 
+// Centred in the VISIBLE part of the screen, not the whole layout viewport:
+// --vv-top / --vv-height come from window.visualViewport (shared/lib/pwa,
+// trackVisibleViewport). When a phone keyboard opens, the visible part
+// shrinks and the window moves up above it instead of hiding under it
+// (owner, 2026-11-15 — the calendar plan form). Too tall → scrolls inside.
 function DialogContent({
   className,
   children,
@@ -55,7 +60,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-card data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-[24px] border border-card-border p-6 shadow-raised duration-200 sm:max-w-lg",
+          "bg-card data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[calc(var(--vv-top,0px)_+_var(--vv-height,100dvh)_/_2)] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] max-h-[calc(var(--vv-height,100dvh)_-_2rem)] overflow-y-auto translate-x-[-50%] translate-y-[-50%] gap-4 rounded-[24px] border border-card-border p-6 shadow-raised duration-200 sm:max-w-lg",
           className,
         )}
         {...props}

@@ -39,12 +39,10 @@ export function CalendarDayView({
   onResizePlan: (taskId: string, endTime: string) => void
 }) {
   const [draft, setDraft] = useState<CalendarItemDraft | null>(null)
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
   const dayKey = formatDateKey(anchorDate)
 
   function closeDraft() {
     setDraft(null)
-    setAnchorRect(null)
   }
 
   const dayPlans = allPlans.filter(task => isPlanOnDay(task, dayKey))
@@ -53,18 +51,16 @@ export function CalendarDayView({
   const timedPlans = dayPlans.filter(task => task.time)
   const timedReminders = dayReminders.filter(reminder => reminder.time)
 
-  function openEditPlan(taskId: string, rect: DOMRect) {
+  function openEditPlan(taskId: string) {
     const task = dayPlans.find(t => t.id === taskId)
     if (!task) return
     setDraft({ mode: "edit-plan", task })
-    setAnchorRect(rect)
   }
 
-  function openEditReminder(reminderId: string, rect: DOMRect) {
+  function openEditReminder(reminderId: string) {
     const reminder = allReminders.find(r => r.id === reminderId)
     if (!reminder) return
     setDraft({ mode: "edit-reminder", reminder })
-    setAnchorRect(rect)
   }
 
   return (
@@ -82,12 +78,11 @@ export function CalendarDayView({
         onEditReminder={openEditReminder}
         onReschedulePlan={onRescheduleTaskTime}
         onResizePlan={onResizePlan}
-        onCreateDraft={(day, startTime, endTime, rect) => {
+        onCreateDraft={(day, startTime, endTime) => {
           setDraft({ mode: "create", day, defaultTime: startTime, defaultEndTime: endTime })
-          setAnchorRect(rect)
         }}
       />
-      <CalendarItemPopover draft={draft} anchorRect={anchorRect} onClose={closeDraft} />
+      <CalendarItemPopover draft={draft} onClose={closeDraft} />
     </div>
   )
 }

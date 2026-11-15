@@ -4,6 +4,7 @@ import { NotificationsSection } from "@/features/notifications/push"
 import { signOut } from "@/shared/lib/auth"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
+import { ConfirmAction } from "@/shared/ui/confirm-action"
 import {
   Sheet,
   SheetContent,
@@ -87,7 +88,7 @@ export function SettingsPanel({
           {view === "appearance" && <AppearanceSection />}
           {view === "notifications" && <NotificationsSection />}
         </div>
-        <div className="px-4 pb-4 mt-auto flex flex-col gap-2">
+        <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))] mt-auto flex flex-col gap-2">
           <InstallAppButton onDone={() => setOpen(false)} />
           {onRestartOnboarding && (
             <Button
@@ -102,14 +103,21 @@ export function SettingsPanel({
               {t("settings.restartOnboarding")}
             </Button>
           )}
-          <Button
-            variant="outline"
-            className="w-full justify-center text-muted-foreground hover:text-destructive"
-            onClick={() => signOut()}
+          {/* Asks first: a stray tap used to log out at once (owner, 2026-11-15). */}
+          <ConfirmAction
+            title={t("settings.logoutConfirmTitle")}
+            description={t("settings.logoutConfirmBody")}
+            confirmLabel={t("settings.logoutConfirm")}
+            onConfirm={() => signOut()}
           >
-            <LogOut size={14} />
-            {t("sidebar.logout")}
-          </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-center text-muted-foreground hover:text-destructive"
+            >
+              <LogOut size={14} />
+              {t("sidebar.logout")}
+            </Button>
+          </ConfirmAction>
         </div>
       </SheetContent>
     </Sheet>

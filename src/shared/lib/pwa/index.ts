@@ -1,1 +1,8 @@
-export { initPwa, isStandalone, usePwaInstall, useThemeColorSync, type InstallMode } from "./pwa"
+export {
+  chromeIntentUrl,
+  initPwa,
+  isStandalone,
+  usePwaInstall,
+  useThemeColorSync,
+  type InstallMode,
+} from "./pwa"

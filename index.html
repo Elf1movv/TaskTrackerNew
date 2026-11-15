@@ -5,7 +5,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="google" content="notranslate" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: the page may draw under the iPhone home-indicator
+         area; the bottom nav pads itself with env(safe-area-inset-bottom). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <!-- PWA (2026-11-12): installable app — manifest, home-screen icons. The
          theme color follows the app's theme at runtime (shared/lib/pwa). -->

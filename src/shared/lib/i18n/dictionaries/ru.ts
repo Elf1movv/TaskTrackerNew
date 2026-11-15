@@ -219,6 +219,7 @@ export const ru: Record<keyof typeof en, string> = {
   "calendar.view.week": "Неделя",
   "calendar.view.month": "Месяц",
   "calendar.view.year": "Год",
+  "calendar.openDay": "Открыть день: {day}",
   "calendar.typeTask": "Задача",
   "calendar.typeReminder": "Напоминание",
 
@@ -329,7 +330,7 @@ export const ru: Record<keyof typeof en, string> = {
   "onboarding.task.addCategory": "+ Своя",
   "onboarding.task.newCategoryPlaceholder": "Название категории",
   "onboarding.task.categoryHint":
-    "Категории — ваши разделы дел. Создавайте свои, переименовывайте, перекрашивайте и меняйте порядок на вкладке «Задачи». Те же категории есть у целей.",
+    "Категории — ваши разделы дел. Создавайте свои, переименовывайте, перекрашивайте и меняйте порядок на вкладке «Задачи».",
   "onboarding.task.due": "Срок",
   "onboarding.task.today": "Сегодня",
   "onboarding.task.tomorrow": "Завтра",
@@ -396,6 +397,9 @@ export const ru: Record<keyof typeof en, string> = {
   "settings.restartOnboarding": "Пройти знакомство заново",
   "settings.installApp": "Установить приложение",
   "settings.menu.notifications": "Уведомления",
+  "settings.logoutConfirmTitle": "Выйти из аккаунта?",
+  "settings.logoutConfirmBody": "Чтобы вернуться, нужно будет снова ввести почту и пароль.",
+  "settings.logoutConfirm": "Выйти",
   "push.description":
     "Напоминания приходят вовремя, даже когда MyTracker закрыт. Важные — ещё и заранее: за сутки и за час.",
   "push.off": "Выключены",
@@ -425,6 +429,9 @@ export const ru: Record<keyof typeof en, string> = {
   "pwa.ios.step1": "Нажмите «Поделиться» внизу экрана Safari",
   "pwa.ios.step2": "Выберите «На экран „Домой“», включите «Открыть как веб-приложение» и нажмите «Добавить»",
   "pwa.ios.done": "Понятно",
+  "pwa.chrome.hint":
+    "Этот браузер не умеет устанавливать приложения. Откройте MyTracker в Chrome — там появится кнопка «Установить приложение».",
+  "pwa.chrome.open": "Открыть в Chrome",
   "onboarding.back.1": "С возвращением!",
   "onboarding.back.2": "Рады видеть вас снова!",
   "onboarding.back.3": "Вы вернулись — самое время закрыть пару задач.",

@@ -62,8 +62,13 @@ export interface HourGridColumn {
 // doesn't pass them): when absent, the column attaches no pointerdown
 // listener at all and no resize handle is rendered, so Week keeps its
 // existing whole-block-move-only behavior unchanged.
+//
+// `compact` — Week on a phone (owner, 2026-11-15): all 7 days fit the screen
+// width instead of 120px+ columns scrolling sideways. Narrow hour labels
+// ("09"), and blocks show only their title (the full plan opens on tap).
 export function HourGrid({
   columns,
+  compact = false,
   onEditPlan,
   onEditReminder,
   onReschedulePlan,
@@ -71,6 +76,7 @@ export function HourGrid({
   onCreateDraft,
 }: {
   columns: HourGridColumn[]
+  compact?: boolean
   onEditPlan: (taskId: string, anchorRect: DOMRect) => void
   onEditReminder: (reminderId: string, anchorRect: DOMRect) => void
   onReschedulePlan: (taskId: string, day: Date, time: string) => void
@@ -111,11 +117,19 @@ export function HourGrid({
       ref={scrollRef}
       className="flex bg-card border border-card-border rounded-xl shadow-card overflow-auto max-h-[65vh]"
     >
-      <div className="shrink-0 w-12 border-r border-border" style={{ height: GRID_HEIGHT_PX }}>
+      <div
+        className={`shrink-0 border-r border-border ${compact ? "w-7" : "w-12"}`}
+        style={{ height: GRID_HEIGHT_PX }}
+      >
         {HOURS.map(hour => (
           <div key={hour} className="relative" style={{ height: HOUR_HEIGHT_PX }}>
-            <span className="tabular-nums absolute -top-[7px] right-1.5 text-caption font-bold text-tertiary bg-card px-0.5">
-              {String(hour).padStart(2, "0")}:00
+            <span
+              className={`tabular-nums absolute -top-[7px] text-caption font-bold text-tertiary bg-card px-0.5 ${
+                compact ? "right-0.5" : "right-1.5"
+              }`}
+            >
+              {String(hour).padStart(2, "0")}
+              {compact ? "" : ":00"}
             </span>
           </div>
         ))}
@@ -126,6 +140,7 @@ export function HourGrid({
           <TimelineDayColumn
             key={column.day.toISOString()}
             column={column}
+            compact={compact}
             nowTop={isToday(column.day) ? nowTop : null}
             movePreview={movePreview?.day === formatDateKey(column.day) ? movePreview : null}
             onMovePreviewChange={setMovePreview}
@@ -143,6 +158,7 @@ export function HourGrid({
 
 function TimelineDayColumn({
   column,
+  compact,
   nowTop,
   movePreview,
   onMovePreviewChange,
@@ -153,6 +169,7 @@ function TimelineDayColumn({
   onCreateDraft,
 }: {
   column: HourGridColumn
+  compact: boolean
   nowTop: number | null
   // Already filtered to this column by HourGrid (movePreview.day matched
   // against this column's own day) — null here just means "no move-drag
@@ -205,7 +222,7 @@ function TimelineDayColumn({
       // column ref threaded down from HourGrid — see that hook's comment.
       data-calendar-day={formatDateKey(column.day)}
       onPointerDown={onCreateDraft ? onCreatePointerDown : undefined}
-      className={`relative flex-1 min-w-[120px] border-r border-border last:border-r-0 ${
+      className={`relative flex-1 border-r ${compact ? "min-w-0" : "min-w-[120px]"} border-border last:border-r-0 ${
         movePreview ? "bg-primary/5" : ""
       } ${onCreateDraft ? "cursor-crosshair" : ""}`}
       style={{ height: GRID_HEIGHT_PX }}
@@ -234,6 +251,7 @@ function TimelineDayColumn({
         <TimedPlanBlock
           key={task.id}
           task={task}
+          compact={compact}
           categoryColor={PLAN_COLOR}
           lane={laneById.get(`task:${task.id}`) ?? { id: "", laneIndex: 0, laneCount: 1 }}
           columnRef={columnEl}
@@ -247,6 +265,7 @@ function TimelineDayColumn({
         <TimedReminderBlock
           key={reminder.id}
           reminder={reminder}
+          compact={compact}
           lane={laneById.get(`reminder:${reminder.id}`) ?? { id: "", laneIndex: 0, laneCount: 1 }}
           onEdit={rect => onEditReminder(reminder.id, rect)}
         />
@@ -297,6 +316,7 @@ function taskDurationMinutes(task: Task): number {
 
 function TimedPlanBlock({
   task,
+  compact,
   categoryColor,
   lane,
   columnRef,
@@ -306,6 +326,7 @@ function TimedPlanBlock({
   onMovePreviewChange,
 }: {
   task: Task
+  compact: boolean
   categoryColor: string
   lane: LaneAssignment
   columnRef: React.RefObject<HTMLDivElement | null>
@@ -387,14 +408,26 @@ function TimedPlanBlock({
       // the browser this element has no native touch behavior of its own;
       // JS gets the whole gesture. Direct user feedback, 2026-09-28 (twice
       // — once for the selection, once for this).
-      className="absolute flex items-center gap-1 rounded-md px-1.5 text-left text-caption shadow-sm cursor-grab active:cursor-grabbing overflow-hidden select-none touch-none [-webkit-touch-callout:none]"
+      className={`absolute flex gap-1 rounded-md text-left text-caption shadow-sm cursor-grab ${
+        compact ? "items-start px-0.5 py-0.5 leading-tight" : "items-center px-1.5"
+      } active:cursor-grabbing overflow-hidden select-none touch-none [-webkit-touch-callout:none]`}
       title={`${task.time} · ${task.title}`}
     >
-      <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
-        <PlanToggleCheckbox taskId={task.id} completed={task.completed} size={14} />
-      </div>
-      <span className="tabular-nums shrink-0 text-muted-foreground">{task.time}</span>
-      <span className={`truncate font-semibold ${task.completed ? "text-tertiary" : ""}`}>
+      {/* Compact: a ~45px column has room for the title only — no checkbox,
+          no time; tapping opens the plan with everything. */}
+      {!compact && (
+        <>
+          <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+            <PlanToggleCheckbox taskId={task.id} completed={task.completed} size={14} />
+          </div>
+          <span className="tabular-nums shrink-0 text-muted-foreground">{task.time}</span>
+        </>
+      )}
+      <span
+        className={`font-semibold ${compact ? "min-w-0 [overflow-wrap:anywhere]" : "truncate"} ${
+          task.completed ? "text-tertiary" : ""
+        }`}
+      >
         <span className={task.completed ? "line-through" : ""}>{task.title}</span>
       </span>
       {onResizePlan && (
@@ -421,10 +454,12 @@ function TimedPlanBlock({
 
 function TimedReminderBlock({
   reminder,
+  compact,
   lane,
   onEdit,
 }: {
   reminder: Reminder
+  compact: boolean
   lane: LaneAssignment
   onEdit: (anchorRect: DOMRect) => void
 }) {
@@ -441,7 +476,9 @@ function TimedReminderBlock({
       // Full border (not just a left stripe) + neutral fill — stays
       // distinguishable from a task's colored fill even when a category
       // color happens to be yellow/red-ish, per explicit user feedback.
-      className="absolute z-10 flex items-center gap-1 rounded-full border-2 bg-card px-1.5 text-left text-caption overflow-hidden"
+      className={`absolute z-10 flex items-center gap-1 rounded-full border-2 bg-card text-left text-caption overflow-hidden ${
+        compact ? "px-0.5" : "px-1.5"
+      }`}
       title={`${reminder.time} · ${reminder.title}`}
     >
       <ReminderPriorityIcon
@@ -449,7 +486,9 @@ function TimedReminderBlock({
         size={9}
         colorOverride={REMINDER_BORDER_COLORS[reminder.priority]}
       />
-      <span className="tabular-nums shrink-0 text-muted-foreground font-bold">{reminder.time}</span>
+      {!compact && (
+        <span className="tabular-nums shrink-0 text-muted-foreground font-bold">{reminder.time}</span>
+      )}
       <span className="truncate font-semibold">{reminder.title}</span>
     </button>
   )

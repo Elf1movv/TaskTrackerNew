@@ -7,6 +7,7 @@ import { isPlanOnDay, type CalendarEntry as Plan } from "@/entities/calendar-pla
 import { buildWeekRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, useLanguage } from "@/shared/lib/i18n"
+import { useIsMobile } from "@/shared/ui/use-mobile"
 import { AllDayStrip, HourGrid } from "@/widgets/calendar-timeline"
 import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-item-popover"
 
@@ -19,6 +20,10 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 // has a day but no hour (untimed reminders, task and goal deadlines), same
 // as Day (audit П8). No Goal create/edit anywhere in Week — only Goals' own
 // page can create/edit them.
+//
+// On a phone (owner, 2026-11-15) the week is the short overview: all 7 days
+// fit the screen (HourGrid `compact`), and tapping a day's header opens that
+// day in full (`onOpenDay`). The headers are buttons on a computer too.
 export function CalendarWeekView({
   anchorDate,
   allPlans,
@@ -27,6 +32,7 @@ export function CalendarWeekView({
   allGoals,
   onRescheduleTaskTime,
   onResizePlan,
+  onOpenDay,
 }: {
   anchorDate: Date
   allPlans: Plan[]
@@ -35,15 +41,15 @@ export function CalendarWeekView({
   allGoals: Goal[]
   onRescheduleTaskTime: (taskId: string, day: Date, time: string) => void
   onResizePlan: (taskId: string, endTime: string) => void
+  onOpenDay: (day: Date) => void
 }) {
-  const { language } = useLanguage()
+  const { language, t } = useLanguage()
+  const compact = useIsMobile()
   const locale = getDateLocale(language)
   const [draft, setDraft] = useState<CalendarItemDraft | null>(null)
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
 
   function closeDraft() {
     setDraft(null)
-    setAnchorRect(null)
   }
 
   const days = buildWeekRange(anchorDate)
@@ -59,33 +65,38 @@ export function CalendarWeekView({
 
   // Week has 7 day arrays, not Day's single one — look items up directly
   // in the full collections by id rather than a per-column array.
-  function openEditPlan(taskId: string, rect: DOMRect) {
+  function openEditPlan(taskId: string) {
     const task = allPlans.find(t => t.id === taskId)
     if (!task) return
     setDraft({ mode: "edit-plan", task })
-    setAnchorRect(rect)
   }
 
-  function openEditReminder(reminderId: string, rect: DOMRect) {
+  function openEditReminder(reminderId: string) {
     const reminder = allReminders.find(r => r.id === reminderId)
     if (!reminder) return
     setDraft({ mode: "edit-reminder", reminder })
-    setAnchorRect(rect)
   }
 
   return (
     <div className="min-w-0">
       <div className="flex mb-1">
-        <div className="w-12 shrink-0" />
+        <div className={`${compact ? "w-7" : "w-12"} shrink-0`} />
         <div className="flex-1 grid grid-cols-7 min-w-0">
           {days.map(day => (
-            <div key={day.toISOString()} className="text-center min-w-0">
+            <button
+              key={day.toISOString()}
+              type="button"
+              data-week-day={formatDateKey(day)}
+              onClick={() => onOpenDay(day)}
+              aria-label={t("calendar.openDay", { day: format(day, "EEEE d MMMM", { locale }) })}
+              className="text-center min-w-0 rounded-md py-0.5 hover:bg-fill transition-colors"
+            >
               <div
                 className={`tabular-nums text-caption uppercase tracking-wider font-bold ${
                   isToday(day) ? "text-primary" : "text-tertiary"
                 }`}
               >
-                {format(day, "EEE", { locale })}
+                {format(day, compact ? "EEEEEE" : "EEE", { locale })}
               </div>
               <div
                 className={`inline-flex items-center justify-center size-7 rounded-full text-sm font-bold ${
@@ -94,13 +105,14 @@ export function CalendarWeekView({
               >
                 {format(day, "d")}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
 
       <AllDayStrip
         days={days}
+        compact={compact}
         reminders={allReminders}
         deadlines={allDeadlines}
         goals={allGoals}
@@ -109,16 +121,16 @@ export function CalendarWeekView({
 
       <HourGrid
         columns={hourGridColumns}
+        compact={compact}
         onEditPlan={openEditPlan}
         onEditReminder={openEditReminder}
         onReschedulePlan={onRescheduleTaskTime}
         onResizePlan={onResizePlan}
-        onCreateDraft={(day, startTime, endTime, rect) => {
+        onCreateDraft={(day, startTime, endTime) => {
           setDraft({ mode: "create", day, defaultTime: startTime, defaultEndTime: endTime })
-          setAnchorRect(rect)
         }}
       />
-      <CalendarItemPopover draft={draft} anchorRect={anchorRect} onClose={closeDraft} />
+      <CalendarItemPopover draft={draft} onClose={closeDraft} />
     </div>
   )
 }

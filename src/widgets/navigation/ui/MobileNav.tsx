@@ -6,7 +6,11 @@ export function MobileNav() {
   const { t } = useLanguage()
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border flex z-50">
+    // pb-[env(safe-area-inset-bottom)]: on an iPhone without a Home button the
+    // installed app reaches the rounded corners and the home-indicator bar;
+    // the icons sit above that strip, the bar's background fills it
+    // (owner report, 2026-11-15). 0 everywhere else.
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border flex z-50 pb-[env(safe-area-inset-bottom)]">
       {NAV_ITEMS.map(({ path, labelKey, Icon }) => (
         <NavLink
           key={path}
