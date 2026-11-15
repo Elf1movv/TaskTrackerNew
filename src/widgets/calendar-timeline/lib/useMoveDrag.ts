@@ -116,7 +116,17 @@ export function useMoveDrag({
     [computeAt, onPreviewChange, onReschedulePlan, taskId],
   )
 
-  const onPointerDownRaw = usePointerVerticalDrag({ onMove: handleMove, onEnd: handleEnd })
+  const handleCancel = useCallback(() => {
+    startPointRef.current = null
+    setIsDragging(false)
+    onPreviewChange(null)
+  }, [onPreviewChange])
+
+  const onPointerDownRaw = usePointerVerticalDrag({
+    onMove: handleMove,
+    onEnd: handleEnd,
+    onCancel: handleCancel,
+  })
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {

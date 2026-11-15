@@ -87,7 +87,17 @@ export function useCreateDrag({
     [columnRef, onCreateDraft, timeAtClientY],
   )
 
-  const onPointerDownRaw = usePointerVerticalDrag({ onMove: handleMove, onEnd: handleEnd })
+  // The browser took the touch for a scroll: no new plan.
+  const handleCancel = useCallback(() => {
+    anchorTimeRef.current = null
+    setPreview(null)
+  }, [])
+
+  const onPointerDownRaw = usePointerVerticalDrag({
+    onMove: handleMove,
+    onEnd: handleEnd,
+    onCancel: handleCancel,
+  })
 
   // Only ever fires when the gesture starts on the column's own
   // background — an existing block's own onPointerDown calls
