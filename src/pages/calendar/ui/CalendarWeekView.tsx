@@ -22,9 +22,10 @@ import { CalendarItemPopover, type CalendarItemDraft } from "@/widgets/calendar-
 // page can create/edit them.
 //
 // On a phone (owner, 2026-11-15) the week is the short overview: all 7 days
-// fit the screen (HourGrid `compact`), and tapping a day — its column or its
-// header — opens that day in full (`onOpenDay`). The headers are buttons on a
-// computer too.
+// fit the screen (HourGrid `compact`), and tapping a day's header opens that
+// day in full (`onOpenDay`). The headers are buttons on a computer too. A tap
+// on a day's column creates a plan, as in Day (tap-the-column-to-open was
+// tried and reverted, owner 2026-11-15).
 export function CalendarWeekView({
   anchorDate,
   allPlans,
@@ -127,16 +128,9 @@ export function CalendarWeekView({
         onEditReminder={openEditReminder}
         onReschedulePlan={onRescheduleTaskTime}
         onResizePlan={onResizePlan}
-        // Phone: the week is an overview — a tap on a day opens it (new plans
-        // are made in Day, which has room). Computer: tap/drag creates a plan.
-        onCreateDraft={
-          compact
-            ? undefined
-            : (day, startTime, endTime) => {
-                setDraft({ mode: "create", day, defaultTime: startTime, defaultEndTime: endTime })
-              }
-        }
-        onOpenDay={compact ? onOpenDay : undefined}
+        onCreateDraft={(day, startTime, endTime) => {
+          setDraft({ mode: "create", day, defaultTime: startTime, defaultEndTime: endTime })
+        }}
       />
       <CalendarItemPopover draft={draft} onClose={closeDraft} />
     </div>
