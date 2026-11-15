@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { useRouteError } from "react-router"
+import { hideSplash } from "@/shared/lib/pwa"
 
 // Our own page when something crashes while drawing a page (React Router's
 // `errorElement`), instead of the library's English "Unexpected Application
@@ -28,6 +29,8 @@ export function RouteErrorPage() {
 
   useEffect(() => {
     console.error(error)
+    // A crash before the login check finished would stay hidden under it.
+    hideSplash()
   }, [error])
 
   return (

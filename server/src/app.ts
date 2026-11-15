@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 import { toNodeHandler } from "better-auth/node"
+import compression from "compression"
 import cors from "cors"
 import express from "express"
 import helmet from "helmet"
@@ -38,6 +39,11 @@ export function createApp() {
 
   app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"))
   app.use(helmet())
+  // gzip/brotli for everything we send. The app bundle is ~1.45 MB as is;
+  // compressed it's a few hundred KB. nginx in front doesn't compress what it
+  // proxies (gzip_types / gzip_proxied are off there), and it passes our
+  // compressed responses through untouched — owner: "loads 8-12 s", 2026-11-15.
+  app.use(compression())
   app.use(cors({ origin: ALLOWED_ORIGINS }))
 
   // Registered before express.json() deliberately — Better Auth reads the
@@ -87,7 +93,21 @@ export function createApp() {
   // here means one process handles both the API and the site on one origin.
   const frontendDist = path.join(__dirname, "..", "..", "dist")
   const indexHtmlPath = path.join(frontendDist, "index.html")
-  app.use(express.static(frontendDist))
+  app.use(
+    express.static(frontendDist, {
+      setHeaders(res, filePath) {
+        // Vite puts a content hash in every file name under /assets
+        // (index-BjtZ4kTC.js): a new build means a new name, so these can be
+        // kept by the browser for a year without ever asking again — a
+        // repeat launch on a phone downloads nothing. Everything else
+        // (index.html, sw.js, manifest, icons) keeps the default: the browser
+        // checks it each time, so a release shows up at once.
+        if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable")
+        }
+      },
+    }),
+  )
 
   // SPA fallback: any request that didn't match an API route or a real static
   // file gets index.html instead, so React Router can handle client-side

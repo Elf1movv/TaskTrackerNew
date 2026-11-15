@@ -1,5 +1,6 @@
 export {
   chromeIntentUrl,
+  hideSplash,
   initPwa,
   isStandalone,
   usePwaInstall,

@@ -1,3 +1,7 @@
+import fs from "fs"
+import path from "path"
+import { fileURLToPath } from "url"
+import request from "supertest"
 import { describe, expect, it } from "vitest"
 import { createApp } from "./app.js"
 import { createAuthenticatedAgent } from "./test-utils/auth.js"
@@ -36,5 +40,27 @@ describe("per-route JSON body limits", () => {
       imageData: `data:image/png;base64,${"A".repeat(300_000)}`, // well past the 256kb default limit
     })
     expect(res.status).toBe(201)
+  })
+})
+
+// Load speed, 2026-11-15: responses are compressed, and the hashed build
+// files under /assets are cached for a year. Needs the built frontend
+// (`npm run build` at the project root) — skipped where there is none.
+describe("static frontend delivery", () => {
+  const dist = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "dist")
+  const assets = fs.existsSync(path.join(dist, "assets")) ? fs.readdirSync(path.join(dist, "assets")) : []
+  const bundle = assets.find(name => name.endsWith(".js"))
+
+  it.skipIf(!bundle)("sends the JS bundle compressed and cacheable for a year", async () => {
+    const res = await request(createApp()).get(`/assets/${bundle}`).set("Accept-Encoding", "gzip")
+    expect(res.status).toBe(200)
+    expect(res.headers["content-encoding"]).toBe("gzip")
+    expect(res.headers["cache-control"]).toBe("public, max-age=31536000, immutable")
+  })
+
+  it.skipIf(!bundle)("lets the browser re-check index.html every time", async () => {
+    const res = await request(createApp()).get("/index.html")
+    expect(res.status).toBe(200)
+    expect(res.headers["cache-control"]).not.toContain("immutable")
   })
 })

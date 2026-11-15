@@ -138,3 +138,14 @@ export function useThemeColorSync(theme: string | undefined) {
     return () => cancelAnimationFrame(frame)
   }, [theme])
 }
+
+// The splash screen lives in index.html (shown before any JS loads,
+// 2026-11-15). The app fades it out once there is something real to show —
+// when the login check is done (app/providers/AppProviders) and on the error
+// page.
+export function hideSplash() {
+  const splash = document.getElementById("splash")
+  if (!splash || splash.classList.contains("splash-hide")) return
+  splash.classList.add("splash-hide")
+  window.setTimeout(() => splash.remove(), 300)
+}

@@ -1,10 +1,11 @@
-import type { ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import { ThemeProvider, useTheme } from "next-themes"
 import { DndProvider } from "react-dnd"
 import { MultiBackend } from "react-dnd-multi-backend"
 import { HTML5toTouch } from "rdndmb-html5-to-touch"
+import { useSession } from "@/shared/lib/auth"
 import { LanguageProvider } from "@/shared/lib/i18n"
-import { useThemeColorSync } from "@/shared/lib/pwa"
+import { hideSplash, useThemeColorSync } from "@/shared/lib/pwa"
 import { Toaster } from "@/shared/ui/sonner"
 import { TooltipProvider } from "@/shared/ui/tooltip"
 
@@ -37,12 +38,23 @@ function ThemeColorSync() {
   return null
 }
 
+// The splash in index.html stays until the login check is answered — until
+// then RootLayout draws nothing, and the screen would be blank (2026-11-15).
+function HideSplashWhenReady() {
+  const { isPending } = useSession()
+  useEffect(() => {
+    if (!isPending) hideSplash()
+  }, [isPending])
+  return null
+}
+
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     // enableSystem={false} — the theme toggle is a plain binary
     // light/dark switch, not a three-way "match OS" option.
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <ThemeColorSync />
+      <HideSplashWhenReady />
       <LanguageProvider>
         <DndProvider backend={MultiBackend} options={dndOptions}>
           <TooltipProvider>
