@@ -23,7 +23,7 @@ export function RootLayout() {
   const { t } = useLanguage()
   const location = useLocation()
   const element = useOutlet()
-  const { data: session, isPending } = useSession()
+  const { data: session, isPending, error } = useSession()
   // Called before the early returns below (hooks can't be skipped); it only
   // starts loading once there is a session.
   const onboarding = useOnboarding(session?.user.id)
@@ -33,6 +33,14 @@ export function RootLayout() {
   // isPending: session is still being fetched — render nothing rather than
   // flash the login page before the real answer arrives.
   if (isPending) return null
+  // The login check couldn't reach the server (no network, or the server is
+  // down). The page itself may have come from the phone's copy (public/sw.js),
+  // so without this a person with no signal would land on the login screen as
+  // if logged out. Show the "No connection" page instead (2026-11-15).
+  if (!session && error) {
+    window.location.replace(`/offline.html?from=${encodeURIComponent(location.pathname + location.search)}`)
+    return null
+  }
   if (!session) return <Navigate to="/login" replace />
 
   return (

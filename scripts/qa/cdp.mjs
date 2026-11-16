@@ -62,8 +62,12 @@ export async function point(expression) {
     `(()=>{const r=(${expression}).getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`,
   )
 }
+// The splash (index.html, 2026-11-15) covers the app for its ~2.7 s
+// animation; a click before it's gone lands on the splash, not the app.
+export const splashGone = "!document.getElementById('splash') || document.getElementById('splash').classList.contains('splash-hide')"
 export async function click(expression) {
   await wait(expression)
+  await wait(splashGone)
   await evaluate(`(${expression}).scrollIntoView({block:'center'})`)
   await pause(100)
   const p = await point(expression)
@@ -80,6 +84,7 @@ export async function fill(selector, value) {
 export async function navigate(path, ready) {
   await send("Page.navigate", { url: origin + path })
   await wait(ready)
+  await wait(splashGone)
   await pause(250)
 }
 export async function api(path, method = "GET", body) {
@@ -103,6 +108,7 @@ export function close() {
   for (const call of pending.values()) clearTimeout(call.timer)
 }
 export async function drag(from, to, touch = false) {
+  await wait(splashGone)
   await evaluate(`(${from}).scrollIntoView({block:'center'})`)
   await pause(150)
   const a = await point(from),

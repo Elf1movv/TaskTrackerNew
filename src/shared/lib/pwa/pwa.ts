@@ -140,12 +140,18 @@ export function useThemeColorSync(theme: string | undefined) {
 }
 
 // The splash screen lives in index.html (shown before any JS loads,
-// 2026-11-15). The app fades it out once there is something real to show —
+// 2026-11-15). The app removes it once there is something real to show -
 // when the login check is done (app/providers/AppProviders) and on the error
-// page.
+// page - but never before its animation has played: public/splash.js puts the
+// minimum on <html data-splash-min-ms> (full ~2.7 s, short 0.9 s).
 export function hideSplash() {
   const splash = document.getElementById("splash")
-  if (!splash || splash.classList.contains("splash-hide")) return
-  splash.classList.add("splash-hide")
-  window.setTimeout(() => splash.remove(), 300)
+  if (!splash || splash.dataset.hiding) return
+  splash.dataset.hiding = "1"
+  const minMs = Number(document.documentElement.dataset.splashMinMs || 0)
+  const wait = Math.max(0, minMs - performance.now())
+  window.setTimeout(() => {
+    splash.classList.add("splash-hide")
+    window.setTimeout(() => splash.remove(), 400)
+  }, wait)
 }
