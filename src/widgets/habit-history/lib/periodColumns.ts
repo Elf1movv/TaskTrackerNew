@@ -1,4 +1,5 @@
 import {
+  addDays,
   addMonths,
   addWeeks,
   addYears,
@@ -7,12 +8,14 @@ import {
   endOfMonth,
   endOfWeek,
   endOfYear,
+  startOfDay,
   startOfMonth,
   startOfWeek,
   startOfYear,
 } from "date-fns"
 
-export type HabitHistoryPeriod = "week" | "month" | "year"
+// "day" — one day's list (2026-11-16, phone and desktop alike).
+export type HabitHistoryPeriod = "day" | "week" | "month" | "year"
 
 // Monday-first, matching the rest of the app (see
 // shared/lib/calendarGrid.ts's buildMonthGrid).
@@ -34,6 +37,7 @@ export function getYearMonths(today: Date): Date[] {
 // any date inside the shown period; "now" stays a separate real `today`
 // everywhere else, so days after the anchor aren't mistaken for future days.
 export function shiftPeriodAnchor(period: HabitHistoryPeriod, anchor: Date, direction: -1 | 1): Date {
+  if (period === "day") return addDays(anchor, direction)
   if (period === "week") return addWeeks(anchor, direction)
   if (period === "month") return addMonths(anchor, direction)
   return addYears(anchor, direction)
@@ -41,6 +45,7 @@ export function shiftPeriodAnchor(period: HabitHistoryPeriod, anchor: Date, dire
 
 // Can't browse past the period that contains today — nothing to mark there.
 export function isCurrentOrFuturePeriod(period: HabitHistoryPeriod, anchor: Date, today: Date): boolean {
+  if (period === "day") return startOfDay(anchor) >= startOfDay(today)
   if (period === "week")
     return startOfWeek(anchor, { weekStartsOn: 1 }) >= startOfWeek(today, { weekStartsOn: 1 })
   if (period === "month") return startOfMonth(anchor) >= startOfMonth(today)

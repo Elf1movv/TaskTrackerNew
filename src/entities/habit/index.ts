@@ -9,3 +9,6 @@ export { getHabitMonthCompletionStats, type HabitMonthCompletionStats } from "./
 export { getHabitCompletionsByDay } from "./lib/getHabitCompletionsByDay"
 export { getHabitIconMeta, type HabitIconMeta } from "@/shared/lib/habitIconPaths"
 export { HabitIcon } from "@/shared/ui/habit-icon"
+export { getBestStreak } from "./lib/getBestStreak"
+export { getDayCounts, getDayShare } from "./lib/getDayShare"
+export { getYearMap, type YearMap } from "./lib/getYearMap"

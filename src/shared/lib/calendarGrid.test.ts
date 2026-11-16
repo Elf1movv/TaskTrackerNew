@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildAgendaRange, buildMonthGrid, buildWeekRange } from "./calendarGrid"
+import { buildAgendaRange, buildMonthGrid, buildWeekRange, buildYearGrid } from "./calendarGrid"
 
 describe("buildMonthGrid", () => {
   it("pads September 2026 (starts on a Tuesday) to a Monday-first, full-week grid", () => {
@@ -55,5 +55,26 @@ describe("buildAgendaRange", () => {
 
   it("respects a custom window size", () => {
     expect(buildAgendaRange(new Date("2026-09-24"), 5)).toHaveLength(5)
+  })
+})
+
+describe("buildYearGrid", () => {
+  it("starts on Monday and pads before January 1", () => {
+    // 2026-01-01 is a Thursday: three empty cells first.
+    const { cells, columns, monthColumns } = buildYearGrid(2026)
+    expect(cells.slice(0, 3)).toEqual([null, null, null])
+    expect(cells[3]?.getDate()).toBe(1)
+    expect(columns).toBe(53)
+    expect(cells.filter(Boolean)).toHaveLength(365)
+    expect(monthColumns[0]).toBe(0)
+    // Nov 1 2026 is a Sunday, day 304 of the year: (3 + 304) / 7 → column 43.
+    expect(monthColumns[10]).toBe(43)
+  })
+
+  it("handles a leap year that needs 54 columns", () => {
+    // 2028-01-01 is a Saturday and 2028 has 366 days: 5 + 366 = 371 → 53 cols;
+    // 2040-01-01 is a Sunday: 6 + 366 = 372 → 54 cols.
+    expect(buildYearGrid(2028).columns).toBe(53)
+    expect(buildYearGrid(2040).columns).toBe(54)
   })
 })

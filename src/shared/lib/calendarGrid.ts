@@ -1,4 +1,13 @@
-import { addDays, eachDayOfInterval, endOfMonth, getDay, startOfMonth, startOfWeek, subDays } from "date-fns"
+import {
+  addDays,
+  eachDayOfInterval,
+  endOfMonth,
+  getDay,
+  getDaysInYear,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+} from "date-fns"
 
 export interface MonthGridDay {
   date: Date
@@ -45,4 +54,32 @@ export function buildWeekRange(anchor: Date): Date[] {
 // benefit here).
 export function buildAgendaRange(anchor: Date, days = 30): Date[] {
   return eachDayOfInterval({ start: anchor, end: addDays(anchor, days - 1) })
+}
+
+export interface YearGrid {
+  // Column-major, Monday-first: cells[col * 7 + row]. `null` pads the first
+  // week before January 1 and the last week after December 31.
+  cells: (Date | null)[]
+  columns: number
+  // Column where each month starts — for the month labels under the grid.
+  monthColumns: number[]
+}
+
+// A whole calendar year as a "weeks × weekdays" grid — the year heat maps on
+// the habits page (collapsed block) and on the habit screen (2026-11-16).
+export function buildYearGrid(year: number): YearGrid {
+  const jan1 = new Date(year, 0, 1)
+  const lead = (jan1.getDay() + 6) % 7
+  const days = getDaysInYear(jan1)
+  const columns = Math.ceil((lead + days) / 7)
+  const cells: (Date | null)[] = []
+  for (let i = 0; i < columns * 7; i++) {
+    const offset = i - lead
+    cells.push(offset >= 0 && offset < days ? addDays(jan1, offset) : null)
+  }
+  const monthColumns = Array.from({ length: 12 }, (_, month) => {
+    const dayOfYear = Math.round((new Date(year, month, 1).getTime() - jan1.getTime()) / 86_400_000)
+    return Math.floor((lead + dayOfYear) / 7)
+  })
+  return { cells, columns, monthColumns }
 }

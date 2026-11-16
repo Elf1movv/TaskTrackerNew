@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useState } from "react"
+import { useNavigate } from "react-router"
 import { endOfWeek, format, startOfWeek } from "date-fns"
 import { Activity, BarChart3, Check, ChevronLeft, ChevronRight, Flame, Plus, TrendingUp } from "lucide-react"
 import { HabitForm } from "@/features/habit-form"
@@ -22,7 +23,7 @@ import {
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/accordion"
 import { Button } from "@/shared/ui/button"
 import { useIsMobile } from "@/shared/ui/use-mobile"
-import { getDayCellState } from "../lib/habitCellState"
+import { getDayCellState, getDayCellStyle } from "../lib/habitCellState"
 import { getHabitHistorySummary } from "../lib/habitHistorySummary"
 import {
   getPeriodDays,
@@ -32,9 +33,10 @@ import {
   type HabitHistoryPeriod,
 } from "../lib/periodColumns"
 import { HabitHistoryChart, type HabitChartStyle } from "./HabitHistoryChart"
+import { DayHabitList } from "./DayHabitList"
 import { MonthCell } from "./MonthCell"
 
-const PERIODS: HabitHistoryPeriod[] = ["week", "month", "year"]
+const PERIODS: HabitHistoryPeriod[] = ["day", "week", "month", "year"]
 
 const CHART_STYLES: { style: HabitChartStyle; Icon: typeof TrendingUp }[] = [
   { style: "area", Icon: TrendingUp },
@@ -79,19 +81,21 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
   // AccordionItem has no forwardRef.
   const { ref: headerRef, isDragging, dropHabitOn } = useHabitGroupDnd(group)
 
-  const days = period !== "year" ? getPeriodDays(period, anchor) : null
+  const days = period === "week" || period === "month" ? getPeriodDays(period, anchor) : null
   const months = period === "year" ? getYearMonths(anchor) : null
   const atCurrentPeriod = isCurrentOrFuturePeriod(period, anchor, today)
   const periodLabel =
-    period === "week"
-      ? formatDayRange(
-          startOfWeek(anchor, { weekStartsOn: 1 }),
-          endOfWeek(anchor, { weekStartsOn: 1 }),
-          language,
-        )
-      : period === "month"
-        ? capitalizeFirst(format(anchor, "LLLL yyyy", { locale }))
-        : format(anchor, "yyyy")
+    period === "day"
+      ? capitalizeFirst(format(anchor, "EEEE, d MMMM", { locale }))
+      : period === "week"
+        ? formatDayRange(
+            startOfWeek(anchor, { weekStartsOn: 1 }),
+            endOfWeek(anchor, { weekStartsOn: 1 }),
+            language,
+          )
+        : period === "month"
+          ? capitalizeFirst(format(anchor, "LLLL yyyy", { locale }))
+          : format(anchor, "yyyy")
   const columnCount = (days ?? months ?? []).length
   // minmax(0, 1fr) columns let the day/month track collapse to nothing on a
   // narrow screen — the weekday-label text doesn't wrap or clip there, it
@@ -203,7 +207,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                 >
                   <ChevronLeft size={16} />
                 </Button>
-                <span className="text-meta font-semibold min-w-[120px] text-center" data-period-label>
+                <span className="text-meta font-semibold min-w-[160px] text-center" data-period-label>
                   {periodLabel}
                 </span>
                 <Button
@@ -217,7 +221,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                   <ChevronRight size={16} />
                 </Button>
               </div>
-              <div className="grid grid-cols-3 w-[252px] p-0.5 rounded-md bg-fill">
+              <div className="grid grid-cols-4 w-[336px] p-0.5 rounded-md bg-fill">
                 {PERIODS.map(p => (
                   <button
                     key={p}
@@ -265,6 +269,9 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                   {t(isGeneral ? "habits.withoutBlockEmpty" : "habits.noHabitsYet")}
                 </div>
               )
+            ) : period === "day" ? (
+              // "День" — the same one-day list as on the phone (2026-11-16).
+              <DayHabitList habits={habits} date={anchor} today={today} />
             ) : (
               <div className="overflow-x-auto">
                 <div className="grid gap-y-2 gap-x-1" style={{ gridTemplateColumns }}>
@@ -332,7 +339,7 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
               </div>
             )}
 
-            {habits.length > 0 && (
+            {habits.length > 0 && period !== "day" && (
               <div className="pt-2 border-t border-border">
                 <div className="overflow-x-auto">
                   <div
@@ -421,6 +428,7 @@ function HabitGridRow({
   )
 
   const streak = getStreak(habit.completedDates, habit.activeDays)
+  const navigate = useNavigate()
 
   return (
     <Fragment>
@@ -443,12 +451,15 @@ function HabitGridRow({
         {/* Two lines before the ellipsis, full name on hover: in the narrow
             name column on a phone one line cut most names to a word or two
             (owner report, 2026-11-12). */}
-        <span
+        {/* A button since 2026-11-16: opens the habit screen. */}
+        <button
+          type="button"
           title={habit.title}
-          className="text-sm font-semibold leading-tight line-clamp-2 break-words min-w-0 flex-1"
+          onClick={() => navigate(`/habits/${habit.id}`)}
+          className="text-sm font-semibold leading-tight line-clamp-2 break-words min-w-0 flex-1 text-left hover:underline underline-offset-2 cursor-pointer"
         >
           {habit.title}
-        </span>
+        </button>
         <span
           className="tabular-nums flex items-center gap-1 text-xs shrink-0"
           style={{
@@ -479,21 +490,7 @@ function HabitGridRow({
             onClick={() => clickable && onToggle(dateKey)}
             aria-label={`${habit.title} ${dateKey}`}
             className="w-full max-w-9 aspect-square mx-auto rounded-full border flex items-center justify-center transition-colors disabled:cursor-default"
-            style={{
-              // Done = a soft tint of the habit's own color + a check, not a
-              // solid saturated disc (unslop pass 2026-11-08: four habits a
-              // week read as a rainbow mosaic). The habit color stays.
-              backgroundColor:
-                state === "done"
-                  ? `color-mix(in srgb, ${habit.color} 20%, transparent)`
-                  : state === "unscheduled" || state === "future"
-                    ? "var(--muted)"
-                    : "transparent",
-              borderColor: state === "done" ? habit.color : "var(--border)",
-              color: habit.color,
-              borderStyle: state === "unscheduled" || state === "future" ? "dashed" : "solid",
-              opacity: state === "unscheduled" || state === "future" ? 0.6 : 1,
-            }}
+            style={getDayCellStyle(state, habit.color)}
           >
             {state === "done" && <Check size={16} strokeWidth={2.5} aria-hidden />}
           </button>

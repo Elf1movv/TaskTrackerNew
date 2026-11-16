@@ -12,3 +12,22 @@ export function getDayCellState(habit: Habit, date: Date, today: Date): DayCellS
   if (!habit.activeDays.includes(date.getDay())) return "unscheduled"
   return habit.completedDates.includes(formatDateKey(date)) ? "done" : "pending"
 }
+
+// How a tappable day circle looks (desktop table and phone week, 2026-11-16).
+// Done = a soft tint of the habit's own color + a check, not a solid disc
+// (unslop pass 2026-11-08: four habits a week read as a rainbow mosaic).
+export function getDayCellStyle(state: DayCellState, color: string) {
+  const muted = state === "unscheduled" || state === "future"
+  return {
+    backgroundColor:
+      state === "done"
+        ? `color-mix(in srgb, ${color} 20%, transparent)`
+        : muted
+          ? "var(--muted)"
+          : "transparent",
+    borderColor: state === "done" ? color : "var(--border)",
+    color,
+    borderStyle: muted ? "dashed" : "solid",
+    opacity: muted ? 0.6 : 1,
+  } as const
+}

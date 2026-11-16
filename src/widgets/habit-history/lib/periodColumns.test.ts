@@ -33,3 +33,27 @@ describe("habit summary for a past period", () => {
     expect(summary.total).toBe(0)
   })
 })
+
+describe("day period", () => {
+  it("steps one day and stops at today", () => {
+    const prev = shiftPeriodAnchor("day", today, -1)
+    expect(prev.getDate()).toBe(7)
+    expect(isCurrentOrFuturePeriod("day", prev, today)).toBe(false)
+    expect(isCurrentOrFuturePeriod("day", today, today)).toBe(true)
+  })
+})
+
+describe("summary skips days before the habit existed", () => {
+  it("does not count October for a habit created on November 3", () => {
+    const habit = {
+      id: "h",
+      title: "Run",
+      activeDays: [0, 1, 2, 3, 4, 5, 6],
+      completedDates: ["2026-11-03"],
+      createdAt: "2026-11-03T09:00:00.000Z",
+    } as Parameters<typeof getHabitHistorySummary>[0][number]
+    const summary = getHabitHistorySummary([habit], "year", today, today)
+    expect(summary.total).toBe(6) // Nov 3..8
+    expect(summary.completed).toBe(1)
+  })
+})

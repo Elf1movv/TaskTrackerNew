@@ -4,7 +4,8 @@ import { HabitGroupForm } from "@/features/habit-group-form"
 import { useHabits } from "@/entities/habit"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
-import { HabitHistoryGrid } from "@/widgets/habit-history"
+import { useIsMobile } from "@/shared/ui/use-mobile"
+import { HabitHistoryGrid, MobileHabitsView } from "@/widgets/habit-history"
 
 // All habits, always — regardless of today's schedule (see
 // entities/habit/lib/selectTodayHabits.ts, used only on the Today page).
@@ -13,6 +14,17 @@ export function HabitsPage() {
   const { habits } = useHabits()
   const { t } = useLanguage()
   const [isAddingGroup, setIsAddingGroup] = useState(false)
+  const isMobile = useIsMobile()
+
+  // Phones get their own layout with no sideways scrolling (2026-11-16):
+  // one period switch, blocks one under another — see MobileHabitsView.
+  if (isMobile) {
+    return (
+      <div className="px-4 pt-6 pb-10">
+        <MobileHabitsView habits={habits} />
+      </div>
+    )
+  }
 
   return (
     // max-w-7xl, not 4xl — a block's grid in month view has far more
