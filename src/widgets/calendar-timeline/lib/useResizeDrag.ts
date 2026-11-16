@@ -49,7 +49,13 @@ export function useResizeDrag({
     [clampedEndTimeAtClientY, onResizePlan],
   )
 
-  const onPointerDownRaw = usePointerVerticalDrag({ onMove: handleMove, onEnd: handleEnd })
+  const handleCancel = useCallback(() => setDraftEndTime(null), [])
+
+  const onPointerDownRaw = usePointerVerticalDrag({
+    onMove: handleMove,
+    onEnd: handleEnd,
+    onCancel: handleCancel,
+  })
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {

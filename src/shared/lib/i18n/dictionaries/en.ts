@@ -217,6 +217,7 @@ export const en = {
   "calendar.view.week": "Week",
   "calendar.view.month": "Month",
   "calendar.view.year": "Year",
+  "calendar.openDay": "Open day: {day}",
   "calendar.typeTask": "Task",
   "calendar.typeReminder": "Reminder",
 
@@ -324,7 +325,7 @@ export const en = {
   "onboarding.task.addCategory": "+ Your own",
   "onboarding.task.newCategoryPlaceholder": "Category name",
   "onboarding.task.categoryHint":
-    "Categories are your sections for tasks. Create your own, rename, recolour and reorder them on the Tasks tab. Goals use the same categories.",
+    "Categories are your sections for tasks. Create your own, rename, recolour and reorder them on the Tasks tab.",
   "onboarding.task.due": "Deadline",
   "onboarding.task.today": "Today",
   "onboarding.task.tomorrow": "Tomorrow",
@@ -392,6 +393,9 @@ export const en = {
   "settings.restartOnboarding": "Take the tour again",
   "settings.installApp": "Install the app",
   "settings.menu.notifications": "Notifications",
+  "settings.logoutConfirmTitle": "Log out?",
+  "settings.logoutConfirmBody": "To come back you'll need to enter your email and password again.",
+  "settings.logoutConfirm": "Log out",
   "push.description":
     "Reminders arrive on time, even when MyTracker is closed. Important ones also come early: a day and an hour ahead.",
   "push.off": "Off",
@@ -421,6 +425,9 @@ export const en = {
   "pwa.ios.step1": "Tap Share at the bottom of Safari",
   "pwa.ios.step2": "Choose “Add to Home Screen”, turn on “Open as Web App”, then tap Add",
   "pwa.ios.done": "Got it",
+  "pwa.chrome.hint":
+    "This browser can't install apps. Open MyTracker in Chrome — the “Install the app” button will be there.",
+  "pwa.chrome.open": "Open in Chrome",
   "onboarding.back.1": "Welcome back!",
   "onboarding.back.2": "Great to see you again!",
   "onboarding.back.3": "You're back — perfect time to clear a task or two.",

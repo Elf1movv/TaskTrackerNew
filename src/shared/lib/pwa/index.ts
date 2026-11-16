@@ -1,1 +1,9 @@
-export { initPwa, isStandalone, usePwaInstall, useThemeColorSync, type InstallMode } from "./pwa"
+export {
+  chromeIntentUrl,
+  hideSplash,
+  initPwa,
+  isStandalone,
+  usePwaInstall,
+  useThemeColorSync,
+  type InstallMode,
+} from "./pwa"

@@ -23,7 +23,7 @@ export function RootLayout() {
   const { t } = useLanguage()
   const location = useLocation()
   const element = useOutlet()
-  const { data: session, isPending } = useSession()
+  const { data: session, isPending, error } = useSession()
   // Called before the early returns below (hooks can't be skipped); it only
   // starts loading once there is a session.
   const onboarding = useOnboarding(session?.user.id)
@@ -33,6 +33,14 @@ export function RootLayout() {
   // isPending: session is still being fetched — render nothing rather than
   // flash the login page before the real answer arrives.
   if (isPending) return null
+  // The login check couldn't reach the server (no network, or the server is
+  // down). The page itself may have come from the phone's copy (public/sw.js),
+  // so without this a person with no signal would land on the login screen as
+  // if logged out. Show the "No connection" page instead (2026-11-15).
+  if (!session && error) {
+    window.location.replace(`/offline.html?from=${encodeURIComponent(location.pathname + location.search)}`)
+    return null
+  }
   if (!session) return <Navigate to="/login" replace />
 
   return (
@@ -66,8 +74,9 @@ export function RootLayout() {
                           page's header (title + "Add" button) reaches that corner
                           and the button ended up under them; from xl the centred
                           column stays clear, and on phones the button wraps below
-                          the title. */}
-                      <main className="flex-1 overflow-y-auto pb-16 md:pb-0 sm:max-xl:pt-10">
+                          the title. The bottom padding clears the phone nav bar plus
+                      the iPhone home-indicator strip under it (MobileNav). */}
+                      <main className="flex-1 overflow-y-auto pb-[calc(4rem+max(0px,calc(env(safe-area-inset-bottom)-20px)))] md:pb-0 sm:max-xl:pt-10">
                         {import.meta.env.VITE_APP_ENV === "staging" && (
                           <div className="m-4 rounded-lg bg-primary-soft text-primary px-4 py-2 text-sm">
                             {t("app.staging")}

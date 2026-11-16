@@ -5,7 +5,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="google" content="notranslate" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: the page may draw under the iPhone home-indicator
+         area; the bottom nav pads itself with env(safe-area-inset-bottom). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <!-- PWA (2026-11-12): installable app — manifest, home-screen icons. The
          theme color follows the app's theme at runtime (shared/lib/pwa). -->
@@ -30,10 +32,218 @@
       #root {
         height: 100%;
       }
+      /* Splash "Stamp" (owner's pick, 2026-11-15): drawn by the browser
+         straight from this file, before any JS arrives. The letters of
+         "MyTracker" appear one by one, then the logo drops onto them like a
+         stamp. public/splash.js picks the theme colour and the short version
+         (a cold start within 30 min of the previous one); hideSplash()
+         (shared/lib/pwa) removes it once the animation has played AND the
+         app is ready. The font is a 1.9 KB subset of Playfair Display
+         (SIL OFL) with only these letters, inlined so nothing waits for it. */
+      @font-face {
+        font-family: "Splash Playfair";
+        font-style: italic;
+        font-weight: 600;
+        src: url(data:font/woff2;base64,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)
+          format("woff2");
+      }
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 26px;
+        background: #0b1117;
+        color: #e6ecf2;
+        transition: opacity 0.35s ease;
+      }
+      html[data-splash="light"] #splash {
+        background: #f4f6f8;
+        color: #1c3049;
+      }
+      #splash.splash-hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .splash-logo {
+        position: relative;
+        width: 132px;
+        height: 132px;
+        opacity: 0;
+        transform: translateY(-140%) scale(1.5);
+        animation:
+          splash-drop 0.5s 1.75s cubic-bezier(0.55, 0, 0.7, 0.4) forwards,
+          splash-settle 0.35s 2.25s ease-out forwards;
+      }
+      .splash-logo svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .splash-ripple {
+        position: absolute;
+        inset: 0;
+        border-radius: 28%;
+        border: 2px solid #8fb3dd;
+        opacity: 0;
+        animation: splash-ripple 0.9s 2.25s ease-out forwards;
+      }
+      .splash-word {
+        font:
+          italic 600 46px/1.1 "Splash Playfair",
+          Georgia,
+          serif;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+        animation: splash-jolt 0.35s 2.25s ease-out;
+      }
+      .splash-word span {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(8px);
+        filter: blur(4px);
+        animation: splash-letter 0.45s ease-out forwards;
+      }
+      .splash-word span:nth-child(1) {
+        animation-delay: 0.15s;
+      }
+      .splash-word span:nth-child(2) {
+        animation-delay: 0.31s;
+      }
+      .splash-word span:nth-child(3) {
+        animation-delay: 0.47s;
+      }
+      .splash-word span:nth-child(4) {
+        animation-delay: 0.63s;
+      }
+      .splash-word span:nth-child(5) {
+        animation-delay: 0.79s;
+      }
+      .splash-word span:nth-child(6) {
+        animation-delay: 0.95s;
+      }
+      .splash-word span:nth-child(7) {
+        animation-delay: 1.11s;
+      }
+      .splash-word span:nth-child(8) {
+        animation-delay: 1.27s;
+      }
+      .splash-word span:nth-child(9) {
+        animation-delay: 1.43s;
+      }
+      /* Short version: the word is already there, only a quick stamp. */
+      html[data-splash-mode="short"] .splash-word span {
+        animation: none;
+        opacity: 1;
+        transform: none;
+        filter: none;
+      }
+      html[data-splash-mode="short"] .splash-logo {
+        animation:
+          splash-drop 0.35s 0.05s cubic-bezier(0.55, 0, 0.7, 0.4) forwards,
+          splash-settle 0.3s 0.4s ease-out forwards;
+      }
+      html[data-splash-mode="short"] .splash-ripple,
+      html[data-splash-mode="short"] .splash-word {
+        animation-delay: 0.4s;
+      }
+      @keyframes splash-letter {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+      }
+      @keyframes splash-drop {
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1.05);
+        }
+      }
+      @keyframes splash-settle {
+        0% {
+          opacity: 1;
+          transform: translateY(0) scale(1.05);
+        }
+        40% {
+          opacity: 1;
+          transform: translateY(0) scale(0.94);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      @keyframes splash-ripple {
+        0% {
+          opacity: 0.7;
+          transform: scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1.9);
+        }
+      }
+      @keyframes splash-jolt {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        30% {
+          transform: translateY(5px);
+        }
+        60% {
+          transform: translateY(-2px);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .splash-logo,
+        .splash-word,
+        .splash-word span {
+          animation: none !important;
+          opacity: 1;
+          transform: none;
+          filter: none;
+        }
+        .splash-ripple {
+          animation: none !important;
+        }
+      }
     </style>
+    <script src="/splash.js"></script>
   </head>
 
   <body>
+    <div id="splash" aria-hidden="true">
+      <div class="splash-logo">
+        <span class="splash-ripple"></span>
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="9" fill="#1c3049" />
+          <svg
+            x="7"
+            y="7"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#ffffff"
+            stroke-width="2.25"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12a9 9 0 1 1-6.2-8.56" />
+            <path d="m8.5 11.5 3 3L22 4" />
+          </svg>
+        </svg>
+      </div>
+      <div class="splash-word">
+        <span>M</span><span>y</span><span>T</span><span>r</span><span>a</span><span>c</span><span>k</span
+        ><span>e</span><span>r</span>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

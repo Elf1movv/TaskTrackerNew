@@ -22,12 +22,15 @@ import { formatDateKey } from "@/shared/lib/date"
 // opens the same edit popover as a timed one.
 export function AllDayStrip({
   days,
+  compact = false,
   reminders,
   deadlines,
   goals,
   onEditReminder,
 }: {
   days: Date[]
+  // Week on a phone: the narrow hour column of HourGrid's compact mode.
+  compact?: boolean
   reminders: Reminder[]
   deadlines: Task[]
   goals: Goal[]
@@ -48,7 +51,7 @@ export function AllDayStrip({
 
   return (
     <div data-all-day-strip className="flex mb-2">
-      <div className="w-12 shrink-0" />
+      <div className={`${compact ? "w-7" : "w-12"} shrink-0`} />
       <div
         className="flex-1 grid min-w-0"
         style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}

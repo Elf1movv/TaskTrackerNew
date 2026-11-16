@@ -58,33 +58,29 @@ export function CalendarMonthView({
 }) {
   const monthGrid = useMemo(() => buildMonthGrid(anchorDate), [anchorDate])
   const [draft, setDraft] = useState<CalendarItemDraft | null>(null)
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
 
   function closeDraft() {
     setDraft(null)
-    setAnchorRect(null)
   }
 
   // Clicking a task row (not the day cell itself, and not its checkbox)
   // opens the same edit popover Day/Week use, anchored at the row — one
   // click to edit, matching their muscle memory, instead of forcing a
   // detour through the day panel first.
-  function openEditPlan(taskId: string, rect: DOMRect) {
+  function openEditPlan(taskId: string) {
     const task = allPlans.find(t => t.id === taskId)
     if (!task) return
     setDraft({ mode: "edit-plan", task })
-    setAnchorRect(rect)
   }
 
   // Same one-click-to-edit shortcut as tasks above — reminder chips used
   // to have no click handler of their own and just bubbled up to the
   // day-panel selection; per the redesign mockup they now open the same
   // edit popover Day/Week already use for reminders.
-  function openEditReminder(reminderId: string, rect: DOMRect) {
+  function openEditReminder(reminderId: string) {
     const reminder = allReminders.find(r => r.id === reminderId)
     if (!reminder) return
     setDraft({ mode: "edit-reminder", reminder })
-    setAnchorRect(rect)
   }
 
   return (
@@ -134,7 +130,7 @@ export function CalendarMonthView({
           )}
         </AnimatePresence>
       </motion.div>
-      <CalendarItemPopover draft={draft} anchorRect={anchorRect} onClose={closeDraft} />
+      <CalendarItemPopover draft={draft} onClose={closeDraft} />
     </div>
   )
 }

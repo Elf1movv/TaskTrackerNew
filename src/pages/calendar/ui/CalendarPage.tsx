@@ -1,8 +1,9 @@
 import { useTasks } from "@/entities/task"
 import { PlanShelf } from "@/widgets/calendar-timeline"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { format, isSameDay, isSameMonth, isSameWeek } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { useSearchParams } from "react-router"
 import { buildWeekRange } from "@/shared/lib/calendarGrid"
 import { formatDateKey } from "@/shared/lib/date"
@@ -16,7 +17,6 @@ import {
   type TranslationKey,
 } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
-import { useIsMobile } from "@/shared/ui/use-mobile"
 import { CalendarYear } from "@/widgets/calendar-year"
 import { CalendarProvider, useCalendarContext, type CalendarView } from "../connectors"
 import { CalendarAgendaView } from "./CalendarAgendaView"
@@ -93,7 +93,10 @@ function CalendarPageContent() {
   const { language, t } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
   const hasConsumedInitialParams = useRef(false)
-  const isMobile = useIsMobile()
+  const reduceMotion = useReducedMotion()
+  // Where the Day view grows from after a tap on a day in Week (percent of
+  // the page width); null — an ordinary switch, a soft fade.
+  const [zoomFromX, setZoomFromX] = useState<number | null>(null)
 
   // One-time reconciliation of the URL the page was opened with — either an
   // external deep link (Today's reminder card sends `?date=`, no `?view=`,
@@ -108,17 +111,10 @@ function CalendarPageContent() {
 
     const viewParam = searchParams.get("view")
     if (viewParam && (BUILT_VIEWS as string[]).includes(viewParam)) {
-      // Week's 7-day hourly grid doesn't fit a phone screen, and the swipe
-      // needed to scroll to the rest of the days conflicts with the
-      // existing press-and-drag-down "create a task" gesture on the grid
-      // (see HourGrid.tsx) — confirmed with the user, 2026-09-28: on
-      // mobile, Week opens Day instead. Read window.innerWidth directly
-      // here rather than the isMobile hook above — that hook's own
-      // detection runs one render behind on first mount, which would let a
-      // direct/bookmarked `?view=week` link slip through unredirected on
-      // the very first load.
-      const isMobileWidth = window.innerWidth < 768
-      setView(viewParam === "week" && isMobileWidth ? "day" : (viewParam as CalendarView))
+      // Until 2026-11-15 a phone opened Day instead of Week (the 7-column
+      // grid didn't fit). Week now has a compact phone layout
+      // (CalendarWeekView), so every view opens as asked.
+      setView(viewParam as CalendarView)
     }
 
     const dateParam = searchParams.get("date")
@@ -153,20 +149,19 @@ function CalendarPageContent() {
 
   return (
     <div className="p-4 md:p-6">
-      {/* mr-24 below md: below that width the sidebar is hidden (see
-          SidebarNav's own md:flex) and this row runs the full width of the
-          page, reaching the same top-right corner the page-shell's
-          fixed notification/settings buttons occupy — without this
-          clearance the row's own overflow-x-auto scrolling just moves
-          which tab sits UNDER those buttons, never actually revealing
-          "Год" from behind them. At md and up the sidebar already keeps
-          this row well clear of that corner, so no margin is needed. */}
-      <div className="flex gap-0.5 bg-fill rounded-md p-0.5 w-fit mb-5 overflow-x-auto mr-24 md:mr-0">
+      {/* Phones: the switcher takes its own full-width row BELOW the fixed
+          bell + gear in the top-right corner (owner, 2026-11-15: they
+          covered "Year"). From md the sidebar keeps this row clear of that
+          corner, so it shrinks back to its own width. */}
+      <div className="flex gap-0.5 bg-fill rounded-md p-0.5 mb-5 mt-12 sm:mt-2 md:mt-0 w-full md:w-fit">
         {BUILT_VIEWS.map(v => (
           <button
             key={v}
-            onClick={() => setView(v === "week" && isMobile ? "day" : v)}
-            className={`h-8 px-3 rounded-lg text-xs transition shrink-0 ${
+            onClick={() => {
+              setZoomFromX(null)
+              setView(v)
+            }}
+            className={`h-8 flex-1 md:flex-none px-1 md:px-3 rounded-lg text-xs transition truncate ${
               view === v
                 ? "bg-seg text-foreground font-bold shadow-card"
                 : "text-muted-foreground font-medium hover:text-foreground"
@@ -177,114 +172,145 @@ function CalendarPageContent() {
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
-        <h1 className="text-page-sm sm:text-page">{formatPeriodTitle(view, anchorDate, language)}</h1>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={goToPrev}
-            className="rounded-md text-muted-foreground hover:text-foreground"
-          >
-            <ChevronLeft size={16} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={goToToday}
-            className="tabular-nums rounded-md h-9 px-4 text-xs font-semibold shadow-card bg-card text-foreground hover:bg-card"
-          >
-            {isViewingCurrentPeriod(view, anchorDate) ? t("common.today") : t("calendar.backToToday")}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={goToNext}
-            className="rounded-md text-muted-foreground hover:text-foreground"
-          >
-            <ChevronRight size={16} />
-          </Button>
-        </div>
-      </div>
+      {/* Everything under the view switcher changes with the view, so it all
+          animates together: a soft fade between views, and a day opened from
+          Week grows out of the tapped day's column (owner, 2026-11-15:
+          "открывается через анимацию"). "Reduce motion": fade only. */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={view}
+          style={zoomFromX !== null ? { transformOrigin: `${zoomFromX}% 35%` } : undefined}
+          initial={
+            reduceMotion
+              ? { opacity: 0 }
+              : zoomFromX !== null && view === "day"
+                ? { opacity: 0, scale: 0.3 }
+                : { opacity: 0, scale: 0.97 }
+          }
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.1 } }}
+          transition={
+            zoomFromX !== null && view === "day"
+              ? { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
+              : { duration: 0.18 }
+          }
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+            <h1 className="text-page-sm sm:text-page">{formatPeriodTitle(view, anchorDate, language)}</h1>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToPrev}
+                className="rounded-md text-muted-foreground hover:text-foreground"
+              >
+                <ChevronLeft size={16} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goToToday}
+                className="tabular-nums rounded-md h-9 px-4 text-xs font-semibold shadow-card bg-card text-foreground hover:bg-card"
+              >
+                {isViewingCurrentPeriod(view, anchorDate) ? t("common.today") : t("calendar.backToToday")}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToNext}
+                className="rounded-md text-muted-foreground hover:text-foreground"
+              >
+                <ChevronRight size={16} />
+              </Button>
+            </div>
+          </div>
 
-      <PlanShelf
-        anchorDate={formatDateKey(anchorDate)}
-        days={
-          view === "day"
-            ? [formatDateKey(anchorDate)]
-            : view === "week"
-              ? buildWeekRange(anchorDate).map(formatDateKey)
-              : []
-        }
-        onReschedule={reschedulePlanTime}
-      />
+          <PlanShelf
+            anchorDate={formatDateKey(anchorDate)}
+            days={
+              view === "day"
+                ? [formatDateKey(anchorDate)]
+                : view === "week"
+                  ? buildWeekRange(anchorDate).map(formatDateKey)
+                  : []
+            }
+            onReschedule={reschedulePlanTime}
+          />
 
-      {view === "month" && (
-        <CalendarMonthView
-          anchorDate={anchorDate}
-          selectedDay={selectedDay}
-          selectedPlans={selectedPlans}
-          selectedReminders={selectedReminders}
-          selectedGoals={selectedGoals}
-          selectedHabits={selectedHabits}
-          allPlans={allPlans}
-          allDeadlines={allDeadlines}
-          selectedDeadlines={selectedDeadlines}
-          allReminders={allReminders}
-          allGoals={allGoals}
-          onSelectDay={handleSelectDay}
-          onCloseDayPanel={() => selectDay(null)}
-          onMovePlanToDay={movePlanToDay}
-        />
-      )}
+          {view === "month" && (
+            <CalendarMonthView
+              anchorDate={anchorDate}
+              selectedDay={selectedDay}
+              selectedPlans={selectedPlans}
+              selectedReminders={selectedReminders}
+              selectedGoals={selectedGoals}
+              selectedHabits={selectedHabits}
+              allPlans={allPlans}
+              allDeadlines={allDeadlines}
+              selectedDeadlines={selectedDeadlines}
+              allReminders={allReminders}
+              allGoals={allGoals}
+              onSelectDay={handleSelectDay}
+              onCloseDayPanel={() => selectDay(null)}
+              onMovePlanToDay={movePlanToDay}
+            />
+          )}
 
-      {view === "agenda" && (
-        <CalendarAgendaView
-          anchorDate={anchorDate}
-          allPlans={allPlans}
-          allDeadlines={allDeadlines}
-          allReminders={allReminders}
-          allGoals={allGoals}
-        />
-      )}
+          {view === "agenda" && (
+            <CalendarAgendaView
+              anchorDate={anchorDate}
+              allPlans={allPlans}
+              allDeadlines={allDeadlines}
+              allReminders={allReminders}
+              allGoals={allGoals}
+            />
+          )}
 
-      {view === "day" && (
-        <CalendarDayView
-          anchorDate={anchorDate}
-          allPlans={allPlans}
-          allReminders={allReminders}
-          allDeadlines={allDeadlines}
-          allGoals={allGoals}
-          onRescheduleTaskTime={reschedulePlanTime}
-          onResizePlan={resizePlan}
-        />
-      )}
+          {view === "day" && (
+            <CalendarDayView
+              anchorDate={anchorDate}
+              allPlans={allPlans}
+              allReminders={allReminders}
+              allDeadlines={allDeadlines}
+              allGoals={allGoals}
+              onRescheduleTaskTime={reschedulePlanTime}
+              onResizePlan={resizePlan}
+            />
+          )}
 
-      {view === "week" && (
-        <CalendarWeekView
-          anchorDate={anchorDate}
-          allPlans={allPlans}
-          allReminders={allReminders}
-          allDeadlines={allDeadlines}
-          allGoals={allGoals}
-          onRescheduleTaskTime={reschedulePlanTime}
-          onResizePlan={resizePlan}
-        />
-      )}
+          {view === "week" && (
+            <CalendarWeekView
+              anchorDate={anchorDate}
+              allPlans={allPlans}
+              allReminders={allReminders}
+              allDeadlines={allDeadlines}
+              allGoals={allGoals}
+              onRescheduleTaskTime={reschedulePlanTime}
+              onResizePlan={resizePlan}
+              onOpenDay={(day, from) => {
+                const pageWidth = document.documentElement.clientWidth || 1
+                setZoomFromX(Math.round(((from.left + from.width / 2) / pageWidth) * 100))
+                goToDate(day)
+                setView("day")
+              }}
+            />
+          )}
 
-      {view === "year" && (
-        <CalendarYear
-          year={anchorDate}
-          tasks={canonicalTasks}
-          plans={allPlans}
-          goals={allGoals}
-          habits={allHabits}
-          onSelectDay={day => {
-            goToDate(day)
-            setView("day")
-          }}
-        />
-      )}
+          {view === "year" && (
+            <CalendarYear
+              year={anchorDate}
+              tasks={canonicalTasks}
+              plans={allPlans}
+              goals={allGoals}
+              habits={allHabits}
+              onSelectDay={day => {
+                goToDate(day)
+                setView("day")
+              }}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   )
 }
