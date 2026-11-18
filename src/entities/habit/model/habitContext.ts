@@ -6,6 +6,9 @@ export interface HabitContextValue {
   // False until the first load from the server finishes — lets the habit
   // screen tell "still loading" from "no such habit" (2026-11-16).
   isLoaded: boolean
+  // The server has answered at least once (isLoaded can be true from the copy
+  // kept on the phone alone) — wait for this before deciding a habit is gone.
+  isSynced: boolean
   // Returns the new habit's id (generated on the client) — the onboarding
   // uses it to find and highlight the habit it just created.
   addHabit: (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates">) => string

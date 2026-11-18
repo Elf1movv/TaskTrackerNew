@@ -40,6 +40,17 @@ export function createApp() {
   const app = express()
 
   app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"))
+  // Data answers: the browser keeps the last one and asks "changed since?"
+  // (If-None-Match with the ETag Express adds to every JSON answer) — an
+  // unchanged collection comes back as a tiny 304 instead of the whole list
+  // (data cache, 2026-11-18). `private`: per person, never in shared caches;
+  // `no-cache`: always ask the server first. Not for /api/auth (better-auth
+  // sets its own headers).
+  app.use("/api", (req, res, next) => {
+    if (req.method === "GET" && !req.path.startsWith("/auth"))
+      res.setHeader("Cache-Control", "private, no-cache")
+    next()
+  })
   // Slow answers in the log (speed iteration 2026-11-18): any request that took
   // over 500 ms. Method and path only — no query string, body or user. Read on
   // the server with `docker compose logs app | grep "slow request"`.

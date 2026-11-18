@@ -10,6 +10,7 @@ import { PlanProvider } from "@/entities/calendar-plan"
 import { TaskProvider } from "@/entities/task"
 import { useLanguage } from "@/shared/lib/i18n"
 import { useSession } from "@/shared/lib/auth"
+import { clearAllCaches, setCacheUser } from "@/shared/lib/storage"
 import { usePushSync } from "@/features/notifications/push"
 import { CriticalReminderAlert } from "@/widgets/critical-reminder-alert"
 import { DueDateReminders } from "@/widgets/due-date-reminders"
@@ -42,7 +43,14 @@ export function RootLayout() {
     window.location.replace(`/offline.html?from=${encodeURIComponent(location.pathname + location.search)}`)
     return null
   }
-  if (!session) return <Navigate to="/login" replace />
+  if (!session) {
+    // Logged out or the session expired: no copy of anyone's data stays on
+    // the device (shared/lib/storage/collectionCache.ts).
+    clearAllCaches()
+    return <Navigate to="/login" replace />
+  }
+  // Before the providers below render: they read this person's kept copy.
+  setCacheUser(session.user.id)
 
   return (
     // Entity providers mounted here, not in AppProviders — they only ever

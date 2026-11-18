@@ -49,8 +49,26 @@ const mainReady = "document.querySelector('main h1')"
 result.today = await coldStart("/today", mainReady)
 result.habits = await coldStart("/habits", mainReady)
 
+// Repeat start: the app's copy and (since 2026-11-18) the data cache are already
+// on the phone. Time until the Habits screen shows data (a habit row, or the
+// empty "add" state), and how much /api data actually crossed the network —
+// unchanged answers come back as a tiny "304 Not Modified".
+{
+  const started = Date.now()
+  await send("Page.navigate", { url: origin + "/habits" })
+  await wait("document.querySelector('main [aria-label^=\"Открыть привычку\"], main [aria-label^=\"Open habit\"]') || document.body.innerText.includes('Пока нет привычек')")
+  result.habitsRepeat = { msToData: Date.now() - started }
+  await pause(1500)
+  const api = await evaluate(
+    "performance.getEntriesByType('resource').filter(e=>e.name.includes('/api/')).map(e=>({t:e.transferSize,b:e.encodedBodySize}))",
+  )
+  result.habitsRepeat.apiRequests = api.length
+  result.habitsRepeat.apiKbTransferred = Math.round(api.reduce((sum, e) => sum + e.t, 0) / 1024)
+  result.habitsRepeat.notModified = api.filter(e => e.b > 0 && e.t > 0 && e.t < e.b).length
+}
+
 // Switching the phone Habits view to Year (heaviest calculation on screen).
-result.habits.yearSwitchMs = await evaluate(`(async()=>{
+result.habitsRepeat.yearSwitchMs = await evaluate(`(async()=>{
   const b=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Год')
   if(!b) return null
   const t=performance.now(); b.click()
@@ -58,6 +76,7 @@ result.habits.yearSwitchMs = await evaluate(`(async()=>{
   return Math.round(performance.now()-t)})()`)
 
 for (const [name, r] of Object.entries(result)) {
+  if (!r.codeKb && r.codeKb !== 0) continue
   if (r.ms > START_BUDGET_MS) warnings.push(`${name}: start ${r.ms} ms > ${START_BUDGET_MS} ms`)
   if (r.repeatedApi.length) warnings.push(`${name}: same request twice: ${r.repeatedApi.join(", ")}`)
   if (r.otherServers.length) warnings.push(`${name}: loads from ${r.otherServers.join(", ")}`)
