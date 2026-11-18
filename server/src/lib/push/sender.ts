@@ -50,7 +50,8 @@ export async function sendToSubscriptions(
           JSON.stringify(message),
           // An hour on the push service's side: a phone that was off longer
           // gets nothing rather than a pile of stale reminders.
-          { TTL: 3600, urgency: urgent ? "high" : "normal" },
+          // timeout: a push service that hangs is given up after 10 s (2026-11-18).
+          { TTL: 3600, urgency: urgent ? "high" : "normal", timeout: 10_000 },
         )
         delivered = true
         await db.pushSubscription.update({ where: { id: sub.id }, data: { lastSuccessAt: new Date() } })

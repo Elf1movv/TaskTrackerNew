@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useState } from "react"
+import { Fragment, lazy, Suspense, useCallback, useState } from "react"
 import { useNavigate } from "react-router"
 import { endOfWeek, format, startOfWeek } from "date-fns"
 import { Activity, BarChart3, Check, ChevronLeft, ChevronRight, Flame, Plus, TrendingUp } from "lucide-react"
@@ -32,9 +32,15 @@ import {
   shiftPeriodAnchor,
   type HabitHistoryPeriod,
 } from "../lib/periodColumns"
-import { HabitHistoryChart, type HabitChartStyle } from "./HabitHistoryChart"
+import type { HabitChartStyle } from "./HabitHistoryChart"
 import { DayHabitList } from "./DayHabitList"
 import { MonthCell } from "./MonthCell"
+
+// Recharts in its own file: this table is the desktop view, phones show
+// MobileHabitsView and never download the chart library (2026-11-18).
+const HabitHistoryChart = lazy(() =>
+  import("./HabitHistoryChart").then(m => ({ default: m.HabitHistoryChart })),
+)
 
 const PERIODS: HabitHistoryPeriod[] = ["day", "week", "month", "year"]
 
@@ -363,11 +369,13 @@ export function HabitGroupAccordionItem({ group, habits }: { group: HabitGroup; 
                       ))}
                     </div>
                     <div style={{ gridColumn: `2 / -1` }}>
-                      <HabitHistoryChart
-                        data={summary.chartData}
-                        style={chartStyle}
-                        seriesName={t("habits.page.summaryLabel")}
-                      />
+                      <Suspense fallback={<div className="h-[120px]" />}>
+                        <HabitHistoryChart
+                          data={summary.chartData}
+                          style={chartStyle}
+                          seriesName={t("habits.page.summaryLabel")}
+                        />
+                      </Suspense>
                     </div>
                   </div>
                 </div>

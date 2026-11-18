@@ -4,7 +4,8 @@
 # tasktracker_test?schema=redesign_browser, starts headless Chrome on :9222,
 # registers + verifies a disposable QA user, runs the checks, then cleans up
 # the user and stops both processes.
-#   scripts/qa/run-local.sh            # 20-check suite + onboarding
+#   scripts/qa/run-local.sh            # 20-check suite + onboarding + PWA
+#                                      # + weak-phone speed check (perf.mjs)
 #   scripts/qa/run-local.sh --full     # suite + calendar gestures
 #   scripts/qa/run-local.sh --keep     # leave server+Chrome running and the
 #                                      # QA user logged in (for ad-hoc scripts);
@@ -61,5 +62,7 @@ export QA_RESET
 node scripts/qa/onboarding.mjs | grep -v '^PASS' || true
 # PWA: installable, service worker, offline page (restarts the local server).
 QA_ENV="$ENV_FILE" node scripts/qa/pwa.mjs | cut -c1-200 || true
+# Weak-phone speed check (docs/PERFORMANCE.md): prints timings and WARN lines.
+node scripts/qa/perf.mjs || true
 [ "${1:-}" = "--full" ] && node scripts/qa/calendar-gestures.mjs | tail -1
 echo "QA output: $QA_TMP"

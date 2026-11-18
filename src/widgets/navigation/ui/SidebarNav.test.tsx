@@ -20,6 +20,9 @@ vi.mock("@/entities/habit", async importOriginal => ({
 }))
 vi.mock("@/entities/goal", () => ({ useGoals: () => ({ goals: state.goals }) }))
 vi.mock("@/shared/ui/weekly-activity-chart", () => ({ WeeklyActivityChart: () => null }))
+// The sidebar asks whether this is a phone (the chart is desktop-only, 2026-11-18);
+// the test DOM has no matchMedia.
+vi.mock("@/shared/ui/use-mobile", () => ({ useIsMobile: () => false }))
 
 const todayWeekday = new Date().getDay()
 const otherWeekday = (todayWeekday + 1) % 7

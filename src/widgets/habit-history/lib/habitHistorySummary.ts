@@ -1,5 +1,5 @@
 import { startOfMonth } from "date-fns"
-import type { Habit } from "@/entities/habit"
+import { hasCompletion, type Habit } from "@/entities/habit"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDayCellState } from "./habitCellState"
 import { getPeriodDays, getYearMonths, type HabitHistoryPeriod } from "./periodColumns"
@@ -69,7 +69,7 @@ function summarizeByMonth(habits: Habit[], months: Date[], today: Date): HabitHi
         if (!habit.activeDays.includes(date.getDay())) continue
         if (formatDateKey(date) < created) continue
         total++
-        if (habit.completedDates.includes(formatDateKey(date))) {
+        if (hasCompletion(habit, formatDateKey(date))) {
           completed++
           monthCompleted++
         }

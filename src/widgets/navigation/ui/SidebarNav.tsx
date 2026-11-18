@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react"
 import { format } from "date-fns"
 import { NavLink } from "react-router"
 import { getTaskCompletionsByDay, isCompletedToday, useTasks } from "@/entities/task"
@@ -12,10 +13,18 @@ import {
   type TranslationKey,
 } from "@/shared/lib/i18n"
 import { BrandMark } from "@/shared/ui/brand-mark"
-import { WeeklyActivityChart, type WeeklyActivityPoint } from "@/shared/ui/weekly-activity-chart"
+import { useIsMobile } from "@/shared/ui/use-mobile"
+import type { WeeklyActivityPoint } from "@/shared/ui/weekly-activity-chart"
 import { NAV_ITEMS } from "../model/navItems"
 
+// The chart library (Recharts) is a big part of the code and the sidebar is
+// desktop-only — phones never download it (speed iteration 2026-11-18).
+const WeeklyActivityChart = lazy(() =>
+  import("@/shared/ui/weekly-activity-chart").then(m => ({ default: m.WeeklyActivityChart })),
+)
+
 export function SidebarNav() {
+  const isMobile = useIsMobile()
   const { tasks } = useTasks()
   const { habits } = useHabits()
   const { goals } = useGoals()
@@ -89,7 +98,11 @@ export function SidebarNav() {
       <section className="flex flex-col gap-4 mt-7 pt-5 border-t border-border">
         <div className="bg-card border border-card-border rounded-xl shadow-card px-3.5 pt-3.5 pb-2.5 flex flex-col gap-2">
           <span className="text-meta font-semibold text-tertiary">{t("sidebar.statChartLabel")}</span>
-          <WeeklyActivityChart data={chartData} seriesName={t("sidebar.statChartValueLabel")} />
+          {!isMobile && (
+            <Suspense fallback={<div className="h-[70px]" />}>
+              <WeeklyActivityChart data={chartData} seriesName={t("sidebar.statChartValueLabel")} />
+            </Suspense>
+          )}
         </div>
 
         <div className="flex flex-col gap-2.5 px-1.5">

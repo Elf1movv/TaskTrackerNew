@@ -34,10 +34,24 @@ const ALLOWED_ORIGINS = process.env.APP_ORIGINS?.split(",")
 
 // Split out from index.ts so tests (supertest) can import the app without
 // binding a real port — index.ts is the only place that calls .listen().
+const SLOW_REQUEST_MS = 500
+
 export function createApp() {
   const app = express()
 
   app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"))
+  // Slow answers in the log (speed iteration 2026-11-18): any request that took
+  // over 500 ms. Method and path only — no query string, body or user. Read on
+  // the server with `docker compose logs app | grep "slow request"`.
+  app.use((req, res, next) => {
+    const started = process.hrtime.bigint()
+    res.on("finish", () => {
+      const ms = Number((process.hrtime.bigint() - started) / 1_000_000n)
+      if (ms > SLOW_REQUEST_MS)
+        console.warn(`slow request ${req.method} ${req.originalUrl.split("?")[0]} ${res.statusCode} ${ms}ms`)
+    })
+    next()
+  })
   app.use(helmet())
   // gzip/brotli for everything we send. The app bundle is ~1.45 MB as is;
   // compressed it's a few hundred KB. nginx in front doesn't compress what it

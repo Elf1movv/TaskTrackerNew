@@ -1,6 +1,7 @@
 import { isAfter, isBefore, startOfDay } from "date-fns"
 import type { Habit } from "../model/habit"
 import { formatDateKey } from "@/shared/lib/date"
+import { hasCompletion } from "./hasCompletion"
 
 // Share of `habits` done on `date`, 0..1 — the brightness of one day on a year
 // heat map (2026-11-16). Counts only habits scheduled that day that already
@@ -25,7 +26,7 @@ export function getDayCounts(
     if (!habit.activeDays.includes(date.getDay())) continue
     if (isBefore(startOfDay(date), startOfDay(new Date(habit.createdAt)))) continue
     scheduled++
-    if (habit.completedDates.includes(key)) done++
+    if (hasCompletion(habit, key)) done++
   }
   return scheduled === 0 ? null : { done, scheduled }
 }

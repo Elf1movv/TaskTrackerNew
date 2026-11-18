@@ -1,5 +1,5 @@
 import { isAfter } from "date-fns"
-import type { Habit } from "@/entities/habit"
+import { hasCompletion, type Habit } from "@/entities/habit"
 import { formatDateKey } from "@/shared/lib/date"
 
 export type DayCellState = "done" | "pending" | "unscheduled" | "future"
@@ -10,7 +10,7 @@ export type DayCellState = "done" | "pending" | "unscheduled" | "future"
 export function getDayCellState(habit: Habit, date: Date, today: Date): DayCellState {
   if (isAfter(date, today)) return "future"
   if (!habit.activeDays.includes(date.getDay())) return "unscheduled"
-  return habit.completedDates.includes(formatDateKey(date)) ? "done" : "pending"
+  return hasCompletion(habit, formatDateKey(date)) ? "done" : "pending"
 }
 
 // How a tappable day circle looks (desktop table and phone week). Done = a
