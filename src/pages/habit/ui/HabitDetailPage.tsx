@@ -7,10 +7,12 @@ import { HabitDetail } from "@/widgets/habit-detail"
 // deleted), then goes back to the list.
 export function HabitDetailPage() {
   const { habitId } = useParams()
-  const { habits, isLoaded } = useHabits()
+  const { habits, isSynced } = useHabits()
   const habit = habits.find(h => h.id === habitId)
 
-  if (!habit) return isLoaded ? <Navigate to="/habits" replace /> : null
+  // Not in the phone's copy may still mean "made on another device" — wait
+  // for the server before sending the person back to the list.
+  if (!habit) return isSynced ? <Navigate to="/habits" replace /> : null
 
   return (
     <div className="px-4 pt-2 pb-10 md:px-10 md:pt-0">

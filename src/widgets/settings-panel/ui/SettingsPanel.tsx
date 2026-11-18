@@ -2,6 +2,7 @@ import { Bell, Compass, LogOut, Palette, Settings, User } from "lucide-react"
 import { useState } from "react"
 import { NotificationsSection } from "@/features/notifications/push"
 import { signOut } from "@/shared/lib/auth"
+import { clearAllCaches } from "@/shared/lib/storage"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
 import { ConfirmAction } from "@/shared/ui/confirm-action"
@@ -108,7 +109,11 @@ export function SettingsPanel({
             title={t("settings.logoutConfirmTitle")}
             description={t("settings.logoutConfirmBody")}
             confirmLabel={t("settings.logoutConfirm")}
-            onConfirm={() => signOut()}
+            onConfirm={async () => {
+              // Forget the data kept on the phone, then log out (2026-11-18).
+              clearAllCaches()
+              await signOut()
+            }}
           >
             <Button
               variant="outline"

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
+import { readCache, writeCache } from "./collectionCache"
 import { ConflictError, type Repository } from "./repository"
 
 const ENTITY_TRANSLATION_KEYS: Record<string, TranslationKey> = {
@@ -26,31 +27,85 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
 ) {
   const { t } = useLanguage()
   const entity = t(ENTITY_TRANSLATION_KEYS[entityLabel] ?? "toast.entityTask")
-  const [items, setItems] = useState<T[]>([])
-  const [isLoaded, setIsLoaded] = useState(false)
+  // "Show at once, check at once" (2026-11-18, collectionCache.ts): start from
+  // the copy kept on the phone, then replace it with the server's answer.
+  // isLoaded = there is something to show (copy or server); isSynced = the
+  // server has answered (use it before concluding a record doesn't exist).
+  const [cached] = useState(() => readCache<T>(entityLabel))
+  const [items, setItems] = useState<T[]>(() => cached ?? [])
+  const [isLoaded, setIsLoaded] = useState(cached !== null)
+  const [isSynced, setIsSynced] = useState(false)
+
+  // The server-confirmed state - what goes into the phone's copy. Changes
+  // still on their way (or rolled back) live only in `items`, never here.
+  const confirmed = useRef<T[]>(cached ?? [])
+  const saveConfirmed = useCallback(
+    (next: T[]) => {
+      confirmed.current = next
+      writeCache(entityLabel, next)
+    },
+    [entityLabel],
+  )
+
+  // Every create/update/remove/reorder bumps `edits` and sits in `inFlight`
+  // until the server answers. A list() asked for BEFORE an edit may come back
+  // without it: applying that answer would undo what the person just did on
+  // the cached screen. Such an answer is dropped and asked for again once the
+  // edits have reached the server.
+  const edits = useRef(0)
+  const inFlight = useRef(new Set<Promise<unknown>>())
+  const track = useCallback(<P>(request: Promise<P>): Promise<P> => {
+    edits.current++
+    inFlight.current.add(request)
+    void request.finally(() => inFlight.current.delete(request))
+    return request
+  }, [])
+
+  // The server's list once no edit is racing it; null = still being edited
+  // after three tries (then the screen stays as it is).
+  const fetchSettled = useCallback(async (): Promise<T[] | null> => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const editsBefore = edits.current
+      const list = await repository.list()
+      if (edits.current === editsBefore) return list
+      await Promise.allSettled([...inFlight.current])
+    }
+    return null
+  }, [repository])
+
+  const applyServer = useCallback(
+    (list: T[] | null) => {
+      if (list) {
+        setItems(list)
+        saveConfirmed(list)
+      }
+      setIsLoaded(true)
+      setIsSynced(true)
+    },
+    [saveConfirmed],
+  )
 
   useEffect(() => {
     let cancelled = false
-    repository.list().then(list => {
-      if (!cancelled) {
-        setItems(list)
-        setIsLoaded(true)
-      }
-    })
+    fetchSettled().then(
+      list => !cancelled && applyServer(list),
+      err => {
+        // Offline or server error: keep showing the phone's copy (if any).
+        console.error(err)
+        if (!cancelled) setIsLoaded(true)
+      },
+    )
     return () => {
       cancelled = true
     }
-  }, [repository])
+  }, [fetchSettled, applyServer])
 
   // Re-fetches the whole collection from the server — for the rare case
   // where something else (e.g. deleting a category cascades to deleting its
   // tasks server-side) changed records this collection doesn't directly
   // know about, and a full resync is simpler than threading that knowledge
   // through every caller.
-  const refresh = useCallback(async () => {
-    const list = await repository.list()
-    setItems(list)
-  }, [repository])
+  const refresh = useCallback(async () => applyServer(await fetchSettled()), [fetchSettled, applyServer])
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -75,6 +130,8 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
         try {
           const saved = await repository.create(item)
           setItems(prev => prev.map(i => (i.id === item.id ? saved : i)))
+          const rest = confirmed.current.filter(i => i.id !== saved.id)
+          saveConfirmed(prepend ? [saved, ...rest] : [...rest, saved])
           return true
         } catch (err) {
           setItems(prev => prev.filter(i => i.id !== item.id))
@@ -86,9 +143,9 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
         }
       })()
       pendingCreates.current.set(item.id, request)
-      return request
+      return track(request)
     },
-    [repository, t, entity],
+    [repository, t, entity, saveConfirmed, track],
   )
 
   // Keyed by item id — chains same-item update() calls one after another
@@ -116,11 +173,13 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
         try {
           const saved = await repository.update(id, patch, base.updatedAt)
           setItems(prev => prev.map(i => (i.id === id ? saved : i)))
+          saveConfirmed(confirmed.current.map(i => (i.id === id ? saved : i)))
           return saved
         } catch (err) {
           if (err instanceof ConflictError) {
             const current = err.current as T
             setItems(prev => prev.map(i => (i.id === id ? current : i)))
+            saveConfirmed(confirmed.current.map(i => (i.id === id ? current : i)))
             toast.error(t("toast.conflict", { entity }))
             console.error(err)
             return current
@@ -132,6 +191,7 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
         }
       })
       pendingUpdates.current.set(id, thisUpdate)
+      track(thisUpdate)
       // Returns the server-confirmed item (or, on conflict/failure, whatever
       // was actually applied locally) — a caller that needs to act on this
       // item right after (e.g. moveHabitToGroup building a reorder() list)
@@ -141,25 +201,30 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
       // exact same false-conflict race this queuing was built to prevent.
       return await thisUpdate
     },
-    [items, repository, t, entity],
+    [items, repository, t, entity, saveConfirmed, track],
   )
 
   const remove = useCallback(
-    async (id: string) => {
+    (id: string) => {
       const previous = items
       setItems(prev => prev.filter(i => i.id !== id))
-      const pendingCreate = pendingCreates.current.get(id)
-      // A create that failed has already taken the item away — nothing to delete.
-      if (pendingCreate && !(await pendingCreate)) return
-      try {
-        await repository.remove(id)
-      } catch (err) {
-        setItems(previous)
-        toast.error(t("toast.deleteFailed", { entity }))
-        console.error(err)
-      }
+      return track(
+        (async () => {
+          const pendingCreate = pendingCreates.current.get(id)
+          // A create that failed has already taken the item away — nothing to delete.
+          if (pendingCreate && !(await pendingCreate)) return
+          try {
+            await repository.remove(id)
+            saveConfirmed(confirmed.current.filter(i => i.id !== id))
+          } catch (err) {
+            setItems(previous)
+            toast.error(t("toast.deleteFailed", { entity }))
+            console.error(err)
+          }
+        })(),
+      )
     },
-    [items, repository, t, entity],
+    [items, repository, t, entity, saveConfirmed, track],
   )
 
   // Chains reorder() calls one after another instead of letting them race —
@@ -222,6 +287,14 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
             const updatedAt = freshUpdatedAt.get(item.id)
             if (updatedAt) pendingUpdates.current.set(item.id, Promise.resolve({ ...item, updatedAt }))
           })
+          // Same new order in the confirmed copy, with each record's own
+          // confirmed fields (not edits still on their way).
+          const byId = new Map(confirmed.current.map(i => [i.id, i]))
+          const moved = nextItems
+            .map(n => byId.get(n.id))
+            .filter((i): i is T => i !== undefined)
+            .map(i => (freshUpdatedAt.has(i.id) ? { ...i, updatedAt: freshUpdatedAt.get(i.id)! } : i))
+          saveConfirmed([...confirmed.current.filter(i => !nextIds.has(i.id)), ...moved])
         } catch (err) {
           setItems(previous)
           toast.error(t("toast.reorderFailed"))
@@ -229,10 +302,10 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
         }
       })
       pendingReorder.current = thisReorder
-      return thisReorder
+      return track(thisReorder)
     },
-    [items, repository, t],
+    [items, repository, t, saveConfirmed, track],
   )
 
-  return { items, isLoaded, create, update, remove, reorder, refresh }
+  return { items, isLoaded, isSynced, create, update, remove, reorder, refresh }
 }

@@ -10,6 +10,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
   const {
     items: habits,
     isLoaded,
+    isSynced,
     create,
     update,
     remove,
@@ -96,6 +97,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     () => ({
       habits,
       isLoaded,
+      isSynced,
       addHabit,
       updateHabit,
       deleteHabit,
@@ -107,6 +109,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     [
       habits,
       isLoaded,
+      isSynced,
       addHabit,
       updateHabit,
       deleteHabit,
