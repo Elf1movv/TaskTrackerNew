@@ -54,8 +54,35 @@ function stagingBranding(): Plugin {
   }
 }
 
+// Screens load their code on first visit (React.lazy, speed iteration
+// 2026-11-18), so index.html no longer names every code file. The service
+// worker (public/sw.js) keeps on the phone exactly the /assets/ files named in
+// index.html — so list them all here in a meta tag the browser itself ignores:
+// the first start downloads only what the opened screen needs, and the rest
+// is saved in the background, so every screen still opens without a network.
+function listAllAssets(): Plugin {
+  return {
+    name: "list-all-assets",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(html, ctx) {
+        const files = Object.keys(ctx.bundle ?? {})
+          .filter(name => name.startsWith("assets/") && /\.(js|css|woff2)$/.test(name))
+          .map(name => `/${name}`)
+          .sort()
+        if (files.length === 0) return html
+        return html.replace(
+          "</head>",
+          `    <meta name="app-assets" content="${files.join(" ")}" />\n  </head>`,
+        )
+      },
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), stagingBranding()],
+  plugins: [react(), tailwindcss(), stagingBranding(), listAllAssets()],
   resolve: {
     alias: {
       // Alias @ to the src directory

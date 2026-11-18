@@ -1,6 +1,7 @@
 import { isAfter, isBefore, isSameMonth } from "date-fns"
 import type { Habit } from "../model/habit"
 import { formatDateKey } from "@/shared/lib/date"
+import { hasCompletion } from "./hasCompletion"
 
 export interface HabitMonthCompletionStats {
   done: number
@@ -41,7 +42,7 @@ export function getHabitMonthCompletionStats(
     const date = new Date(year, monthIndex, day)
     if (!habit.activeDays.includes(date.getDay())) continue
     scheduled++
-    if (habit.completedDates.includes(formatDateKey(date))) done++
+    if (hasCompletion(habit, formatDateKey(date))) done++
   }
 
   return { done, scheduled }

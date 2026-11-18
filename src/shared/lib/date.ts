@@ -1,9 +1,14 @@
-import { addDays, eachDayOfInterval, format, subDays } from "date-fns"
+import { addDays, eachDayOfInterval, subDays } from "date-fns"
 
 export const DATE_KEY_FORMAT = "yyyy-MM-dd"
 
+// Same "yyyy-MM-dd" as DATE_KEY_FORMAT, built by hand: the habit year views
+// call this thousands of times, and date-fns `format` re-reads the pattern on
+// every call (speed iteration 2026-11-18).
 export function formatDateKey(date: Date): string {
-  return format(date, DATE_KEY_FORMAT)
+  const m = date.getMonth() + 1
+  const d = date.getDate()
+  return `${date.getFullYear()}-${m < 10 ? "0" : ""}${m}-${d < 10 ? "0" : ""}${d}`
 }
 
 export function getTodayKey(): string {
