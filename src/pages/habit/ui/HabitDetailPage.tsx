@@ -13,7 +13,7 @@ export function HabitDetailPage() {
   if (!habit) return isLoaded ? <Navigate to="/habits" replace /> : null
 
   return (
-    <div className="px-4 pt-5 pb-10 md:px-10 md:pt-14">
+    <div className="px-4 pt-2 pb-10 md:px-10 md:pt-0">
       <HabitDetail habit={habit} />
     </div>
   )

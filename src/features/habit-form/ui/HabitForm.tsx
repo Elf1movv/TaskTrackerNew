@@ -8,7 +8,6 @@ import { Button } from "@/shared/ui/button"
 import { EmojiPicker } from "@/shared/ui/emoji-picker"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]
 
@@ -90,26 +89,34 @@ export function HabitForm({
           </div>
         </div>
 
+        {/* Blocks as chips, like task categories — the small dropdown was easy
+            to miss, and new habits silently landed in "Без блока" (owner,
+            2026-11-18). */}
         {showGroupPicker && (
-          <div className="flex items-center gap-2">
-            <Label htmlFor="habit-group" className="text-xs text-muted-foreground font-normal">
-              {t("habitForm.group")}
-            </Label>
-            <Select value={groupId} onValueChange={setGroupId}>
-              <SelectTrigger id="habit-group" size="sm" className="text-xs h-8 w-auto bg-muted">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {habitGroups.map(g => (
-                  <SelectItem key={g.id} value={g.id}>
-                    <span className="inline-flex items-center gap-1.5">
-                      <HabitIcon emoji={getHabitGroupIcon(g)} size={14} />
-                      {getHabitGroupTitle(g, t)}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-1.5" role="radiogroup" aria-label={t("habitForm.group")}>
+            <span className="text-xs text-muted-foreground">{t("habitForm.group")}</span>
+            <div className="flex flex-wrap gap-1.5">
+              {habitGroups.map(g => {
+                const selected = g.id === groupId
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setGroupId(g.id)}
+                    className={`h-9 px-3 rounded-full border text-meta font-semibold inline-flex items-center gap-1.5 transition-colors ${
+                      selected
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted border-border text-foreground"
+                    }`}
+                  >
+                    <HabitIcon emoji={getHabitGroupIcon(g)} size={14} />
+                    {g.isGeneral ? t("habits.withoutBlock") : getHabitGroupTitle(g, t)}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>

@@ -26,8 +26,8 @@ const TABS = [
   { value: "notifications", icon: Bell, label: "settings.menu.notifications" },
 ] as const
 
-// One entry point (the gear button, fixed top-right on every authenticated
-// page) for a panel meant to grow — a root menu of sections, each one
+// One entry point (the gear button, in the top bar of every authenticated
+// page — app/layouts/TopBar) for a panel meant to grow — a root menu of sections, each one
 // level deep. Reachable on every screen width, so it's also how a mobile
 // visitor gets to things the desktop sidebar shows directly (language,
 // theme, log out) — the sidebar's own footer no longer duplicates them.
@@ -51,7 +51,7 @@ export function SettingsPanel({
           type="button"
           aria-label={t("settings.open")}
           data-onboarding="settings-gear"
-          className="fixed top-4 right-4 md:top-6 md:right-6 z-40 flex size-11 items-center justify-center rounded-full bg-card border border-border shadow-card text-muted-foreground hover:text-foreground transition-colors"
+          className="flex size-11 items-center justify-center rounded-full bg-card border border-border shadow-card text-muted-foreground hover:text-foreground transition-colors"
         >
           <Settings size={18} strokeWidth={1.75} />
         </button>

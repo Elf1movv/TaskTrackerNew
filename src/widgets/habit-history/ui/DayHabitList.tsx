@@ -1,14 +1,28 @@
 import { isAfter, startOfDay } from "date-fns"
 import { Check } from "lucide-react"
 import { useNavigate } from "react-router"
+import { useHabitRowDnd } from "@/features/habit/group-dnd"
 import { getStreak, HabitIcon, selectHabitsOnDay, useHabits, type Habit } from "@/entities/habit"
 import { formatDateKey } from "@/shared/lib/date"
 import { useLanguage } from "@/shared/lib/i18n"
+import { HabitDragHandle } from "./HabitDragHandle"
 
 // The "День" mode, shared by the phone view and the desktop table
 // (2026-11-16): one block's habits scheduled on `date`, a row each — tap the
 // name to open the habit screen, tap the round button to mark the day.
-export function DayHabitList({ habits, date, today }: { habits: Habit[]; date: Date; today: Date }) {
+// `onDropHabit` (phone only) adds the six-dot handle: drag a habit onto
+// another row to reorder or move it into that row's block.
+export function DayHabitList({
+  habits,
+  date,
+  today,
+  onDropHabit,
+}: {
+  habits: Habit[]
+  date: Date
+  today: Date
+  onDropHabit?: (draggedId: string, targetId: string) => void
+}) {
   const { t } = useLanguage()
   const scheduled = selectHabitsOnDay(habits, date)
 
@@ -19,13 +33,23 @@ export function DayHabitList({ habits, date, today }: { habits: Habit[]; date: D
   return (
     <div className="flex flex-col gap-2">
       {scheduled.map(habit => (
-        <DayHabitRow key={habit.id} habit={habit} date={date} today={today} />
+        <DayHabitRow key={habit.id} habit={habit} date={date} today={today} onDropHabit={onDropHabit} />
       ))}
     </div>
   )
 }
 
-function DayHabitRow({ habit, date, today }: { habit: Habit; date: Date; today: Date }) {
+function DayHabitRow({
+  habit,
+  date,
+  today,
+  onDropHabit,
+}: {
+  habit: Habit
+  date: Date
+  today: Date
+  onDropHabit?: (draggedId: string, targetId: string) => void
+}) {
   const { toggleHabit } = useHabits()
   const { t } = useLanguage()
   const navigate = useNavigate()
@@ -33,12 +57,20 @@ function DayHabitRow({ habit, date, today }: { habit: Habit; date: Date; today: 
   const done = habit.completedDates.includes(dateKey)
   const future = isAfter(startOfDay(date), startOfDay(today))
   const streak = getStreak(habit.completedDates, habit.activeDays)
+  const { handleRef, rowRef, isDragging, isOver } = useHabitRowDnd(habit.id, onDropHabit)
 
   return (
     <div
-      className="flex items-center gap-3 rounded-lg border bg-card px-3.5 py-2.5 transition-opacity"
-      style={{ borderColor: "var(--border)", opacity: done ? 0.75 : 1 }}
+      ref={onDropHabit ? rowRef : undefined}
+      className={`flex items-center gap-3 rounded-lg border bg-card py-2.5 pr-3.5 transition-opacity ${
+        onDropHabit ? "pl-2" : "pl-3.5"
+      }`}
+      style={{
+        borderColor: isOver ? "var(--primary)" : "var(--border)",
+        opacity: isDragging ? 0.4 : done ? 0.75 : 1,
+      }}
     >
+      {onDropHabit && <HabitDragHandle ref={handleRef} />}
       <button
         type="button"
         onClick={() => navigate(`/habits/${habit.id}`)}

@@ -150,6 +150,11 @@
       html[data-splash-mode="short"] .splash-word {
         animation-delay: 0.4s;
       }
+      /* "Hold": the page reloaded into a new version right after the full
+         animation (public/splash.js) — show its last frame, don't replay. */
+      html[data-splash-mode="hold"] #splash * {
+        animation-delay: -10s !important;
+      }
       @keyframes splash-letter {
         to {
           opacity: 1;

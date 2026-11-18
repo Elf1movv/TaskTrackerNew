@@ -20,7 +20,7 @@ export function HabitsPage() {
   // one period switch, blocks one under another — see MobileHabitsView.
   if (isMobile) {
     return (
-      <div className="px-4 pt-6 pb-10">
+      <div className="px-4 pt-3 pb-10">
         <MobileHabitsView habits={habits} />
       </div>
     )
@@ -30,16 +30,9 @@ export function HabitsPage() {
     // max-w-7xl, not 4xl — a block's grid in month view has far more
     // columns than week/year and needs the extra room; each block now
     // renders its own fixed-width card (see HabitGroupAccordionItem), the
-    // page just has to be wide enough for the widest of them.
-    //
-    // Extra top clearance (md:pt-14, not the md:p-10 every other page
-    // uses) — now that the header spans the full max-w-7xl (see below),
-    // "Добавить блок" sits right under the fixed bell/gear (top-6, size
-    // 44px) with only ~7px of clearance, reading as overlapping (direct
-    // feedback, 2026-09-28). Other pages keep the plain p-10 top padding
-    // — their own narrower headers don't reach anywhere near the icons
-    // horizontally, so they never showed this.
-    <div className="p-6 md:pt-14 md:px-10 md:pb-10 max-w-7xl mx-auto">
+    // page just has to be wide enough for the widest of them. Top padding
+    // is small: the top bar (app/layouts/TopBar) is above it now.
+    <div className="p-6 md:px-10 md:pt-0 md:pb-10 max-w-7xl mx-auto">
       {/* No max-w-4xl here (unlike the "add block" form below) — this
           row's own button needs to reach the same right edge as the
           block grid beneath it (max-w-7xl on the page wrapper), not a

@@ -148,12 +148,11 @@ function CalendarPageContent() {
   }
 
   return (
-    <div className="p-4 md:p-6">
-      {/* Phones: the switcher takes its own full-width row BELOW the fixed
-          bell + gear in the top-right corner (owner, 2026-11-15: they
-          covered "Year"). From md the sidebar keeps this row clear of that
-          corner, so it shrinks back to its own width. */}
-      <div className="flex gap-0.5 bg-fill rounded-md p-0.5 mb-5 mt-12 sm:mt-2 md:mt-0 w-full md:w-fit">
+    <div className="px-4 pt-3 pb-4 md:px-6 md:pt-0 md:pb-6">
+      {/* Phones: the switcher takes its own full-width row; from md it
+          shrinks back to its own width. (The bell and gear moved into the top
+          bar on 2026-11-18, so this row no longer has to dodge them.) */}
+      <div className="flex gap-0.5 bg-fill rounded-md p-0.5 mb-5 w-full md:w-fit">
         {BUILT_VIEWS.map(v => (
           <button
             key={v}

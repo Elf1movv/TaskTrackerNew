@@ -175,6 +175,7 @@ export const en = {
   "habits.markDay": "{title}: {date}",
   "habits.blockActions": "Block actions",
   "habits.yearMonthOpen": "Open {month}",
+  "habits.dragHabit": "Drag to reorder or move to another block",
   "habits.detail.edit": "Edit",
   "habits.detail.everyDay": "every day",
   "habits.detail.currentStreak": "day in a row|days in a row",

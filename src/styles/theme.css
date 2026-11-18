@@ -50,11 +50,11 @@
   --radius: 0.75rem; /* 12px; sm 8 · md 10 · lg 12 · xl 16 */
 
   /* habit / goal / category palette (same order as PALETTE_COLORS) */
-  --chart-1: #c97b3a;
-  --chart-2: #6a9c74;
-  --chart-3: #5b7fc7;
-  --chart-4: #a35bc7;
-  --chart-5: #c75b8f;
+  --chart-1: #f59e0b;
+  --chart-2: #34d399;
+  --chart-3: #60a5fa;
+  --chart-4: #a78bfa;
+  --chart-5: #f472b6;
 
   --sidebar: #fbfcfd;
   --sidebar-foreground: #131c20;
@@ -121,10 +121,10 @@
   --border-strong: #3a4652;
   --card-border: rgba(255, 255, 255, 0.06);
   --text-tertiary: #7d8892;
-  --success: #63b890;
-  --success-bg: rgba(99, 184, 144, 0.14);
-  --warning: #e0a55a;
-  --warning-bg: rgba(224, 165, 90, 0.14);
+  --success: #34d399;
+  --success-bg: rgba(52, 211, 153, 0.14);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.14);
   --error-bg: rgba(228, 119, 110, 0.14);
   --seg: #2a3540;
   --scrim: rgba(0, 0, 0, 0.55);

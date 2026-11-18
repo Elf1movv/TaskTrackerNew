@@ -32,7 +32,7 @@ function TasksPageContent() {
   } = useTasksContext()
 
   return (
-    <div className="p-6 md:p-10 max-w-3xl mx-auto">
+    <div className="px-6 pt-3 pb-6 md:px-10 md:pt-0 md:pb-10 max-w-3xl mx-auto">
       <Dialog open={!!focused} onOpenChange={open => !open && close()}>
         <DialogContent>
           <DialogHeader>

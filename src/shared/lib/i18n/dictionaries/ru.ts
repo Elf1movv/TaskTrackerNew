@@ -177,6 +177,7 @@ export const ru: Record<keyof typeof en, string> = {
   "habits.markDay": "{title}: {date}",
   "habits.blockActions": "Действия с блоком",
   "habits.yearMonthOpen": "Открыть {month}",
+  "habits.dragHabit": "Перетащить: поменять порядок или перенести в другой блок",
   "habits.detail.edit": "Изменить",
   "habits.detail.everyDay": "каждый день",
   "habits.detail.currentStreak": "день подряд|дня подряд|дней подряд",

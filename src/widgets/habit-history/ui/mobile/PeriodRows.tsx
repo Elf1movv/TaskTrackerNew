@@ -1,11 +1,13 @@
 import { format, isSameDay, isSameMonth, startOfMonth } from "date-fns"
 import { Check } from "lucide-react"
 import { useNavigate } from "react-router"
+import { useHabitRowDnd } from "@/features/habit/group-dnd"
 import { getHabitMonthCompletionStats, getStreak, useHabits, type Habit } from "@/entities/habit"
 import { formatDateKey } from "@/shared/lib/date"
 import { getDateLocale, getWeekdayLabels, useLanguage } from "@/shared/lib/i18n"
 import { getDayCellState, getDayCellStyle } from "../../lib/habitCellState"
 import { getPeriodDays, getYearMonths } from "../../lib/periodColumns"
+import { HabitDragHandle } from "../HabitDragHandle"
 
 // The phone's Week / Month / Year rows of one block (mockups "с блоками",
 // 2026-11-16): the habit's name on its own line, its days or months below it
@@ -31,9 +33,18 @@ function HabitName({ habit, meta }: { habit: Habit; meta: string }) {
 const SEVEN = { gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }
 const TWELVE = { gridTemplateColumns: "repeat(12, minmax(0, 1fr))" }
 
-export function WeekRows({ habits, anchor, today }: { habits: Habit[]; anchor: Date; today: Date }) {
-  const { toggleHabit } = useHabits()
-  const { t, language } = useLanguage()
+export function WeekRows({
+  habits,
+  anchor,
+  today,
+  onDropHabit,
+}: {
+  habits: Habit[]
+  anchor: Date
+  today: Date
+  onDropHabit: (draggedId: string, targetId: string) => void
+}) {
+  const { language } = useLanguage()
   const days = getPeriodDays("week", anchor)
   const labels = getWeekdayLabels(language)
 
@@ -52,39 +63,65 @@ export function WeekRows({ habits, anchor, today }: { habits: Habit[]; anchor: D
         ))}
       </div>
       {habits.map(habit => (
-        <div key={habit.id} className="flex flex-col gap-2 border-t border-border pt-2">
-          <HabitName
-            habit={habit}
-            meta={t("habits.streakShort", { count: getStreak(habit.completedDates, habit.activeDays) })}
-          />
-          <div className="grid gap-1.5" style={SEVEN}>
-            {days.map(day => {
-              const state = getDayCellState(habit, day, today)
-              const dateKey = formatDateKey(day)
-              const clickable = state === "done" || state === "pending"
-              return (
-                <button
-                  key={dateKey}
-                  type="button"
-                  disabled={!clickable}
-                  aria-pressed={state === "done"}
-                  aria-label={t("habits.markDay", { title: habit.title, date: dateKey })}
-                  onClick={() => toggleHabit(habit.id, dateKey)}
-                  className="mx-auto aspect-square w-full max-w-10 rounded-full border-2 flex items-center justify-center disabled:cursor-default"
-                  style={{
-                    ...getDayCellStyle(state, habit.color),
-                    outline:
-                      isSameDay(day, today) && state !== "done" ? "2px solid var(--primary)" : undefined,
-                    outlineOffset: -2,
-                  }}
-                >
-                  {state === "done" && <Check size={16} strokeWidth={2.5} aria-hidden />}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <WeekRow key={habit.id} habit={habit} days={days} today={today} onDropHabit={onDropHabit} />
       ))}
+    </div>
+  )
+}
+
+function WeekRow({
+  habit,
+  days,
+  today,
+  onDropHabit,
+}: {
+  habit: Habit
+  days: Date[]
+  today: Date
+  onDropHabit: (draggedId: string, targetId: string) => void
+}) {
+  const { toggleHabit } = useHabits()
+  const { t } = useLanguage()
+  const { handleRef, rowRef, isDragging, isOver } = useHabitRowDnd(habit.id, onDropHabit)
+
+  return (
+    <div
+      ref={rowRef}
+      className={`flex flex-col gap-2 border-t pt-2 ${isOver ? "border-primary" : "border-border"}`}
+      style={{ opacity: isDragging ? 0.4 : 1 }}
+    >
+      <div className="flex items-center gap-1">
+        <HabitDragHandle ref={handleRef} />
+        <HabitName
+          habit={habit}
+          meta={t("habits.streakShort", { count: getStreak(habit.completedDates, habit.activeDays) })}
+        />
+      </div>
+      <div className="grid gap-1.5" style={SEVEN}>
+        {days.map(day => {
+          const state = getDayCellState(habit, day, today)
+          const dateKey = formatDateKey(day)
+          const clickable = state === "done" || state === "pending"
+          return (
+            <button
+              key={dateKey}
+              type="button"
+              disabled={!clickable}
+              aria-pressed={state === "done"}
+              aria-label={t("habits.markDay", { title: habit.title, date: dateKey })}
+              onClick={() => toggleHabit(habit.id, dateKey)}
+              className="mx-auto aspect-square w-full max-w-10 rounded-full border-2 flex items-center justify-center disabled:cursor-default"
+              style={{
+                ...getDayCellStyle(state, habit.color),
+                outline: isSameDay(day, today) && state !== "done" ? "2px solid var(--primary)" : undefined,
+                outlineOffset: -2,
+              }}
+            >
+              {state === "done" && <Check size={16} strokeWidth={3} aria-hidden />}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -244,7 +281,6 @@ export function PeriodBars({ values, max, color }: { values: number[]; max: numb
             height: max === 0 ? 0 : `${Math.round((value / max) * 34)}px`,
             minHeight: value > 0 ? 2 : 0,
             background: color,
-            opacity: 0.75,
           }}
         />
       ))}
