@@ -39,7 +39,7 @@ function TodayPageContent() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto">
+    <div className="px-6 pt-3 pb-6 md:px-10 md:pt-0 md:pb-10 max-w-4xl mx-auto">
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-page-sm sm:text-page">{heroDate}</h1>
         <Button

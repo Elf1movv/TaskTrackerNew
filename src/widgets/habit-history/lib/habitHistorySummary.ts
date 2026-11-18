@@ -15,6 +15,12 @@ export interface HabitHistorySummary {
   total: number
 }
 
+// Days before a habit existed don't count as "not done" (2026-11-16: the
+// phone's "% за год" and the year heat map disagreed because of this).
+function createdKey(habit: Habit): string {
+  return habit.createdAt ? formatDateKey(new Date(habit.createdAt)) : ""
+}
+
 // One point per day (week/month) — how many habits were actually done
 // that day, out of the whole period's scheduled/done totals used for the
 // "Выполнено: X из Y" line below the chart.
@@ -26,6 +32,7 @@ function summarizeByDay(habits: Habit[], days: Date[], today: Date): HabitHistor
     for (const habit of habits) {
       const state = getDayCellState(habit, date, today)
       if (state === "unscheduled" || state === "future") continue
+      if (formatDateKey(date) < createdKey(habit)) continue
       total++
       if (state === "done") {
         completed++
@@ -56,9 +63,11 @@ function summarizeByMonth(habits: Habit[], months: Date[], today: Date): HabitHi
 
     let monthCompleted = 0
     for (const habit of habits) {
+      const created = createdKey(habit)
       for (let day = 1; day <= lastDay; day++) {
         const date = new Date(year, monthIndex, day)
         if (!habit.activeDays.includes(date.getDay())) continue
+        if (formatDateKey(date) < created) continue
         total++
         if (habit.completedDates.includes(formatDateKey(date))) {
           completed++
@@ -80,5 +89,6 @@ export function getHabitHistorySummary(
   today: Date,
 ): HabitHistorySummary {
   if (period === "year") return summarizeByMonth(habits, getYearMonths(anchor), today)
+  if (period === "day") return summarizeByDay(habits, [anchor], today)
   return summarizeByDay(habits, getPeriodDays(period, anchor), today)
 }

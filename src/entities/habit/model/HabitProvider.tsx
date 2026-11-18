@@ -9,6 +9,7 @@ import type { Habit } from "./habit"
 export function HabitProvider({ children }: { children: ReactNode }) {
   const {
     items: habits,
+    isLoaded,
     create,
     update,
     remove,
@@ -94,6 +95,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       habits,
+      isLoaded,
       addHabit,
       updateHabit,
       deleteHabit,
@@ -104,6 +106,7 @@ export function HabitProvider({ children }: { children: ReactNode }) {
     }),
     [
       habits,
+      isLoaded,
       addHabit,
       updateHabit,
       deleteHabit,

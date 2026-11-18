@@ -30,7 +30,7 @@ function GoalsPageContent() {
   }, [focusedGoalId, setSearchParams])
 
   return (
-    <div className="p-6 md:p-10 max-w-3xl mx-auto">
+    <div className="px-6 pt-3 pb-6 md:px-10 md:pt-0 md:pb-10 max-w-3xl mx-auto">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <h1>{t("goals.title")}</h1>

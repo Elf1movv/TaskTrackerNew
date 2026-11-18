@@ -26,7 +26,7 @@ export function ReminderBell() {
             <button
               type="button"
               aria-label={t("reminderSummary.title")}
-              className="fixed top-4 right-[58px] md:top-6 md:right-[78px] z-40 flex size-11 items-center justify-center rounded-full bg-card border border-border shadow-card text-muted-foreground hover:text-foreground transition-colors"
+              className="relative flex size-11 items-center justify-center rounded-full bg-card border border-border shadow-card text-muted-foreground hover:text-foreground transition-colors"
             >
               <Bell size={18} strokeWidth={1.75} />
               {total > 0 && (

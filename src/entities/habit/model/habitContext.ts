@@ -3,6 +3,9 @@ import type { Habit } from "./habit"
 
 export interface HabitContextValue {
   habits: Habit[]
+  // False until the first load from the server finishes — lets the habit
+  // screen tell "still loading" from "no such habit" (2026-11-16).
+  isLoaded: boolean
   // Returns the new habit's id (generated on the client) — the onboarding
   // uses it to find and highlight the habit it just created.
   addHabit: (habit: Omit<Habit, "id" | "updatedAt" | "createdAt" | "completedDates">) => string

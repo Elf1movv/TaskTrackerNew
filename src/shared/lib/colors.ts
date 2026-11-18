@@ -1,19 +1,22 @@
+// Bright shades from the approved habit mockups (owner, 2026-11-18: the old
+// muted set looked "dull and sad"); migration 20261118120000_vivid_palette
+// moved every stored color to its new shade in the same order.
 // Shared by the habit and goal color pickers — kept as one list so the two
 // forms can't drift apart again (they used to duplicate this array, with
 // Goal's being a stale 5-color subset of Habit's 12).
 export const PALETTE_COLORS = [
-  "#c97b3a",
-  "#6a9c74",
-  "#5b7fc7",
-  "#a35bc7",
-  "#c75b8f",
-  "#3aa6c9",
-  "#c9a63a",
-  "#4f9c5e",
-  "#c75b5b",
-  "#7b6ac9",
-  "#3ac9a0",
-  "#c98f5b",
+  "#f59e0b",
+  "#34d399",
+  "#60a5fa",
+  "#a78bfa",
+  "#f472b6",
+  "#38bdf8",
+  "#facc15",
+  "#4ade80",
+  "#f87171",
+  "#818cf8",
+  "#2dd4bf",
+  "#fb923c",
 ]
 
 // Task blocks on the calendar are now filled by their own category's color

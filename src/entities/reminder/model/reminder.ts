@@ -17,7 +17,7 @@ export const REMINDER_PRIORITY_COLORS: Record<ReminderPriority, string> = {
 // above for one consistent meaning; "normal" reuses the warm yellow
 // already in PALETTE_COLORS (shared/lib/colors.ts) rather than a new hex.
 export const REMINDER_BORDER_COLORS: Record<ReminderPriority, string> = {
-  normal: "#c9a63a",
+  normal: "#facc15",
   critical: "#c9503a",
 }
 

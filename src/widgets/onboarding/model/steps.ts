@@ -38,10 +38,10 @@ export const CREATE_STEP_COUNT = 3
 // (rendered as a line icon, the emoji itself is never shown) and `color` one
 // of PALETTE_COLORS, so the result looks like a habit made in the normal form.
 export const HABIT_PRESETS = [
-  { key: "water", icon: "💧", color: "#3aa6c9" },
-  { key: "running", icon: "🏃", color: "#c97b3a" },
-  { key: "reading", icon: "📚", color: "#5b7fc7" },
-  { key: "walk", icon: "🚶", color: "#6a9c74" },
+  { key: "water", icon: "💧", color: "#38bdf8" },
+  { key: "running", icon: "🏃", color: "#f59e0b" },
+  { key: "reading", icon: "📚", color: "#60a5fa" },
+  { key: "walk", icon: "🚶", color: "#34d399" },
 ] as const
 
 export type HabitPresetKey = (typeof HABIT_PRESETS)[number]["key"]

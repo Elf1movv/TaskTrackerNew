@@ -31,10 +31,65 @@ function trackVisibleViewport() {
   viewport.addEventListener("scroll", update)
 }
 
+// How far to scroll so `target` (a form box, in screen pixels) sits inside
+// `visible` (the part of the screen above the keyboard and below the top
+// bar): positive = scroll down. If the box is taller than the space, its top
+// wins — the field being typed into is near the top of its form.
+export function revealScrollDelta(
+  target: { top: number; bottom: number },
+  visible: { top: number; bottom: number },
+  margin = 12,
+): number {
+  const room = visible.bottom - visible.top - 2 * margin
+  if (target.bottom - target.top > room) return target.top - (visible.top + margin)
+  if (target.bottom > visible.bottom - margin) return target.bottom - (visible.bottom - margin)
+  if (target.top < visible.top + margin) return target.top - (visible.top + margin)
+  return 0
+}
+
+const TOP_BAR_HEIGHT = 60 // app/layouts/TopBar on phones
+
+// Phones: when the keyboard opens for a field, scroll the field's form above
+// the keyboard (owner, 2026-11-18 — forms near the bottom of a screen were
+// hidden under it). Dialogs already sit above the keyboard on their own
+// (shared/ui/dialog.tsx); this covers the forms written into the page itself
+// (habit, task, goal, note…). The "form" is the field's largest ancestor
+// that still fits in the space left — so its Save button shows too.
+function keepFocusedFieldVisible() {
+  const viewport = window.visualViewport
+  if (!viewport) return
+  const reveal = () => {
+    const field = document.activeElement
+    if (!(field instanceof HTMLElement) || !field.matches("input, textarea, [contenteditable='true']")) return
+    if (field.closest("[role='dialog'], [role='alertdialog']")) return
+    const visible = { top: viewport.offsetTop + TOP_BAR_HEIGHT, bottom: viewport.offsetTop + viewport.height }
+    const room = visible.bottom - visible.top - 24
+    let box: HTMLElement = field
+    for (let node = field.parentElement; node && node !== document.body; node = node.parentElement) {
+      if (node.tagName === "MAIN" || node.getBoundingClientRect().height > room) break
+      box = node
+    }
+    const rect = box.getBoundingClientRect()
+    const delta = revealScrollDelta(rect, visible)
+    if (delta === 0) return
+    const scroller = field.closest("main") ?? document.scrollingElement
+    scroller?.scrollBy({ top: delta, behavior: "smooth" })
+  }
+  let timer = 0
+  const schedule = () => {
+    window.clearTimeout(timer)
+    // Wait for the keyboard animation to settle.
+    timer = window.setTimeout(reveal, 250)
+  }
+  viewport.addEventListener("resize", schedule)
+  document.addEventListener("focusin", schedule)
+}
+
 // Called once from main.tsx before the app renders: Chrome fires
 // `beforeinstallprompt` early, often before any React component exists.
 export function initPwa() {
   trackVisibleViewport()
+  if (window.matchMedia?.("(pointer: coarse)").matches) keepFocusedFieldVisible()
   window.addEventListener("beforeinstallprompt", event => {
     // Keep the browser's own mini-bar from popping up at a random moment —
     // the install offer lives in settings.
@@ -151,6 +206,9 @@ export function hideSplash() {
   const minMs = Number(document.documentElement.dataset.splashMinMs || 0)
   const wait = Math.max(0, minMs - performance.now())
   window.setTimeout(() => {
+    // public/splash.js is about to reload into a new version — keep the
+    // splash up until then (2026-11-18).
+    if (splash.dataset.reloading) return
     splash.classList.add("splash-hide")
     window.setTimeout(() => splash.remove(), 400)
   }, wait)

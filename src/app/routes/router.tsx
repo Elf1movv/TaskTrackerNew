@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router"
 import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from "@/pages/auth"
 import { CalendarPage } from "@/pages/calendar"
 import { GoalsPage } from "@/pages/goals"
+import { HabitDetailPage } from "@/pages/habit"
 import { HabitsPage } from "@/pages/habits"
 import { TasksPage } from "@/pages/tasks"
 import { TodayPage } from "@/pages/today"
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
           { path: "tasks", element: <TasksPage /> },
           { path: "goals", element: <GoalsPage /> },
           { path: "habits", element: <HabitsPage /> },
+          { path: "habits/:habitId", element: <HabitDetailPage /> },
           { path: "calendar", element: <CalendarPage /> },
           { path: "*", element: <Navigate to="/today" replace /> },
         ],

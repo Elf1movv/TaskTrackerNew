@@ -18,6 +18,7 @@ import { OnboardingRoot, useOnboarding } from "@/widgets/onboarding"
 import { MobileNav, SidebarNav } from "@/widgets/navigation"
 import { ReminderBell } from "@/widgets/reminder-summary"
 import { SettingsPanel } from "@/widgets/settings-panel"
+import { TopBar } from "./TopBar"
 
 export function RootLayout() {
   const { t } = useLanguage()
@@ -60,23 +61,22 @@ export function RootLayout() {
                   <ReminderProvider>
                     <div className="flex h-screen bg-background text-foreground overflow-hidden">
                       <SidebarNav />
-                      <SettingsPanel email={session.user.email} onRestartOnboarding={onboarding.restart} />
-                      {/* Hidden on /today — that page already has its own bell
-                      (with the same badge) on the goal/reminder swap card,
-                      see GoalReminderSwapCard.tsx; showing both was
-                      redundant. Every other page still gets this one. */}
-                      {location.pathname !== "/today" && <ReminderBell />}
                       <DueDateReminders userId={session.user.id} />
                       <CriticalReminderAlert userId={session.user.id} />
 
-                      {/* sm:max-xl:pt-10 — the settings gear and reminder bell are
-                          fixed in the top-right corner. Between these widths each
-                          page's header (title + "Add" button) reaches that corner
-                          and the button ended up under them; from xl the centred
-                          column stays clear, and on phones the button wraps below
-                          the title. The bottom padding clears the phone nav bar plus
-                      the iPhone home-indicator strip under it (MobileNav). */}
-                      <main className="flex-1 overflow-y-auto pb-[calc(4rem+max(0px,calc(env(safe-area-inset-bottom)-20px)))] md:pb-0 sm:max-xl:pt-10">
+                      {/* The bottom padding clears the phone nav bar plus the
+                          iPhone home-indicator strip under it (MobileNav). */}
+                      <main className="flex-1 overflow-y-auto pb-[calc(4rem+max(0px,calc(env(safe-area-inset-bottom)-20px)))] md:pb-0">
+                        <TopBar>
+                          {/* No bell on /today — that page has its own (with the
+                              same badge) on the goal/reminder swap card, see
+                              GoalReminderSwapCard.tsx. */}
+                          {location.pathname !== "/today" && <ReminderBell />}
+                          <SettingsPanel
+                            email={session.user.email}
+                            onRestartOnboarding={onboarding.restart}
+                          />
+                        </TopBar>
                         {import.meta.env.VITE_APP_ENV === "staging" && (
                           <div className="m-4 rounded-lg bg-primary-soft text-primary px-4 py-2 text-sm">
                             {t("app.staging")}
