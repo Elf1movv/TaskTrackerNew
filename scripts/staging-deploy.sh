@@ -50,7 +50,9 @@ echo "counts:   $BEFORE -> $(count)   (users/notes/tasks/goals/plans/reminders)"
 HEALTH=$(curl -s -o /dev/null -w '%{http_code}' https://test.mytracker.space/api/health)
 echo "health:   $HEALTH"
 echo "log errors (1m): $($C logs --since 1m app < /dev/null 2>&1 | grep -ci error || true)"
-echo "prod bundle: $(curl -s https://mytracker.space/ | grep -o 'assets/index-[^"]*\.js')"
+# The main script tag only — since 2026-11-18 index.html also lists every
+# asset in <meta name="app-assets">, which would match too.
+echo "prod bundle: $(curl -s https://mytracker.space/ | grep -o 'src="/assets/index-[^"]*\.js' | head -1 | cut -c7-)"
 # Each deploy pulls a new ~830 MB staging image; 14 of them filled the disk
 # to 85 % (2026-11-09). Keep the one now running plus the newest other one
 # (fast rollback; "newest", not "the one before this run" — a redeploy of
