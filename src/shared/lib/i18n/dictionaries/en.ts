@@ -137,6 +137,9 @@ export const en = {
   "habitForm.activeDays": "Repeats on",
   "habitForm.group": "Block",
 
+  "offline.banner": "No connection — viewing saved data only",
+  "offline.readOnly": "No connection — changes are unavailable for now",
+  "offline.logoutUnavailable": "Log out needs a connection",
   "habits.sectionLabel": "Habits",
   "habits.doneToday": "{done} of {total} today",
   "habits.dropOutOfBlock": "Drop here to take the habit out of its block",

@@ -2,6 +2,7 @@ import { Bell, Compass, LogOut, Palette, Settings, User } from "lucide-react"
 import { useState } from "react"
 import { NotificationsSection } from "@/features/notifications/push"
 import { signOut } from "@/shared/lib/auth"
+import { useIsOffline } from "@/shared/lib/pwa"
 import { clearAllCaches } from "@/shared/lib/storage"
 import { useLanguage } from "@/shared/lib/i18n"
 import { Button } from "@/shared/ui/button"
@@ -44,6 +45,7 @@ export function SettingsPanel({
   const { t } = useLanguage()
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<SettingsView>("account")
+  const isOffline = useIsOffline()
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -104,25 +106,39 @@ export function SettingsPanel({
               {t("settings.restartOnboarding")}
             </Button>
           )}
-          {/* Asks first: a stray tap used to log out at once (owner, 2026-11-15). */}
-          <ConfirmAction
-            title={t("settings.logoutConfirmTitle")}
-            description={t("settings.logoutConfirmBody")}
-            confirmLabel={t("settings.logoutConfirm")}
-            onConfirm={async () => {
-              // Forget the data kept on the phone, then log out (2026-11-18).
-              clearAllCaches()
-              await signOut()
-            }}
-          >
+          {/* Asks first: a stray tap used to log out at once (owner, 2026-11-15).
+              Without a network log out can't reach the server, and wiping the
+              saved data silently would surprise — so it waits (2026-11-18). */}
+          {isOffline ? (
             <Button
               variant="outline"
-              className="w-full justify-center text-muted-foreground hover:text-destructive"
+              className="w-full justify-center"
+              disabled
+              title={t("offline.logoutUnavailable")}
             >
               <LogOut size={14} />
-              {t("sidebar.logout")}
+              {t("offline.logoutUnavailable")}
             </Button>
-          </ConfirmAction>
+          ) : (
+            <ConfirmAction
+              title={t("settings.logoutConfirmTitle")}
+              description={t("settings.logoutConfirmBody")}
+              confirmLabel={t("settings.logoutConfirm")}
+              onConfirm={async () => {
+                // Forget the data kept on the phone, then log out (2026-11-18).
+                clearAllCaches()
+                await signOut()
+              }}
+            >
+              <Button
+                variant="outline"
+                className="w-full justify-center text-muted-foreground hover:text-destructive"
+              >
+                <LogOut size={14} />
+                {t("sidebar.logout")}
+              </Button>
+            </ConfirmAction>
+          )}
         </div>
       </SheetContent>
     </Sheet>

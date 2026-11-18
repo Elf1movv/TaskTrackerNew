@@ -13,6 +13,9 @@
 //   app simply works without the copy.
 
 const PREFIX = "mytracker-cache:"
+// Who was logged in last on this device — lets the app open without a network
+// (offline view, 2026-11-18). Wiped on log out like the data itself.
+const LAST_USER_KEY = `${PREFIX}last-user`
 const FORMAT = "v1"
 const MAX_CHARS = 1_500_000 // ~1.5 MB per collection: skip rather than fill the storage
 
@@ -37,7 +40,7 @@ export function setCacheUser(id: string): void {
   userId = id
   try {
     const mine = `${PREFIX}${FORMAT}:${id}:`
-    for (const k of ownKeys()) if (!k.startsWith(mine)) localStorage.removeItem(k)
+    for (const k of ownKeys()) if (!k.startsWith(mine) && k !== LAST_USER_KEY) localStorage.removeItem(k)
   } catch {
     // storage unavailable — nothing to clean
   }
@@ -74,5 +77,31 @@ export function writeCache<T>(entity: string, items: T[]): void {
     else localStorage.setItem(k, raw)
   } catch {
     // full or blocked storage — keep working without the copy
+  }
+}
+
+export interface LastUser {
+  id: string
+  email: string
+}
+
+export function saveLastUser(user: LastUser): void {
+  try {
+    localStorage.setItem(LAST_USER_KEY, JSON.stringify({ id: user.id, email: user.email }))
+  } catch {
+    // storage unavailable — no offline view on this device
+  }
+}
+
+export function readLastUser(): LastUser | null {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(LAST_USER_KEY) ?? "null")
+    if (parsed && typeof parsed === "object" && "id" in parsed && "email" in parsed) {
+      const { id, email } = parsed as LastUser
+      if (typeof id === "string" && typeof email === "string") return { id, email }
+    }
+    return null
+  } catch {
+    return null
   }
 }

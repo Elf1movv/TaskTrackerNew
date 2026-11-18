@@ -28,6 +28,14 @@ out.themeColor = await evaluate(`[localStorage.getItem('theme'), document.docume
 // offline page
 execSync(`for pid in $(netstat -ano | grep -E ":3002 .*LISTENING" | awk '{print $5}' | sort -u); do taskkill //PID $pid //F //T; done`, { shell: "bash", stdio: "ignore" })
 await pause(1000)
+// Offline view (2026-11-18): this device has the person's saved data, so the
+// app opens on it with the "No connection" strip instead of the offline page.
+await send("Page.navigate", { url: origin + "/tasks" })
+await wait(`document.querySelector('[role=status]') && document.body.innerText.includes('Нет сети')`)
+out.offlineView = true
+await screenshot("pwa-offline-view")
+// Without a saved person (logged out on this device) — our offline page.
+await evaluate(`localStorage.removeItem('mytracker-cache:last-user')`)
 await send("Page.navigate", { url: origin + "/tasks" })
 await wait(text("Нет подключения к интернету"))
 await pause(800)

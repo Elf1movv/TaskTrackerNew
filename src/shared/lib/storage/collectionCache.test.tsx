@@ -2,7 +2,14 @@ import { act, renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { LanguageProvider } from "@/shared/lib/i18n"
-import { clearAllCaches, readCache, setCacheUser, writeCache } from "./collectionCache"
+import {
+  clearAllCaches,
+  readCache,
+  readLastUser,
+  saveLastUser,
+  setCacheUser,
+  writeCache,
+} from "./collectionCache"
 import type { Repository } from "./repository"
 import { usePersistedCollection } from "./usePersistedCollection"
 
@@ -42,6 +49,14 @@ describe("collectionCache", () => {
     clearAllCaches()
     setCacheUser("u1")
     expect(readCache("task")).toBeNull()
+  })
+
+  it("remembers the last person until log out, also when another logs in", () => {
+    saveLastUser({ id: "u1", email: "a@example.com" })
+    setCacheUser("u2")
+    expect(readLastUser()).toEqual({ id: "u1", email: "a@example.com" })
+    clearAllCaches()
+    expect(readLastUser()).toBeNull()
   })
 
   it("ignores a copy that isn't a list", () => {

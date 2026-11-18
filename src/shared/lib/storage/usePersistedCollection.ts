@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { useLanguage, type TranslationKey } from "@/shared/lib/i18n"
+import { isOfflineMode } from "@/shared/lib/pwa"
 import { readCache, writeCache } from "./collectionCache"
 import { ConflictError, type Repository } from "./repository"
 
@@ -54,6 +55,15 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
   // edits have reached the server.
   const edits = useRef(0)
   const inFlight = useRef(new Set<Promise<unknown>>())
+  // Offline view (step 1, 2026-11-18): no queue of changes yet, so a change
+  // made without a network is refused honestly instead of failing later.
+  // Step 2 replaces this with a queue.
+  const refuseOffline = useCallback(() => {
+    if (!isOfflineMode()) return false
+    toast.error(t("offline.readOnly"))
+    return true
+  }, [t])
+
   const track = useCallback(<P>(request: Promise<P>): Promise<P> => {
     edits.current++
     inFlight.current.add(request)
@@ -125,6 +135,7 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
   // whose server also gives new records the first place (goals, 2026-11-12).
   const create = useCallback(
     (item: T, { prepend = false }: { prepend?: boolean } = {}) => {
+      if (refuseOffline()) return Promise.resolve(false)
       setItems(prev => (prepend ? [item, ...prev] : [...prev, item]))
       const request = (async () => {
         try {
@@ -145,7 +156,7 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
       pendingCreates.current.set(item.id, request)
       return track(request)
     },
-    [repository, t, entity, saveConfirmed, track],
+    [repository, t, entity, saveConfirmed, track, refuseOffline],
   )
 
   // Keyed by item id — chains same-item update() calls one after another
@@ -166,6 +177,7 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
     async (id: string, patch: Partial<T>) => {
       const previous = items.find(i => i.id === id)
       if (!previous) return
+      if (refuseOffline()) return previous
       setItems(prev => prev.map(i => (i.id === id ? { ...i, ...patch } : i)))
 
       const priorChain = pendingUpdates.current.get(id) ?? Promise.resolve(previous)
@@ -201,11 +213,12 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
       // exact same false-conflict race this queuing was built to prevent.
       return await thisUpdate
     },
-    [items, repository, t, entity, saveConfirmed, track],
+    [items, repository, t, entity, saveConfirmed, track, refuseOffline],
   )
 
   const remove = useCallback(
     (id: string) => {
+      if (refuseOffline()) return Promise.resolve()
       const previous = items
       setItems(prev => prev.filter(i => i.id !== id))
       return track(
@@ -224,7 +237,7 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
         })(),
       )
     },
-    [items, repository, t, entity, saveConfirmed, track],
+    [items, repository, t, entity, saveConfirmed, track, refuseOffline],
   )
 
   // Chains reorder() calls one after another instead of letting them race —
@@ -249,6 +262,7 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
         order: { id: string; order: number }[],
       ) => Promise<{ id: string; updatedAt: string }[]> = repository.reorder,
     ) => {
+      if (refuseOffline()) return Promise.resolve()
       const previous = items
       // Most callers pass the whole collection in its new order, but some
       // (e.g. habits reordering within one group) pass only a subset —
@@ -304,7 +318,7 @@ export function usePersistedCollection<T extends { id: string; updatedAt: string
       pendingReorder.current = thisReorder
       return track(thisReorder)
     },
-    [items, repository, t, saveConfirmed, track],
+    [items, repository, t, saveConfirmed, track, refuseOffline],
   )
 
   return { items, isLoaded, isSynced, create, update, remove, reorder, refresh }

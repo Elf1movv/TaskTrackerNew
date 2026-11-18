@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Navigate, useLocation, useOutlet } from "react-router"
 import { CategoryProvider } from "@/entities/category"
@@ -10,7 +11,8 @@ import { PlanProvider } from "@/entities/calendar-plan"
 import { TaskProvider } from "@/entities/task"
 import { useLanguage } from "@/shared/lib/i18n"
 import { useSession } from "@/shared/lib/auth"
-import { clearAllCaches, setCacheUser } from "@/shared/lib/storage"
+import { markStartedOffline } from "@/shared/lib/pwa"
+import { clearAllCaches, readLastUser, saveLastUser, setCacheUser } from "@/shared/lib/storage"
 import { usePushSync } from "@/features/notifications/push"
 import { CriticalReminderAlert } from "@/widgets/critical-reminder-alert"
 import { DueDateReminders } from "@/widgets/due-date-reminders"
@@ -19,6 +21,7 @@ import { OnboardingRoot, useOnboarding } from "@/widgets/onboarding"
 import { MobileNav, SidebarNav } from "@/widgets/navigation"
 import { ReminderBell } from "@/widgets/reminder-summary"
 import { SettingsPanel } from "@/widgets/settings-panel"
+import { OfflineBanner } from "./OfflineBanner"
 import { TopBar } from "./TopBar"
 
 export function RootLayout() {
@@ -32,6 +35,15 @@ export function RootLayout() {
   // Push notifications: refresh this browser's subscription on the server.
   usePushSync(session?.user.id)
 
+  // Offline view (2026-11-18): the login check couldn't reach the server, but
+  // this device still has the last person's saved data (they never logged
+  // out) — open the app on that copy, read-only (shared/lib/pwa/networkStatus).
+  const lastUser = !isPending && !session && error ? readLastUser() : null
+  const startsOffline = lastUser !== null
+  useEffect(() => {
+    if (startsOffline) markStartedOffline()
+  }, [startsOffline])
+
   // isPending: session is still being fetched — render nothing rather than
   // flash the login page before the real answer arrives.
   if (isPending) return null
@@ -39,18 +51,21 @@ export function RootLayout() {
   // down). The page itself may have come from the phone's copy (public/sw.js),
   // so without this a person with no signal would land on the login screen as
   // if logged out. Show the "No connection" page instead (2026-11-15).
-  if (!session && error) {
+  // No saved data to show either: the "No connection" page (2026-11-15).
+  if (!session && error && !lastUser) {
     window.location.replace(`/offline.html?from=${encodeURIComponent(location.pathname + location.search)}`)
     return null
   }
-  if (!session) {
+  if (!session && !lastUser) {
     // Logged out or the session expired: no copy of anyone's data stays on
     // the device (shared/lib/storage/collectionCache.ts).
     clearAllCaches()
     return <Navigate to="/login" replace />
   }
+  const user = session ? { id: session.user.id, email: session.user.email } : lastUser!
+  if (session) saveLastUser(user)
   // Before the providers below render: they read this person's kept copy.
-  setCacheUser(session.user.id)
+  setCacheUser(user.id)
 
   return (
     // Entity providers mounted here, not in AppProviders — they only ever
@@ -69,8 +84,8 @@ export function RootLayout() {
                   <ReminderProvider>
                     <div className="flex h-screen bg-background text-foreground overflow-hidden">
                       <SidebarNav />
-                      <DueDateReminders userId={session.user.id} />
-                      <CriticalReminderAlert userId={session.user.id} />
+                      <DueDateReminders userId={user.id} />
+                      <CriticalReminderAlert userId={user.id} />
 
                       {/* The bottom padding clears the phone nav bar plus the
                           iPhone home-indicator strip under it (MobileNav). */}
@@ -80,11 +95,9 @@ export function RootLayout() {
                               same badge) on the goal/reminder swap card, see
                               GoalReminderSwapCard.tsx. */}
                           {location.pathname !== "/today" && <ReminderBell />}
-                          <SettingsPanel
-                            email={session.user.email}
-                            onRestartOnboarding={onboarding.restart}
-                          />
+                          <SettingsPanel email={user.email} onRestartOnboarding={onboarding.restart} />
                         </TopBar>
+                        <OfflineBanner />
                         {import.meta.env.VITE_APP_ENV === "staging" && (
                           <div className="m-4 rounded-lg bg-primary-soft text-primary px-4 py-2 text-sm">
                             {t("app.staging")}

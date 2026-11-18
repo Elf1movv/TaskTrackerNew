@@ -139,6 +139,9 @@ export const ru: Record<keyof typeof en, string> = {
   "habitForm.activeDays": "Повторять по дням",
   "habitForm.group": "Блок",
 
+  "offline.banner": "Нет сети — только просмотр сохранённого",
+  "offline.readOnly": "Нет сети — изменить пока нельзя",
+  "offline.logoutUnavailable": "Чтобы выйти, нужен интернет",
   "habits.sectionLabel": "Привычки",
   "habits.doneToday": "{done} из {total} сегодня",
   "habits.addHabit": "Добавить привычку",
