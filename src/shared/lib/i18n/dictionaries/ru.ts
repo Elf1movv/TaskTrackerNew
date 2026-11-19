@@ -141,6 +141,7 @@ export const ru: Record<keyof typeof en, string> = {
 
   "offline.banner": "Нет сети — только просмотр сохранённого",
   "offline.readOnly": "Нет сети — изменить пока нельзя",
+  "offline.retry": "Повторить",
   "offline.logoutUnavailable": "Чтобы выйти, нужен интернет",
   "habits.sectionLabel": "Привычки",
   "habits.doneToday": "{done} из {total} сегодня",

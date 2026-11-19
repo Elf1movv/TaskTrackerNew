@@ -20,19 +20,67 @@ export function isOfflineMode(): boolean {
 export function markStartedOffline(): void {
   if (startedOffline) return
   startedOffline = true
+  startProbing()
   notify()
+}
+
+// Back online. After an offline start the page reloads (the login check then
+// runs for real); after a mid-session loss the strip just goes away.
+function backOnline() {
+  browserOffline = false
+  stopProbing()
+  if (startedOffline) window.location.reload()
+  else notify()
+}
+
+// Phones often never fire the browser's `online` event — an app on the iPhone
+// home screen after airplane mode, a switch between Wi-Fi and mobile data —
+// and the app stayed in offline mode until restarted (owner, 2026-11-19).
+// So while offline we ask the server ourselves: every 5 s, whenever the app
+// comes back to the screen, and on the strip's "Retry" button.
+const PROBE_EVERY_MS = 5000
+let probeTimer: number | undefined
+let probing = false
+
+export async function checkConnection(): Promise<boolean> {
+  if (probing) return false
+  probing = true
+  try {
+    const res = await fetch("/api/health", { cache: "no-store" })
+    if (res.ok) {
+      backOnline()
+      return true
+    }
+  } catch {
+    // still no network
+  } finally {
+    probing = false
+  }
+  return false
+}
+
+function startProbing() {
+  if (probeTimer !== undefined || typeof window === "undefined") return
+  probeTimer = window.setInterval(() => void checkConnection(), PROBE_EVERY_MS)
+}
+
+function stopProbing() {
+  if (probeTimer === undefined) return
+  window.clearInterval(probeTimer)
+  probeTimer = undefined
 }
 
 if (typeof window !== "undefined") {
   window.addEventListener("offline", () => {
     browserOffline = true
+    startProbing()
     notify()
   })
-  window.addEventListener("online", () => {
-    browserOffline = false
-    if (startedOffline) window.location.reload()
-    else notify()
+  window.addEventListener("online", backOnline)
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && isOfflineMode()) void checkConnection()
   })
+  if (browserOffline) startProbing()
 }
 
 function subscribe(listener: () => void) {

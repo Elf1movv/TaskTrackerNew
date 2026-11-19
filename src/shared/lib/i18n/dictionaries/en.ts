@@ -139,6 +139,7 @@ export const en = {
 
   "offline.banner": "No connection — viewing saved data only",
   "offline.readOnly": "No connection — changes are unavailable for now",
+  "offline.retry": "Retry",
   "offline.logoutUnavailable": "Log out needs a connection",
   "habits.sectionLabel": "Habits",
   "habits.doneToday": "{done} of {total} today",

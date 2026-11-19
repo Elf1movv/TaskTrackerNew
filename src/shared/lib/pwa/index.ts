@@ -7,4 +7,4 @@ export {
   useThemeColorSync,
   type InstallMode,
 } from "./pwa"
-export { isOfflineMode, markStartedOffline, useIsOffline } from "./networkStatus"
+export { checkConnection, isOfflineMode, markStartedOffline, useIsOffline } from "./networkStatus"
